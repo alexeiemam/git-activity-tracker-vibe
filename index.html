@@ -125,6 +125,12 @@
     }
 
     /* ✅ Sticky dock: prettier, more "designed" */
+    /* ─────────────────────────────────────────────
+   Sticky Dock — FULL DEFINITIONS (copy/paste)
+   Includes: layout, contributor rail, metric segmented control,
+   year capsule styling, toggle capsule styling, responsive behavior
+───────────────────────────────────────────── */
+
     .sticky-dock {
       position: sticky;
       top: 10px;
@@ -132,10 +138,14 @@
       margin: 12px 0 18px;
     }
 
+    /* Main dock container */
     .sticky-inner {
       display: flex;
       align-items: center;
       gap: 14px;
+
+      /* key: allow wrapping on small screens to prevent overlap */
+      flex-wrap: wrap;
 
       padding: 12px 14px;
       border: 1px solid rgba(26, 24, 20, 0.14);
@@ -152,7 +162,14 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.55);
     }
 
-    /* Subtle divider line that doesn't scream "table border" */
+    /* Generic slot (keeps items aligned without assuming their internals) */
+    .sticky-slot {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Divider between left rail and right controls */
     .sticky-divider {
       width: 1px;
       align-self: stretch;
@@ -160,34 +177,49 @@
           transparent,
           rgba(26, 24, 20, 0.14),
           transparent);
+      opacity: 0.9;
     }
 
-    .sticky-slot {
-      min-width: 0;
+    /* Right side (metric/year/toggles) */
+    .sticky-right {
       display: flex;
       align-items: center;
+      gap: 12px;
+      margin-left: auto;
+
+      /* on small screens this becomes row 2 */
+      width: 100%;
+      justify-content: flex-end;
+      flex-wrap: wrap;
     }
 
-    /* Contributors become a compact "rail" */
+    /* ── Contributors rail (renders INSIDE sticky-contrib-slot) ───────── */
+
     .sticky-contrib-rail {
       display: flex;
       align-items: center;
       gap: 8px;
-      min-width: 260px;
-      max-width: 520px;
-      flex: 1;
+
+      /* on small screens: take full width row 1 */
+      flex: 1 1 100%;
+      max-width: none;
+      order: 1;
 
       padding: 6px 8px;
       border: 1px solid rgba(26, 24, 20, 0.10);
       background: rgba(245, 242, 235, 0.52);
       border-radius: 999px;
+
       overflow: hidden;
+      position: relative;
+      z-index: 1;
+      /* avoid being visually under other elements */
     }
 
     .sticky-contrib-rail .rail-label {
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.58rem;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: 0.10em;
       text-transform: uppercase;
       color: var(--muted);
@@ -199,6 +231,11 @@
       display: flex;
       gap: 6px;
       overflow-x: auto;
+
+      /* IMPORTANT: never wrap */
+      flex-wrap: nowrap !important;
+      white-space: nowrap;
+
       scrollbar-width: none;
     }
 
@@ -206,15 +243,20 @@
       display: none;
     }
 
-    /* Compact chip style inside dock */
+    /* Compact chips inside rail */
     .sticky-chip {
       display: inline-flex;
       align-items: center;
       gap: 8px;
+
       padding: 6px 10px;
       border-radius: 999px;
       border: 1px solid rgba(26, 24, 20, 0.10);
       background: rgba(255, 255, 255, 0.55);
+
+      /* IMPORTANT: prevent wrapping/shrinking into overlap */
+      flex: 0 0 auto;
+
       transition: transform 0.08s, border-color 0.15s, background 0.15s;
       white-space: nowrap;
     }
@@ -225,57 +267,60 @@
       background: rgba(255, 255, 255, 0.72);
     }
 
+    .sticky-chip:active {
+      transform: translateY(0px);
+    }
+
     .sticky-chip .mini-avatar {
       width: 18px !important;
       height: 18px !important;
       font-size: 0.55rem !important;
+      line-height: 1 !important;
     }
 
     .sticky-chip .chip-name {
+      font-family: 'IBM Plex Mono', monospace;
       font-size: 0.62rem !important;
-      font-weight: 700 !important;
+      font-weight: 800 !important;
+      color: var(--ink);
     }
 
+    /* if your generator includes chip-sub, hide it in sticky */
     .sticky-chip .chip-sub {
       display: none;
     }
 
-    /* dock version: keep it clean */
+    /* ── Metric segmented control (renders INSIDE sticky-metric-slot) ─── */
 
-    /* Right side grouping */
-    .sticky-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-left: auto;
-      flex-shrink: 0;
-    }
-
-    /* Metric segmented control (works with your renderStickyMetricTabs) */
     .sticky-metrics {
       display: inline-flex;
       align-items: center;
+
       border: 1px solid rgba(26, 24, 20, 0.14);
       background: rgba(245, 242, 235, 0.55);
       border-radius: 999px;
       overflow: hidden;
+
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
     }
 
+    /* Reuses your .metric-tab elements but enforces segmented styling here */
     .sticky-metrics .metric-tab {
       border: 0 !important;
       border-right: 1px solid rgba(26, 24, 20, 0.10);
+
       padding: 7px 10px;
       margin: 0 !important;
 
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.62rem;
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing: 0.06em;
       text-transform: uppercase;
 
       color: var(--muted);
       background: transparent;
+
       transition: background 0.15s, color 0.15s, transform 0.08s;
     }
 
@@ -297,15 +342,20 @@
       color: var(--bg) !important;
     }
 
-    /* Year pills inside dock get a tighter look */
-    #sticky-year-slot .year-filter {
+    /* ── Year capsule: we are docking #year-filter into sticky-year-slot ─ */
+
+    #sticky-year-slot #year-filter {
+      /* override original panel-ish styling */
       padding: 6px 8px !important;
       border: 1px solid rgba(26, 24, 20, 0.12) !important;
       background: rgba(245, 242, 235, 0.52) !important;
       border-radius: 999px !important;
+
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
     }
 
-    /* Remove the big "Year:" label vibe; keep it subtle */
     #sticky-year-slot .year-filter-label {
       font-size: 0.56rem !important;
       letter-spacing: 0.10em !important;
@@ -324,11 +374,13 @@
       border-color: var(--ink) !important;
     }
 
-    /* Toggles become a tidy "filters" capsule */
+    /* ── Toggle capsule ─────────────────────────────────────────────── */
+
     .sticky-options {
       display: inline-flex;
       align-items: center;
       gap: 10px;
+
       padding: 7px 10px;
       border: 1px solid rgba(26, 24, 20, 0.12);
       background: rgba(245, 242, 235, 0.52);
@@ -338,6 +390,38 @@
     .sticky-options .merge-toggle-label {
       gap: 8px !important;
       font-size: 0.64rem !important;
+    }
+
+    /* ── Responsive: on large screens go back to a single-line dock ───── */
+
+    @media (min-width: 1024px) {
+      .sticky-inner {
+        flex-wrap: nowrap;
+      }
+
+      .sticky-right {
+        width: auto;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+      }
+
+      .sticky-contrib-rail {
+        flex: 1 1 auto;
+        max-width: 560px;
+        /* tune to taste */
+        order: 0;
+      }
+
+      .sticky-divider {
+        display: block;
+      }
+    }
+
+    /* Divider not useful when dock is two rows */
+    @media (max-width: 1023px) {
+      .sticky-divider {
+        display: none;
+      }
     }
 
     /* Active state styling for "tab-like" buttons (JS toggles .active) */
@@ -677,7 +761,7 @@
         <div class="sticky-inner">
           <!-- Left: contributor quick links -->
           <div id="sticky-contrib-slot" class="sticky-slot"></div>
-
+          <div class="sticky-divider"></div>
           <!-- Right: year selector + options -->
           <div class="sticky-right">
             <!-- Metric selector (new) -->
