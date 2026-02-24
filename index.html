@@ -124,303 +124,227 @@
       color: #a07800;
     }
 
-    /* ✅ Sticky dock: prettier, more "designed" */
     /* ─────────────────────────────────────────────
-   Sticky Dock — FULL DEFINITIONS (copy/paste)
-   Includes: layout, contributor rail, metric segmented control,
-   year capsule styling, toggle capsule styling, responsive behavior
+   Sticky Sidebar Dock (full definitions)
 ───────────────────────────────────────────── */
 
-    .sticky-dock {
+    .sticky-sidebar {
       position: sticky;
-      top: 10px;
-      z-index: 50;
+      top: 12px;
+      z-index: 60;
+
+      /* sits inside your max-width container */
       margin: 12px 0 18px;
+
+      /* sidebar sizing */
+      width: 240px;
+      flex: 0 0 240px;
     }
 
-    /* Main dock container */
-    .sticky-inner {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-
-      /* key: allow wrapping on small screens to prevent overlap */
-      flex-wrap: wrap;
-
-      padding: 12px 14px;
+    .sidebar-inner {
       border: 1px solid rgba(26, 24, 20, 0.14);
-      border-radius: 16px;
-
-      background: linear-gradient(180deg,
-          rgba(255, 254, 251, 0.92),
-          rgba(255, 254, 251, 0.82));
+      border-radius: 14px;
+      background: rgba(255, 254, 251, 0.92);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.55);
 
-      box-shadow:
-        0 12px 30px rgba(0, 0, 0, 0.10),
-        inset 0 1px 0 rgba(255, 255, 255, 0.55);
+      padding: 12px;
     }
 
-    /* Generic slot (keeps items aligned without assuming their internals) */
-    .sticky-slot {
-      min-width: 0;
+    .sidebar-head {
       display: flex;
-      align-items: center;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 2px 2px 10px 2px;
+      border-bottom: 1px solid rgba(26, 24, 20, 0.10);
+      margin-bottom: 10px;
     }
 
-    /* Divider between left rail and right controls */
-    .sticky-divider {
-      width: 1px;
-      align-self: stretch;
-      background: linear-gradient(180deg,
-          transparent,
-          rgba(26, 24, 20, 0.14),
-          transparent);
-      opacity: 0.9;
+    .sidebar-title {
+      color: var(--muted);
     }
 
-    /* Right side (metric/year/toggles) */
-    .sticky-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-left: auto;
-
-      /* on small screens this becomes row 2 */
-      width: 100%;
-      justify-content: flex-end;
-      flex-wrap: wrap;
+    .sidebar-sub {
+      color: rgba(138, 128, 112, 0.75);
     }
 
-    /* ── Contributors rail (renders INSIDE sticky-contrib-slot) ───────── */
-
-    .sticky-contrib-rail {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      /* on small screens: take full width row 1 */
-      flex: 1 1 100%;
-      max-width: none;
-      order: 1;
-
-      padding: 6px 8px;
-      border: 1px solid rgba(26, 24, 20, 0.10);
-      background: rgba(245, 242, 235, 0.52);
-      border-radius: 999px;
-
-      overflow: hidden;
-      position: relative;
-      z-index: 1;
-      /* avoid being visually under other elements */
+    .sidebar-section {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(26, 24, 20, 0.08);
     }
 
-    .sticky-contrib-rail .rail-label {
+    .sidebar-section:last-child {
+      border-bottom: 0;
+      padding-bottom: 2px;
+    }
+
+    .sidebar-label {
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.58rem;
       font-weight: 800;
-      letter-spacing: 0.10em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--muted);
-      padding-left: 6px;
-      flex-shrink: 0;
+      color: rgba(138, 128, 112, 0.95);
+      margin: 0 2px 8px;
     }
 
-    .sticky-contrib-rail .rail-scroll {
+    .sidebar-list {
       display: flex;
+      flex-direction: column;
       gap: 6px;
-      overflow-x: auto;
-
-      /* IMPORTANT: never wrap */
-      flex-wrap: nowrap !important;
-      white-space: nowrap;
-
-      scrollbar-width: none;
     }
 
-    .sticky-contrib-rail .rail-scroll::-webkit-scrollbar {
-      display: none;
-    }
-
-    /* Compact chips inside rail */
-    .sticky-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(26, 24, 20, 0.10);
-      background: rgba(255, 255, 255, 0.55);
-
-      /* IMPORTANT: prevent wrapping/shrinking into overlap */
-      flex: 0 0 auto;
-
-      transition: transform 0.08s, border-color 0.15s, background 0.15s;
-      white-space: nowrap;
-    }
-
-    .sticky-chip:hover {
-      transform: translateY(-1px);
-      border-color: rgba(26, 24, 20, 0.28);
-      background: rgba(255, 255, 255, 0.72);
-    }
-
-    .sticky-chip:active {
-      transform: translateY(0px);
-    }
-
-    .sticky-chip .mini-avatar {
-      width: 18px !important;
-      height: 18px !important;
-      font-size: 0.55rem !important;
-      line-height: 1 !important;
-    }
-
-    .sticky-chip .chip-name {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.62rem !important;
-      font-weight: 800 !important;
-      color: var(--ink);
-    }
-
-    /* if your generator includes chip-sub, hide it in sticky */
-    .sticky-chip .chip-sub {
-      display: none;
-    }
-
-    /* ── Metric segmented control (renders INSIDE sticky-metric-slot) ─── */
-
-    .sticky-metrics {
-      display: inline-flex;
-      align-items: center;
-
-      border: 1px solid rgba(26, 24, 20, 0.14);
-      background: rgba(245, 242, 235, 0.55);
-      border-radius: 999px;
-      overflow: hidden;
-
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
-    }
-
-    /* Reuses your .metric-tab elements but enforces segmented styling here */
-    .sticky-metrics .metric-tab {
-      border: 0 !important;
-      border-right: 1px solid rgba(26, 24, 20, 0.10);
-
-      padding: 7px 10px;
-      margin: 0 !important;
-
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.62rem;
-      font-weight: 900;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-
-      color: var(--muted);
-      background: transparent;
-
-      transition: background 0.15s, color 0.15s, transform 0.08s;
-    }
-
-    .sticky-metrics .metric-tab:last-child {
-      border-right: 0;
-    }
-
-    .sticky-metrics .metric-tab:hover {
-      color: var(--ink);
-      background: rgba(255, 255, 255, 0.55);
-    }
-
-    .sticky-metrics .metric-tab:active {
-      transform: translateY(1px);
-    }
-
-    .sticky-metrics .metric-tab.active {
-      background: var(--ink) !important;
-      color: var(--bg) !important;
-    }
-
-    /* ── Year capsule: we are docking #year-filter into sticky-year-slot ─ */
-
-    #sticky-year-slot #year-filter {
-      /* override original panel-ish styling */
-      padding: 6px 8px !important;
-      border: 1px solid rgba(26, 24, 20, 0.12) !important;
-      background: rgba(245, 242, 235, 0.52) !important;
-      border-radius: 999px !important;
-
-      display: flex !important;
-      align-items: center !important;
-      gap: 6px !important;
-    }
-
-    #sticky-year-slot .year-filter-label {
-      font-size: 0.56rem !important;
-      letter-spacing: 0.10em !important;
-      opacity: 0.85;
-    }
-
-    #sticky-year-slot .year-btn {
-      padding: 6px 10px !important;
-      border-radius: 999px !important;
-      border-color: rgba(26, 24, 20, 0.12) !important;
-    }
-
-    #sticky-year-slot .year-btn.active {
-      background: var(--ink) !important;
-      color: var(--bg) !important;
-      border-color: var(--ink) !important;
-    }
-
-    /* ── Toggle capsule ─────────────────────────────────────────────── */
-
-    .sticky-options {
-      display: inline-flex;
+    /* Buttons in the sidebar */
+    .sidebar-btn {
+      display: flex;
       align-items: center;
       gap: 10px;
 
-      padding: 7px 10px;
-      border: 1px solid rgba(26, 24, 20, 0.12);
-      background: rgba(245, 242, 235, 0.52);
+      width: 100%;
+      text-align: left;
+
+      padding: 8px 10px;
+      border-radius: 10px;
+
+      border: 1px solid rgba(26, 24, 20, 0.10);
+      background: rgba(245, 242, 235, 0.40);
+
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--ink);
+
+      transition: transform 0.08s, background 0.15s, border-color 0.15s;
+    }
+
+    .sidebar-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.62);
+      border-color: rgba(26, 24, 20, 0.22);
+    }
+
+    .sidebar-btn:active {
+      transform: translateY(0px);
+    }
+
+    .sidebar-btn.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--bg);
+    }
+
+    .sidebar-dot {
+      width: 10px;
+      height: 10px;
       border-radius: 999px;
+      flex: 0 0 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
     }
 
-    .sticky-options .merge-toggle-label {
-      gap: 8px !important;
-      font-size: 0.64rem !important;
+    .sidebar-mini {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.56rem;
+      font-weight: 900;
+      color: white;
+      flex: 0 0 18px;
     }
 
-    /* ── Responsive: on large screens go back to a single-line dock ───── */
+    .sidebar-btn .sidebar-main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
 
-    @media (min-width: 1024px) {
-      .sticky-inner {
-        flex-wrap: nowrap;
-      }
+    .sidebar-btn .sidebar-name {
+      font-weight: 800;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-      .sticky-right {
+    .sidebar-btn .sidebar-subtxt {
+      font-size: 0.58rem;
+      color: rgba(138, 128, 112, 0.95);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-btn.active .sidebar-subtxt {
+      color: rgba(245, 242, 235, 0.70);
+    }
+
+    /* Year pill row */
+    .sidebar-year {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .sidebar-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(26, 24, 20, 0.12);
+      background: rgba(245, 242, 235, 0.40);
+
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.64rem;
+      color: var(--muted);
+
+      transition: background 0.15s, border-color 0.15s, transform 0.08s;
+    }
+
+    .sidebar-pill:hover {
+      transform: translateY(-1px);
+      border-color: rgba(26, 24, 20, 0.22);
+      background: rgba(255, 255, 255, 0.60);
+    }
+
+    .sidebar-pill.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--bg);
+    }
+
+    /* Toggle list */
+    .sidebar-toggles {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(26, 24, 20, 0.10);
+      background: rgba(245, 242, 235, 0.40);
+
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.66rem;
+      color: var(--muted);
+    }
+
+    .sidebar-toggle:hover {
+      border-color: rgba(26, 24, 20, 0.20);
+      background: rgba(255, 255, 255, 0.56);
+    }
+
+    /* Responsive: if the viewport is narrow, sidebar becomes top stack */
+    @media (max-width: 980px) {
+      .sticky-sidebar {
         width: auto;
-        justify-content: flex-end;
-        flex-wrap: nowrap;
-      }
-
-      .sticky-contrib-rail {
         flex: 1 1 auto;
-        max-width: 560px;
-        /* tune to taste */
-        order: 0;
-      }
-
-      .sticky-divider {
-        display: block;
-      }
-    }
-
-    /* Divider not useful when dock is two rows */
-    @media (max-width: 1023px) {
-      .sticky-divider {
-        display: none;
       }
     }
 
@@ -756,37 +680,49 @@
     <div id="dashboard">
       <!-- Summary bar -->
       <div id="summary-bar" class="mb-8 grid grid-cols-4 gap-px border border-border bg-border"></div>
-      <!-- ✅ Sticky controls dock -->
-      <div id="sticky-dock" class="sticky-dock">
-        <div class="sticky-inner">
-          <!-- Left: contributor quick links -->
-          <div id="sticky-contrib-slot" class="sticky-slot"></div>
-          <div class="sticky-divider"></div>
-          <!-- Right: year selector + options -->
-          <div class="sticky-right">
-            <!-- Metric selector (new) -->
-            <div id="sticky-metric-slot" class="sticky-slot"></div>
+      <div class="dashboard-shell flex items-start gap-4">
+        <div id="sticky-dock" class="sticky-sidebar">
+          <div class="sidebar-inner">
+            <div class="sidebar-head">
+              <div class="sidebar-title font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted">Controls</div>
+              <div class="sidebar-sub font-mono text-[0.62rem] text-muted/80">sticky</div>
+            </div>
 
-            <!-- Year selector -->
-            <div id="sticky-year-slot" class="sticky-slot"></div>
+            <div class="sidebar-section">
+              <div class="sidebar-label">Contributors</div>
+              <div id="sticky-contrib-slot" class="sidebar-list"></div>
+            </div>
 
-            <!-- Toggles -->
-            <div class="sticky-options">
-              <label
-                class="merge-toggle-label inline-flex cursor-pointer select-none items-center gap-2 font-mono text-[0.68rem] text-muted">
-                <input type="checkbox" id="include-merges-sticky" class="cursor-pointer accent-accent" />
-                include merge commits
-              </label>
+            <div class="sidebar-section">
+              <div class="sidebar-label">Metric</div>
+              <div id="sticky-metric-slot" class="sidebar-list"></div>
+            </div>
 
-              <label
-                class="merge-toggle-label inline-flex cursor-pointer select-none items-center gap-2 font-mono text-[0.68rem] text-muted">
-                <input type="checkbox" id="penalise-reverts-sticky" class="cursor-pointer accent-accent" />
-                penalise reverts
-              </label>
+            <div class="sidebar-section">
+              <div class="sidebar-label">Year</div>
+              <div id="sticky-year-slot" class="sidebar-year"></div>
+            </div>
+
+            <div class="sidebar-section">
+              <div class="sidebar-label">Filters</div>
+              <div class="sidebar-toggles">
+                <label class="sidebar-toggle">
+                  <input type="checkbox" id="include-merges-sticky" class="cursor-pointer accent-accent" />
+                  <span>include merges</span>
+                </label>
+
+                <label class="sidebar-toggle">
+                  <input type="checkbox" id="penalise-reverts-sticky" class="cursor-pointer accent-accent" />
+                  <span>penalise reverts</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
+
       </div>
+      <!-- ✅ Sticky controls dock -->
+      <!-- ✅ Sticky sidebar dock -->
       <!-- Contributors strip -->
       <div id="contrib-strip" style="display:none"
         class="panel-label mb-7 mt-5 border border-border bg-surface px-4 py-3.5" data-label="CONTRIBUTORS">
@@ -1472,6 +1408,7 @@
       renderComparisonPanel();
       renderHeatmaps(committers, years);
       renderTable(committers);
+      renderSidebarDock();
     }
 
     // ── COMPARISON PANEL ──────────────────────────────────────────
@@ -2935,8 +2872,7 @@ ${(penaliseReverts && rc.isRevert) ? '<span class="tip-revert-pill">penalised</s
       renderTable(parsedData.committers);
       renderComparisonPanel();
 
-      // ✅ keep sticky metric selector in sync
-      renderStickyMetricTabs();
+      renderSidebarMetricList();
     }
 
     function setYear(y, btn) {
@@ -3218,46 +3154,32 @@ ${(penaliseReverts && rc.isRevert) ? '<span class="tip-revert-pill">penalised</s
       document.getElementById('import-banner').classList.remove('visible');
     }
 
-    function mountStickyDock() {
-      // ✅ stop docking the full contributor panel into the sticky bar
-      // const contrib = document.getElementById('contrib-strip');  // remove usage
+function mountStickyDock() {
+  // Render sidebar contents
+  renderSidebarDock();
 
-      // Dock the year filter (fine)
-      const yearFilter = document.getElementById('year-filter');
-      const yearSlot = document.getElementById('sticky-year-slot');
-      if (yearFilter && yearSlot && yearFilter.parentElement !== yearSlot) {
-        yearSlot.appendChild(yearFilter);
-      }
+  // Wire sticky toggles -> existing handlers
+  const mSticky = document.getElementById('include-merges-sticky');
+  const rSticky = document.getElementById('penalise-reverts-sticky');
 
-      // ✅ NEW: render compact contributor rail
-      renderStickyContribRail();
+  if (mSticky) {
+    mSticky.onchange = () => {
+      const mMain = document.getElementById('include-merges');
+      if (mMain) mMain.checked = mSticky.checked;
+      onMergeToggle();
+    };
+  }
 
-      // Metric selector (you already added earlier)
-      renderStickyMetricTabs();
+  if (rSticky) {
+    rSticky.onchange = () => {
+      const rMain = document.getElementById('penalise-reverts');
+      if (rMain) rMain.checked = rSticky.checked;
+      onRevertToggle();
+    };
+  }
 
-      // Wire sticky toggles -> existing handlers
-      const mSticky = document.getElementById('include-merges-sticky');
-      const rSticky = document.getElementById('penalise-reverts-sticky');
-
-      if (mSticky) {
-        mSticky.onchange = () => {
-          const mMain = document.getElementById('include-merges');
-          if (mMain) mMain.checked = mSticky.checked;
-          onMergeToggle();
-        };
-      }
-
-      if (rSticky) {
-        rSticky.onchange = () => {
-          const rMain = document.getElementById('penalise-reverts');
-          if (rMain) rMain.checked = rSticky.checked;
-          onRevertToggle();
-        };
-      }
-
-      syncStickyTogglesFromMain();
-    }
-
+  syncStickyTogglesFromMain();
+}
     function syncStickyTogglesFromMain() {
       const mMain = document.getElementById('include-merges');
       const rMain = document.getElementById('penalise-reverts');
@@ -3312,6 +3234,112 @@ ${(penaliseReverts && rc.isRevert) ? '<span class="tip-revert-pill">penalised</s
       </div>
     </div>
   `;
+    }
+
+    function renderSidebarMetricList() {
+      const slot = document.getElementById('sticky-metric-slot');
+      if (!slot) return;
+
+      const items = [{
+          key: 'commits',
+          label: 'Commits'
+        },
+        {
+          key: 'lines_added',
+          label: 'Lines Added'
+        },
+        {
+          key: 'lines_deleted',
+          label: 'Lines Deleted'
+        },
+        {
+          key: 'files',
+          label: 'Files Changed'
+        },
+        {
+          key: 'active_days',
+          label: 'Active Days'
+        },
+      ];
+
+      slot.innerHTML = items.map(it => `
+    <button class="sidebar-btn ${currentMetric === it.key ? 'active' : ''}"
+            onclick="setMetric('${it.key}', this)">
+      <span class="sidebar-dot" style="background:${currentMetric === it.key ? 'rgba(245,242,235,0.35)' : 'rgba(26,24,20,0.18)'}"></span>
+      <span class="sidebar-name">${esc(it.label)}</span>
+    </button>
+  `).join('');
+    }
+
+    function renderSidebarYearPills() {
+      const slot = document.getElementById('sticky-year-slot');
+      if (!slot || !parsedData) return;
+
+      const {
+        minDate,
+        maxDate
+      } = parsedData;
+      const minY = +minDate.slice(0, 4);
+      const maxY = +maxDate.slice(0, 4);
+
+      let html = `
+    <button class="sidebar-pill ${activeYear === 'all' ? 'active' : ''}" onclick="setYear('all', this)">All</button>
+  `;
+      for (let y = minY; y <= maxY; y++) {
+        html +=
+          `<button class="sidebar-pill ${activeYear == y ? 'active' : ''}" onclick="setYear(${y}, this)">${y}</button>`;
+      }
+      slot.innerHTML = html;
+    }
+
+    function renderSidebarContributors() {
+      const slot = document.getElementById('sticky-contrib-slot');
+      if (!slot || !parsedData) return;
+
+      const {
+        committers
+      } = parsedData;
+      const activeCommitters =
+        activeYear === 'all' ? committers : committers.filter(c => yrSum(c.commits) > 0);
+
+      const mkInit = (name) => (name || '?')
+        .split(' ')
+        .filter(Boolean)
+        .map(w => w[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
+
+      // compact label: Firstname + initial
+      const shortName = (name) => {
+        const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return '?';
+        if (parts.length === 1) return parts[0];
+        return `${parts[0]} ${parts[1][0]}.`;
+      };
+
+      slot.innerHTML = activeCommitters
+        .sort((a, b) => yrSum(b.commits) - yrSum(a.commits))
+        .map(c => {
+          const color = COLORS[c.colorIndex];
+          const label = shortName(c.displayName);
+          const sub = `${yrSum(c.commits).toLocaleString()} commits`;
+          return `
+        <button class="sidebar-btn" onclick="jumpToCommitter(${c.gi})" title="${esc(c.displayName)}">
+          <span class="sidebar-mini" style="background:${color}">${mkInit(c.displayName)}</span>
+          <span class="sidebar-main">
+            <span class="sidebar-name">${esc(label)}</span>
+            <span class="sidebar-subtxt">${esc(sub)}</span>
+          </span>
+        </button>
+      `;
+        }).join('');
+    }
+
+    function renderSidebarDock() {
+      renderSidebarContributors();
+      renderSidebarMetricList();
+      renderSidebarYearPills();
     }
   </script>
 </body>
