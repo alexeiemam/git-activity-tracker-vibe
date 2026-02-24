@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <!-- Recklessly robocrafted by an unholy combination of Claude Sonnet 4.5 and ChatGPT 5.2 -->
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -123,7 +124,7 @@
       color: #a07800;
     }
 
-    /* ✅ Sticky dock: keeps key controls visible while scrolling dashboard */
+    /* ✅ Sticky dock: prettier, more "designed" */
     .sticky-dock {
       position: sticky;
       top: 10px;
@@ -131,35 +132,130 @@
       margin: 12px 0 18px;
     }
 
-    /* ── Sticky dock polish ───────────────────────────── */
     .sticky-inner {
-      border-radius: 12px;
-      padding: 12px 14px;
-      gap: 14px;
-    }
-
-    .sticky-right {
+      display: flex;
       align-items: center;
       gap: 14px;
+
+      padding: 12px 14px;
+      border: 1px solid rgba(26, 24, 20, 0.14);
+      border-radius: 16px;
+
+      background: linear-gradient(180deg,
+          rgba(255, 254, 251, 0.92),
+          rgba(255, 254, 251, 0.82));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+
+      box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55);
     }
 
-    .sticky-options {
-      padding-left: 14px;
-      border-left: 1px solid var(--border2);
-      gap: 10px;
+    /* Subtle divider line that doesn't scream "table border" */
+    .sticky-divider {
+      width: 1px;
+      align-self: stretch;
+      background: linear-gradient(180deg,
+          transparent,
+          rgba(26, 24, 20, 0.14),
+          transparent);
     }
 
-    /* a subtle “control group” treatment for slots inside the dock */
     .sticky-slot {
+      min-width: 0;
       display: flex;
       align-items: center;
     }
 
-    /* ── Segmented metric control (new) ───────────────── */
+    /* Contributors become a compact "rail" */
+    .sticky-contrib-rail {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 260px;
+      max-width: 520px;
+      flex: 1;
+
+      padding: 6px 8px;
+      border: 1px solid rgba(26, 24, 20, 0.10);
+      background: rgba(245, 242, 235, 0.52);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .sticky-contrib-rail .rail-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding-left: 6px;
+      flex-shrink: 0;
+    }
+
+    .sticky-contrib-rail .rail-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .sticky-contrib-rail .rail-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Compact chip style inside dock */
+    .sticky-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(26, 24, 20, 0.10);
+      background: rgba(255, 255, 255, 0.55);
+      transition: transform 0.08s, border-color 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+
+    .sticky-chip:hover {
+      transform: translateY(-1px);
+      border-color: rgba(26, 24, 20, 0.28);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .sticky-chip .mini-avatar {
+      width: 18px !important;
+      height: 18px !important;
+      font-size: 0.55rem !important;
+    }
+
+    .sticky-chip .chip-name {
+      font-size: 0.62rem !important;
+      font-weight: 700 !important;
+    }
+
+    .sticky-chip .chip-sub {
+      display: none;
+    }
+
+    /* dock version: keep it clean */
+
+    /* Right side grouping */
+    .sticky-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    /* Metric segmented control (works with your renderStickyMetricTabs) */
     .sticky-metrics {
       display: inline-flex;
       align-items: center;
-      border: 1px solid var(--border);
+      border: 1px solid rgba(26, 24, 20, 0.14);
       background: rgba(245, 242, 235, 0.55);
       border-radius: 999px;
       overflow: hidden;
@@ -167,16 +263,17 @@
     }
 
     .sticky-metrics .metric-tab {
-      /* reuse your existing .metric-tab JS + active behavior */
-      border-bottom: 0 !important;
-      border-right: 1px solid var(--border2);
+      border: 0 !important;
+      border-right: 1px solid rgba(26, 24, 20, 0.10);
       padding: 7px 10px;
       margin: 0 !important;
+
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.62rem;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: 0.06em;
       text-transform: uppercase;
+
       color: var(--muted);
       background: transparent;
       transition: background 0.15s, color 0.15s, transform 0.08s;
@@ -195,47 +292,52 @@
       transform: translateY(1px);
     }
 
-    /* Active state: make it look like a selected pill segment */
     .sticky-metrics .metric-tab.active {
       background: var(--ink) !important;
       color: var(--bg) !important;
     }
 
-    .sticky-slot {
-      min-width: 0;
+    /* Year pills inside dock get a tighter look */
+    #sticky-year-slot .year-filter {
+      padding: 6px 8px !important;
+      border: 1px solid rgba(26, 24, 20, 0.12) !important;
+      background: rgba(245, 242, 235, 0.52) !important;
+      border-radius: 999px !important;
     }
 
-    .sticky-right {
-      margin-left: auto;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
+    /* Remove the big "Year:" label vibe; keep it subtle */
+    #sticky-year-slot .year-filter-label {
+      font-size: 0.56rem !important;
+      letter-spacing: 0.10em !important;
+      opacity: 0.85;
     }
 
+    #sticky-year-slot .year-btn {
+      padding: 6px 10px !important;
+      border-radius: 999px !important;
+      border-color: rgba(26, 24, 20, 0.12) !important;
+    }
+
+    #sticky-year-slot .year-btn.active {
+      background: var(--ink) !important;
+      color: var(--bg) !important;
+      border-color: var(--ink) !important;
+    }
+
+    /* Toggles become a tidy "filters" capsule */
     .sticky-options {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+      display: inline-flex;
       align-items: center;
-      padding-left: 10px;
-      border-left: 1px solid var(--border2);
+      gap: 10px;
+      padding: 7px 10px;
+      border: 1px solid rgba(26, 24, 20, 0.12);
+      background: rgba(245, 242, 235, 0.52);
+      border-radius: 999px;
     }
 
-    /* Make the embedded contributor strip feel like part of the dock */
-    #sticky-contrib-slot #contrib-strip {
-      margin: 0 !important;
-      padding: 0 !important;
-      border: 0 !important;
-      background: transparent !important;
-    }
-
-    /* Make year filter sit cleanly in the dock */
-    #sticky-year-slot #year-filter {
-      padding: 0 !important;
-      border: 0 !important;
-      background: transparent !important;
+    .sticky-options .merge-toggle-label {
+      gap: 8px !important;
+      font-size: 0.64rem !important;
     }
 
     /* Active state styling for "tab-like" buttons (JS toggles .active) */
@@ -3033,21 +3135,20 @@ ${(penaliseReverts && rc.isRevert) ? '<span class="tip-revert-pill">penalised</s
     }
 
     function mountStickyDock() {
-      // Move existing nodes into dock slots (no duplicate rendering)
-      const contrib = document.getElementById('contrib-strip');
+      // ✅ stop docking the full contributor panel into the sticky bar
+      // const contrib = document.getElementById('contrib-strip');  // remove usage
+
+      // Dock the year filter (fine)
       const yearFilter = document.getElementById('year-filter');
-
-      const contribSlot = document.getElementById('sticky-contrib-slot');
       const yearSlot = document.getElementById('sticky-year-slot');
-
-      if (contrib && contribSlot && contrib.parentElement !== contribSlot) {
-        contribSlot.appendChild(contrib);
-      }
       if (yearFilter && yearSlot && yearFilter.parentElement !== yearSlot) {
         yearSlot.appendChild(yearFilter);
       }
 
-      // ✅ NEW: build metric tabs in sticky
+      // ✅ NEW: render compact contributor rail
+      renderStickyContribRail();
+
+      // Metric selector (you already added earlier)
       renderStickyMetricTabs();
 
       // Wire sticky toggles -> existing handlers
@@ -3082,6 +3183,51 @@ ${(penaliseReverts && rc.isRevert) ? '<span class="tip-revert-pill">penalised</s
 
       if (mMain && mSticky) mSticky.checked = !!mMain.checked;
       if (rMain && rSticky) rSticky.checked = !!rMain.checked;
+    }
+
+    function renderStickyContribRail() {
+      const slot = document.getElementById('sticky-contrib-slot');
+      if (!slot || !parsedData) return;
+
+      const {
+        committers
+      } = parsedData;
+      const activeCommitters =
+        activeYear === 'all' ? committers : committers.filter(c => yrSum(c.commits) > 0);
+
+      if (!activeCommitters.length) {
+        slot.innerHTML = '';
+        return;
+      }
+
+      const mkInit = (name) => (name || '?')
+        .split(' ')
+        .filter(Boolean)
+        .map(w => w[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
+
+      const list = [...activeCommitters].sort((a, b) => yrSum(b.commits) - yrSum(a.commits));
+
+      slot.innerHTML = `
+    <div class="sticky-contrib-rail">
+      <div class="rail-label">Contributors</div>
+      <div class="rail-scroll">
+        ${list.map(c => {
+          const color = COLORS[c.colorIndex];
+          const initials = mkInit(c.displayName);
+          return `
+            <div class="sticky-chip" onclick="jumpToCommitter(${c.gi})" title="${esc(c.displayName)}">
+              <div class="mini-avatar flex items-center justify-center rounded-full font-mono font-bold text-white"
+                   style="background:${color}">${initials}</div>
+              <div class="chip-name font-mono text-ink">${esc(c.displayName)}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
     }
   </script>
 </body>
