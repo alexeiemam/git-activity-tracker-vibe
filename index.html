@@ -131,17 +131,74 @@
       margin: 12px 0 18px;
     }
 
+    /* ── Sticky dock polish ───────────────────────────── */
     .sticky-inner {
+      border-radius: 12px;
+      padding: 12px 14px;
+      gap: 14px;
+    }
+
+    .sticky-right {
+      align-items: center;
+      gap: 14px;
+    }
+
+    .sticky-options {
+      padding-left: 14px;
+      border-left: 1px solid var(--border2);
+      gap: 10px;
+    }
+
+    /* a subtle “control group” treatment for slots inside the dock */
+    .sticky-slot {
       display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 10px 12px;
+      align-items: center;
+    }
+
+    /* ── Segmented metric control (new) ───────────────── */
+    .sticky-metrics {
+      display: inline-flex;
+      align-items: center;
       border: 1px solid var(--border);
-      background: rgba(255, 254, 251, 0.92);
-      /* surface w/ a hint of translucency */
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.10);
+      background: rgba(245, 242, 235, 0.55);
+      border-radius: 999px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+
+    .sticky-metrics .metric-tab {
+      /* reuse your existing .metric-tab JS + active behavior */
+      border-bottom: 0 !important;
+      border-right: 1px solid var(--border2);
+      padding: 7px 10px;
+      margin: 0 !important;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: transparent;
+      transition: background 0.15s, color 0.15s, transform 0.08s;
+    }
+
+    .sticky-metrics .metric-tab:last-child {
+      border-right: 0;
+    }
+
+    .sticky-metrics .metric-tab:hover {
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .sticky-metrics .metric-tab:active {
+      transform: translateY(1px);
+    }
+
+    /* Active state: make it look like a selected pill segment */
+    .sticky-metrics .metric-tab.active {
+      background: var(--ink) !important;
+      color: var(--bg) !important;
     }
 
     .sticky-slot {
@@ -521,8 +578,13 @@
 
           <!-- Right: year selector + options -->
           <div class="sticky-right">
+            <!-- Metric selector (new) -->
+            <div id="sticky-metric-slot" class="sticky-slot"></div>
+
+            <!-- Year selector -->
             <div id="sticky-year-slot" class="sticky-slot"></div>
 
+            <!-- Toggles -->
             <div class="sticky-options">
               <label
                 class="merge-toggle-label inline-flex cursor-pointer select-none items-center gap-2 font-mono text-[0.68rem] text-muted">
@@ -1564,6 +1626,26 @@
         } else cur = 1;
       }
       return max;
+    }
+
+    function renderStickyMetricTabs() {
+      const slot = document.getElementById('sticky-metric-slot');
+      if (!slot) return;
+
+      slot.innerHTML = `
+    <div class="sticky-metrics" role="tablist" aria-label="Metric">
+      <button class="metric-tab ${currentMetric==='commits'?'active':''}"
+        onclick="setMetric('commits',this)">Commits</button>
+      <button class="metric-tab ${currentMetric==='lines_added'?'active':''}"
+        onclick="setMetric('lines_added',this)">Lines Added</button>
+      <button class="metric-tab ${currentMetric==='lines_deleted'?'active':''}"
+        onclick="setMetric('lines_deleted',this)">Lines Deleted</button>
+      <button class="metric-tab ${currentMetric==='files'?'active':''}"
+        onclick="setMetric('files',this)">Files Changed</button>
+      <button class="metric-tab ${currentMetric==='active_days'?'active':''}"
+        onclick="setMetric('active_days',this)">Active Days</button>
+    </div>
+  `;
     }
 
     function longestConsecutiveWorkdays(days) {
@@ -2666,6 +2748,9 @@ ${(penaliseReverts && rc.isRevert) ? '<span class="tip-revert-pill">penalised</s
       refreshCells();
       renderTable(parsedData.committers);
       renderComparisonPanel();
+
+      // ✅ keep sticky metric selector in sync
+      renderStickyMetricTabs();
     }
 
     function setYear(y, btn) {
@@ -2962,13 +3047,15 @@ ${(penaliseReverts && rc.isRevert) ? '<span class="tip-revert-pill">penalised</s
         yearSlot.appendChild(yearFilter);
       }
 
+      // ✅ NEW: build metric tabs in sticky
+      renderStickyMetricTabs();
+
       // Wire sticky toggles -> existing handlers
       const mSticky = document.getElementById('include-merges-sticky');
       const rSticky = document.getElementById('penalise-reverts-sticky');
 
       if (mSticky) {
         mSticky.onchange = () => {
-          // keep original checkbox (input panel) in sync
           const mMain = document.getElementById('include-merges');
           if (mMain) mMain.checked = mSticky.checked;
           onMergeToggle();
