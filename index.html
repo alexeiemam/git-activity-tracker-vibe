@@ -1069,7 +1069,8 @@
       shareMetric = 'commits';
 
     let hiddenSeries = new Set();
-
+    // ✅ Per-committer commits-by-day (heatmap years) expand state
+    let expandedCommitDayHeatmaps = new Set(); // stores committer gi values
     const COLORS = [
       '#c0392b', '#2980b9', '#16a085', '#8e44ad', '#d35400',
       '#27ae60', '#1a6b8a', '#b07d12', '#5d2e8c', '#c0586a'
@@ -1090,6 +1091,17 @@
       } catch {
         return new Set();
       }
+    }
+
+    function toggleCommitDayHeatmap(gi, e) {
+      if (e && e.stopPropagation) e.stopPropagation(); // don't collapse the whole section
+      gi = +gi;
+      if (!Number.isFinite(gi)) return;
+
+      if (expandedCommitDayHeatmaps.has(gi)) expandedCommitDayHeatmaps.delete(gi);
+      else expandedCommitDayHeatmaps.add(gi);
+
+      render(); // re-render heatmaps with the new year span
     }
 
     function savePinnedContributors() {
@@ -2286,6 +2298,38 @@
         </div>
 
         <div class="committer-body px-6 pb-7 pt-6">
+          ${
+            (activeYear === 'all' && years.length > 1)
+            ? `
+              <div class="mb-3 flex items-center justify-between gap-3">
+                <div class="font-mono text-[0.6rem] uppercase tracking-[0.08em] text-muted">
+                  Commits by day
+                </div>
+
+                <button
+                  class="border border-border bg-transparent px-3 py-1 font-mono text-[0.62rem] text-muted transition hover:border-ink hover:text-ink"
+                  onclick="toggleCommitDayHeatmap(${c.gi}, event)"
+                >
+                  ${
+                    expandedCommitDayHeatmaps.has(c.gi)
+                      ? `
+                        <span class="text-ink">Showing all years</span>
+                        <span class="opacity-60"> · Collapse to 1 year</span>
+                      `
+                      : `
+                        <span class="text-ink">Showing ${years[years.length - 1]}</span>
+                        <span class="opacity-60"> · Show all years</span>
+                      `
+                  }
+                </button>
+              </div>
+            ` : `
+                <div class="mb-3 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-muted">
+                  Commits by day
+                </div>
+              `
+          }
+
           <div id="yr-${ci}"></div>
 
           <div class="legend mt-4 flex items-center gap-1.5 font-mono text-[0.6rem] text-muted">
@@ -2311,7 +2355,16 @@
       `;
         container.appendChild(section);
 
-        const displayYears = activeYear === 'all' ? years : [+activeYear];
+        const latestYear = years[years.length - 1];
+
+        let displayYears;
+        if (activeYear === 'all') {
+          // collapsed => 1 year (latest); expanded => all years
+          displayYears = expandedCommitDayHeatmaps.has(c.gi) ? years : [latestYear];
+        } else {
+          // active year filter forces 1 year regardless of expanded/collapsed
+          displayYears = [+activeYear];
+        }
         const metMap = metricMap(c);
         const mxVal = maxForMetric(metMap);
         const yrContainer = section.querySelector(`#yr-${ci}`);
