@@ -1873,7 +1873,14 @@
       const {
         committers
       } = parsedData;
-      const vals = committers.map(c => shareMetric === 'active_days' ? c.totalActiveDays : yrSum(c[shareMetric]));
+      const vals = committers.map(c => {
+        if (shareMetric === 'active_days') {
+          if (activeYear === 'all') return c.totalActiveDays;
+          const p = String(activeYear);
+          return [...c.activeDays].filter(d => d.startsWith(p)).length;
+        }
+        return yrSum(c[shareMetric]);
+      });
       const total = vals.reduce((a, b) => a + b, 0) || 1;
       const labels = {
         commits: 'commits',
