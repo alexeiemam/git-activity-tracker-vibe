@@ -1,0 +1,474 @@
+/* src/styles.css */
+
+/* Base palette (matches the JS-rendered CSS variable usage) */
+:root{
+  --bg:#0f0f0f;
+  --surface:#161616;
+  --ink:#f5f2eb;
+  --muted:rgba(245,242,235,0.55);
+  --border:rgba(245,242,235,0.14);
+  --border2:rgba(245,242,235,0.09);
+
+  --added:#7ec87e;
+  --deleted:#e08080;
+  --accent:#c9a227;
+
+  --c0:rgba(26,24,20,0.25);
+  --c1:rgba(245,242,235,0.12);
+  --c2:rgba(245,242,235,0.22);
+  --c3:rgba(245,242,235,0.34);
+  --c4:rgba(245,242,235,0.50);
+
+  --mergeborder: rgba(201,162,39,0.35);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+}
+
+.hidden{display:none !important}
+
+.container{
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 22px 18px 40px;
+}
+
+.topbar{
+  position: sticky;
+  top:0;
+  z-index: 50;
+  background: rgba(15,15,15,0.88);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border2);
+}
+.topbar-inner{
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 14px 18px;
+  display:flex;
+  gap:16px;
+  align-items:center;
+  justify-content:space-between;
+}
+.brand-title{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.brand-sub{
+  margin-top:2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.topbar-controls{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.card{
+  border:1px solid var(--border2);
+  background: var(--surface);
+  padding: 18px;
+  margin: 16px 0;
+}
+.card-head{
+  margin-bottom: 14px;
+}
+.card-title{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.card-sub{
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.grid2{
+  display:grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap:16px;
+}
+@media (max-width: 900px){
+  .grid2{grid-template-columns:1fr}
+}
+
+.label{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  letter-spacing:0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.textarea{
+  width:100%;
+  border:1px solid var(--border);
+  background: rgba(0,0,0,0.25);
+  color: var(--ink);
+  padding: 12px;
+  outline:none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.textarea:focus{border-color: rgba(201,162,39,0.6)}
+
+.error{
+  margin-top: 10px;
+  color: #ffb3b3;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-top: 10px;
+}
+.spacer{flex:1}
+
+.ctrl{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.ctrl-label{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+select, input[type="file"]{
+  border:1px solid var(--border);
+  background: rgba(0,0,0,0.25);
+  color: var(--ink);
+  padding: 7px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  outline:none;
+}
+select:focus{border-color: rgba(201,162,39,0.6)}
+
+.toggle{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+.toggle input{accent-color: var(--accent)}
+
+.btn{
+  border:1px solid var(--border);
+  background: transparent;
+  color: var(--ink);
+  padding: 8px 12px;
+  cursor:pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+}
+.btn:hover{border-color: rgba(245,242,235,0.35)}
+.btn.small{padding:6px 10px;font-size:11px}
+.btn.primary{
+  border-color: rgba(201,162,39,0.65);
+  color: var(--ink);
+}
+.btn.primary:hover{border-color: rgba(201,162,39,0.9)}
+
+.cmd-row{
+  display:flex;
+  gap:10px;
+  align-items:stretch;
+  margin: 10px 0 18px;
+}
+.cmd{
+  flex:1;
+  margin:0;
+  padding: 10px 12px;
+  border:1px solid var(--border2);
+  background: rgba(0,0,0,0.25);
+  overflow:auto;
+}
+.cmd code{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  color: rgba(245,242,235,0.9);
+}
+
+.banner{
+  display:none;
+  border:1px solid rgba(126,200,126,0.35);
+  background: rgba(126,200,126,0.12);
+  padding: 10px 12px;
+  margin: 12px 0;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.banner.visible{display:flex}
+
+.summary-bar{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+@media (max-width: 900px){
+  .summary-bar{grid-template-columns: repeat(2, 1fr);}
+}
+.summary-bar .stat-box{
+  border: 1px solid var(--border2);
+}
+
+.text-added{color:var(--added)}
+.text-deleted{color:var(--deleted)}
+.text-ink{color:var(--ink)}
+.text-muted{color:var(--muted)}
+.bg-surface{background:var(--surface)}
+.bg-bg{background:var(--bg)}
+.bg-c0{background:var(--c0)}
+.border-border{border-color:var(--border)}
+.border-border2{border-color:var(--border2)}
+
+.layout{
+  display:grid;
+  grid-template-columns: 300px 1fr;
+  gap: 14px;
+  align-items:start;
+}
+@media (max-width: 1020px){
+  .layout{grid-template-columns:1fr}
+}
+.sidebar{
+  position: sticky;
+  top: 68px;
+}
+.sidebar-card{
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.sidebar-title{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  letter-spacing:0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.sidebar-subtitle{
+  margin-top: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  letter-spacing:0.08em;
+  text-transform: uppercase;
+  color: rgba(245,242,235,0.35);
+}
+.sidebar-meta{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  color: rgba(245,242,235,0.45);
+  margin-bottom: 10px;
+}
+
+.sidebar-stack{display:flex;flex-direction:column;gap:8px}
+.sidebar-btn{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  border: 1px solid var(--border2);
+  background: rgba(0,0,0,0.18);
+  padding: 8px 10px;
+  cursor:pointer;
+}
+.sidebar-btn:hover{border-color: rgba(245,242,235,0.25)}
+.sidebar-btn.active{border-color: rgba(245,242,235,0.35)}
+
+.sidebar-dot{
+  width:10px;height:10px;border-radius:50%;
+}
+.sidebar-mini{
+  width:22px;height:22px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+.sidebar-main{min-width:0;display:flex;flex-direction:column;gap:2px}
+.sidebar-name{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.sidebar-subtxt{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  color: rgba(245,242,235,0.45);
+}
+.sidebar-pin{
+  margin-left:auto;
+  border:0;
+  background: transparent;
+  color: rgba(245,242,235,0.5);
+  cursor:pointer;
+  font-size: 14px;
+}
+.sidebar-pin.pinned{color: var(--accent)}
+.sidebar-empty{
+  border: 1px dashed var(--border2);
+  padding: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  color: rgba(245,242,235,0.4);
+}
+
+.sidebar-pills{display:flex;flex-wrap:wrap;gap:8px}
+.sidebar-pill{
+  border:1px solid var(--border2);
+  background: rgba(0,0,0,0.16);
+  color: rgba(245,242,235,0.75);
+  padding: 6px 10px;
+  cursor:pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+}
+.sidebar-pill.active{border-color: rgba(245,242,235,0.35); color: var(--ink)}
+
+.comp-tabs{
+  display:flex;
+  gap:8px;
+  margin-bottom: 12px;
+  flex-wrap:wrap;
+}
+.comp-tab{
+  border:1px solid var(--border2);
+  background: rgba(0,0,0,0.16);
+  color: rgba(245,242,235,0.75);
+  padding: 7px 10px;
+  cursor:pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+}
+.comp-tab.active{border-color: rgba(245,242,235,0.35); color: var(--ink)}
+
+.chart-wrap{position:relative}
+.timeline-cursor{
+  position:absolute;
+  top:0;
+  width:1px;
+  background: rgba(245,242,235,0.25);
+  display:none;
+}
+.timeline-tip{
+  position:absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid var(--border2);
+  padding: 10px 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  line-height: 1.55;
+  display:none;
+  max-width: 320px;
+}
+
+.legend{
+  margin-top: 12px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  color: rgba(245,242,235,0.7);
+}
+
+.tooltip{
+  position: fixed;
+  z-index: 1500;
+  background: rgba(0,0,0,0.86);
+  border: 1px solid var(--border2);
+  max-width: 520px;
+  pointer-events: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+/* Heatmap cells are rendered with dataset level */
+.heatmap-cell{
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--c0);
+}
+.heatmap-cell[data-level="1"]{background: var(--c1)}
+.heatmap-cell[data-level="2"]{background: var(--c2)}
+.heatmap-cell[data-level="3"]{background: var(--c3)}
+.heatmap-cell[data-level="4"]{background: var(--c4)}
+.heatmap-cell.faded{opacity:0.25}
+
+.table-wrap{overflow:auto;border:1px solid var(--border2)}
+.table{
+  width:100%;
+  border-collapse: collapse;
+  min-width: 980px;
+}
+.table th{
+  position: sticky;
+  top:0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(8px);
+  text-align:left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  letter-spacing:0.06em;
+  text-transform: uppercase;
+  color: rgba(245,242,235,0.55);
+}
+.table td{
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border2);
+  font-size: 12px;
+}
+
+/* Merge UI */
+.merge-groups{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.merge-group{
+  border:1px solid var(--border2);
+  background: rgba(0,0,0,0.16);
+  padding: 12px;
+}
+.suggestion-badge{
+  border: 1px solid var(--mergeborder);
+}
+
+/* Simple H2H containers */
+.h2h-header{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+.h2h-metrics{
+  border: 1px solid var(--border2);
+  margin-top: 12px;
+}
