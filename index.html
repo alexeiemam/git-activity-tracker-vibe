@@ -2374,7 +2374,7 @@
             ? `
               <div class="mb-3 flex items-center justify-between gap-3">
                 <div class="font-mono text-[0.6rem] uppercase tracking-[0.08em] text-muted">
-                  Commits by day
+                  --
                 </div>
 
                 <button
@@ -2396,7 +2396,7 @@
               </div>
             ` : `
                 <div class="mb-3 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-muted">
-                  Commits by day
+                  --
                 </div>
               `
           }
@@ -3502,23 +3502,29 @@
       const rowHTML = (c, isPinned) => {
         const color = COLORS[c.colorIndex];
         const label = shortName(c.displayName);
-        const sub = `${yrSum(c.commits).toLocaleString()} commits`;
+
+        const v = metricValueForContributor(c, currentMetric);
+        const unit = (currentMetric === 'active_days') ?
+          'days' :
+          metricLabel(currentMetric).toLowerCase();
+
+        const sub = `${v.toLocaleString()} ${unit}` + (activeYear === 'all' ? '' : ` · ${activeYear}`);
 
         return `
-        <div class="sidebar-btn" role="button" tabindex="0" onclick="jumpToCommitter(${c.gi})" title="${esc(c.displayName)}">
-          <span class="sidebar-mini" style="background:${color}">${mkInit(c.displayName)}</span>
-          <span class="sidebar-main">
-            <span class="sidebar-name">${esc(label)}</span>
-            <span class="sidebar-subtxt">${esc(sub)}</span>
-          </span>
-          <button class="sidebar-pin ${isPinned ? 'pinned' : ''}"
-                  title="${isPinned ? 'Unpin' : 'Pin'}"
-                  aria-label="${isPinned ? 'Unpin contributor' : 'Pin contributor'}"
-                  onclick="toggleContributorPin(event, ${c.gi})">
-            ${isPinned ? '★' : '☆'}
-          </button>
-        </div>
-      `;
+          <div class="sidebar-btn" role="button" tabindex="0" onclick="jumpToCommitter(${c.gi})" title="${esc(c.displayName)}">
+            <span class="sidebar-mini" style="background:${color}">${mkInit(c.displayName)}</span>
+            <span class="sidebar-main">
+              <span class="sidebar-name">${esc(label)}</span>
+              <span class="sidebar-subtxt">${esc(sub)}</span>
+            </span>
+            <button class="sidebar-pin ${isPinned ? 'pinned' : ''}"
+                    title="${isPinned ? 'Unpin' : 'Pin'}"
+                    aria-label="${isPinned ? 'Unpin contributor' : 'Pin contributor'}"
+                    onclick="toggleContributorPin(event, ${c.gi})">
+              ${isPinned ? '★' : '☆'}
+            </button>
+          </div>
+        `;
       };
 
       if (!pinnedList.length) {
