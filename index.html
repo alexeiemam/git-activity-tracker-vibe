@@ -1701,7 +1701,8 @@
       const ta = committers.reduce((a, c) => a + yrSum(c.lines_added), 0);
       const td = committers.reduce((a, c) => a + yrSum(c.lines_deleted), 0);
 
-      const activeCommitters = (activeYear === 'all') ? committers : committers.filter(c => metricValueForContributor(c, currentMetric) > 0);
+      const activeCommitters = (activeYear === 'all') ? committers : committers.filter(c => metricValueForContributor(c,
+        currentMetric) > 0);
 
       document.getElementById('summary-bar').innerHTML =
         `<div class="stat-box bg-surface px-5 py-4">
@@ -1721,11 +1722,12 @@
           <div class="value font-mono text-[1.6rem] font-semibold leading-none text-deleted">−${td.toLocaleString()}</div>
        </div>`;
 
-      renderContributorStrip();
+      // renderContributorStrip(); // ✅ remove this
       renderComparisonPanel();
       renderHeatmaps(committers, years);
       renderTable(committers);
       renderSidebarDock();
+      hideExternalControls(); // ✅ ensure legacy UI stays suppressed at end
     }
 
     // ── COMPARISON PANEL ──────────────────────────────────────────
@@ -3381,13 +3383,17 @@
 
     function setMetric(m, btn) {
       currentMetric = m;
+
+      // If legacy metric tabs exist, keep them consistent (safe even if hidden)
       document.querySelectorAll('.metric-tab').forEach(t => t.classList.remove('active'));
-      if (btn) btn.classList.add('active');
+      if (btn && btn.classList) btn.classList.add('active');
+
       refreshCells();
       renderTable(parsedData.committers);
       renderComparisonPanel();
-      renderSidebarMetricList();
-      renderSidebarContributors();
+
+      // ✅ One call to redraw all sidebar UI that depends on metric
+      renderSidebarDock();
     }
 
     function setYear(y, btn) {
@@ -3481,12 +3487,14 @@
         .filter(c => pinnedContributors.has(c.gi))
         .sort((a, b) => metricValueForContributor(b, currentMetric) - metricValueForContributor(a, currentMetric))
 
-      const activeList = (activeYear === 'all' ? committers : committers.filter(c => metricValueForContributor(c, currentMetric) > 0))
+      const activeList = (activeYear === 'all' ? committers : committers.filter(c => metricValueForContributor(c,
+          currentMetric) > 0))
         .filter(c => !pinnedContributors.has(c.gi))
         .sort((a, b) => metricValueForContributor(b, currentMetric) - metricValueForContributor(a, currentMetric))
 
       if (metaEl) {
-        const count = (activeYear === 'all') ? committers.length : committers.filter(c => metricValueForContributor(c, currentMetric) > 0).length;
+        const count = (activeYear === 'all') ? committers.length : committers.filter(c => metricValueForContributor(c,
+          currentMetric) > 0).length;
         metaEl.textContent = activeYear === 'all' ? `${count} total` : `${count} active in ${activeYear}`;
       }
 
