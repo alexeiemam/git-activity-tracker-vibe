@@ -1626,6 +1626,55 @@
       return Object.entries(map || {}).filter(([d]) => d.startsWith(p)).reduce((a, [, v]) => a + v, 0);
     }
 
+    function metricLabel(key) {
+      const labels = {
+        commits: 'Commits',
+        lines_added: 'Lines Added',
+        lines_deleted: 'Lines Deleted',
+        files: 'Files Changed',
+        active_days: 'Active Days',
+        releases: 'Releases',
+      };
+      return labels[key] || key;
+    }
+
+    function metricValueForContributor(c, key) {
+      if (!c) return 0;
+
+      if (key === 'active_days') {
+        if (activeYear === 'all') return c.totalActiveDays || 0;
+        const p = String(activeYear);
+        return [...(c.activeDays || [])].filter(d => d.startsWith(p)).length;
+      }
+
+      // maps are stored by day: c.commits, c.lines_added, c.files, c.releases, etc
+      return yrSum(c[key] || {});
+    }
+
+    function hideExternalControls() {
+      // Year selectors outside sidebar
+      const yf = document.getElementById('year-filter');
+      if (yf) yf.style.display = 'none';
+
+      // Contributor strip outside sidebar
+      const cs = document.getElementById('contrib-strip');
+      if (cs) cs.style.display = 'none';
+
+      // Metric selectors outside sidebar (any legacy tabs/buttons)
+      document.querySelectorAll('.metric-tab, .share-metric-btn').forEach(el => {
+        // hide their container if possible, otherwise hide the element
+        const parent = el.closest(
+          '#metric-tabs, .metric-tabs, .metric-tabs-wrap, #share-metrics, .share-metrics') || el;
+        parent.style.display = 'none';
+      });
+
+      // If you have any other legacy “selector rows”, hide safely:
+      ['metric-tabs', 'share-metrics', 'year-filter', 'contrib-strip'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+    }
+
     function render() {
       const {
         committers,
@@ -1636,7 +1685,7 @@
       // ✅ ensure dock exists + toggles are synced (safe to call repeatedly)
       mountStickyDock();
       syncStickyTogglesFromMain();
-
+      hideExternalControls();
       const minY = +minDate.slice(0, 4),
         maxY = +maxDate.slice(0, 4);
       const years = [];
@@ -1652,7 +1701,7 @@
       const ta = committers.reduce((a, c) => a + yrSum(c.lines_added), 0);
       const td = committers.reduce((a, c) => a + yrSum(c.lines_deleted), 0);
 
-      const activeCommitters = (activeYear === 'all') ? committers : committers.filter(c => yrSum(c.commits) > 0);
+      const activeCommitters = (activeYear === 'all') ? committers : committers.filter(c => metricValueForContributor(c, currentMetric) > 0);
 
       document.getElementById('summary-bar').innerHTML =
         `<div class="stat-box bg-surface px-5 py-4">
@@ -1873,37 +1922,50 @@
       const {
         committers
       } = parsedData;
-      const vals = committers.map(c => {
-        if (shareMetric === 'active_days') {
-          if (activeYear === 'all') return c.totalActiveDays;
-          const p = String(activeYear);
-          return [...c.activeDays].filter(d => d.startsWith(p)).length;
-        }
-        return yrSum(c[shareMetric]);
-      });
-      const total = vals.reduce((a, b) => a + b, 0) || 1;
-      const labels = {
-        commits: 'commits',
-        lines_added: 'lines added',
-        lines_deleted: 'lines deleted',
-        files: 'files changed',
-        active_days: 'active days',
-        releases: 'releases'
-      };
 
-      document.getElementById('share-bars').innerHTML = committers.map((c, i) => {
-        const val = vals[i],
-          pct = (val / total * 100).toFixed(1);
+      // Share is now controlled by the sidebar metric selection
+      const key = currentMetric;
+
+      const vals = committers.map(c => metricValueForContributor(c, key));
+      const total = vals.reduce((a, b) => a + b, 0) || 1;
+
+      // Highlight the current metric near the share viz
+      const label = metricLabel(key);
+      const scope = activeYear === 'all' ? 'All years' : `Year ${activeYear}`;
+      const header = `
+    <div class="mb-3 flex items-center justify-between">
+      <div class="font-mono text-[0.6rem] uppercase tracking-[0.08em] text-muted">Metric</div>
+      <div class="inline-flex items-center gap-2 rounded-full border border-border bg-bg px-3 py-1 font-mono text-[0.65rem] text-ink">
+        <span class="opacity-70">${esc(label)}</span>
+        <span class="opacity-30">·</span>
+        <span class="opacity-70">${esc(scope)}</span>
+      </div>
+    </div>
+  `;
+
+      // Put the highlight above the bars (share panel container must exist)
+      const barsEl = document.getElementById('share-bars');
+      if (!barsEl) return;
+
+      // Render header + bars
+      barsEl.innerHTML = header + committers.map((c, i) => {
+        const val = vals[i];
+        const pct = (val / total * 100).toFixed(1);
         const color = COLORS[c.colorIndex];
+
+        // label text for the right side
+        const unit = (key === 'active_days') ? 'days' : label.toLowerCase();
+
         return `<div class="share-row mb-2.5 flex items-center gap-3">
-        <div class="share-name w-[130px] flex-shrink-0 truncate font-mono text-[0.7rem] text-ink" title="${esc(c.displayName)}">${esc(c.displayName)}</div>
-        <div class="share-bar-track h-[22px] flex-1 overflow-hidden rounded-[2px] bg-c0">
-          <div class="share-bar-fill flex h-full items-center rounded-[2px] transition-[width] duration-500 ease-[cubic-bezier(.22,.61,.36,1)]" style="width:${pct}%;background:${color}">
-            ${+pct > 8 ? `<span class="share-pct pl-2 font-mono text-[0.6rem] text-white/90 whitespace-nowrap">${pct}%</span>` : ''}
-          </div>
+      <div class="share-name w-[130px] flex-shrink-0 truncate font-mono text-[0.7rem] text-ink" title="${esc(c.displayName)}">${esc(c.displayName)}</div>
+      <div class="share-bar-track h-[22px] flex-1 overflow-hidden rounded-[2px] bg-c0">
+        <div class="share-bar-fill flex h-full items-center rounded-[2px] transition-[width] duration-500 ease-[cubic-bezier(.22,.61,.36,1)]"
+             style="width:${pct}%;background:${color}">
+          ${+pct > 8 ? `<span class="share-pct pl-2 font-mono text-[0.6rem] text-white/90 whitespace-nowrap">${pct}%</span>` : ''}
         </div>
-        <div class="share-abs w-[100px] flex-shrink-0 text-right font-mono text-[0.62rem] text-muted">${val.toLocaleString()} ${labels[shareMetric]}</div>
-      </div>`;
+      </div>
+      <div class="share-abs w-[120px] flex-shrink-0 text-right font-mono text-[0.62rem] text-muted">${val.toLocaleString()} ${esc(unit)}</div>
+    </div>`;
       }).join('');
     }
 
@@ -3077,7 +3139,7 @@
 
       const activeCommitters = (activeYear === 'all') ?
         committers :
-        committers.filter(c => yrSum(c.commits) > 0);
+        committers.filter(c => metricValueForContributor(c, currentMetric) > 0);
 
       const strip = document.getElementById('contrib-strip');
       const meta = document.getElementById('contrib-strip-meta');
@@ -3106,9 +3168,9 @@
       chips.innerHTML = list.map(c => {
         const color = COLORS[c.colorIndex];
         const initials = mkInitLocal(c.displayName);
-        const sub = activeYear === 'all' ?
-          `${yrSum(c.commits).toLocaleString()} commits` :
-          `${yrSum(c.commits).toLocaleString()} commits in ${activeYear}`;
+        const v = metricValueForContributor(c, currentMetric);
+        const unit = currentMetric === 'active_days' ? 'days' : metricLabel(currentMetric).toLowerCase();
+        const sub = `${v.toLocaleString()} ${unit}` + (activeYear === 'all' ? '' : ` · ${activeYear}`);
 
         return `
         <div class="contrib-chip max-w-[320px] cursor-pointer inline-flex items-center gap-2 rounded-full border border-border bg-bg px-3 py-1.5 transition hover:-translate-y-[1px] hover:border-ink hover:bg-[#fffef6]"
@@ -3325,6 +3387,7 @@
       renderTable(parsedData.committers);
       renderComparisonPanel();
       renderSidebarMetricList();
+      renderSidebarContributors();
     }
 
     function setYear(y, btn) {
@@ -3416,14 +3479,14 @@
 
       const pinnedList = committers
         .filter(c => pinnedContributors.has(c.gi))
-        .sort((a, b) => yrSum(b.commits) - yrSum(a.commits));
+        .sort((a, b) => metricValueForContributor(b, currentMetric) - metricValueForContributor(a, currentMetric))
 
-      const activeList = (activeYear === 'all' ? committers : committers.filter(c => yrSum(c.commits) > 0))
+      const activeList = (activeYear === 'all' ? committers : committers.filter(c => metricValueForContributor(c, currentMetric) > 0))
         .filter(c => !pinnedContributors.has(c.gi))
-        .sort((a, b) => yrSum(b.commits) - yrSum(a.commits));
+        .sort((a, b) => metricValueForContributor(b, currentMetric) - metricValueForContributor(a, currentMetric))
 
       if (metaEl) {
-        const count = (activeYear === 'all') ? committers.length : committers.filter(c => yrSum(c.commits) > 0).length;
+        const count = (activeYear === 'all') ? committers.length : committers.filter(c => metricValueForContributor(c, currentMetric) > 0).length;
         metaEl.textContent = activeYear === 'all' ? `${count} total` : `${count} active in ${activeYear}`;
       }
 
