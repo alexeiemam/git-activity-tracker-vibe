@@ -1,0 +1,686 @@
+/* Git Activity Tracker: bespoke component and visualization styles. */
+
+:root {
+  --bg: #f5f2eb;
+  --surface: #fffefb;
+  --border: #d4cfc4;
+  --border2: #e8e3d8;
+  --text: #1a1814;
+  --muted: #8a8070;
+  --ink: #2c2820;
+  --accent: #c0392b;
+  --accent2: #e74c3c;
+  --c0: #ede9e0;
+  --c1: #f4b8a0;
+  --c2: #e8825a;
+  --c3: #d44f28;
+  --c4: #c0392b;
+  --added: #2d6a2d;
+  --deleted: #c0392b;
+  --merge-bg: #fffbe6;
+  --merge-border: #e0c84a;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  background-image: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 27px,
+      var(--border2) 27px,
+      var(--border2) 28px);
+}
+
+/* Keep the tiny reset that helps SVG/text quirks */
+svg text {
+  dominant-baseline: middle;
+}
+
+/* Pseudo-labels for "panels" (kept as CSS because Tailwind can't do ::before content nicely w/out config/plugins) */
+.panel-label {
+  position: relative;
+}
+
+.panel-label::before {
+  content: attr(data-label);
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  background: var(--surface);
+  padding: 0 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.panel-label.accent::before {
+  color: var(--accent);
+}
+
+.panel-label.merge::before {
+  background: var(--merge-bg);
+  color: #a07800;
+}
+
+/* ─────────────────────────────────────────────
+   Sticky Sidebar Dock (full definitions)
+───────────────────────────────────────────── */
+.dash-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  overflow: visible;
+}
+
+.dash-main {
+  min-width: 0;
+}
+
+.sticky-sidebar {
+  position: sticky;
+  top: 12px;
+  z-index: 60;
+  align-self: start;
+  width: 240px;
+  height: fit-content;
+  margin: 12px 0 18px;
+}
+
+@media (max-width: 980px) {
+  .dash-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sticky-sidebar {
+    position: relative;
+    top: auto;
+    width: auto;
+  }
+}
+
+.sidebar-inner {
+  border: 1px solid rgba(26, 24, 20, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 254, 251, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+
+  padding: 12px;
+}
+
+.sidebar-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 2px 2px 10px 2px;
+  border-bottom: 1px solid rgba(26, 24, 20, 0.10);
+  margin-bottom: 10px;
+}
+
+.sidebar-title {
+  color: var(--muted);
+}
+
+.sidebar-sub {
+  color: rgba(138, 128, 112, 0.75);
+}
+
+.sidebar-section {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(26, 24, 20, 0.08);
+}
+
+.sidebar-section:last-child {
+  border-bottom: 0;
+  padding-bottom: 2px;
+}
+
+.sidebar-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(138, 128, 112, 0.95);
+  margin: 0 2px 8px;
+}
+
+.sidebar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Contributor rows keep navigation and pinning as separate controls. */
+.sidebar-contributor-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sidebar-contributor-row .sidebar-btn {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* Buttons in the sidebar */
+.sidebar-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+  text-align: left;
+
+  padding: 8px 10px;
+  border-radius: 10px;
+
+  border: 1px solid rgba(26, 24, 20, 0.10);
+  background: rgba(245, 242, 235, 0.40);
+
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--ink);
+
+  transition: transform 0.08s, background 0.15s, border-color 0.15s;
+}
+
+/* ─────────────────────────────────────────────
+   Sidebar: Pinned + Active contributors
+───────────────────────────────────────────── */
+
+.sidebar-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 2px 8px;
+}
+
+.sidebar-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  color: rgba(138, 128, 112, 0.85);
+  white-space: nowrap;
+}
+
+.sidebar-subsection {
+  margin-top: 10px;
+}
+
+.sidebar-sublabel {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(138, 128, 112, 0.80);
+  margin: 0 2px 6px;
+}
+
+/* Fixed-height scroll area so sidebar doesn't resize */
+.sidebar-scroll {
+  max-height: 260px;
+  /* tune as desired */
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 2px;
+  scrollbar-width: thin;
+}
+
+/* Webkit scrollbar (optional niceness) */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(26, 24, 20, 0.16);
+  border-radius: 999px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-empty {
+  border: 1px dashed rgba(26, 24, 20, 0.14);
+  background: rgba(245, 242, 235, 0.25);
+  color: rgba(138, 128, 112, 0.9);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.64rem;
+}
+
+/* Pin button inside sidebar contributor rows */
+.sidebar-pin {
+  margin-left: auto;
+  flex: 0 0 auto;
+
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+  border: 1px solid rgba(26, 24, 20, 0.12);
+  background: rgba(255, 255, 255, 0.38);
+
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: rgba(26, 24, 20, 0.40);
+
+  transition: transform 0.08s, background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.sidebar-pin:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(26, 24, 20, 0.22);
+  color: rgba(26, 24, 20, 0.65);
+}
+
+.sidebar-pin.pinned {
+  color: var(--accent);
+  border-color: rgba(192, 57, 43, 0.35);
+  background: rgba(192, 57, 43, 0.10);
+}
+
+.sidebar-pin:active {
+  transform: translateY(0px);
+}
+
+.sidebar-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(26, 24, 20, 0.22);
+}
+
+.sidebar-btn:active {
+  transform: translateY(0px);
+}
+
+.sidebar-btn.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+.sidebar-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex: 0 0 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.sidebar-mini {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.56rem;
+  font-weight: 900;
+  color: white;
+  flex: 0 0 18px;
+}
+
+.sidebar-btn .sidebar-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sidebar-btn .sidebar-name {
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-btn .sidebar-subtxt {
+  font-size: 0.58rem;
+  color: rgba(138, 128, 112, 0.95);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-btn.active .sidebar-subtxt {
+  color: rgba(245, 242, 235, 0.70);
+}
+
+/* Year pill row */
+.sidebar-year {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sidebar-pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(26, 24, 20, 0.12);
+  background: rgba(245, 242, 235, 0.40);
+
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.64rem;
+  color: var(--muted);
+
+  transition: background 0.15s, border-color 0.15s, transform 0.08s;
+}
+
+.sidebar-pill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(26, 24, 20, 0.22);
+  background: rgba(255, 255, 255, 0.60);
+}
+
+.sidebar-pill.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+/* Toggle list */
+.sidebar-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(26, 24, 20, 0.10);
+  background: rgba(245, 242, 235, 0.40);
+
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.66rem;
+  color: var(--muted);
+}
+
+.sidebar-toggle:hover {
+  border-color: rgba(26, 24, 20, 0.20);
+  background: rgba(255, 255, 255, 0.56);
+}
+
+
+.comp-tab.active {
+  color: var(--accent) !important;
+  border-bottom-color: var(--accent) !important;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+#dashboard:not([hidden]),
+#merge-step:not([hidden]) {
+  animation: fadeIn 0.3s ease;
+}
+
+.import-banner:not([hidden]) {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Committer collapse behavior */
+.committer-section.collapsed .chevron {
+  transform: rotate(-90deg);
+}
+
+.committer-section.collapsed .committer-body {
+  display: none;
+}
+
+.chevron {
+  transition: transform 0.2s;
+}
+
+/* Heatmap "levels" & hover scaling (worth keeping as CSS, not worth tailwindifying) */
+.heatmap-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  outline: 1px solid transparent;
+  transition: transform 0.1s, outline 0.1s, opacity 0.1s;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.5);
+  outline: 1px solid var(--ink);
+  z-index: 10;
+  position: relative;
+}
+
+.heatmap-cell[data-level="0"] {
+  background: var(--c0);
+}
+
+.heatmap-cell[data-level="1"] {
+  background: var(--c1);
+}
+
+.heatmap-cell[data-level="2"] {
+  background: var(--c2);
+}
+
+.heatmap-cell[data-level="3"] {
+  background: var(--c3);
+}
+
+.heatmap-cell[data-level="4"] {
+  background: var(--c4);
+}
+
+.heatmap-cell.faded {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* Tooltip (complex nested markup + scrollbars: keep) */
+.tooltip {
+  position: fixed;
+  background: var(--ink);
+  color: #f5f2eb;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 1000;
+  display: none;
+  width: 340px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+.tip-commits {
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.tip-revert-pill {
+  display: inline-block;
+  font-size: 0.5rem;
+  padding: 1px 6px;
+  border-radius: 2px;
+  background: rgba(41, 128, 185, 0.22);
+  /* muted blue */
+  color: rgba(245, 242, 235, 0.62);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.tip-merge-pill {
+  display: inline-block;
+  font-size: 0.5rem;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(192, 57, 43, 0.18);
+  color: rgba(245, 242, 235, 0.5);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.tip-release-pill {
+  display: inline-block;
+  font-size: 0.5rem;
+  padding: 1px 6px;
+  border-radius: 2px;
+  background: rgba(45, 106, 45, 0.22);
+  /* muted green */
+  color: rgba(245, 242, 235, 0.62);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+/* Timeline hover cursor/tip positioning (kept) */
+.timeline-cursor {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  display: none;
+  z-index: 5;
+  width: 1px;
+  background: var(--ink);
+  opacity: 0.5;
+}
+
+.timeline-tip {
+  position: absolute;
+  background: var(--ink);
+  color: #f5f2eb;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  padding: 10px 14px;
+  pointer-events: none;
+  z-index: 10;
+  display: none;
+  white-space: nowrap;
+  line-height: 1.9;
+  min-width: 160px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  top: 8px;
+}
+
+
+.dowhour-tooltip {
+  position: fixed;
+  z-index: 2000;
+  display: none;
+  padding: 8px 12px;
+  color: #f5f2eb;
+  background: var(--ink);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  line-height: 1.8;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Day × Hour heatmap hover outline (kept) */
+.dowhour-cell {
+  height: 14px;
+  cursor: default;
+  position: relative;
+  transition: opacity 0.1s;
+  border: 1px solid transparent;
+}
+
+.dowhour-cell:hover {
+  border-color: var(--ink) !important;
+  z-index: 5;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

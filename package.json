@@ -1,0 +1,8 @@
+{
+  "name": "git-activity-tracker-refactor",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
