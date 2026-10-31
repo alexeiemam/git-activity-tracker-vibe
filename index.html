@@ -29,9 +29,9 @@
       <details id="source-details" open>
         <summary><span class="source-heading"><span class="step-dot">01</span> <strong id="source-title">Load repository history</strong> <span class="subtle" id="source-status">Paste git log output, or try the demo.</span></span><span class="summary-chevron" aria-hidden="true">⌄</span></summary>
         <div class="source-content">
-          <div class="source-topline"><label for="range-select">Capture up to</label><select id="range-select" aria-label="History included in generated command"><option value="1">1 year</option><option value="2">2 years</option><option value="3" selected>3 years</option><option value="4">4 years</option><option value="5">5 years</option></select><span class="helper">This changes the <strong>git command only</strong>. Use the dashboard to filter imported data.</span></div>
+          <div class="source-topline"><label for="range-select">Initially show</label><select id="range-select" aria-label="Initial authored-date window"><option value="1">1 year</option><option value="2">2 years</option><option value="3" selected>3 years</option><option value="4">4 years</option><option value="5">5 years</option></select><span class="helper">Import full reachable history. Start by viewing the latest <strong>authored</strong> years; change dates in the dashboard.</span></div>
           <div class="command-row"><span class="terminal-mark">$</span><code id="git-cmd"></code><button type="button" data-action="copy-command" class="command-copy">Copy command</button></div>
-          <p class="input-hint">Run inside your repository and paste its output below. Merge commits are captured so you can include or exclude them later. The command uses macOS <code>pbcopy</code>; on other systems, remove the final pipe and copy terminal output.</p>
+          <p class="input-hint">Run inside your repository and paste its output below. No committer-date cutoff is applied: older authored changes remain available even if rebased recently. Merge commits are captured so you can include or exclude them later. The command uses macOS <code>pbcopy</code>; on other systems, remove the final pipe and copy terminal output.</p>
           <label class="field-label" for="log-input">Git log output</label>
           <textarea id="log-input" placeholder="COMMIT|hash|email|name|2026-10-01T09:12:00+01:00|subject|parents&#10;25  8  app/models/example.rb" spellcheck="false"></textarea>
           <div class="source-actions"><button type="button" data-action="analyse" class="button primary">Analyse history <span aria-hidden="true">→</span></button><button type="button" data-action="load-demo" class="button soft">Explore demo dataset</button><span id="parse-error" class="error-text" role="alert" aria-live="polite"></span></div>
@@ -72,17 +72,52 @@
       <section class="report-section" aria-labelledby="pulse-heading"><div class="section-header"><div><span class="eyebrow section-index">04 / WHEN IT HAPPENED</span><h3 id="pulse-heading">The activity pulse.</h3><p>Switch between monthly totals and an authored-day calendar. Every cell uses the selected metric, people, dates and commit policy, with one colour scale across contributors.</p></div><div class="segmented" role="group" aria-label="Activity pulse granularity"><button type="button" class="segment active" data-action="pulse-mode" data-pulse-mode="monthly" aria-controls="pulse" aria-pressed="true">Monthly</button><button type="button" class="segment" data-action="pulse-mode" data-pulse-mode="daily" aria-controls="pulse" aria-pressed="false">Daily</button></div></div><div class="report-card pulse-card"><div class="viz-top"><span class="eyebrow" id="pulse-context"></span><div class="intensity-key" aria-label="Relative colour intensity, from zero to the highest cell">ZERO <i></i><i></i><i></i><i></i><i></i> HIGH</div></div><p id="pulse-hint" class="pulse-hint"></p><div id="pulse" class="pulse-scroll" aria-label="Activity pulse chart"></div><div id="pulse-popover" class="pulse-popover" role="tooltip" hidden></div></div></section>
 
       <section class="report-section" aria-labelledby="rhythm-heading">
-        <div class="section-header"><div><span class="eyebrow section-index">05 / THE WORKING RHYTHM</span><h3 id="rhythm-heading">A week in their commits.</h3><p>Scan the whole selection, then explore a person's weekday and hour-of-week patterns. Every view follows the same contributor, date and commit-policy filters.</p></div></div>
+        <div class="section-header"><div><span class="eyebrow section-index">05 / THE WORKING RHYTHM</span><h3 id="rhythm-heading">The rhythms behind the activity.</h3><p>Explore a typical week, changes across years and recurring seasonal patterns—always using the same globally filtered author history.</p></div></div>
         <div class="report-card rhythm-report-card">
           <div id="rhythm-explorer" class="rhythm-explorer" aria-label="Detailed working rhythm explorer">
             <div class="rhythm-explorer-heading"><div><span class="eyebrow">THE RHYTHM EXPLORER</span><h4 id="rhythm-focus-name">A closer look at the week</h4><p id="rhythm-focus-caption">Choose whose rhythm to inspect. This does not change the global comparison.</p></div><div class="rhythm-focus-picker" id="rhythm-focus-picker" role="group" aria-label="Contributor to inspect within the global selection"></div></div>
-            <div id="rhythm-kpis" class="rhythm-kpis"></div>
+            <div class="rhythm-tabs" role="group" aria-label="Behaviour analysis timescale">
+              <button type="button" data-action="rhythm-tab" data-rhythm-tab="weekly" class="rhythm-tab is-active" aria-pressed="true">Weekly patterns <span>DAY × HOUR</span></button>
+              <button type="button" data-action="rhythm-tab" data-rhythm-tab="years" class="rhythm-tab" aria-pressed="false">Across years <span>EVOLUTION</span></button>
+              <button type="button" data-action="rhythm-tab" data-rhythm-tab="seasonal" class="rhythm-tab" aria-pressed="false">Seasonality <span>RECURRING SIGNALS</span></button>
+            </div>
+            <div id="rhythm-weekly-content">
+              <div id="rhythm-kpis" class="rhythm-kpis"></div>
             <div id="rhythm-plots" class="rhythm-plots">
               <section class="rhythm-weekday-card" aria-labelledby="rhythm-weekdays-label"><div class="rhythm-panel-title"><div><span class="eyebrow">01 / WEEKDAY PROFILE</span><h5 id="rhythm-weekdays-label">Which days?</h5></div><span class="helper">7 days · timed commits</span></div><div id="rhythm-weekday-columns"></div></section>
               <section class="rhythm-week-card" aria-labelledby="rhythm-week-label"><div class="rhythm-panel-title rhythm-week-title"><div><span class="eyebrow">02 / HOUR-OF-WEEK PROFILE</span><h5 id="rhythm-week-label">Where in the 168 hours?</h5></div><div class="segmented rhythm-display-switch" role="group" aria-label="Weekly timing visualisation"><button type="button" data-action="rhythm-display" data-rhythm-display="heatmap" class="segment active" aria-pressed="true">Grid</button><button type="button" data-action="rhythm-display" data-rhythm-display="clock" class="segment" aria-pressed="false">Circle</button><button type="button" data-action="rhythm-display" data-rhythm-display="bars" class="segment" aria-pressed="false">Bars</button></div></div><p class="rhythm-display-caption" id="rhythm-display-caption"></p><div id="rhythm-week-chart"></div><div id="rhythm-legend" class="rhythm-legend"></div></section>
             </div>
             <div class="rhythm-detail" id="rhythm-detail" role="status" aria-live="off"></div>
-            <p class="rhythm-footnote">These are <strong>commit-occurrence</strong> patterns, regardless of the comparison metric chosen above (lines changed do not indicate when someone worked). All displays use the same timed-commit cohort and 168 Monday–Sunday author-local hour buckets. Times are <strong>as recorded by each commit's author</strong>; different time zones are not converted to a common clock. Untimed commits are excluded from all three rhythm charts, not just the hourly views. No pattern here measures working hours or productivity.</p>
+              <p class="rhythm-footnote">These are <strong>commit-occurrence</strong> patterns, regardless of the comparison metric chosen above (lines changed do not indicate when someone worked). All displays use the same timed-commit cohort and 168 Monday–Sunday author-local hour buckets. Times are <strong>as recorded by each commit's author</strong>; different time zones are not converted to a common clock. Untimed commits are excluded from all three rhythm charts, not just the hourly views. No pattern here measures working hours or productivity.</p>
+            </div>
+            <div id="season-explorer" class="season-explorer" hidden>
+              <div class="season-toolbar">
+                <div><span class="eyebrow">01 / COMPARE LIKE WITH LIKE</span><h5 id="season-view-title">Across years</h5><p id="season-explanation">Compare the same authored history at different time scales.</p></div>
+                <div class="season-modes segmented" role="group" aria-label="Historical comparison measure">
+                  <button type="button" class="segment active" data-action="season-mode" data-season-mode="rate" aria-pressed="true">Commits / week</button>
+                  <button type="button" class="segment" data-action="season-mode" data-season-mode="shape" aria-pressed="false">Within year %</button>
+                  <button type="button" class="segment" data-action="season-mode" data-season-mode="index" aria-pressed="false">Seasonal index</button>
+                </div>
+              </div>
+              <div class="season-year-picker" id="season-year-picker" role="group" aria-label="Years displayed in the comparison"></div>
+              <div class="season-mode-help" id="season-mode-help"></div>
+              <div id="season-year-content">
+                <div class="season-section-head"><div><span class="eyebrow">01 / THE YEAR × MONTH MATRIX</span><h5>When does activity concentrate?</h5></div><span class="helper">Same authored dates · one shared colour scale</span></div>
+                <div id="season-month-matrix"></div>
+                <div class="season-section-head"><div><span class="eyebrow">02 / ANNUAL BEHAVIOUR</span><h5>Volume is not behaviour.</h5></div><span class="helper">Exposure-adjusted rates · year-over-year matched dates</span></div>
+                <div id="season-annual-scorecard" class="season-table-scroll"></div>
+                <div class="season-section-head"><div><span class="eyebrow">03 / THE HABITS BEHIND THE TOTAL</span><h5>Weekly rhythm, year by year.</h5></div><span class="helper">168 author-local hour slots · normalised within each year</span></div>
+                <div id="season-rhythm-years"></div>
+                <div id="season-person-comparison" class="season-person-comparison"></div>
+              </div>
+              <div id="season-seasonal-content" hidden>
+                <div class="season-section-head"><div><span class="eyebrow">01 / JANUARY → DECEMBER</span><h5>Overlay equivalent months across years.</h5></div><span class="helper">Missing months are gaps, not zeroes</span></div>
+                <div id="season-overlay"></div>
+                <div id="season-signals"></div>
+              </div>
+              <div id="season-detail" class="season-detail" aria-label="Historical activity details" aria-live="off"></div>
+              <p class="rhythm-footnote">Historical comparisons use the <strong>same selected authored-date commits</strong>, merge/revert policy and reference cohort as the dashboard. Only years and contributor focus <em>displayed here</em> can differ. Counts and active-day frequency include commits without a known hour; weekday × hour charts exclude those untimed commits consistently. Observed days are bounded by the imported authored-date history, not proof of employment or a complete repository. Changes in commit timing are not measures of working hours or performance.</p>
+            </div>
           </div>
           <details class="rhythm-overview-details" id="rhythm-comparison-details" open><summary><span><span class="eyebrow">QUICK COMPARISON</span><strong>Compare selected contributors</strong><small>Consistent within-person percentages · weekday and time band</small></span><span class="rhythm-overview-chevron" aria-hidden="true">⌄</span></summary><div id="rhythm" class="rhythm-list"></div></details>
         </div>

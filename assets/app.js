@@ -1,7 +1,7 @@
 import {
   METRICS, DAY_NAMES, TIME_BANDS, buildAnalysis, getDateBounds, pulseDayDetails, workingRhythm, mondayOf, dayNumber, dateAtDay,
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
-  valueInMode, displayModeLabel, sum,
+  valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitLog,
 } from './domain.js';
 import { generateDemoLog } from './demo-data.js';
@@ -31,13 +31,16 @@ const state = {
   period: 'all', start: null, end: null,
   includeMerges: false, includeReverts: true,
   metric: 'commits', mode: 'total', denominator: 'repository',
-  trend: 'rolling', pulseMode: 'monthly', rhythmFocus: 'selection', rhythmDisplay: 'heatmap', sortKey: 'lens', sortDesc: true,
+  trend: 'rolling', pulseMode: 'monthly', rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
+  rhythmTab: 'weekly', seasonMode: 'rate', seasonYears: null, sortKey: 'lens', sortDesc: true,
 };
 
 function setText(id, content) { $(id).textContent = content; }
 function command() {
-  const years = Math.max(1, Math.min(5, Number($('range-select').value) || 3));
-  setText('git-cmd', `git log --since="${12 * years} months ago" --pretty=format:"COMMIT|%H|%ae|%an|%aI|%s|%P" --numstat | pbcopy`);
+  // Git --since limits commits by the *committer* date. It would silently
+  // truncate author-date history (notably rebases and cherry-picks). Import
+  // reachable history first, and apply the authored-date window in the UI.
+  setText('git-cmd', 'git log --pretty=format:"COMMIT|%H|%ae|%an|%aI|%s|%P" --numstat | pbcopy');
 }
 function copyCommand() {
   if (!navigator.clipboard) return setText('parse-error', 'Clipboard unavailable. Select and copy the command manually.');
@@ -264,8 +267,15 @@ function loadDemo() {
 }
 function syncScopeAfterLoad() {
   const { min,max } = getDateBounds(rawCommits);
-  Object.assign(state, { period:'all',start:min,end:max,includeMerges:false,includeReverts:true,
-    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',sortKey:'lens',sortDesc:true,search:'' });
+  const years = Math.max(1, Math.min(5, Number($('range-select').value) || 3));
+  const anchored = new Date(`${max}T12:00:00Z`);
+  const y = anchored.getUTCFullYear() - years, m = anchored.getUTCMonth();
+  const maxDay = new Date(Date.UTC(y,m+1,0)).getUTCDate();
+  const anniversary = new Date(Date.UTC(y,m,Math.min(anchored.getUTCDate(),maxDay))).toISOString().slice(0,10);
+  const desiredStart = dateAtDay(dayNumber(anniversary)+1);
+  const initialStart = min > desiredStart ? min : desiredStart;
+  Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
+    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'' });
   state.selectedIds = new Set(mergeGroups.map((_,i)=>String(i)));
   if (pendingImport?.scope) {
     const s = pendingImport.scope;
@@ -278,6 +288,9 @@ function syncScopeAfterLoad() {
     if (['rolling','weekly','cumulative'].includes(s.trend)) state.trend=s.trend;
     if (['monthly','daily'].includes(s.pulseMode)) state.pulseMode=s.pulseMode;
     if (['heatmap','clock','bars'].includes(s.rhythmDisplay)) state.rhythmDisplay=s.rhythmDisplay;
+    if (['weekly','years','seasonal'].includes(s.rhythmTab)) state.rhythmTab=s.rhythmTab;
+    if (['rate','shape','index'].includes(s.seasonMode)) state.seasonMode=s.seasonMode;
+    if (Array.isArray(s.seasonYears)) state.seasonYears=new Set(s.seasonYears.filter(y=>Number.isInteger(y)&&y>=1900&&y<=2200));
     if (s.start && s.end && s.start <= s.end && /^\d{4}-\d\d-\d\d$/.test(s.start) && /^\d{4}-\d\d-\d\d$/.test(s.end)) {
       state.start=s.start; state.end=s.end;
     }
@@ -336,7 +349,7 @@ function changeDate() {
 }
 function resetFilters() {
   Object.assign(state,{ period:'all',start:getDateBounds(rawCommits).min,end:getDateBounds(rawCommits).max,
-    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',sortKey:'lens',sortDesc:true,search:'' });
+    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'' });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
   setText('scope-error','');
@@ -890,6 +903,7 @@ function renderRhythmExplorer(view) {
   const top=Math.max(0,...model.cells.map(c=>c.count));
   $('rhythm-legend').innerHTML=`<div class="rhythm-scale"><span>0 commits</span>${[0,.25,.5,.75,1].map(t=>`<i style="background:${rhythmShade(accent,t*Math.max(top,1),Math.max(top,1))}"></i>`).join('')}<span>${number.format(top)} / hour (max)</span></div><span>${number.format(model.missingTime)} commits without authored hours omitted · all views share these ${number.format(model.timedCommits)} timed events</span>`;
   renderRhythmDetail();
+  renderSeasonality(view);
 }
 function renderRhythm(view) {
   $('rhythm-comparison-details').hidden=view.contributors.length<=1;
@@ -912,6 +926,226 @@ function renderRhythm(view) {
   }).join('');
   $('rhythm').innerHTML=`<div class="rhythm-list-wrap">${heading}${rows}</div>`;
   renderRhythmExplorer(view);
+}
+
+
+// Historical behaviour is a second representation of the same authored-date
+// evidence; year chips and contributor focus change only this explorer's view.
+const SEASON_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let seasonModel = null;
+let seasonHover = null;
+let seasonPinned = null;
+function seasonKey(d) { return d ? `${d.kind}:${d.year}:${d.index}` : ''; }
+function seasonValueText(value, mode=state.seasonMode) {
+  if (value == null || !Number.isFinite(value)) return '—';
+  return mode === 'rate' ? `${decimal.format(value)}/wk` : mode === 'shape' ? percent(value) : `${decimal.format(value)}×`;
+}
+function seasonModeTitle() {
+  return state.seasonMode === 'rate' ? 'Commits per calendar week'
+    : state.seasonMode === 'shape' ? 'Share of authored commits within that year'
+    : 'Monthly intensity vs that year’s average daily rate';
+}
+function seasonShownYears(model) {
+  if (!model) return [];
+  if (state.seasonYears) {
+    const valid = new Set(model.years.map(y => y.year));
+    state.seasonYears = new Set([...state.seasonYears].filter(y => valid.has(y)));
+    if (!state.seasonYears.size) state.seasonYears = null;
+  }
+  return model.years.filter(y => !state.seasonYears || state.seasonYears.has(y.year));
+}
+function seasonEmpty(message) { return `<div class="season-empty">${esc(message)}</div>`; }
+function seasonColour(value,max) { return rhythmShade('#176b52',Math.max(0,value??0),Math.max(1e-6,max)); }
+function monthTitle(month) {
+  return `${SEASON_MONTHS[month.month]} ${month.year} · ${month.count} authored commits · ${month.days} observed calendar days · ${month.full?'complete':'partial'} month · ${seasonValueText(seasonalMonthValue(month),state.seasonMode)}`;
+}
+function seasonCellAttributes(kind,year,index,title) {
+  return `data-season-cell data-season-kind="${kind}" data-season-year="${year}" data-season-index="${index}" data-action="season-inspect" aria-pressed="false" aria-label="${esc(title)}" title="${esc(title)}"`;
+}
+function renderSeasonYearPicker(model) {
+  const displayed = seasonShownYears(model);
+  const all = state.seasonYears === null;
+  $('season-year-picker').innerHTML=`<span class="eyebrow">YEARS IN VIEW</span><button type="button" class="season-year-chip ${all?'is-active':''}" data-action="season-all-years" aria-pressed="${all}">All years</button>${model.years.map(y=>`<button type="button" class="season-year-chip ${displayed.includes(y)?'is-active':''}" data-action="season-toggle-year" data-season-year="${y.year}" aria-pressed="${displayed.includes(y)}">${y.year}${y.full?'':' <span aria-hidden="true">◔</span>'}</button>`).join('')}<span class="season-years-note">${displayed.length} of ${model.years.length} · ◔ partial-year coverage</span>`;
+}
+function renderSeasonMonthMatrix(model,years) {
+  const values = years.flatMap(y=>y.months.filter(m=>m.days).map(m=>seasonalMonthValue(m)));
+  const maximum = Math.max(1e-6, ...values.filter(v=>v!==null));
+  const heading = `<div class="season-month-head"><span>YEAR</span><div class="season-month-labels">${SEASON_MONTHS.map(m=>`<span>${m}</span>`).join('')}</div><span>CALENDAR COVERAGE</span></div>`;
+  const lines = [...years].reverse().map(y=>{
+    const maxYearDays=new Date(Date.UTC(y.year+1,0,1))-new Date(Date.UTC(y.year,0,1));
+    return `<div class="season-month-row"><span class="season-month-year"><strong>${y.year}</strong><small>${number.format(y.count)} commits</small></span><div class="season-month-cells">${y.months.map(m=>m.days?`<button type="button" class="season-month-cell ${m.full?'':'is-partial'} ${(seasonalMonthValue(m)??0)/maximum>.55?'is-strong':''}" ${seasonCellAttributes('month',y.year,m.month,monthTitle(m))} style="background:${seasonColour(seasonalMonthValue(m),maximum)}"><span>${esc(seasonValueText(seasonalMonthValue(m)))}</span></button>`:`<span class="season-month-missing" title="${SEASON_MONTHS[m.month]} ${y.year}: outside imported author dates or global scope" aria-label="${SEASON_MONTHS[m.month]} ${y.year}: not observed">—</span>`).join('')}</div><span class="season-month-coverage"><strong>${y.exposureDays}d</strong><small>${y.full?'Full year':`${Math.round(y.exposureDays/(maxYearDays/86400000)*100)}% of year`}</small></span></div>`;
+  }).join('');
+  const legend=`<div class="season-chart-key"><span>Zero activity</span><div class="season-swatch">${[0,.25,.5,.75,1].map(t=>`<i style="background:${seasonColour(t*maximum,maximum)}"></i>`).join('')}</div><span>${seasonValueText(maximum)} (highest cell)</span><em>Dashed outline = partial month; — = outside selected/imported dates.</em></div>`;
+  $('season-month-matrix').innerHTML = years.length ? `<p class="season-scroll-hint">Swipe sideways to see all 12 months ↔</p><div class="season-month-scroll"><div class="season-month-board">${heading}${lines}</div></div>${legend}` : seasonEmpty('Select at least one year to compare.');
+}
+function seasonYoYText(year, years) {
+  if (!year.yoy || !years.some(y=>y.year===year.year-1)) return '<span class="season-dash">—</span>';
+  const a=year.yoy;
+  const value=a.change === null ? (a.currentCount ? 'New activity' : 'No baseline') : `${a.change>=0?'+':''}${percent(a.change)}`;
+  const cls=a.change===null?'':a.change>0?'season-up':a.change<0?'season-down':'';
+  return `<span class="${cls}">${esc(value)}</span><small>${esc(a.from)} → ${esc(a.to)} · ${a.currentDays}/${a.priorDays} days · vs ${year.year-1}</small>`;
+}
+function renderSeasonAnnualScorecard(years) {
+  if(!years.length){$('season-annual-scorecard').innerHTML='';return;}
+  const th=['YEAR / OBSERVED', 'COMMITS', 'COMMITS / WEEK', 'ACTIVE DAY FREQUENCY', 'COMMITS / ACTIVE DAY', 'WEEKEND SHARE', 'EVENING SHARE', 'HOUR COVERAGE', 'YEAR-ON-YEAR PACE'];
+  const tr=[...years].reverse().map(y=>`<tr><th scope="row"><strong>${y.year}</strong><small>${y.exposureDays} calendar days${y.full?'':' · partial'}</small></th><td>${number.format(y.count)}</td><td><strong>${decimal.format(y.pace)}</strong></td><td>${percent(y.activeFrequency)}<small>${y.activeDays} distinct dates</small></td><td>${y.perActiveDay===null?'—':decimal.format(y.perActiveDay)}</td><td>${y.weekendShare===null?'—':percent(y.weekendShare)}</td><td>${y.eveningShare===null?'—':percent(y.eveningShare)}</td><td>${y.timeCoverage===null?'—':percent(y.timeCoverage)}<small>${y.timedCount} timed / ${y.count} total</small></td><td>${seasonYoYText(y,years)}</td></tr>`).join('');
+  $('season-annual-scorecard').innerHTML=`<table class="season-annual-table"><thead><tr>${th.map(t=>`<th scope="col">${t}</th>`).join('')}</tr></thead><tbody>${tr}</tbody></table><p class="season-table-footnote">Year-on-year changes compare identical calendar-day portions of adjacent years, using commits per calendar week. Active day frequency = distinct authored dates / observed calendar days; evening = 18:00–23:59 author-local among timed commits. “—” means undefined or outside scope. These are activity measures, not performance scores.</p>`;
+}
+function renderSeasonRhythmYears(model,years) {
+  if (!years.length) { $('season-rhythm-years').innerHTML='';return; }
+  const maximum = Math.max(1e-6,...years.flatMap(y=>y.slots.map(v=>y.timedCount?v/y.timedCount*100:0)));
+  const hours=Array.from({length:24},(_,i)=>`<span>${i%3===0?String(i).padStart(2,'0'):''}</span>`).join('');
+  $('season-rhythm-years').innerHTML=`<div class="season-rhythm-gallery">${[...years].reverse().map(y=>`<div class="season-rhythm-year"><div class="season-rhythm-heading"><strong>${y.year}</strong><span>${number.format(y.timedCount)} timed · ${y.timeCoverage===null?'—':percent(y.timeCoverage)} coverage ${y.full?'':'· partial year'}</span></div>${y.timedCount?`<div class="season-rhythm-scroll"><div class="season-rhythm-board"><div class="season-rhythm-labelrow"><span>LOCAL</span><div>${hours}</div></div>${DAY_NAMES.map((d,day)=>`<div class="season-rhythm-row"><span>${d}</span><div>${y.slots.slice(day*24,day*24+24).map((count,h)=>{const idx=day*24+h;const share=count/y.timedCount*100;return `<button type="button" ${seasonCellAttributes('slot',y.year,idx,`${y.year} ${d} ${String(h).padStart(2,'0')}:00 · ${count} timed commits · ${percent(share)} of that year's timed commits`)} class="season-rhythm-cell" style="background:${seasonColour(share,maximum)}"></button>`;}).join('')}</div></div>`).join('')}</div></div>`:seasonEmpty('No authored hours in this year; no time slots inferred.')}</div>`).join('')}</div><div class="season-chart-key"><span>0% of year’s timed commits</span><div class="season-swatch">${[0,.25,.5,.75,1].map(t=>`<i style="background:${seasonColour(t*maximum,maximum)}"></i>`).join('')}</div><span>${percent(maximum)} per slot (shared max)</span><em>Same axes and colour scale across years · shape, not total volume.</em></div>`;
+}
+function renderSeasonPeople(model,years) {
+  const target=$('season-person-comparison');
+  if(model.comparisons.length<=1 || !years.length){target.innerHTML='';return;}
+  const order=[...years].reverse();
+  const rows=model.comparisons.map(person=>`<tr><th scope="row"><span style="${style(person.id)}"><i class="person-dot"></i> ${esc(person.name)}</span></th>${order.map(y=>{const row=person.years.find(p=>p.year===y.year);return `<td><strong>${row?.pace===null?'—':decimal.format(row.pace)}</strong><small>${row.count} commits · ${row.weekendShare===null?'—':percent(row.weekendShare)} weekend</small></td>`;}).join('')}</tr>`).join('');
+  target.innerHTML=`<div class="season-section-head"><div><span class="eyebrow">04 / ONE OR MANY CONTRIBUTORS</span><h5>Individual annual trajectories.</h5></div><span class="helper">Commits per calendar week · selected contributors only</span></div><div class="season-table-scroll"><table class="season-annual-table season-person-table"><thead><tr><th>CONTRIBUTOR</th>${order.map(y=>`<th>${y.year}${y.full?'':' · PARTIAL'}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div><p class="season-table-footnote">Each person uses the same calendar exposure as every other person in that year, including inactive dates. Cell details give total commits and weekend share; focus on a contributor above to inspect their complete historical rhythms.</p>`;
+}
+function seasonalSeriesPath(points, x, y) {
+  const runs=[];let run=[];
+  for (let i=0;i<12;i++) {
+    if(points[i]===null){if(run.length)runs.push(run);run=[];}
+    else run.push(i);
+  }
+  if(run.length) runs.push(run);
+  return runs.filter(r=>r.length>1).map(run=>`<polyline points="${run.map(i=>`${x(i)},${y(points[i])}`).join(' ')}" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
+}
+function renderSeasonOverlay(model,years) {
+  const target=$('season-overlay');
+  if (!years.length){target.innerHTML=seasonEmpty('Select years to overlay.');return;}
+  const visible=[...years].sort((a,b)=>a.year-b.year);
+  const yearsData=visible.map((year,i)=>({year,colour:COLORS[i%COLORS.length],points:year.months.map(m=>m.days?seasonalMonthValue(m):null)}));
+  const baseline=Array.from({length:12},(_,month)=>{
+    const eligible=visible.filter(y=>y.full&&y.count>0).map(y=>y.months[month]);
+    return eligible.length>=3?sum(eligible.map(m=>seasonalMonthValue(m)))/eligible.length:null;
+  });
+  const allValues=yearsData.flatMap(d=>d.points).concat(baseline).filter(v=>v!==null);
+  const max=Math.max(state.seasonMode==='index'?1.5:1,...allValues)*1.1;
+  const W=960,H=330,L=62,R=24,T=18,B=48,cw=W-L-R,ch=H-T-B;
+  const x=i=>L+cw*i/11, y=n=>T+ch-(n/max)*ch;
+  let svg=`<svg class="season-overlay-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Monthly seasonal lines from January to December, each line one selected year">`;
+  for(let i=0;i<=4;i++){
+    const v=max*i/4;
+    svg+=`<line x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}" class="season-axis-line"/><text x="${L-12}" y="${y(v)+3.5}" text-anchor="end" class="season-axis-label">${esc(seasonValueText(v))}</text>`;
+  }
+  if(state.seasonMode==='index') svg+=`<line x1="${L}" x2="${W-R}" y1="${y(1)}" y2="${y(1)}" stroke="#a56f4b" stroke-width="1.3" stroke-dasharray="5 4"/>`;
+  for(let m=0;m<12;m++) svg+=`<text x="${x(m)}" y="${H-15}" text-anchor="middle" class="season-axis-label">${SEASON_MONTHS[m]}</text>`;
+  for(const {year,colour,points} of yearsData){
+    svg+=`<g style="color:${colour}">${seasonalSeriesPath(points,x,y)}`;
+    for(let i=0;i<12;i++){
+      if(points[i]===null)continue;
+      const month=year.months[i];
+      const title=monthTitle(month);
+      svg+=`<circle cx="${x(i)}" cy="${y(points[i])}" r="${month.full?5:5.5}" class="season-overlay-point ${month.full?'':'is-partial'}" stroke="${colour}" fill="${month.full?colour:'#fffefa'}" ${seasonCellAttributes('month',year.year,i,title)} role="button" tabindex="0"><title>${esc(title)}</title></circle>`;
+    }
+    svg+='</g>';
+  }
+  if(baseline.some(n=>n!==null))svg+=`<g style="color:#273c31"><path d="${baseline.map((v,i)=>v===null?'':`${i===0||baseline[i-1]===null?'M':'L'}${x(i)} ${y(v)}`).join(' ')}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-dasharray="6 5"/></g>`;
+  svg+='</svg>';
+  const legend=yearsData.map(({year,colour})=>`<span class="season-legend-item"><i style="background:${colour}"></i>${year.year}${year.full?'':' · partial'}</span>`).join('');
+  const hasBaseline=baseline.some(n=>n!==null);
+  target.innerHTML=`<p class="season-scroll-hint">Swipe sideways to compare Jul–Dec ↔</p><div class="season-overlay-scroll">${svg}</div><div class="season-legend">${legend}${hasBaseline?'<span class="season-legend-item"><i class="season-baseline-marker"></i>Mean · 3+ complete years</span>':''}</div><p class="season-table-footnote">Filled dots: complete calendar months. Hollow dots: partial months inside the global authored-date window. Lines never bridge unobserved months. The ${state.seasonMode==='index'?'1× dashed baseline is the year’s average rate; an actual multi-year seasonal mean appears only with ≥3 complete years.':'line values reflect the selected measure and observed days; no extrapolation is performed.'}</p>`;
+}
+function renderSeasonSignals(model,years) {
+  const target=$('season-signals');
+  const full=years.filter(y=>y.full&&y.count>0);
+  const completeMonthRates=SEASON_MONTHS.map((name,month)=>{
+    const eligible=years.map(y=>y.months[month]).filter(m=>m.full);
+    return {name,month,count:eligible.length,average:eligible.length?sum(eligible.map(m=>m.pace))/eligible.length:null};
+  }).filter(m=>m.count);
+  const sorted=[...completeMonthRates].sort((a,b)=>b.average-a.average);
+  const busiest=sorted[0],quietest=sorted.at(-1);
+  const recurring=full.length>=3;
+  const metric=(label,value,desc)=>`<div class="season-signal"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(desc)}</small></div>`;
+  target.innerHTML=`<div class="season-section-head"><div><span class="eyebrow">02 / WHAT CAN WE CONCLUDE?</span><h5>${recurring?'Repeated signals, with caveats.':'Patterns to investigate, not proven seasonality.'}</h5></div></div><div class="season-signal-grid">${metric('FULL YEARS',`${full.length}`,recurring?'Enough for a descriptive seasonal mean':'Three or more complete years recommended')}${metric('HIGHEST RECORDED MONTH',busiest?busiest.name:'—',busiest?`${decimal.format(busiest.average)} commits/week · ${busiest.count} complete months`:'No complete months')}${metric('LOWEST RECORDED MONTH',quietest?quietest.name:'—',quietest?`${decimal.format(quietest.average)} commits/week · ${quietest.count} complete months`:'No complete months')}</div><p class="season-table-footnote">${recurring?'The overlaid profile supports a descriptive multi-year baseline, not a prediction.':'The lines are exploratory; a repeated month in only one or two years cannot establish seasonality.'} High/low months summarise calendar-week rates for <em>complete observed months only</em>. Different amounts of imported history, changes in team size and release cycles may explain these patterns.</p>`;
+}
+function seasonDetailMarkup(model,selection) {
+  if(!selection) return `<div class="season-inspector-placeholder"><strong>Pick a month or an hourly square to inspect.</strong><span>Hover or focus for a quick breakdown. Click to pin the evidence and inspect individual authored commits. This does not alter dashboard filters.</span></div>`;
+  const year=model.years.find(y=>y.year===selection.year);
+  if(!year) return seasonDetailMarkup(model,null);
+  let items=[],title='',sub='',referenceCount=0,exposure='';
+  if(selection.kind==='month'){
+    const m=year.months[selection.index];
+    if(!m?.days)return seasonDetailMarkup(model,null);
+    items=m.commits;
+    title=`${SEASON_MONTHS[m.month]} ${m.year}`;
+    sub=`${m.days} of ${m.calendarDays} calendar days in scope · ${m.full?'complete':'partial'} month · ${model.name}`;
+    exposure=`${decimal.format(m.pace)} commits/week · ${m.share===null?'undefined':percent(m.share)} of ${m.year} commits · ${m.index===null?'undefined':decimal.format(m.index)+'×'} annual daily baseline`;
+    referenceCount=m.referenceCount;
+  } else if(selection.kind==='slot'){
+    const day=Math.floor(selection.index/24),hour=selection.index%24;
+    items=year.commits.filter(c=>Number.isInteger(c.hour)&&dayOfWeek(c.date)===day&&c.hour===hour);
+    title=`${year.year} · ${DAY_NAMES[day]} ${String(hour).padStart(2,'0')}:00–${String(hour).padStart(2,'0')}:59`;
+    sub=`${year.timedCount} timed commits in ${year.year} · ${year.untimedCount} without an authored hour`;
+    exposure=`${year.timedCount?percent(items.length/year.timedCount*100):'undefined'} of ${year.year} timed commits · ${number.format(year.weekdayExposures[day])} observed ${DAY_NAMES[day]} occurrences`;
+    referenceCount=analysis.referenceCommits.filter(c=>Number(c.date.slice(0,4))===year.year&&Number.isInteger(c.hour)&&dayOfWeek(c.date)===day&&c.hour===hour).length;
+  } else return seasonDetailMarkup(model,null);
+  const uniqueDates=new Set(items.map(c=>c.date)).size;
+  const files=items.flatMap(c=>c.files);
+  const added=sum(files.map(f=>f.added)),deleted=sum(files.map(f=>f.deleted));
+  const evidence=[...items].sort((a,b)=>(b.authoredAt??-1)-(a.authoredAt??-1)).slice(0,8);
+  const share=referenceCount ? `${percent(items.length/referenceCount*100)} of ${model.referenceName} activity in this slice` : 'No commits in reference slice; percentage undefined';
+  const facts=(label,value)=>`<div><span>${label}</span><strong>${esc(value)}</strong></div>`;
+  const m=selection.kind==='month'?year.months[selection.index]:null;
+  return `<div class="season-detail-header"><div><span class="eyebrow">${seasonPinned?'PINNED EVIDENCE':'HOVER OR FOCUS · CLICK TO PIN'} / AUTHOR DATES</span><h5>${esc(title)}</h5><p>${esc(sub)}</p></div><div class="season-detail-actions">${m?`<button type="button" class="season-detail-scope" data-action="season-apply-month" data-season-year="${year.year}" data-season-index="${selection.index}">View this month across dashboard ↗</button>`:''}${seasonPinned?'<button type="button" class="rhythm-unpin" data-action="season-unpin">Unpin ×</button>':''}</div></div><div class="season-detail-facts">${facts('COMMITS',number.format(items.length))}${facts('AUTHOR DATES',number.format(uniqueDates))}${facts('FILE TOUCHES',number.format(files.length))}${facts('TEXT + / −',`+${number.format(added)} / −${number.format(deleted)}`)}${facts('REFERENCE SHARE',referenceCount?percent(items.length/referenceCount*100):'—')}</div><p class="season-detail-description">${esc(exposure)} · ${esc(share)}</p>${evidence.length?`<div class="season-evidence"><span class="eyebrow">${evidence.length} MOST RECENT OF ${items.length} MATCHING COMMITS</span><ol>${evidence.map(c=>`<li><span>${esc(`${c.date}${Number.isInteger(c.hour)?' '+String(c.hour).padStart(2,'0')+':'+String(c.minute??0).padStart(2,'0'):''}`)} · ${esc(c.hash?.slice(0,8)||'—')}</span><strong>${esc(c.subject||'(No subject)')}</strong></li>`).join('')}</ol></div>`:'<p class="season-table-footnote">No authored commits in this observed slice.</p>'}`;
+}
+function renderSeasonDetail() {
+  if (!seasonModel || state.rhythmTab==='weekly') return;
+  const selection=seasonPinned||seasonHover;
+  $('season-detail').innerHTML=seasonDetailMarkup(seasonModel,selection);
+  const key=seasonKey(selection);
+  $('season-explorer').querySelectorAll('[data-season-cell]').forEach(node=>{
+    const active=key===seasonKey({kind:node.dataset.seasonKind,year:Number(node.dataset.seasonYear),index:Number(node.dataset.seasonIndex)});
+    node.classList.toggle('is-active',active);
+    node.setAttribute('aria-pressed',String(Boolean(seasonPinned && active)));
+  });
+}
+function renderSeasonality(view) {
+  const shown = state.rhythmTab !== 'weekly';
+  $('rhythm-weekly-content').hidden = shown;
+  $('season-explorer').hidden = !shown;
+  document.querySelectorAll('[data-rhythm-tab]').forEach(button=>{
+    const active=button.dataset.rhythmTab===state.rhythmTab;
+    button.classList.toggle('is-active',active);
+    button.setAttribute('aria-pressed',String(active));
+  });
+  if (!shown) return;
+  const focus=rhythmFocus(view);
+  if(seasonModel?.focusId!==focus){seasonPinned=null;seasonHover=null;}
+  seasonModel=seasonalityAnalysis(view,focus);
+  const model=seasonModel;
+  const years=seasonShownYears(model);
+  $('season-year-content').hidden=state.rhythmTab!=='years';
+  $('season-seasonal-content').hidden=state.rhythmTab!=='seasonal';
+  setText('rhythm-focus-name',model.focusId==='selection'?`Selected contributors, across time`:`${model.name}, across time`);
+  setText('season-view-title',state.rhythmTab==='years'?'Across years':'Recurring seasonal patterns');
+  setText('season-explanation',state.rhythmTab==='years'?'Separate changes in activity level from changes in timing and composition.': 'Compare January with January and examine whether seasonal swings recur.');
+  document.querySelectorAll('[data-season-mode]').forEach(button=>{
+    const active=button.dataset.seasonMode===state.seasonMode;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',String(active));
+  });
+  const descriptions={
+    rate:'Commits per seven calendar days, including quiet days, normalised by observed dates. Each cell also retains its original commit count.',
+    shape:'Percentage of that year’s authored commits. Compares the distribution, not volume; partial years are explicitly marked.',
+    index:'Monthly daily rate ÷ that same year’s daily average. 1× means typical for the observed portion of the year; undefined when a year has no commits.',
+  };
+  setText('season-mode-help',`${seasonModeTitle()}. ${descriptions[state.seasonMode]} All three modes use the same global scope and contributor focus.`);
+  renderSeasonYearPicker(model);
+  if(!model.years.length){$('season-month-matrix').innerHTML=seasonEmpty('No authored dates in the selected and imported period.');$('season-overlay').innerHTML=seasonEmpty('No historic data in scope.');return;}
+  if(state.rhythmTab==='years') {
+    renderSeasonMonthMatrix(model,years);
+    renderSeasonAnnualScorecard(years);
+    renderSeasonRhythmYears(model,years);
+    renderSeasonPeople(model,years);
+  } else {
+    renderSeasonOverlay(model,years);
+    renderSeasonSignals(model,years);
+  }
+  renderSeasonDetail();
 }
 
 // Independent behaviour slice from the exact same commit cohort. Commit
@@ -989,7 +1223,8 @@ function exportSession() {
     mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails]})),
     scope:{selectedEmails,period:state.period,start:state.start,end:state.end,metric:state.metric,mode:state.mode,denominator:state.denominator,
       includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode,
-      rhythmDisplay:state.rhythmDisplay,rhythmFocusEmail:analysis?.byId.get(state.rhythmFocus)?.emails[0]||null}};
+      rhythmDisplay:state.rhythmDisplay,rhythmTab:state.rhythmTab,seasonMode:state.seasonMode,seasonYears:state.seasonYears?[...state.seasonYears]:null,
+      rhythmFocusEmail:analysis?.byId.get(state.rhythmFocus)?.emails[0]||null}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const uri=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=uri;a.download=`git-signals-${new Date().toISOString().slice(0,10)}.json`;a.click();
@@ -1047,6 +1282,33 @@ const ACTIONS={
   'reset-filters':resetFilters,
   'trend-mode':(_e,t)=>{state.trend=t.dataset.trend;renderDashboard();},
   'pulse-mode':(_e,t)=>{state.pulseMode=t.dataset.pulseMode;renderDashboard();},
+  'rhythm-tab':(_e,t)=>{state.rhythmTab=t.dataset.rhythmTab;seasonHover=null;seasonPinned=null;renderRhythmExplorer(analysis);},
+  'season-mode':(_e,t)=>{state.seasonMode=t.dataset.seasonMode;seasonHover=null;seasonPinned=null;renderSeasonality(analysis);},
+  'season-all-years':()=>{state.seasonYears=null;seasonHover=null;seasonPinned=null;renderSeasonality(analysis);},
+  'season-toggle-year':(_e,t)=>{
+    const year=Number(t.dataset.seasonYear);
+    const all=seasonModel?.years.map(y=>y.year)||[];
+    if(!all.includes(year))return;
+    const selected=state.seasonYears?new Set(state.seasonYears):new Set(all);
+    if(selected.has(year)){if(selected.size===1)return;selected.delete(year);}
+    else selected.add(year);
+    state.seasonYears=selected.size===all.length?null:selected;
+    seasonHover=null;seasonPinned=null;renderSeasonality(analysis);
+  },
+  'season-inspect':(_e,t)=>{
+    const next={kind:t.dataset.seasonKind,year:Number(t.dataset.seasonYear),index:Number(t.dataset.seasonIndex)};
+    seasonPinned=seasonKey(next)===seasonKey(seasonPinned)?null:next;
+    seasonHover=next;renderSeasonDetail();
+  },
+  'season-unpin':()=>{seasonPinned=null;seasonHover=null;renderSeasonDetail();},
+  'season-apply-month':(_e,t)=>{
+    const year=seasonModel?.years.find(y=>y.year===Number(t.dataset.seasonYear));
+    const month=year?.months[Number(t.dataset.seasonIndex)];
+    if(!month?.days)return;
+    state.start=month.start;state.end=month.end;state.period='custom';
+    state.seasonYears=null;seasonPinned=null;seasonHover=null;
+    renderDashboard();$('pulse-heading').scrollIntoView({behavior:'smooth',block:'start'});
+  },
   'rhythm-focus':(_e,t)=>{state.rhythmFocus=t.dataset.rhythmFocus;rhythmHover=null;rhythmPinned=null;renderRhythm(analysis);if(t.classList.contains('rhythm-explore-link'))$('rhythm-explorer').scrollIntoView({behavior:'smooth',block:'start'});},
   'rhythm-display':(_e,t)=>{state.rhythmDisplay=t.dataset.rhythmDisplay;rhythmHover=null;renderRhythmExplorer(analysis);},
   'rhythm-inspect':(_e,t)=>{const next={kind:t.dataset.rhythmKind,index:Number(t.dataset.rhythmIndex)};rhythmPinned=rhythmDatumKey(rhythmPinned)===rhythmDatumKey(next)?null:next;rhythmHover=next;renderRhythmDetail();},
@@ -1135,6 +1397,36 @@ function init() {
     const matching=$('rhythm-week-chart').querySelector(`[data-rhythm-index="${next}"]`);
     if(matching){event.preventDefault();matching.focus();}
   });
+  $('season-explorer').addEventListener('pointerover',event=>{
+    if(seasonPinned)return;
+    const target=event.target.closest('[data-season-cell]');
+    if(!target)return;
+    const next={kind:target.dataset.seasonKind,year:Number(target.dataset.seasonYear),index:Number(target.dataset.seasonIndex)};
+    if(seasonKey(next)!==seasonKey(seasonHover)){seasonHover=next;renderSeasonDetail();}
+  });
+  $('season-explorer').addEventListener('pointerout',event=>{
+    if(seasonPinned||!event.target.closest('[data-season-cell]'))return;
+    if(event.relatedTarget?.closest?.('[data-season-cell]'))return;
+    seasonHover=null;renderSeasonDetail();
+  });
+  $('season-explorer').addEventListener('focusin',event=>{
+    if(seasonPinned)return;
+    const target=event.target.closest('[data-season-cell]');
+    if(target){seasonHover={kind:target.dataset.seasonKind,year:Number(target.dataset.seasonYear),index:Number(target.dataset.seasonIndex)};renderSeasonDetail();}
+  });
+  $('season-explorer').addEventListener('keydown',event=>{
+    const target=event.target.closest('[data-season-cell]');
+    if(!target)return;
+    if(target.matches('svg *')&&(event.key==='Enter'||event.key===' ')){
+      event.preventDefault();ACTIONS['season-inspect'](event,target);return;
+    }
+    const shift={ArrowLeft:-1,ArrowRight:1,ArrowUp:target.dataset.seasonKind==='slot'?-24:-1,ArrowDown:target.dataset.seasonKind==='slot'?24:1}[event.key];
+    if(shift===undefined)return;
+    const max=target.dataset.seasonKind==='slot'?167:11;
+    const next=Math.max(0,Math.min(max,Number(target.dataset.seasonIndex)+shift));
+    const match=$('season-explorer').querySelector(`[data-season-kind="${target.dataset.seasonKind}"][data-season-year="${target.dataset.seasonYear}"][data-season-index="${next}"]`);
+    if(match){event.preventDefault();match.focus();}
+  });
   $('pulse').addEventListener('pointerover',onPulsePointerOver);
   $('pulse').addEventListener('pointerout',onPulsePointerOut);
   $('pulse').addEventListener('focusin',event=>{const cell=event.target.closest('[data-pulse-day]');if(cell&&!pulsePopoverPinned&&!pulseSuppressFocus)showPulsePopover(cell);});
@@ -1143,7 +1435,8 @@ function init() {
   $('pulse-popover').addEventListener('pointerleave',event=>{if(!pulsePopoverPinned&&!pulsePopoverOrigin?.contains(event.relatedTarget))hidePulsePopover();});
   document.addEventListener('keydown',event=>{
     if (event.key !== 'Escape') return;
-    if (rhythmPinned) {event.preventDefault();rhythmPinned=null;rhythmHover=null;renderRhythmDetail();}
+    if (seasonPinned) {event.preventDefault();seasonPinned=null;seasonHover=null;renderSeasonDetail();}
+    else if (rhythmPinned) {event.preventDefault();rhythmPinned=null;rhythmHover=null;renderRhythmDetail();}
     else if (identityPicker) {event.preventDefault();closeIdentityPicker();}
     else if (!$('pulse-popover').hidden) closePulseAndRestoreFocus();
   });

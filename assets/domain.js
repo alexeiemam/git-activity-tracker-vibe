@@ -549,3 +549,144 @@ export function seriesForAnalysis(view,{mode='total',trend='rolling'}={}) {
   return {weeks,lines};
 }
 
+
+/**
+ * Year/month and year/weekday-hour views from precisely the same globally
+ * filtered author-date commits as the rest of the dashboard. Focus only
+ * changes which already-selected people are shown, never the eligible cohort.
+ *
+ * Exposure is the overlap of the user's date scope with the imported
+ * authored-date bounds. We cannot infer employment or unimported history
+ * outside those bounds. Dates inside the imported span with no commits are
+ * genuine zero counts in this dataset, not missing month records.
+ */
+export function seasonalityAnalysis(view, focusId = 'selection') {
+  const focus = String(focusId);
+  if (focus !== 'selection' && !view.selectedIds.has(focus)) return null;
+  const focused = focus === 'selection' ? view.selectedCommits : view.byId.get(focus)?.commits;
+  if (!focused) return null;
+  const from = [view.start, view.min].filter(validDate).sort().at(-1);
+  const to = [view.end, view.max].filter(validDate).sort()[0];
+  const name = focus === 'selection' ? 'Selected contributors' : view.byId.get(focus).displayName;
+  const emptyResult = { focusId: focus, name, from, to, years: [], comparisons: [], seasonalAverage: [], fullYears: 0, referenceName: view.denominator === 'selection' ? 'selected contributors' : 'imported repository' };
+  if (!validDate(from) || !validDate(to) || from > to) return emptyResult;
+
+  const byMonth = new Map();
+  const referenceByMonth = new Map();
+  for (const commit of focused) {
+    const key = commit.date.slice(0, 7);
+    if (!byMonth.has(key)) byMonth.set(key, []);
+    byMonth.get(key).push(commit);
+  }
+  for (const commit of view.referenceCommits) {
+    const key = commit.date.slice(0, 7);
+    referenceByMonth.set(key, (referenceByMonth.get(key) || 0) + 1);
+  }
+  const years = [];
+  const daySpan = (a, b) => Math.max(0, dayNumber(b) - dayNumber(a) + 1);
+  for (let year = Number(from.slice(0, 4)); year <= Number(to.slice(0, 4)); year++) {
+    const yearStart = `${year}-01-01`, yearEnd = `${year}-12-31`;
+    const start = from > yearStart ? from : yearStart;
+    const end = to < yearEnd ? to : yearEnd;
+    const exposureDays = daySpan(start, end);
+    const months = Array.from({length: 12}, (_, month) => {
+      const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+      const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+      const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      const startDate = start > monthStart ? start : monthStart;
+      const endDate = end < monthEnd ? end : monthEnd;
+      const days = startDate <= endDate ? daySpan(startDate, endDate) : 0;
+      const key = monthStart.slice(0, 7);
+      const commits = days ? (byMonth.get(key) || []) : [];
+      const activeDates = new Set(commits.map(c => c.date)).size;
+      return { year, month, key, start: days ? startDate : null, end: days ? endDate : null,
+        days, full: days === lastDay, calendarDays: lastDay,
+        count: commits.length, activeDates, referenceCount: days ? referenceByMonth.get(key) || 0 : 0,
+        commits, pace: days ? commits.length / days * 7 : null,
+        share: null, index: null };
+    });
+    const commits = months.flatMap(m => m.commits);
+    const count = commits.length;
+    const timed = commits.filter(c => Number.isInteger(c.hour) && c.hour >= 0 && c.hour <= 23);
+    const activeDays = new Set(commits.map(c => c.date)).size;
+    const weekend = commits.filter(c => dayOfWeek(c.date) >= 5).length;
+    const evening = timed.filter(c => c.hour >= 18 && c.hour <= 23).length;
+    const slots = Array(168).fill(0);
+    const weekdayExposures = Array(7).fill(0);
+    for (let n = dayNumber(start); n <= dayNumber(end); n++) weekdayExposures[dayOfWeek(dateAtDay(n))]++;
+    for (const commit of timed) slots[dayOfWeek(commit.date) * 24 + commit.hour]++;
+    const avgDaily = exposureDays ? count / exposureDays : 0;
+    for (const month of months) {
+      month.share = count ? month.count / count * 100 : null;
+      month.index = month.days && avgDaily ? month.count / month.days / avgDaily : null;
+    }
+    years.push({ year, start, end, exposureDays,
+      full: exposureDays === daySpan(yearStart, yearEnd), months, commits, count, activeDays,
+      pace: exposureDays ? count / exposureDays * 7 : null,
+      activeFrequency: exposureDays ? activeDays / exposureDays * 100 : null,
+      perActiveDay: activeDays ? count / activeDays : null,
+      timedCount: timed.length, untimedCount: count - timed.length,
+      timeCoverage: count ? timed.length / count * 100 : null,
+      weekendShare: count ? weekend / count * 100 : null,
+      eveningShare: timed.length ? evening / timed.length * 100 : null,
+      slots, weekdayExposures,
+    });
+  }
+
+  // For an honest year-over-year comparison, intersect the calendar dates
+  // actually covered in both years (e.g. Jan–Oct vs Jan–Dec compares Jan–Oct).
+  // Never extrapolate counts to an unobserved part of either year.
+  for (const row of years) {
+    const previous = years.find(y => y.year === row.year - 1);
+    if (!previous) { row.yoy = null; continue; }
+    const startMD = [row.start.slice(5), previous.start.slice(5)].sort().at(-1);
+    const endMD = [row.end.slice(5), previous.end.slice(5)].sort()[0];
+    if (startMD > endMD) { row.yoy = null; continue; }
+    const subwindow = annual => annual.commits.filter(c => c.date.slice(5) >= startMD && c.date.slice(5) <= endMD);
+    const thisCount = subwindow(row).length, lastCount = subwindow(previous).length;
+    const inclusiveDays = annual => annual.months.reduce((n,m) => {
+      if (!m.days) return n;
+      const lo = `${annual.year}-${startMD}`, hi = `${annual.year}-${endMD}`;
+      const a = m.start > lo ? m.start : lo;
+      const b = m.end < hi ? m.end : hi;
+      return n + (a <= b ? daySpan(a,b) : 0);
+    }, 0);
+    const thisDays = inclusiveDays(row), lastDays = inclusiveDays(previous);
+    if (!thisDays || !lastDays) { row.yoy = null; continue; }
+    const thisPace = thisCount / thisDays * 7, lastPace = lastCount / lastDays * 7;
+    row.yoy = { from: startMD, to: endMD, currentCount: thisCount, priorCount: lastCount,
+      currentDays: thisDays, priorDays: lastDays,
+      currentPace: thisPace, priorPace: lastPace,
+      change: lastPace ? (thisPace / lastPace - 1) * 100 : null };
+  }
+  // Only complete observed years enter a purported recurring seasonal mean.
+  // At least three such years must exist before returning one.
+  const fullYears = years.filter(y => y.full);
+  const seasonalAverage = Array.from({length: 12}, (_, month) => {
+    const eligible = fullYears.map(y => y.months[month]).filter(m => m.index !== null && m.full);
+    return eligible.length >= 3
+      ? { month, count: eligible.length, index: sum(eligible.map(m => m.index)) / eligible.length,
+        pace: sum(eligible.map(m => m.pace)) / eligible.length }
+      : { month, count: eligible.length, index: null, pace: null };
+  });
+  const comparisons = view.contributors.map(contributor => ({
+    id: contributor.id, name: contributor.displayName,
+    years: years.map(year => {
+      const matching = contributor.commits.filter(c => c.date >= year.start && c.date <= year.end);
+      const active = new Set(matching.map(c => c.date)).size;
+      return { year: year.year, count: matching.length, pace: year.exposureDays ? matching.length / year.exposureDays * 7 : null,
+        activeFrequency: year.exposureDays ? active / year.exposureDays * 100 : null,
+        weekendShare: matching.length ? matching.filter(c => dayOfWeek(c.date) >= 5).length / matching.length * 100 : null };
+    }),
+  }));
+  return { focusId: focus, name, from, to, years, comparisons, seasonalAverage,
+    fullYears: fullYears.length,
+    referenceName: view.denominator === 'selection' ? 'selected contributors' : 'imported repository' };
+}
+
+/** Every year×month display mode uses the same count and exposed date range. */
+export function seasonalMonthValue(month, mode = 'rate') {
+  if (mode === 'shape') return month.share;
+  if (mode === 'index') return month.index;
+  return month.pace;
+}

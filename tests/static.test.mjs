@@ -22,3 +22,12 @@ test('UI actions are dispatched centrally rather than through global functions',
   assert.match(app, /document\.addEventListener\('click',\s*handleDocumentClick\)/);
   assert.doesNotMatch(app, /window\.[A-Za-z_$][\w$]*\s*=/);
 });
+
+test('generated Git capture command requests author timestamps without a committer-date cutoff', () => {
+  const match = app.match(/setText\('git-cmd',\s*'([^']+)'\)/);
+  assert.ok(match, 'generated command must be a plainly inspectable literal');
+  assert.match(match[1], /%aI/);
+  assert.match(match[1], /%ae/);
+  assert.match(match[1], /%an/);
+  assert.doesNotMatch(match[1], /--since|--until|%cI|%cd/);
+});
