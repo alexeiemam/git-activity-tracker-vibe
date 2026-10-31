@@ -40,7 +40,8 @@
     </section>
 
     <section id="merge-step" class="merge-panel" aria-labelledby="merge-heading" hidden>
-      <div class="block-heading"><span class="step-dot">02</span><div><h2 id="merge-heading">Confirm identities</h2><p>The same person may commit from more than one email. These suggestions can be edited before comparison.</p></div></div>
+      <div class="block-heading"><span class="step-dot">02</span><div><h2 id="merge-heading">Confirm identities</h2><p>One person may have many Git author emails. Review the suggested groups, then add multiple identities at once—nothing moves until you apply it.</p></div></div>
+      <div id="merge-feedback" class="merge-feedback" role="status" aria-live="polite" hidden></div>
       <div id="merge-groups" class="merge-groups"></div>
       <div class="merge-actions"><button type="button" data-action="add-merge-group" class="button outline">+ Add group</button><span class="push"></span><button type="button" data-action="skip-merge" class="button soft">Keep emails separate</button><button type="button" data-action="render-dashboard" class="button primary">Build dashboard <span aria-hidden="true">→</span></button></div>
     </section>

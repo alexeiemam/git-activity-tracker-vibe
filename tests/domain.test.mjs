@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { generateDemoLog } from '../assets/demo-data.js';
 import {
-  parseGitLog, buildAnalysis, periodForPreset, validDate, longestStreak,
+  parseGitLog, buildAnalysis, periodForPreset, validDate, longestStreak, moveContributorIdentities,
   longestConsecutiveWorkdays, dayOfWeek, sum, valueInMode, fileArea, seriesForAnalysis, pulseDayDetails,
 } from '../assets/domain.js';
 
@@ -233,4 +233,51 @@ test('daily active-days compare person-days against same-date contributor-day re
   assert.equal(day.metricValue,1,'two commits still count as one active author date');
   assert.equal(day.referenceValue,2,'Blair has activity that day too');
   assert.equal(day.share,50);
+});
+
+test('identity batch moves multiple emails from multiple source contributors atomically', () => {
+  const groups = [
+    {displayName:'Primary',emails:['main@example.test']},
+    {displayName:'Second',emails:['secondary@example.test','secondary-alt@example.test']},
+    {displayName:'Third',emails:['third@example.test']},
+  ];
+  const original = structuredClone(groups);
+  const result = moveContributorIdentities(groups,0,[
+    'secondary@example.test','THIRD@example.test','third@example.test','unknown@example.test',
+  ]);
+  assert.deepEqual(result, [
+    {displayName:'Primary',emails:['main@example.test','secondary@example.test','third@example.test']},
+    {displayName:'Second',emails:['secondary-alt@example.test']},
+  ]);
+  assert.deepEqual(groups, original, 'the input stays unchanged for Undo');
+  assert.equal(new Set(result.flatMap(g=>g.emails)).size,4);
+  assert.equal(moveContributorIdentities(result,0,['secondary@example.test']),result,'repeated moves are no-ops');
+});
+
+test('identity batch preserves target when source groups before it disappear', () => {
+  const groups = [
+    {displayName:'Before', emails:['before@example.test']},
+    {displayName:'After', emails:['after@example.test']},
+    {displayName:'Destination', emails:['home@example.test']},
+  ];
+  assert.deepEqual(moveContributorIdentities(groups,2,['before@example.test','after@example.test']), [
+    {displayName:'Destination', emails:['home@example.test','before@example.test','after@example.test']},
+  ]);
+  assert.deepEqual(moveContributorIdentities(groups,99,['before@example.test']),groups);
+  assert.deepEqual(moveContributorIdentities(groups,2,['not-a-member@example.test']),groups);
+});
+
+test('batch identity reconciliation flows through the same dashboard aggregation', () => {
+  const split = [
+    {displayName:'Alex',emails:['a@example.test']},
+    {displayName:'A second workstation',emails:['alias@example.test']},
+    {displayName:'Blair',emails:['b@example.test']},
+  ];
+  const before = buildAnalysis(commits,split,{...base,selectedIds:['0']});
+  const moved = moveContributorIdentities(split,0,['alias@example.test']);
+  const after = buildAnalysis(commits,moved,{...base,selectedIds:['0']});
+  assert.equal(before.selectedSummary.totals.commits,1);
+  assert.equal(after.selectedSummary.totals.commits,2);
+  assert.deepEqual(after.contributors[0].emails,['a@example.test','alias@example.test']);
+  assert.equal(after.referenceSummary.totals.commits,before.referenceSummary.totals.commits);
 });

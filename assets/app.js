@@ -1,6 +1,6 @@
 import {
   METRICS, DAY_NAMES, TIME_BANDS, buildAnalysis, getDateBounds, pulseDayDetails, mondayOf, dayNumber, dateAtDay,
-  periodForPreset, seriesForAnalysis,
+  periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum,
   parseGitLog,
 } from './domain.js';
@@ -20,6 +20,9 @@ const metricValue = (c, key) => c?.totals[key] || 0;
 
 let rawCommits = [];
 let mergeGroups = [];
+let identityMeta = new Map();
+let identityPicker = null; // { targetIndex, selected: Set, query } — staged until Apply
+let mergeUndo = null;
 let analysis = null;
 let pendingImport = null;
 let tableRows = [];
@@ -43,63 +46,195 @@ function copyCommand() {
     .catch(() => setText('parse-error', 'Clipboard blocked. Select and copy the command manually.'));
 }
 
-// ---- Identity reconciliation: exact emails are authoritative. ----
-function makeMergeSuggestions(commits) {
-  const byEmail = new Map();
-  for (const c of commits) {
-    if (!byEmail.has(c.email)) byEmail.set(c.email, { email:c.email, names:new Map() });
-    const map = byEmail.get(c.email).names;
-    map.set(c.name, (map.get(c.name) || 0) + 1);
+// ---- Identity reconciliation: email is the durable identity key. ----
+function makeIdentityCatalogue(commits) {
+  const catalogue = new Map();
+  for (const commit of commits) {
+    if (!catalogue.has(commit.email)) catalogue.set(commit.email, {
+      nameCounts: new Map(), commits: 0, date: commit.date,
+    });
+    const item = catalogue.get(commit.email);
+    item.commits++;
+    item.nameCounts.set(commit.name, (item.nameCounts.get(commit.name) || 0) + 1);
+    if (commit.date > item.date) item.date = commit.date;
   }
+  return new Map([...catalogue].map(([email, item]) => {
+    const best = [...item.nameCounts].sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)[0]?.[0] || email;
+    return [email, { name: best, aliases: [...item.nameCounts.keys()], commits: item.commits, date: item.date }];
+  }));
+}
+function makeMergeSuggestions() {
   const byName = new Map();
-  for (const entry of byEmail.values()) {
-    const best = [...entry.names.entries()].sort((a,b) => b[1]-a[1] || b[0].length-a[0].length)[0]?.[0] || entry.email;
-    const key = best.trim().toLocaleLowerCase();
-    if (!byName.has(key)) byName.set(key, { displayName:best, emails:[] });
-    byName.get(key).emails.push(entry.email);
+  for (const [email, meta] of identityMeta) {
+    const key = meta.name.trim().toLocaleLowerCase();
+    if (!byName.has(key)) byName.set(key, { displayName: meta.name, emails: [] });
+    byName.get(key).emails.push(email);
   }
-  return [...byName.values()].sort((a,b)=>a.displayName.localeCompare(b.displayName));
+  return [...byName.values()].sort((a, b) => a.displayName.localeCompare(b.displayName));
+}
+function mergeCandidates(index, query = '') {
+  const text = query.trim().toLocaleLowerCase();
+  return mergeGroups.flatMap((g, i) => i === index ? [] : [{ index: i, group: g,
+    emails: g.emails.filter(email => {
+      const meta = identityMeta.get(email);
+      return !text || [email, g.displayName, meta?.name, ...(meta?.aliases || [])]
+        .some(value => String(value || '').toLocaleLowerCase().includes(text));
+    }),
+  }]).filter(entry => entry.emails.length);
+}
+function countWord(n, singular, plural = `${singular}s`) { return `${number.format(n)} ${n === 1 ? singular : plural}`; }
+function renderMergeFeedback(message = '', canUndo = false) {
+  const el = $('merge-feedback');
+  el.hidden = !message;
+  el.innerHTML = message ? `<span>${esc(message)}</span>${canUndo ? '<button type="button" data-action="undo-identity-merge" class="text-button">Undo merge</button>' : ''}` : '';
+}
+function forgetUndo() {
+  mergeUndo = null;
+  renderMergeFeedback();
+}
+function identityRows(index) {
+  const picker = identityPicker;
+  const groups = mergeCandidates(index, picker.query);
+  if (!groups.length) return '<div class="identity-picker-empty">No matching identities. Try a name or email address.</div>';
+  return groups.map(({group, emails}) => `<div class="identity-source" role="group" aria-label="Identities currently under ${esc(group.displayName)}">
+    <div class="identity-source-head"><span>${esc(group.displayName)}</span><span>${countWord(emails.length, 'identity', 'identities')}</span></div>
+    ${emails.map(email => {
+      const meta = identityMeta.get(email);
+      const checked = picker.selected.has(email);
+      return `<label class="identity-option ${checked ? 'is-selected' : ''}">
+        <input type="checkbox" data-identity-email="${esc(email)}" ${checked ? 'checked' : ''}>
+        <span class="identity-option-text"><strong>${esc(meta?.name || group.displayName)}</strong><small title="${esc(email)}">${esc(email)}</small></span>
+        <span class="identity-option-count">${countWord(meta?.commits || 0, 'commit')}</span>
+      </label>`;
+    }).join('')}
+  </div>`).join('');
+}
+function renderIdentityPicker(index) {
+  const all = mergeCandidates(index).flatMap(g => g.emails).length;
+  return `<div id="identity-picker-${index}" class="identity-picker" aria-label="Add Git identities to ${esc(mergeGroups[index].displayName)}">
+    <div class="identity-picker-heading"><div><span class="eyebrow">LINK GIT IDENTITIES</span><h3>Add multiple identities</h3><p>Choose any number of author emails. Only checked identities will move to this contributor.</p></div><button type="button" class="identity-picker-close" data-action="cancel-identity-picker" aria-label="Close identity picker">×</button></div>
+    <label for="identity-search-${index}" class="identity-search-label">FIND IDENTITIES <span>${number.format(all)} available</span></label>
+    <input id="identity-search-${index}" class="identity-search" type="search" data-identity-search placeholder="Search contributor or email…" autocomplete="off" spellcheck="false">
+    <div class="identity-picker-utilities"><span id="identity-visible-${index}" class="helper">${countWord(all, 'identity', 'identities')} shown</span><div><button type="button" class="text-button" data-action="select-visible-identities">Select shown</button><button type="button" class="text-button" data-action="clear-identity-selection">Clear selection</button></div></div>
+    <div class="identity-option-list" id="identity-list-${index}" role="group" aria-label="Available author identities">${identityRows(index)}</div>
+    <div class="identity-picker-bottom"><div class="identity-picker-recap" id="identity-recap-${index}" role="status" aria-live="polite"></div><div class="identity-picker-buttons"><button type="button" class="button outline" data-action="cancel-identity-picker">Cancel</button><button type="button" class="button primary" id="identity-apply-${index}" data-action="apply-identity-picker" disabled>Move selected identities</button></div></div>
+  </div>`;
 }
 function renderMergeUI() {
-  $('merge-groups').innerHTML = mergeGroups.map((group,index) => {
-    const others = mergeGroups.flatMap((g,j) => j === index ? [] : g.emails.map(e => ({ email:e, name:g.displayName })));
-    return `<div class="merge-group"><div><label for="merge-name-${index}">DISPLAY NAME</label><input id="merge-name-${index}" data-merge-name="${index}" value="${esc(group.displayName)}"></div>
-    <div><label>EMAIL IDENTITIES (${group.emails.length})</label><div class="identity-chips">${group.emails.map(e => `<span class="chip">${esc(e)}${group.emails.length > 1 ? `<button type="button" data-action="split-email" data-group="${index}" data-email="${esc(e)}" aria-label="Split ${esc(e)}">×</button>` : ''}</span>`).join('')}</div>
-    <div class="merge-add"><select id="merge-select-${index}" aria-label="Email to merge into ${esc(group.displayName)}"><option value="">+ Move another email here…</option>${others.map(e=>`<option value="${esc(e.email)}">${esc(e.email)} — ${esc(e.name)}</option>`).join('')}</select><button class="mini-button" type="button" data-action="merge-email" data-group="${index}">Merge</button>${group.emails.length>1?`<button class="mini-button" type="button" data-action="split-group" data-group="${index}">Split all</button>`:''}</div></div></div>`;
+  $('merge-groups').innerHTML = mergeGroups.map((group, index) => {
+    const open = identityPicker?.targetIndex === index;
+    const available = mergeGroups.some((g, i) => i !== index && g.emails.length);
+    const groupCommits = sum(group.emails.map(email => identityMeta.get(email)?.commits || 0));
+    return `<article class="merge-group ${open ? 'merge-group-open' : ''}">
+      <div class="merge-group-main">
+        <div class="merge-group-name"><label for="merge-name-${index}">CONTRIBUTOR NAME</label><input id="merge-name-${index}" data-merge-name="${index}" value="${esc(group.displayName)}" placeholder="Name this contributor" maxlength="160"><p class="merge-group-caption">${countWord(groupCommits, 'commit')} in imported history</p></div>
+        <div class="merge-group-identities"><div class="merge-identity-heading"><span>AUTHOR EMAILS</span><span class="merge-identity-total">${countWord(group.emails.length, 'identity', 'identities')}</span></div>
+          <div class="identity-chips">${group.emails.length ? group.emails.map(email => `<span class="chip"><span title="${esc(email)}">${esc(email)}</span>${group.emails.length > 1 ? `<button type="button" data-action="split-email" data-group="${index}" data-email="${esc(email)}" aria-label="Separate ${esc(email)} from ${esc(group.displayName)}" title="Separate this identity">×</button>` : ''}</span>`).join('') : '<span class="merge-group-caption">No identities yet. Select author emails to build this contributor.</span>'}</div>
+          <div class="merge-add"><button type="button" class="merge-add-trigger" data-action="toggle-identity-picker" data-group="${index}" aria-expanded="${open}" ${open ? `aria-controls="identity-picker-${index}"` : ''} ${!available ? 'disabled title="No other identities available"' : ''}><span class="merge-plus" aria-hidden="true">${open ? '−' : '+'}</span>${open ? 'Close selector' : 'Add identities'}<span class="merge-plus-chevron" aria-hidden="true">${open ? '⌃' : '⌄'}</span></button>${group.emails.length > 1 ? `<button class="mini-button" type="button" data-action="split-group" data-group="${index}">Separate all</button>` : ''}</div>
+        </div>
+      </div>
+      ${open ? renderIdentityPicker(index) : ''}
+    </article>`;
   }).join('');
+  if (identityPicker) updateIdentityPickerSummary();
 }
-function splitEmail(index,email) {
+function requireResolvedIdentitySelection() {
+  if (!identityPicker?.selected.size) return false;
+  renderMergeFeedback('Apply or cancel the pending identity selection before another edit.');
+  $(`identity-apply-${identityPicker.targetIndex}`)?.focus();
+  return true;
+}
+function openIdentityPicker(index) {
+  if (!mergeGroups[index] || !mergeCandidates(index).length) return;
+  if (identityPicker?.targetIndex === index) return closeIdentityPicker();
+  if (requireResolvedIdentitySelection()) return;
+  identityPicker = {targetIndex:index, selected:new Set(), query:''};
+  renderMergeUI();
+  $(`identity-search-${index}`)?.focus();
+}
+function closeIdentityPicker({ restoreFocus = true } = {}) {
+  if (!identityPicker) return;
+  const index = identityPicker.targetIndex;
+  identityPicker = null;
+  renderMergeUI();
+  if (restoreFocus) $('merge-groups').querySelector(`[data-action="toggle-identity-picker"][data-group="${index}"]`)?.focus({preventScroll:true});
+}
+function refreshIdentityOptions() {
+  if (!identityPicker) return;
+  const index = identityPicker.targetIndex;
+  $(`identity-list-${index}`).innerHTML = identityRows(index);
+  const shown = mergeCandidates(index, identityPicker.query).flatMap(g => g.emails).length;
+  setText(`identity-visible-${index}`, `${countWord(shown, 'identity', 'identities')} shown`);
+  updateIdentityPickerSummary();
+}
+function updateIdentityPickerSummary() {
+  if (!identityPicker) return;
+  const {targetIndex, selected} = identityPicker;
+  const sourceEntries = mergeCandidates(targetIndex);
+  const sourceGroups = sourceEntries.filter(entry => entry.emails.some(email => selected.has(email)));
+  const removedGroups = sourceGroups.filter(entry => entry.emails.every(email => selected.has(email)));
+  const commits = sum([...selected].map(email => identityMeta.get(email)?.commits || 0));
+  const recap = $(`identity-recap-${targetIndex}`);
+  recap.innerHTML = selected.size
+    ? `<strong>${countWord(selected.size, 'identity', 'identities')} · ${countWord(commits, 'commit')}</strong><span>Move from ${countWord(sourceGroups.length, 'contributor')}${removedGroups.length ? ` · ${countWord(removedGroups.length, 'source group')} will be emptied` : ''}. Changes apply to every chart when you build the dashboard.</span>`
+    : `<strong>No identities selected</strong><span>Select one or more author emails above. Your existing identities will be kept.</span>`;
+  const apply = $(`identity-apply-${targetIndex}`);
+  apply.disabled = !selected.size;
+  apply.textContent = selected.size ? `Move ${countWord(selected.size, 'identity', 'identities')}` : 'Move selected identities';
+}
+function applyIdentityPicker() {
+  if (!identityPicker?.selected.size) return;
+  const {targetIndex, selected} = identityPicker;
+  const target = mergeGroups[targetIndex];
+  const original = mergeGroups.map(g => ({displayName:g.displayName, emails:[...g.emails]}));
+  const moved = [...selected];
+  // Reference the destination by email, not by its old array index: groups
+  // before it may disappear as their final identities move.
+  const targetEmail = target.emails[0] || moved[0];
+  const next = moveContributorIdentities(mergeGroups, targetIndex, moved);
+  if (next === mergeGroups) return closeIdentityPicker();
+  mergeGroups = next;
+  identityPicker = null;
+  mergeUndo = original;
+  renderMergeUI();
+  const newIndex = mergeGroups.findIndex(g => g.emails.includes(targetEmail));
+  const btn = $('merge-groups').querySelector(`[data-action="toggle-identity-picker"][data-group="${newIndex}"]`);
+  btn?.focus({preventScroll:true});
+  renderMergeFeedback(`Moved ${countWord(moved.length, 'identity', 'identities')} into ${mergeGroups[newIndex]?.displayName || 'the contributor'}.`, true);
+}
+function undoIdentityMerge() {
+  if (!mergeUndo || requireResolvedIdentitySelection()) return;
+  mergeGroups = mergeUndo;
+  mergeUndo = null;
+  identityPicker = null;
+  renderMergeUI();
+  renderMergeFeedback('Identity move undone.');
+}
+function splitEmail(index, email) {
   const group = mergeGroups[index];
-  if (!group || !group.emails.includes(email)) return;
-  group.emails = group.emails.filter(e=>e!==email);
-  if (!group.emails.length) mergeGroups.splice(index,1);
-  const original = rawCommits.find(c=>c.email===email);
-  mergeGroups.push({ displayName: original?.name || email, emails:[email] });
+  if (!group || group.emails.length <= 1 || !group.emails.includes(email) || requireResolvedIdentitySelection()) return;
+  identityPicker = null;
+  forgetUndo();
+  group.emails = group.emails.filter(e => e !== email);
+  if (!group.emails.length) mergeGroups.splice(index, 1);
+  mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email]});
   renderMergeUI();
 }
 function splitGroup(index) {
   const group = mergeGroups[index];
-  if (!group) return;
+  if (!group || group.emails.length <= 1 || requireResolvedIdentitySelection()) return;
+  identityPicker = null;
+  forgetUndo();
   const emails = [...group.emails];
-  mergeGroups.splice(index,1);
-  for (const email of emails) {
-    const original = rawCommits.find(c=>c.email===email);
-    mergeGroups.push({ displayName: original?.name || email, emails:[email] });
-  }
-  renderMergeUI();
-}
-function mergeEmail(index) {
-  const target = mergeGroups[index];
-  const email = $(`merge-select-${index}`)?.value;
-  if (!target || !email) return;
-  for (const group of mergeGroups) group.emails = group.emails.filter(e=>e!==email);
-  target.emails.push(email);
-  mergeGroups = mergeGroups.filter(group=>group.emails.length);
+  mergeGroups.splice(index, 1);
+  for (const email of emails) mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email]});
   renderMergeUI();
 }
 function skipMerge() {
   const byEmail = new Map();
   for (const c of rawCommits) if (!byEmail.has(c.email)) byEmail.set(c.email,c.name);
+  identityPicker = null;
+  mergeUndo = null;
   mergeGroups = [...byEmail.entries()].map(([email,name])=>({ displayName:name, emails:[email] }));
   buildDashboard();
 }
@@ -110,7 +245,11 @@ function analyse() {
   try { rawCommits = parseGitLog(raw); }
   catch(error) { return setText('parse-error',error.message); }
   pendingImport = null;
-  mergeGroups = makeMergeSuggestions(rawCommits);
+  identityMeta = makeIdentityCatalogue(rawCommits);
+  identityPicker = null;
+  mergeUndo = null;
+  renderMergeFeedback();
+  mergeGroups = makeMergeSuggestions();
   $('merge-step').hidden = false;
   $('dashboard').hidden = true;
   $('export-btn').hidden = true;
@@ -149,6 +288,9 @@ function syncScopeAfterLoad() {
   pendingImport=null;
 }
 function buildDashboard() {
+  if (requireResolvedIdentitySelection()) return;
+  identityPicker = null;
+  mergeUndo = null;
   mergeGroups=mergeGroups.filter(g=>g.emails.length);
   syncScopeAfterLoad();
   $('merge-step').hidden=true;
@@ -720,6 +862,10 @@ async function importSession(event) {
   let commits;
   try {commits=parseGitLog(payload.rawLog);}catch(err){return setText('parse-error',err.message);}
   rawCommits=commits;
+  identityMeta = makeIdentityCatalogue(rawCommits);
+  identityPicker = null;
+  mergeUndo = null;
+  renderMergeFeedback();
   $('log-input').value=payload.rawLog;
   if(Number.isInteger(Number(payload.rangeYears)) && +payload.rangeYears>=1 && +payload.rangeYears<=5) $('range-select').value=String(payload.rangeYears);
   command();
@@ -742,10 +888,15 @@ async function importSession(event) {
 const ACTIONS={
   'choose-import':()=> $('file-import-input').click(),
   'export':exportSession,'copy-command':copyCommand,'analyse':analyse,'load-demo':loadDemo,
-  'add-merge-group':()=>{mergeGroups.push({displayName:'New contributor',emails:[]});renderMergeUI();},
+  'add-merge-group':()=>{if(requireResolvedIdentitySelection())return;forgetUndo();mergeGroups.push({displayName:'New contributor',emails:[]});identityPicker=null;renderMergeUI();openIdentityPicker(mergeGroups.length-1);},
   'split-email':(_e,t)=>splitEmail(Number(t.dataset.group),t.dataset.email),
   'split-group':(_e,t)=>splitGroup(Number(t.dataset.group)),
-  'merge-email':(_e,t)=>mergeEmail(Number(t.dataset.group)),
+  'toggle-identity-picker':(_e,t)=>openIdentityPicker(Number(t.dataset.group)),
+  'cancel-identity-picker':()=>closeIdentityPicker(),
+  'select-visible-identities':()=>{if(!identityPicker)return;mergeCandidates(identityPicker.targetIndex,identityPicker.query).forEach(entry=>entry.emails.forEach(email=>identityPicker.selected.add(email)));refreshIdentityOptions();},
+  'clear-identity-selection':()=>{if(!identityPicker)return;identityPicker.selected.clear();refreshIdentityOptions();},
+  'apply-identity-picker':applyIdentityPicker,
+  'undo-identity-merge':undoIdentityMerge,
   'skip-merge':skipMerge,'render-dashboard':buildDashboard,
   'select-all':()=>{state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));renderDashboard();},
   'select-none':()=>{state.selectedIds=new Set();renderDashboard();},
@@ -765,6 +916,22 @@ function handleDocumentClick(event) {
 }
 function handleDocumentChange(event) {
   const t=event.target;
+  if(t.dataset.mergeName!==undefined) {
+    const group=mergeGroups[Number(t.dataset.mergeName)];
+    if (group) {
+      group.displayName=t.value.trim() || identityMeta.get(group.emails[0])?.name || 'New contributor';
+      t.value=group.displayName;
+    }
+    return;
+  }
+  if(t.matches('[data-identity-email]') && identityPicker) {
+    const email = t.dataset.identityEmail;
+    if (t.checked) identityPicker.selected.add(email);
+    else identityPicker.selected.delete(email);
+    t.closest('.identity-option')?.classList.toggle('is-selected', t.checked);
+    updateIdentityPickerSummary();
+    return;
+  }
   if(t.dataset.personId!==undefined && t.type==='checkbox') {
     if(t.checked)state.selectedIds.add(t.dataset.personId);else state.selectedIds.delete(t.dataset.personId);
     renderDashboard();return;
@@ -783,7 +950,8 @@ function handleDocumentChange(event) {
 }
 function handleDocumentInput(event) {
   const t=event.target;
-  if(t.dataset.mergeName!==undefined){const g=mergeGroups[Number(t.dataset.mergeName)];if(g)g.displayName=t.value;}
+  if(t.dataset.mergeName!==undefined){const g=mergeGroups[Number(t.dataset.mergeName)];if(g){g.displayName=t.value; if(mergeUndo)forgetUndo();}}
+  if(t.matches('[data-identity-search]') && identityPicker){identityPicker.query=t.value;refreshIdentityOptions();}
   if(t.id==='contributor-search'){state.search=t.value;renderPicker();}
 }
 function init() {
@@ -796,7 +964,11 @@ function init() {
   $('pulse').addEventListener('focusout',onPulseFocusOut);
   $('pulse').addEventListener('scroll',()=>hidePulsePopover(),{passive:true});
   $('pulse-popover').addEventListener('pointerleave',event=>{if(!pulsePopoverPinned&&!pulsePopoverOrigin?.contains(event.relatedTarget))hidePulsePopover();});
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('pulse-popover').hidden)closePulseAndRestoreFocus();});
+  document.addEventListener('keydown',event=>{
+    if (event.key !== 'Escape') return;
+    if (identityPicker) {event.preventDefault();closeIdentityPicker();}
+    else if (!$('pulse-popover').hidden) closePulseAndRestoreFocus();
+  });
   command();
 }
 init();

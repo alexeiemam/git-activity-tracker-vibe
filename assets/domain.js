@@ -116,6 +116,27 @@ export function parseGitLog(raw) {
   return unique;
 }
 
+/**
+ * Move any number of known email identities into one contributor in a single
+ * operation. Only the group mapping changes: commit records are never edited.
+ * Unknown identities are ignored and each email remains owned by one group.
+ */
+export function moveContributorIdentities(groups, targetIndex, emails) {
+  if (!Number.isInteger(targetIndex) || targetIndex < 0 || targetIndex >= groups.length ||
+      !Array.isArray(emails)) return groups;
+  const requested = new Set(emails.filter(e => typeof e === 'string').map(e => e.toLowerCase().trim()));
+  const available = new Set(groups.flatMap((g, i) => i === targetIndex ? [] : g.emails));
+  const moving = [...requested].filter(e => available.has(e));
+  if (!moving.length) return groups;
+  const moved = new Set(moving);
+  return groups.map((group, i) => ({
+    ...group,
+    emails: i === targetIndex
+      ? [...new Set([...group.emails, ...moving])]
+      : group.emails.filter(e => !moved.has(e)),
+  })).filter((group, i) => group.emails.length || i === targetIndex || !groups[i].emails.length);
+}
+
 export function getDateBounds(commits) {
   const dates = commits.map(c => c.date).filter(validDate).sort();
   return { min: dates[0] ?? null, max: dates.at(-1) ?? null };

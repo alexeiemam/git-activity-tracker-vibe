@@ -10,7 +10,7 @@ From this directory, serve the static app with:
 python3 -m http.server 8000
 ```
 
-Open `http://localhost:8000` and choose **Explore demo dataset**, or use the generated `git log` command inside a Git repository. Confirm/merge contributor identities, then build the dashboard. The example command uses macOS `pbcopy`; on other systems, remove that final pipe and paste the result yourself.
+Open `http://localhost:8000` and choose **Explore demo dataset**, or use the generated `git log` command inside a Git repository. Confirm/merge contributor identities, then build the dashboard. Use **Add identities** on a contributor to open a searchable multi-selector, tick as many Git author emails as needed (including identities currently under other names), and **Move identities** to apply the batch. The picker previews affected commits and source groups; you can cancel, press Escape, or undo the most recent move. Splitting identities still works independently. The example command uses macOS `pbcopy`; on other systems, remove that final pipe and paste the result yourself.
 
 No build, install, backend, API key, or CDN for JavaScript is needed. The optional Google Fonts request can fall back to local fonts offline.
 
@@ -18,7 +18,7 @@ No build, install, backend, API key, or CDN for JavaScript is needed. The option
 
 **Every view** is rendered from one `buildAnalysis(rawCommits, groups, scope)` result in `assets/domain.js`. It applies the following, in this order:
 
-1. **Identity** — reconcile author emails into people; select all, any subset, or one person (Solo).
+1. **Identity** — reconcile any number of author emails into people using an explicit, searchable batch selector; select all, any subset, or one person (Solo). Moving identities changes only their contributor mapping, not the imported commits. Already-merged source groups lose only the selected emails; empty source groups disappear.
 2. **Dates** — inclusive authored dates; all imported history, latest 90/365/730 days, calendar year or custom. Rolling presets anchor to the *latest imported commit*, not the computer's current date.
 3. **Commit policy** — include/exclude merge commits and revert commits; excluded commits disappear from every view and from both the selection and the reference.
 4. **Metric and presentation** — choose commits, active days, line additions/deletions/churn, file touches, VERSION-file changes, revert or merge commits. Display absolute totals, share of a reference group, per active contributor-day, or per calendar week.
