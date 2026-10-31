@@ -150,6 +150,12 @@ The daily pulse uses columns for calendar weeks and rows for Monday–Sunday; it
 
 Trend views offer trailing four-week windows (default), raw calendar weeks and cumulative values. Rates and shares in rolling/cumulative views are computed from the **sums of their numerators and denominators**, never from averages of percentages; tooltips show the plotted values. Week boundaries are clipped to the selected date window. Shares or per-active-day rates with no valid denominator show **—** or gaps rather than misleading zeros.
 
+### Reading numeric colour intensity
+
+Every value-encoded heatmap now uses the same **zero-aware sequential palette**, independently of the measure being plotted. **Observed zero** is light neutral grey; **any measured positive value** is unmistakably green; increasingly large positive values progress from light green to dark green. Positive shades are spread **logarithmically between the smallest positive observed value and the largest value in that view's shared comparison group**, so rare activity remains visible even in the presence of large outliers. Legends identify zero, the maximum and the log-scaled positive band. These shades **do not mean a linear increment** or imply productivity.
+
+Within a given visualisation the scale is **shared across all displayed people, periods and releases**; there is no secret per-person normalisation. Where the underlying measure is a percentage or rate, any positive fractional value is still coloured. **Unavailable/undefined** is visibly hatched, never presented as observed zero; year/month cells outside the observation window remain hatched separately. Counts and percentages in hover/details, not the colour, remain authoritative. Categorical colours (contributor identity, release type, change-size bands) and non-colour encoded bars/lines are unaffected.
+
 ## Interpreting metrics
 
 - **Active days** are distinct authored dates *per person*. Adding them across people gives *contributor-days*, which differs from unique team calendar days.

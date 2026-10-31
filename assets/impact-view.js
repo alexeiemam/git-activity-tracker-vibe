@@ -1,16 +1,17 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=impact-20261031-3';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=impact-20261031-3';
+import { IMPACT_METRICS } from './impact.js?v=impact-20261031-4';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=impact-20261031-4';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=impact-20261031-4';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
-const p = x => x==null?'—':`${n.format(x)}%`;
+const p = x => x==null?'—':`${Math.abs(x) > 0 && Math.abs(x) < .1 ? Number(x.toPrecision(2)) : n.format(x)}%`;
 const amount = x => x==null?'—':n.format(x);
 const shortDate = x => x ? new Date(`${x}T12:00:00Z`).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}) : 'Undated';
 const typeLabel = s => ({baseline:'First tag on lineage',major:'Major',minor:'Minor',patch:'Patch',prerelease:'Pre-release',divergent:'Version decreased',unclassified:'Unclassified', 'same-version':'Same version'})[s] || 'Unclassified';
 const color = s => ({major:'#b65e49',minor:'#4d70a4',patch:'#2b7957',prerelease:'#a47833',baseline:'#707e70'})[s] || '#84708f';
 const humanMetric = (value,metric) => metric==='share'?p(value):amount(value);
-const shade = (value,max) => value==null?'background:#f4f5f2;color:#87968b':`background:rgba(27,113,75,${(0.09+0.76*Math.pow(Math.max(0,value)/Math.max(1,max),0.55)).toFixed(3)});color:${value/max>0.62?'#fff':'#20553b'}`;
+const precise = x => x < 1 && x > 0 ? Number(x.toPrecision(3)).toString() : n.format(x);
 
 export function impactSelectMessage(model) {
   if(!model.available) return `<div class="impact-empty"><strong>No resolvable release tags in this import</strong><p>Paste a fresh capture using the updated Git command to include annotated and lightweight tags, parent hashes and commit times. Legacy logs and partial Git history still work for activity, but cannot prove release membership. Existing charts remain available.</p></div>`;
@@ -179,24 +180,27 @@ export function impactReleaseMatrix(model, expanded=false) {
   const people=releases[0]?.cells || [];
   if (!releases.length)return '';
   const labels=model.metric==='share'?'Percent of reference commits':IMPACT_METRICS[model.metric];
+  const scale=makeIntensityScale(releases.flatMap(r=>r.cells.map(c=>c?.value)));
   return `<p class="impact-muted">Each cell is ${e(labels.toLowerCase())} by a selected contributor, within a tagged release and the global authored-date/commit-policy scope. The reference for shares is <strong>${e(model.referenceLabel)}</strong>. Distinct paths/areas can overlap across people.</p>
     <div class="impact-matrix-scroll"><table class="impact-matrix"><thead><tr><th>CONTRIBUTOR</th>${releases.map(r=>`<th><span class="impact-matrix-version">${e(r.tag)}</span><small>${e(r.date||'—')}</small></th>`).join('')}</tr></thead><tbody>
-    ${people.map((person,i)=>`<tr><th title="${e(person.name)}">${e(person.name)}</th>${releases.map(r=>{const cell=r.cells[i];const value=cell?.value;const tooltip=`${person.name} · ${r.tag}: ${humanMetric(value,model.metric)} ${labels}`;return `<td><button type="button" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-matrix-cell" style="${shade(value,model.maxCell)}" title="${e(tooltip)}" aria-label="${e(tooltip)}. Open release detail">${humanMetric(value,model.metric)}</button></td>`;}).join('')}</tr>`).join('')}
+    ${people.map((person,i)=>`<tr><th title="${e(person.name)}">${e(person.name)}</th>${releases.map(r=>{const cell=r.cells[i];const value=cell?.value;const tooltip=`${person.name} · ${r.tag}: ${humanMetric(value,model.metric)} ${labels}`;return `<td><button type="button" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-matrix-cell" style="${intensityStyle(value,scale)}" title="${e(tooltip)}" aria-label="${e(tooltip)}. Open release detail">${humanMetric(value,model.metric)}</button></td>`;}).join('')}</tr>`).join('')}
     </tbody></table></div>
-    <p class="impact-muted">${releases.length}${!expanded&&all.length>18?` of ${all.length}`:''} tagged releases. Cell intensity uses a shared scale across all contributors and releases.</p>`;
+    <div class="impact-colour-key">${intensityLegend(scale,x=>model.metric==='share'?`${precise(x)}%`:precise(x),{missing:true})}</div>
+    <p class="impact-muted">${releases.length}${!expanded&&all.length>18?` of ${all.length}`:''} tagged releases. One positive-intensity scale across displayed contributors and releases; unavailable shares are hatched, not zero.</p>`;
 }
 
 export function impactReach(model, areaMode='touches') {
   const areas=model.areas.slice(0,14), people=model.peopleAreas;
   const denom=new Map(people.map(g=>[g.id,[...g.footprint.areaTouches.values()].reduce((a,b)=>a+b,0)]));
   const valueFor=(g,a)=>{const touches=g.footprint.areaTouches.get(a)||0;return areaMode==='within' ? (denom.get(g.id)?100*touches/denom.get(g.id):null):touches;};
-  const max=Math.max(1,...people.flatMap(g=>areas.map(([a])=>valueFor(g,a)||0)));
+  const scale=makeIntensityScale(people.flatMap(g=>areas.map(([a])=>valueFor(g,a))));
   const kinds=Object.entries(model.overall.kindCounts).filter(([,v])=>v).sort((a,b)=>b[1]-a[1]);
   return `<p class="impact-muted">Top-level file areas count file touches from authored commits introduced by displayed tagged releases, with the same global contributor/date/merge/revert scope. Path counts measure breadth, not complexity. ${model.areas.length>14?`Showing the 14 most frequently touched of ${model.areas.length} areas.`:''}</p>
     <div class="impact-reach-legend">${areaMode==='touches'?'File touches · absolute':'Share of each contributor’s file touches · within-person %'}<span>Shared colour intensity scale</span></div>
     <div class="impact-matrix-scroll"><table class="impact-matrix impact-reach-table"><thead><tr><th>CODEBASE AREA</th>${people.map(g=>`<th>${e(g.name)}<small>${amount(g.footprint.pathsCount)} paths</small></th>`).join('')}</tr></thead><tbody>
-    ${areas.map(([area,total])=>`<tr><th>${e(area)}<small>${amount(total)} touches</small></th>${people.map(g=>{const v=valueFor(g,area);return `<td><span class="impact-matrix-cell impact-reach-value" style="${shade(v,max)}">${areaMode==='within'?p(v):amount(v)}</span></td>`;}).join('')}</tr>`).join('')}
+    ${areas.map(([area,total])=>`<tr><th>${e(area)}<small>${amount(total)} touches</small></th>${people.map(g=>{const v=valueFor(g,area);return `<td><span class="impact-matrix-cell impact-reach-value" style="${intensityStyle(v,scale)}">${areaMode==='within'?p(v):amount(v)}</span></td>`;}).join('')}</tr>`).join('')}
     </tbody></table></div>
+    <div class="impact-colour-key">${intensityLegend(scale,x=>areaMode==='within'?`${precise(x)}%`:precise(x),{missing:true})}</div>
     <div class="impact-reach-bottom"><div><h6>Change classification <small>Commit-subject conventions or heuristics</small></h6>${kinds.map(([name,count])=>`<div class="impact-kind-row"><span>${e(name)}</span><div><i style="width:${100*count/(model.overall.commits||1)}%"></i></div><strong>${amount(count)}</strong></div>`).join('')||'No commits in scope'}</div>
       <div><h6>Delivery supporting signals</h6><div class="impact-detail-facts compact"><div><span>CODE + TEST</span><strong>${p(model.overall.testAccompaniment)}</strong><small>Same-commit test accompaniment</small></div><div><span>DOC FILE TOUCHES</span><strong>${amount(model.overall.docTouches)}</strong></div><div><span>EXPLICIT REVERTS</span><strong>${amount(model.overall.reverts)}</strong></div><div><span>DISTINCT PATHS</span><strong>${amount(model.overall.pathsCount)}</strong></div></div><p class="impact-muted">Commit subjects are imperfect intent classifiers. Test accompaniment does not establish test quality or coverage.</p></div></div>
     <div class="impact-cochange"><h6>Areas often changed together <small>Same authored commit · co-change is not proof of technical coupling</small></h6>

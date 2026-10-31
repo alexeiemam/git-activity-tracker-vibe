@@ -3,17 +3,18 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds,
-} from './domain.js?v=impact-20261031-3';
-import { generateDemoLog } from './demo-data.js?v=impact-20261031-3';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=impact-20261031-3';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability } from './impact-view.js?v=impact-20261031-3';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=impact-20261031-3';
+} from './domain.js?v=impact-20261031-4';
+import { generateDemoLog } from './demo-data.js?v=impact-20261031-4';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=impact-20261031-4';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability } from './impact-view.js?v=impact-20261031-4';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=impact-20261031-4';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=impact-20261031-4';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 const $ = id => document.getElementById(id);
 const number = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 });
 const decimal = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
-const percent = n => `${decimal.format(n)}%`;
+const percent = n => `${Math.abs(n) > 0 && Math.abs(n) < .01 ? Number(n.toPrecision(2)) : decimal.format(n)}%`;
 const esc = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const color = id => COLORS[Number(id) % COLORS.length];
 const style = id => `--person:${color(id)}`;
@@ -607,11 +608,7 @@ function hidePulsePopover() {
   pulsePopoverPinned = false;
 }
 
-function pulseIntensity(maximum) {
-  return value => !value || !maximum ? 0 : Math.max(1, Math.min(4, Math.ceil(value / maximum * 4)));
-}
-
-function renderMonthlyPulse(view, level) {
+function renderMonthlyPulse(view) {
   const startMonth=monthIndex(view.start),endMonth=monthIndex(view.end);
   const months=Array.from({length:endMonth-startMonth+1},(_,i)=>startMonth+i);
   const byPerson=view.contributors.map(c=>{
@@ -622,7 +619,7 @@ function renderMonthlyPulse(view, level) {
     }
     return {c,map};
   });
-  const maximum=Math.max(0,...byPerson.flatMap(p=>[...p.map.values()]));
+  const scale=makeIntensityScale(byPerson.flatMap(({map})=>months.map(m=>map.get(m)||0)));
   const columns=`minmax(128px,160px) repeat(${months.length}, minmax(22px, 1fr))`;
   const yearHead=[];
   let i=0;
@@ -637,10 +634,10 @@ function renderMonthlyPulse(view, level) {
   const cells=byPerson.map(({c,map})=>`<div class="pulse-label" title="${esc(c.displayName)}">${esc(c.displayName)}</div>${months.map(m=>{
     const v=map.get(m)||0;
     const ym=`${Math.floor(m/12)}-${String(m%12+1).padStart(2,'0')}`;
-    return `<div class="pulse-cell" data-level="${level(maximum)(v)}" title="${esc(c.displayName)} · ${ym}: ${number.format(v)} ${esc(METRICS[view.metric].unit)}" role="img" aria-label="${esc(c.displayName)}, ${ym}: ${number.format(v)} ${esc(METRICS[view.metric].unit)}"></div>`;
+    return `<div class="pulse-cell" style="${intensityStyle(v,scale)}" title="${esc(c.displayName)} · ${ym}: ${number.format(v)} ${esc(METRICS[view.metric].unit)}" role="img" aria-label="${esc(c.displayName)}, ${ym}: ${number.format(v)} ${esc(METRICS[view.metric].unit)}"></div>`;
   }).join('')}`).join('');
   $('pulse').innerHTML=`<div class="pulse-grid" style="grid-template-columns:${columns}"><span></span>${yearHead.join('')}<span></span>${monthLabels}${cells}</div>`;
-  return maximum;
+  return scale;
 }
 
 function dailyPulseMonths(view) {
@@ -659,9 +656,9 @@ function dailyPulseMonths(view) {
   return markers;
 }
 
-function renderDailyPulse(view, level) {
+function renderDailyPulse(view) {
   const weeks=view.weeks;
-  const max=Math.max(0,...view.contributors.flatMap(c=>Object.values(c.daily[view.metric])));
+  const scale=makeIntensityScale(view.contributors.flatMap(c=>Object.values(c.daily[view.metric])));
   const weekColumns=`repeat(${weeks.length}, var(--pulse-week-size))`;
   const months=dailyPulseMonths(view).map(m=>`<span class="pulse-daily-month" style="grid-column:${m.index+1}">${esc(m.label)}</span>`).join('');
   const weekdays=DAY_NAMES.map((day,i)=>`<span aria-hidden="true">${i%2===0?esc(day):''}</span>`).join('');
@@ -671,12 +668,12 @@ function renderDailyPulse(view, level) {
       if(day<view.start||day>view.end) return '<span class="pulse-daily-outside" aria-hidden="true"></span>';
       const value=c.daily[view.metric][day]||0;
       const label=`${c.displayName}, ${formatDate(day)}: ${number.format(value)} ${METRICS[view.metric].unit}. View day activity.`;
-      return `<button type="button" class="pulse-cell pulse-daily-cell" data-level="${level(max)(value)}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" aria-label="${esc(label)}" aria-haspopup="dialog" aria-controls="pulse-popover"></button>`;
+      return `<button type="button" class="pulse-cell pulse-daily-cell" style="${intensityStyle(value,scale)}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" aria-label="${esc(label)}" aria-haspopup="dialog" aria-controls="pulse-popover"></button>`;
     })).join('');
     return `<div class="pulse-daily-contributor"><div class="pulse-daily-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div><div class="pulse-weekdays">${weekdays}</div><div class="pulse-day-cells" style="grid-template-columns:${weekColumns}">${cells}</div></div>`;
   }).join('');
   $('pulse').innerHTML=`<div class="pulse-daily-board" style="--pulse-week-count:${weeks.length}"><div class="pulse-daily-axis"><span class="pulse-daily-spacer"></span><span></span><div class="pulse-daily-months" style="grid-template-columns:${weekColumns}">${months}</div></div>${rows}</div>`;
-  return max;
+  return scale;
 }
 
 function renderPulse(view) {
@@ -692,9 +689,11 @@ function renderPulse(view) {
   if(!view.contributors.length || !view.spanDays){
     setText('pulse-context',`${METRICS[view.metric].label.toUpperCase()} / ${daily?'DAILY':'MONTHLY'} TOTALS · SHARED SCALE`);
     container.innerHTML=empty('Select contributors and a valid time window.');
+    $('pulse-key').innerHTML=intensityLegend(makeIntensityScale([]));
   } else {
-    const maximum=daily?renderDailyPulse(view,pulseIntensity):renderMonthlyPulse(view,pulseIntensity);
-    setText('pulse-context',`${METRICS[view.metric].label.toUpperCase()} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(maximum)} SCALE`);
+    const scale=daily?renderDailyPulse(view):renderMonthlyPulse(view);
+    $('pulse-key').innerHTML=intensityLegend(scale,n=>number.format(n));
+    setText('pulse-context',`${METRICS[view.metric].label.toUpperCase()} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(scale.max)} SCALE`);
     container.scrollLeft=scrollToLatest?container.scrollWidth:oldScroll;
   }
   pulsePreviousMode=state.pulseMode;
@@ -795,13 +794,6 @@ function rhythmFocus(view) {
   return view.selectedIds.has(String(state.rhythmFocus)) ? String(state.rhythmFocus) : 'selection';
 }
 function rhythmDatumKey(d) { return d ? `${d.kind}:${d.index}` : ''; }
-function rhythmShade(accent, value, maximum) {
-  if (!value) return '#edf1ed';
-  const t = Math.max(.2, Math.pow(value / (maximum || 1), .75));
-  const base = [226,239,230];
-  const target = [1,3,5].map((n,i) => parseInt(accent.slice(n,n+2),16));
-  return `rgb(${base.map((n,i)=>Math.round(n+(target[i]-n)*t)).join(',')})`;
-}
 function rhythmStyleFor(model) { return model.isGroup ? '#176b52' : color(model.focusId); }
 function rhythmSlotTitle(cell) {
   return `${DAY_NAMES[cell.day]} ${String(cell.hour).padStart(2,'0')}:00–${String(cell.hour).padStart(2,'0')}:59 · ${cell.count} timed commits`;
@@ -821,9 +813,9 @@ function rhythmWeekdayColumns(model,accent) {
 }
 
 function rhythmHeatmap(model,accent) {
-  const max=Math.max(1,...model.cells.map(c=>c.count));
+  const scale=makeIntensityScale(model.cells.map(c=>c.count));
   const ticks=Array.from({length:24},(_,h)=>`<span class="rhythm-grid-hour">${h%3===0?String(h).padStart(2,'0'):''}</span>`).join('');
-  return `<div class="rhythm-grid-scroll" aria-label="Day by hour heatmap, scroll horizontally if needed"><div class="rhythm-grid-board" style="--rhythm-accent:${accent}"><div class="rhythm-grid-heading"><span>LOCAL</span><div class="rhythm-grid-hours">${ticks}</div></div>${DAY_NAMES.map((name,day)=>`<div class="rhythm-grid-row"><span class="rhythm-grid-day">${name}</span><div class="rhythm-grid-hours">${model.cells.slice(day*24, day*24+24).map(cell=>`<button type="button" class="rhythm-grid-cell" ${rhythmCellAttributes(cell,model)} style="background:${rhythmShade(accent,cell.count,max)}"></button>`).join('')}</div></div>`).join('')}<div class="rhythm-grid-tail"><span></span><div>00:00 <span>→</span> 23:00 · each square is one authored hour</div></div></div></div>`;
+  return `<div class="rhythm-grid-scroll" aria-label="Day by hour heatmap, scroll horizontally if needed"><div class="rhythm-grid-board" style="--rhythm-accent:${accent}"><div class="rhythm-grid-heading"><span>LOCAL</span><div class="rhythm-grid-hours">${ticks}</div></div>${DAY_NAMES.map((name,day)=>`<div class="rhythm-grid-row"><span class="rhythm-grid-day">${name}</span><div class="rhythm-grid-hours">${model.cells.slice(day*24, day*24+24).map(cell=>`<button type="button" class="rhythm-grid-cell" ${rhythmCellAttributes(cell,model)} style="${intensityStyle(cell.count,scale)}"></button>`).join('')}</div></div>`).join('')}<div class="rhythm-grid-tail"><span></span><div>00:00 <span>→</span> 23:00 · each square is one authored hour</div></div></div></div>`;
 }
 function rhythmArc(cx,cy,inner,outer,start,end) {
   const xy=(r,theta)=>[cx+r*Math.cos(theta),cy+r*Math.sin(theta)];
@@ -831,7 +823,7 @@ function rhythmArc(cx,cy,inner,outer,start,end) {
   return `M${a[0].toFixed(2)},${a[1].toFixed(2)} A${outer},${outer} 0 0 1 ${b[0].toFixed(2)},${b[1].toFixed(2)} L${c[0].toFixed(2)},${c[1].toFixed(2)} A${inner},${inner} 0 0 0 ${d[0].toFixed(2)},${d[1].toFixed(2)} Z`;
 }
 function rhythmClock(model,accent) {
-  const max=Math.max(1,...model.cells.map(c=>c.count));
+  const scale=makeIntensityScale(model.cells.map(c=>c.count));
   const cx=204,cy=199;
   const ticks=[0,6,12,18].map(h=>{
     const angle=h/24*Math.PI*2-Math.PI/2;
@@ -844,15 +836,16 @@ function rhythmClock(model,accent) {
     const end=(cell.hour+1)/24*Math.PI*2-Math.PI/2-.016;
     const inner=48+cell.day*17;
     const outer=inner+12;
-    return `<path d="${rhythmArc(cx,cy,inner,outer,start,end)}" fill="${rhythmShade(accent,cell.count,max)}" class="rhythm-clock-cell" ${rhythmCellAttributes(cell,model)} tabindex="0" role="button"><title>${esc(rhythmSlotTitle(cell))}</title></path>`;
+    return `<path d="${rhythmArc(cx,cy,inner,outer,start,end)}" fill="${intensityColour(cell.count,scale)}" class="rhythm-clock-cell" ${rhythmCellAttributes(cell,model)} tabindex="0" role="button"><title>${esc(rhythmSlotTitle(cell))}</title></path>`;
   }).join('');
   const clockLabels=[[0,204,18],[6,395,203],[12,204,401],[18,11,203]].map(([h,x,y])=>`<text x="${x}" y="${y}" text-anchor="middle" class="rhythm-clock-label">${String(h).padStart(2,'0')}:00</text>`).join('');
   const legend=DAY_NAMES.map((d,i)=>`<span><i style="--ring:${i+1}"></i>${d}</span>`).join('');
   return `<div class="rhythm-clock-layout"><svg class="rhythm-clock" viewBox="0 0 408 412" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Circular 168-hour week. Monday is the innermost ring, Sunday the outermost, and hours advance clockwise from midnight at the top.">${ticks}${cells}<text x="${cx}" y="${cy-3}" class="rhythm-clock-centre" text-anchor="middle">WEEKLY</text><text x="${cx}" y="${cy+13}" class="rhythm-clock-centre-secondary" text-anchor="middle">CLOCK</text>${clockLabels}</svg><div class="rhythm-clock-explanation"><strong>Seven rings, one week.</strong><span>Monday on the inside; Sunday on the outside. Midnight starts at the top, then hours run clockwise.</span><div class="rhythm-clock-rings">${legend}</div></div></div>`;
 }
 function rhythmBars(model,accent) {
-  const max=Math.max(1,...model.cells.map(c=>c.count));
-  return `<div class="rhythm-bars-scroll" aria-label="Seven consecutive 24-hour bar charts, scroll horizontally if needed"><div class="rhythm-bars-week" style="--rhythm-accent:${accent}">${DAY_NAMES.map((name,day)=>`<div class="rhythm-bars-day"><span class="rhythm-bars-dayname">${name} <small>${number.format(model.weekdays[day].count)} commits</small></span><div class="rhythm-bars-bars">${model.cells.slice(day*24,day*24+24).map(cell=>`<button type="button" class="rhythm-bars-column" ${rhythmCellAttributes(cell,model)}><span class="rhythm-bars-fill" style="height:${cell.count/max*100}%;background:${rhythmShade(accent,cell.count,max)}"></span></button>`).join('')}</div><div class="rhythm-bars-hour-labels"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></div>`).join('')}</div></div>`;
+  const scale=makeIntensityScale(model.cells.map(c=>c.count));
+  const max=Math.max(1,scale.max);
+  return `<div class="rhythm-bars-scroll" aria-label="Seven consecutive 24-hour bar charts, scroll horizontally if needed"><div class="rhythm-bars-week" style="--rhythm-accent:${accent}">${DAY_NAMES.map((name,day)=>`<div class="rhythm-bars-day"><span class="rhythm-bars-dayname">${name} <small>${number.format(model.weekdays[day].count)} commits</small></span><div class="rhythm-bars-bars">${model.cells.slice(day*24,day*24+24).map(cell=>`<button type="button" class="rhythm-bars-column" ${rhythmCellAttributes(cell,model)}><span class="rhythm-bars-fill" style="height:${cell.count/max*100}%;background:${intensityColour(cell.count,scale)}"></span></button>`).join('')}</div><div class="rhythm-bars-hour-labels"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></div>`).join('')}</div></div>`;
 }
 function rhythmDetailMarkup(model,datum) {
   if(!model.timedCommits) return `<div class="rhythm-detail-empty">No timed commit activity can be plotted. ${number.format(model.missingTime)} of ${number.format(model.totalCommits)} commits lack an authored hour.</div>`;
@@ -916,8 +909,8 @@ function renderRhythmExplorer(view) {
   $('rhythm-week-chart').innerHTML=!model.timedCommits?empty('No timed commits in this selection. No hours are inferred from date-only Git records.')
     :state.rhythmDisplay==='clock'?rhythmClock(model,accent)
     :state.rhythmDisplay==='bars'?rhythmBars(model,accent):rhythmHeatmap(model,accent);
-  const top=Math.max(0,...model.cells.map(c=>c.count));
-  $('rhythm-legend').innerHTML=`<div class="rhythm-scale"><span>0 commits</span>${[0,.25,.5,.75,1].map(t=>`<i style="background:${rhythmShade(accent,t*Math.max(top,1),Math.max(top,1))}"></i>`).join('')}<span>${number.format(top)} / hour (max)</span></div><span>${number.format(model.missingTime)} commits without authored hours omitted · all views share these ${number.format(model.timedCommits)} timed events</span>`;
+  const scale=makeIntensityScale(model.cells.map(c=>c.count));
+  $('rhythm-legend').innerHTML=`${intensityLegend(scale,n=>number.format(n))}<span>${number.format(model.missingTime)} commits without authored hours omitted · all views share these ${number.format(model.timedCommits)} timed events</span>`;
   renderRhythmDetail();
   renderSeasonality(view);
 }
@@ -971,7 +964,7 @@ function seasonShownYears(model) {
   return model.years.filter(y => !state.seasonYears || state.seasonYears.has(y.year));
 }
 function seasonEmpty(message) { return `<div class="season-empty">${esc(message)}</div>`; }
-function seasonColour(value,max) { return rhythmShade('#176b52',Math.max(0,value??0),Math.max(1e-6,max)); }
+
 function monthTitle(month) {
   return `${SEASON_MONTHS[month.month]} ${month.year} · ${month.count} authored commits · ${month.days} observed calendar days · ${month.full?'complete':'partial'} month · ${seasonValueText(seasonalMonthValue(month),state.seasonMode)}`;
 }
@@ -985,13 +978,13 @@ function renderSeasonYearPicker(model) {
 }
 function renderSeasonMonthMatrix(model,years) {
   const values = years.flatMap(y=>y.months.filter(m=>m.days).map(m=>seasonalMonthValue(m)));
-  const maximum = Math.max(1e-6, ...values.filter(v=>v!==null));
+  const scale = makeIntensityScale(values);
   const heading = `<div class="season-month-head"><span>YEAR</span><div class="season-month-labels">${SEASON_MONTHS.map(m=>`<span>${m}</span>`).join('')}</div><span>CALENDAR COVERAGE</span></div>`;
   const lines = [...years].reverse().map(y=>{
     const maxYearDays=new Date(Date.UTC(y.year+1,0,1))-new Date(Date.UTC(y.year,0,1));
-    return `<div class="season-month-row"><span class="season-month-year"><strong>${y.year}</strong><small>${number.format(y.count)} commits</small></span><div class="season-month-cells">${y.months.map(m=>m.days?`<button type="button" class="season-month-cell ${m.full?'':'is-partial'} ${(seasonalMonthValue(m)??0)/maximum>.55?'is-strong':''}" ${seasonCellAttributes('month',y.year,m.month,monthTitle(m))} style="background:${seasonColour(seasonalMonthValue(m),maximum)}"><span>${esc(seasonValueText(seasonalMonthValue(m)))}</span></button>`:`<span class="season-month-missing" title="${SEASON_MONTHS[m.month]} ${y.year}: outside imported author dates or global scope" aria-label="${SEASON_MONTHS[m.month]} ${y.year}: not observed">—</span>`).join('')}</div><span class="season-month-coverage"><strong>${y.exposureDays}d</strong><small>${y.full?'Full year':`${Math.round(y.exposureDays/(maxYearDays/86400000)*100)}% of year`}</small></span></div>`;
+    return `<div class="season-month-row"><span class="season-month-year"><strong>${y.year}</strong><small>${number.format(y.count)} commits</small></span><div class="season-month-cells">${y.months.map(m=>m.days?`<button type="button" class="season-month-cell ${m.full?'':'is-partial'} " ${seasonCellAttributes('month',y.year,m.month,monthTitle(m))} style="${intensityStyle(seasonalMonthValue(m),scale)}"><span>${esc(seasonValueText(seasonalMonthValue(m)))}</span></button>`:`<span class="season-month-missing" title="${SEASON_MONTHS[m.month]} ${y.year}: outside imported author dates or global scope" aria-label="${SEASON_MONTHS[m.month]} ${y.year}: not observed">—</span>`).join('')}</div><span class="season-month-coverage"><strong>${y.exposureDays}d</strong><small>${y.full?'Full year':`${Math.round(y.exposureDays/(maxYearDays/86400000)*100)}% of year`}</small></span></div>`;
   }).join('');
-  const legend=`<div class="season-chart-key"><span>Zero activity</span><div class="season-swatch">${[0,.25,.5,.75,1].map(t=>`<i style="background:${seasonColour(t*maximum,maximum)}"></i>`).join('')}</div><span>${seasonValueText(maximum)} (highest cell)</span><em>Dashed outline = partial month; — = outside selected/imported dates.</em></div>`;
+  const legend=`<div class="season-chart-key">${intensityLegend(scale,n=>seasonValueText(n),{missing:true})}<em>Dashed outline = partial month; hatched = outside selected/imported dates.</em></div>`;
   $('season-month-matrix').innerHTML = years.length ? `<p class="season-scroll-hint">Swipe sideways to see all 12 months ↔</p><div class="season-month-scroll"><div class="season-month-board">${heading}${lines}</div></div>${legend}` : seasonEmpty('Select at least one year to compare.');
 }
 function seasonYoYText(year, years) {
@@ -1009,9 +1002,9 @@ function renderSeasonAnnualScorecard(years) {
 }
 function renderSeasonRhythmYears(model,years) {
   if (!years.length) { $('season-rhythm-years').innerHTML='';return; }
-  const maximum = Math.max(1e-6,...years.flatMap(y=>y.slots.map(v=>y.timedCount?v/y.timedCount*100:0)));
+  const scale = makeIntensityScale(years.flatMap(y=>y.slots.map(v=>y.timedCount?v/y.timedCount*100:0)));
   const hours=Array.from({length:24},(_,i)=>`<span>${i%3===0?String(i).padStart(2,'0'):''}</span>`).join('');
-  $('season-rhythm-years').innerHTML=`<div class="season-rhythm-gallery">${[...years].reverse().map(y=>`<div class="season-rhythm-year"><div class="season-rhythm-heading"><strong>${y.year}</strong><span>${number.format(y.timedCount)} timed · ${y.timeCoverage===null?'—':percent(y.timeCoverage)} coverage ${y.full?'':'· partial year'}</span></div>${y.timedCount?`<div class="season-rhythm-scroll"><div class="season-rhythm-board"><div class="season-rhythm-labelrow"><span>LOCAL</span><div>${hours}</div></div>${DAY_NAMES.map((d,day)=>`<div class="season-rhythm-row"><span>${d}</span><div>${y.slots.slice(day*24,day*24+24).map((count,h)=>{const idx=day*24+h;const share=count/y.timedCount*100;return `<button type="button" ${seasonCellAttributes('slot',y.year,idx,`${y.year} ${d} ${String(h).padStart(2,'0')}:00 · ${count} timed commits · ${percent(share)} of that year's timed commits`)} class="season-rhythm-cell" style="background:${seasonColour(share,maximum)}"></button>`;}).join('')}</div></div>`).join('')}</div></div>`:seasonEmpty('No authored hours in this year; no time slots inferred.')}</div>`).join('')}</div><div class="season-chart-key"><span>0% of year’s timed commits</span><div class="season-swatch">${[0,.25,.5,.75,1].map(t=>`<i style="background:${seasonColour(t*maximum,maximum)}"></i>`).join('')}</div><span>${percent(maximum)} per slot (shared max)</span><em>Same axes and colour scale across years · shape, not total volume.</em></div>`;
+  $('season-rhythm-years').innerHTML=`<div class="season-rhythm-gallery">${[...years].reverse().map(y=>`<div class="season-rhythm-year"><div class="season-rhythm-heading"><strong>${y.year}</strong><span>${number.format(y.timedCount)} timed · ${y.timeCoverage===null?'—':percent(y.timeCoverage)} coverage ${y.full?'':'· partial year'}</span></div>${y.timedCount?`<div class="season-rhythm-scroll"><div class="season-rhythm-board"><div class="season-rhythm-labelrow"><span>LOCAL</span><div>${hours}</div></div>${DAY_NAMES.map((d,day)=>`<div class="season-rhythm-row"><span>${d}</span><div>${y.slots.slice(day*24,day*24+24).map((count,h)=>{const idx=day*24+h;const share=count/y.timedCount*100;return `<button type="button" ${seasonCellAttributes('slot',y.year,idx,`${y.year} ${d} ${String(h).padStart(2,'0')}:00 · ${count} timed commits · ${percent(share)} of that year's timed commits`)} class="season-rhythm-cell" style="${intensityStyle(share,scale)}"></button>`;}).join('')}</div></div>`).join('')}</div></div>`:seasonEmpty('No authored hours in this year; no time slots inferred.')}</div>`).join('')}</div><div class="season-chart-key">${intensityLegend(scale,n=>percent(n))}<em>Share of each year’s timed commits · shared scale across years, not total volume.</em></div>`;
 }
 function renderSeasonPeople(model,years) {
   const target=$('season-person-comparison');
