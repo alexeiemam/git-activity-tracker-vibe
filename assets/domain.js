@@ -212,10 +212,12 @@ function contributorStats(group, commits) {
   const days = new Set();
   const weekdays = Array(7).fill(0);
   const hours = Array(24).fill(0);
+  const timedWeekdays = Array(7).fill(0);
   const timeBands = Array(TIME_BANDS.length).fill(0);
   const areas = new Map();
   let timedCommits = 0;
   let weekendCommits = 0;
+  let timedWeekendCommits = 0;
 
   for (const c of commits) {
     days.add(c.date);
@@ -224,6 +226,8 @@ function contributorStats(group, commits) {
     if (dow > 4) weekendCommits++;
     if (Number.isInteger(c.hour)) {
       timedCommits++;
+      timedWeekdays[dow]++;
+      if (dow > 4) timedWeekendCommits++;
       hours[c.hour]++;
       const band = TIME_BANDS.findIndex(t => c.hour >= t.start && c.hour < t.end);
       if (band >= 0) timeBands[band]++;
@@ -254,10 +258,12 @@ function contributorStats(group, commits) {
     daily,
     activeDays: days,
     weekdays,
+    timedWeekdays,
     hours,
     timeBands,
     timedCommits,
     weekendCommits,
+    timedWeekendCommits,
     areas,
     firstCommit: dates[0] || null,
     lastCommit: dates.at(-1) || null,
@@ -350,6 +356,93 @@ export function buildAnalysis(rawCommits, groups, scope = {}) {
   };
 }
 
+
+/**
+ * Author-local weekly timing profile for the *same filtered commits* used by
+ * buildAnalysis. One timed commit belongs to precisely one of 168 slots and
+ * exactly one weekday. Unknown authored hours are omitted from every timing
+ * chart (not just from the hour chart), so totals reconcile across views.
+ *
+ * focusId='selection' aggregates the globally selected people. An individual
+ * focus is only permitted for a person included in that selection.
+ */
+export function workingRhythm(view, focusId = 'selection') {
+  const focus = String(focusId);
+  if (focus !== 'selection' && !view.selectedIds.has(focus)) return null;
+  const focused = focus === 'selection' ? view.selectedCommits : view.byId.get(focus)?.commits;
+  if (!focused) return null;
+  const bins = () => Array.from({length: 168}, (_, index) => ({
+    index, day: Math.floor(index / 24), hour: index % 24,
+    count: 0, dates: new Set(), added: 0, deleted: 0, fileTouches: 0, commits: [],
+  }));
+  const slots = bins();
+  const reference = Array(168).fill(0);
+  const referenceWeekdays = Array(7).fill(0);
+  const dayTotals = Array(7).fill(0);
+  const hourTotals = Array(24).fill(0);
+  let timedCommits = 0;
+  let referenceTimed = 0;
+
+  for (const commit of focused) {
+    if (!Number.isInteger(commit.hour) || commit.hour < 0 || commit.hour > 23) continue;
+    const day = dayOfWeek(commit.date);
+    const slot = slots[day * 24 + commit.hour];
+    slot.count++;
+    slot.dates.add(commit.date);
+    slot.added += sum(commit.files.map(f => f.added));
+    slot.deleted += sum(commit.files.map(f => f.deleted));
+    slot.fileTouches += commit.files.length;
+    slot.commits.push(commit);
+    dayTotals[day]++;
+    hourTotals[commit.hour]++;
+    timedCommits++;
+  }
+  for (const commit of view.referenceCommits) {
+    if (!Number.isInteger(commit.hour) || commit.hour < 0 || commit.hour > 23) continue;
+    const day = dayOfWeek(commit.date);
+    reference[day * 24 + commit.hour]++;
+    referenceWeekdays[day]++;
+    referenceTimed++;
+  }
+  const recent = commits => commits.sort((a, b) =>
+    (b.authoredAt ?? -1) - (a.authoredAt ?? -1) || String(a.hash).localeCompare(String(b.hash)))
+    .slice(0, 3).map(c => ({ hash: c.hash, subject: c.subject, date: c.date, hour: c.hour, minute: c.minute }));
+  const cells = slots.map(slot => ({
+    index: slot.index, day: slot.day, hour: slot.hour,
+    count: slot.count, dates: slot.dates.size,
+    added: slot.added, deleted: slot.deleted, fileTouches: slot.fileTouches,
+    percentage: timedCommits ? 100 * slot.count / timedCommits : null,
+    referenceCount: reference[slot.index],
+    referenceShare: reference[slot.index] ? 100 * slot.count / reference[slot.index] : null,
+    examples: recent(slot.commits),
+  }));
+  const weekdays = dayTotals.map((count, day) => ({
+    day, count, percentage: timedCommits ? 100 * count / timedCommits : null,
+    referenceCount: referenceWeekdays[day],
+    referenceShare: referenceWeekdays[day] ? 100 * count / referenceWeekdays[day] : null,
+    dates: new Set(slots.slice(day * 24, day * 24 + 24).flatMap(slot => [...slot.dates])).size,
+    added: sum(slots.slice(day * 24, day * 24 + 24).map(slot => slot.added)),
+    deleted: sum(slots.slice(day * 24, day * 24 + 24).map(slot => slot.deleted)),
+    fileTouches: sum(slots.slice(day * 24, day * 24 + 24).map(slot => slot.fileTouches)),
+    examples: recent(slots.slice(day * 24, day * 24 + 24).flatMap(slot => slot.commits)),
+  }));
+  const busiest = cells.reduce((best, cell) => !best || cell.count > best.count ? cell : best, null);
+  const busiestDay = weekdays.reduce((best, day) => !best || day.count > best.count ? day : best, null);
+  return {
+    focusId: focus, isGroup: focus === 'selection',
+    name: focus === 'selection' ? 'Selected contributors' : view.byId.get(focus).displayName,
+    totalCommits: focused.length, timedCommits, missingTime: focused.length - timedCommits,
+    referenceTimed, hourTotals, cells, weekdays,
+    peakSlot: timedCommits ? busiest : null,
+    peakDay: timedCommits ? busiestDay : null,
+    peakHour: timedCommits ? hourTotals.indexOf(Math.max(...hourTotals)) : null,
+    weekendShare: timedCommits ? (dayTotals[5] + dayTotals[6]) / timedCommits * 100 : null,
+    referenceName: view.denominator === 'selection' ? 'selected group' : 'imported repository',
+    showReference: focus === 'selection'
+      ? !(view.denominator === 'selection' || view.selectedIds.size === view.allContributors.length)
+      : !(view.referenceContributors.length === 1 && view.referenceContributors[0].id === focus),
+  };
+}
 
 /**
  * A single authored day for one selected contributor, using exactly the

@@ -281,3 +281,89 @@ test('batch identity reconciliation flows through the same dashboard aggregation
   assert.deepEqual(after.contributors[0].emails,['a@example.test','alias@example.test']);
   assert.equal(after.referenceSummary.totals.commits,before.referenceSummary.totals.commits);
 });
+
+test('weekly rhythm reconciles weekdays, 24 hours and 168 slots from the same timed commits', async () => {
+  const { workingRhythm } = await import('../assets/domain.js');
+  const view=buildAnalysis(commits,GROUPS,{...base,selectedIds:['0'],denominator:'repository'});
+  const r=workingRhythm(view,'0');
+  assert.equal(r.totalCommits,2);
+  assert.equal(r.timedCommits,2);
+  assert.equal(r.missingTime,0);
+  assert.equal(r.cells.length,168);
+  assert.equal(sum(r.cells.map(c=>c.count)),2);
+  assert.equal(sum(r.weekdays.map(d=>d.count)),2);
+  assert.equal(sum(r.hourTotals),2);
+  assert.deepEqual(r.weekdays.map(d=>d.count),[0,0,2,0,0,0,0]);
+  assert.equal(r.cells[2*24+8].count,1);
+  assert.equal(r.cells[2*24+8].dates,1);
+  assert.equal(r.cells[2*24+8].added,11);
+  assert.equal(r.cells[2*24+8].fileTouches,2);
+  assert.equal(r.cells[2*24+8].referenceCount,1);
+  assert.equal(r.cells[2*24+8].referenceShare,100);
+  assert.equal(r.cells[2*24+11].count,1,'merged alias contributes to the same person');
+  assert.equal(r.cells[2*24+22].count,0,'other contributor is not part of focus');
+  assert.equal(r.cells[2*24+22].referenceCount,1,'reference still includes other contributors');
+  assert.equal(r.cells[2*24+22].referenceShare,0);
+  assert.equal(r.weekdays[2].referenceCount,3);
+  assert.ok(Math.abs(r.weekdays[2].referenceShare-(2/3*100))<1e-9);
+  assert.equal(workingRhythm(view,'1'),null,'an unselected contributor cannot be inspected');
+});
+
+test('weekly rhythm selection uses identical scoped records, excluding date-only hours everywhere', async () => {
+  const { workingRhythm } = await import('../assets/domain.js');
+  const view=buildAnalysis(commits,GROUPS,{...base,metric:'churn'});
+  const r=workingRhythm(view);
+  assert.equal(r.totalCommits,4);
+  assert.equal(r.timedCommits,3);
+  assert.equal(r.missingTime,1);
+  assert.deepEqual(r.weekdays.map(d=>d.count),[0,0,3,0,0,0,0], 'date-only Thursday does not get a fabricated time in weekday view');
+  assert.equal(r.cells[2*24+22].count,1);
+  assert.equal(r.peakDay.day,2);
+  assert.equal(r.peakDay.percentage,100);
+  assert.equal(r.peakDay.dates,1);
+  assert.equal(r.showReference,false,'selection equals reference when everyone is selected');
+  const filtered=buildAnalysis(commits,GROUPS,{...base,includeReverts:false,selectedIds:['0'],metric:'files'});
+  const focused=workingRhythm(filtered,'0');
+  assert.equal(focused.timedCommits,1);
+  assert.equal(focused.cells[2*24+11].count,0);
+  assert.equal(focused.cells[2*24+8].count,1);
+  assert.equal(focused.showReference,true);
+  const benchmark=workingRhythm(buildAnalysis(commits,GROUPS,{...base,selectedIds:['0'],denominator:'selection'}),'0');
+  assert.equal(benchmark.referenceTimed,2);
+  assert.equal(benchmark.cells[2*24+22].referenceCount,0);
+  assert.equal(benchmark.cells[2*24+22].referenceShare,null);
+  assert.equal(benchmark.showReference,false);
+});
+
+test('authored local dates and clock offsets define weekday and hour slots, not UTC conversion', async () => {
+  const { workingRhythm } = await import('../assets/domain.js');
+  const history=parseGitLog([
+    'COMMIT|z1|a@example.test|Alex|2026-10-26T00:30:00+12:00|Monday local|2222222',
+    'COMMIT|z2|a@example.test|Alex|2026-10-25T23:30:00-07:00|Sunday local|2222222',
+    'COMMIT|z3|a@example.test|Alex|2026-10-26|Date only',
+  ].join('\n'));
+  const view=buildAnalysis(history,GROUPS,{start:'2026-10-25',end:'2026-10-26',includeMerges:true,includeReverts:true});
+  const r=workingRhythm(view,'0');
+  assert.equal(r.totalCommits,3);
+  assert.equal(r.timedCommits,2);
+  assert.deepEqual(r.weekdays.map(d=>d.count),[1,0,0,0,0,0,1]);
+  assert.equal(r.cells[0].count,1);
+  assert.equal(r.cells[6*24+23].count,1);
+  assert.equal(r.peakHour,0,'tie breaks toward earliest author-local hour');
+  assert.equal(r.missingTime,1);
+});
+
+test('weekly timing remains empty and undefined when all scoped commits lack an authored hour', async () => {
+  const { workingRhythm } = await import('../assets/domain.js');
+  const view=buildAnalysis(commits,GROUPS,{...base,start:'2026-10-29',end:'2026-10-29',selectedIds:['1']});
+  const r=workingRhythm(view,'1');
+  assert.equal(r.totalCommits,1);
+  assert.equal(r.timedCommits,0);
+  assert.equal(r.missingTime,1);
+  assert.equal(r.peakSlot,null);
+  assert.equal(r.peakDay,null);
+  assert.equal(r.weekendShare,null);
+  assert.equal(sum(r.weekdays.map(d=>d.count)),0);
+  assert.equal(sum(r.cells.map(d=>d.count)),0);
+  assert.equal(r.cells[0].percentage,null);
+});

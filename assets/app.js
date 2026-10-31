@@ -1,5 +1,5 @@
 import {
-  METRICS, DAY_NAMES, TIME_BANDS, buildAnalysis, getDateBounds, pulseDayDetails, mondayOf, dayNumber, dateAtDay,
+  METRICS, DAY_NAMES, TIME_BANDS, buildAnalysis, getDateBounds, pulseDayDetails, workingRhythm, mondayOf, dayNumber, dateAtDay,
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum,
   parseGitLog,
@@ -31,7 +31,7 @@ const state = {
   period: 'all', start: null, end: null,
   includeMerges: false, includeReverts: true,
   metric: 'commits', mode: 'total', denominator: 'repository',
-  trend: 'rolling', pulseMode: 'monthly', sortKey: 'lens', sortDesc: true,
+  trend: 'rolling', pulseMode: 'monthly', rhythmFocus: 'selection', rhythmDisplay: 'heatmap', sortKey: 'lens', sortDesc: true,
 };
 
 function setText(id, content) { $(id).textContent = content; }
@@ -265,7 +265,7 @@ function loadDemo() {
 function syncScopeAfterLoad() {
   const { min,max } = getDateBounds(rawCommits);
   Object.assign(state, { period:'all',start:min,end:max,includeMerges:false,includeReverts:true,
-    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',sortKey:'lens',sortDesc:true,search:'' });
+    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',sortKey:'lens',sortDesc:true,search:'' });
   state.selectedIds = new Set(mergeGroups.map((_,i)=>String(i)));
   if (pendingImport?.scope) {
     const s = pendingImport.scope;
@@ -277,8 +277,13 @@ function syncScopeAfterLoad() {
     if (typeof s.period==='string') state.period=s.period;
     if (['rolling','weekly','cumulative'].includes(s.trend)) state.trend=s.trend;
     if (['monthly','daily'].includes(s.pulseMode)) state.pulseMode=s.pulseMode;
+    if (['heatmap','clock','bars'].includes(s.rhythmDisplay)) state.rhythmDisplay=s.rhythmDisplay;
     if (s.start && s.end && s.start <= s.end && /^\d{4}-\d\d-\d\d$/.test(s.start) && /^\d{4}-\d\d-\d\d$/.test(s.end)) {
       state.start=s.start; state.end=s.end;
+    }
+    if (typeof s.rhythmFocusEmail === 'string') {
+      const i=mergeGroups.findIndex(g=>g.emails.includes(s.rhythmFocusEmail));
+      state.rhythmFocus=i<0?'selection':String(i);
     }
     if (Array.isArray(s.selectedEmails)) {
       const emails = new Set(s.selectedEmails);
@@ -331,7 +336,7 @@ function changeDate() {
 }
 function resetFilters() {
   Object.assign(state,{ period:'all',start:getDateBounds(rawCommits).min,end:getDateBounds(rawCommits).max,
-    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',sortKey:'lens',sortDesc:true,search:'' });
+    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',sortKey:'lens',sortDesc:true,search:'' });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
   setText('scope-error','');
@@ -745,31 +750,168 @@ function onPulseFocusOut(event) {
 
 function microBars(values,labels,id,className='',maxPercent=100) {
   const total=sum(values);
-  // All people share the same percentage axis *within each panel*, while the
-  // y-axis range adapts to reveal variation. Tooltip values remain unscaled.
+  // Same percentage axis for every contributor in the quick comparison.
   return `<div class="rhythm-spark ${className}" style="${style(id)}">${values.map((v,i)=>{
     const pct=total?v/total*100:0;
-    return `<div class="rhythm-piece" title="${esc(labels[i])}: ${v} commits (${percent(pct)})"><div class="rhythm-bar-wrap"><div class="rhythm-bar" style="height:${Math.min(100,pct/maxPercent*100)}%"></div></div><div class="rhythm-bar-label">${esc(labels[i])}</div></div>`;
+    return `<div class="rhythm-piece" title="${esc(labels[i])}: ${v} timed commits (${percent(pct)})"><div class="rhythm-bar-wrap"><div class="rhythm-bar" style="height:${Math.min(100,pct/maxPercent*100)}%"></div></div><div class="rhythm-bar-label">${esc(labels[i])}</div></div>`;
   }).join('')}</div>`;
 }
+
+let rhythmModel = null;
+let rhythmHover = null; // {kind:'slot'|'day',index} — ephemeral on hover / focus
+let rhythmPinned = null; // same shape; click or keyboard activation pins
+
+function rhythmFocus(view) {
+  if (view.contributors.length === 1) return view.contributors[0].id;
+  return view.selectedIds.has(String(state.rhythmFocus)) ? String(state.rhythmFocus) : 'selection';
+}
+function rhythmDatumKey(d) { return d ? `${d.kind}:${d.index}` : ''; }
+function rhythmShade(accent, value, maximum) {
+  if (!value) return '#edf1ed';
+  const t = Math.max(.2, Math.pow(value / (maximum || 1), .75));
+  const base = [226,239,230];
+  const target = [1,3,5].map((n,i) => parseInt(accent.slice(n,n+2),16));
+  return `rgb(${base.map((n,i)=>Math.round(n+(target[i]-n)*t)).join(',')})`;
+}
+function rhythmStyleFor(model) { return model.isGroup ? '#176b52' : color(model.focusId); }
+function rhythmSlotTitle(cell) {
+  return `${DAY_NAMES[cell.day]} ${String(cell.hour).padStart(2,'0')}:00–${String(cell.hour).padStart(2,'0')}:59 · ${cell.count} timed commits`;
+}
+function rhythmSlotLabel(cell, model) {
+  return `${rhythmSlotTitle(cell)} · ${cell.dates} distinct authored dates · ${cell.percentage===null?'undefined':percent(cell.percentage)} of ${model.name}'s timed commits`;
+}
+function rhythmCellAttributes(cell,model) {
+  return `data-rhythm-interactive data-rhythm-kind="slot" data-rhythm-index="${cell.index}" data-action="rhythm-inspect" aria-label="${esc(rhythmSlotLabel(cell,model))}" aria-pressed="false" title="${esc(rhythmSlotTitle(cell))}"`;
+}
+function rhythmWeekdayColumns(model,accent) {
+  if (!model.timedCommits) return empty('No commits with authored hours in this scope. The weekday and hour charts share this same empty evidence.');
+  const maximum=Math.max(1,...model.weekdays.map(d=>d.count));
+  return `<div class="rhythm-weekday-chart" style="--rhythm-accent:${accent}" role="group" aria-label="Timed commits by weekday">
+    ${model.weekdays.map(d=>`<button type="button" class="rhythm-weekday-column" data-rhythm-interactive data-rhythm-kind="day" data-rhythm-index="${d.day}" data-action="rhythm-inspect" aria-label="${esc(DAY_NAMES[d.day])}, ${d.count} timed commits, ${percent(d.percentage||0)} of timed commits" aria-pressed="false" title="${esc(`${DAY_NAMES[d.day]} · ${d.count} commits · ${percent(d.percentage||0)}`)}"><span class="rhythm-weekday-count">${number.format(d.count)}</span><span class="rhythm-weekday-track"><span class="rhythm-weekday-bar" style="height:${d.count/maximum*100}%"></span></span><span class="rhythm-weekday-label">${DAY_NAMES[d.day]}</span><span class="rhythm-weekday-pct">${percent(d.percentage||0)}</span></button>`).join('')}
+  </div>`;
+}
+
+function rhythmHeatmap(model,accent) {
+  const max=Math.max(1,...model.cells.map(c=>c.count));
+  const ticks=Array.from({length:24},(_,h)=>`<span class="rhythm-grid-hour">${h%3===0?String(h).padStart(2,'0'):''}</span>`).join('');
+  return `<div class="rhythm-grid-scroll" aria-label="Day by hour heatmap, scroll horizontally if needed"><div class="rhythm-grid-board" style="--rhythm-accent:${accent}"><div class="rhythm-grid-heading"><span>LOCAL</span><div class="rhythm-grid-hours">${ticks}</div></div>${DAY_NAMES.map((name,day)=>`<div class="rhythm-grid-row"><span class="rhythm-grid-day">${name}</span><div class="rhythm-grid-hours">${model.cells.slice(day*24, day*24+24).map(cell=>`<button type="button" class="rhythm-grid-cell" ${rhythmCellAttributes(cell,model)} style="background:${rhythmShade(accent,cell.count,max)}"></button>`).join('')}</div></div>`).join('')}<div class="rhythm-grid-tail"><span></span><div>00:00 <span>→</span> 23:00 · each square is one authored hour</div></div></div></div>`;
+}
+function rhythmArc(cx,cy,inner,outer,start,end) {
+  const xy=(r,theta)=>[cx+r*Math.cos(theta),cy+r*Math.sin(theta)];
+  const a=xy(outer,start),b=xy(outer,end),c=xy(inner,end),d=xy(inner,start);
+  return `M${a[0].toFixed(2)},${a[1].toFixed(2)} A${outer},${outer} 0 0 1 ${b[0].toFixed(2)},${b[1].toFixed(2)} L${c[0].toFixed(2)},${c[1].toFixed(2)} A${inner},${inner} 0 0 0 ${d[0].toFixed(2)},${d[1].toFixed(2)} Z`;
+}
+function rhythmClock(model,accent) {
+  const max=Math.max(1,...model.cells.map(c=>c.count));
+  const cx=204,cy=199;
+  const ticks=[0,6,12,18].map(h=>{
+    const angle=h/24*Math.PI*2-Math.PI/2;
+    const a=(r)=>[cx+Math.cos(angle)*r,cy+Math.sin(angle)*r];
+    const inner=a(43),outer=a(168);
+    return `<line x1="${inner[0]}" y1="${inner[1]}" x2="${outer[0]}" y2="${outer[1]}" class="rhythm-clock-guide"/>`;
+  }).join('');
+  const cells=model.cells.map(cell=>{
+    const start=cell.hour/24*Math.PI*2-Math.PI/2+.016;
+    const end=(cell.hour+1)/24*Math.PI*2-Math.PI/2-.016;
+    const inner=48+cell.day*17;
+    const outer=inner+12;
+    return `<path d="${rhythmArc(cx,cy,inner,outer,start,end)}" fill="${rhythmShade(accent,cell.count,max)}" class="rhythm-clock-cell" ${rhythmCellAttributes(cell,model)} tabindex="0" role="button"><title>${esc(rhythmSlotTitle(cell))}</title></path>`;
+  }).join('');
+  const clockLabels=[[0,204,18],[6,395,203],[12,204,401],[18,11,203]].map(([h,x,y])=>`<text x="${x}" y="${y}" text-anchor="middle" class="rhythm-clock-label">${String(h).padStart(2,'0')}:00</text>`).join('');
+  const legend=DAY_NAMES.map((d,i)=>`<span><i style="--ring:${i+1}"></i>${d}</span>`).join('');
+  return `<div class="rhythm-clock-layout"><svg class="rhythm-clock" viewBox="0 0 408 412" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Circular 168-hour week. Monday is the innermost ring, Sunday the outermost, and hours advance clockwise from midnight at the top.">${ticks}${cells}<text x="${cx}" y="${cy-3}" class="rhythm-clock-centre" text-anchor="middle">WEEKLY</text><text x="${cx}" y="${cy+13}" class="rhythm-clock-centre-secondary" text-anchor="middle">CLOCK</text>${clockLabels}</svg><div class="rhythm-clock-explanation"><strong>Seven rings, one week.</strong><span>Monday on the inside; Sunday on the outside. Midnight starts at the top, then hours run clockwise.</span><div class="rhythm-clock-rings">${legend}</div></div></div>`;
+}
+function rhythmBars(model,accent) {
+  const max=Math.max(1,...model.cells.map(c=>c.count));
+  return `<div class="rhythm-bars-scroll" aria-label="Seven consecutive 24-hour bar charts, scroll horizontally if needed"><div class="rhythm-bars-week" style="--rhythm-accent:${accent}">${DAY_NAMES.map((name,day)=>`<div class="rhythm-bars-day"><span class="rhythm-bars-dayname">${name} <small>${number.format(model.weekdays[day].count)} commits</small></span><div class="rhythm-bars-bars">${model.cells.slice(day*24,day*24+24).map(cell=>`<button type="button" class="rhythm-bars-column" ${rhythmCellAttributes(cell,model)}><span class="rhythm-bars-fill" style="height:${cell.count/max*100}%;background:${rhythmShade(accent,cell.count,max)}"></span></button>`).join('')}</div><div class="rhythm-bars-hour-labels"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></div>`).join('')}</div></div>`;
+}
+function rhythmDetailMarkup(model,datum) {
+  if(!model.timedCommits) return `<div class="rhythm-detail-empty">No timed commit activity can be plotted. ${number.format(model.missingTime)} of ${number.format(model.totalCommits)} commits lack an authored hour.</div>`;
+  const d=datum?.kind==='day' ? model.weekdays[datum.index] : model.cells[datum?.index ?? model.peakSlot.index];
+  if(!d)return '';
+  const byDay=datum?.kind==='day';
+  const label=byDay?`${DAY_NAMES[d.day]} · all authored hours`:`${DAY_NAMES[d.day]} · ${String(d.hour).padStart(2,'0')}:00–${String(d.hour).padStart(2,'0')}:59`;
+  const isPeak=!datum;
+  const ratio=model.showReference && d.referenceCount
+    ? `${number.format(d.count)} of ${number.format(d.referenceCount)} ${model.referenceName} commits (${percent(d.referenceShare)}) in this ${byDay?'weekday':'hour'}`
+    : model.showReference ? (d.referenceCount===0?`No commits in this ${byDay?'weekday':'hour'} for the ${model.referenceName}`:'Reference share unavailable') : 'Reference and focused contributors are the same group';
+  const examples=d.examples?.length ? `<div class="rhythm-evidence"><span class="eyebrow">MOST RECENT MATCHING COMMITS</span><ul>${d.examples.map(c=>`<li><span>${esc(`${c.date} ${String(c.hour).padStart(2,'0')}:${String(c.minute??0).padStart(2,'0')}`)} · <code>${esc(c.hash?.slice(0,8)||'—')}</code></span><strong>${esc(c.subject||'(No subject)')}</strong></li>`).join('')}</ul></div>` : '';
+  return `<div class="rhythm-detail-head"><div><span class="eyebrow">${rhythmPinned?'PINNED INSPECTION':isPeak?'PEAK HOUR · HOVER, FOCUS OR CLICK TO EXPLORE':'HOUR-BY-HOUR EVIDENCE'}</span><h5>${esc(label)}</h5><p>${esc(model.name)} · ${number.format(d.count)} recorded ${d.count===1?'commit':'commits'} at ${byDay?'these weekday hours':'this weekday and hour'} across the filtered period.</p></div>${rhythmPinned?'<button type="button" class="rhythm-unpin" data-action="rhythm-unpin">Unpin <span aria-hidden="true">×</span></button>':'<span class="rhythm-detail-help">Click any cell to pin ↗</span>'}</div><div class="rhythm-detail-facts"><div><span>COMMITS</span><strong>${number.format(d.count)}</strong></div><div><span>SHARE OF TIMED</span><strong>${d.percentage===null?'—':percent(d.percentage)}</strong></div><div><span>ACTIVE AUTHOR DATES</span><strong>${number.format(d.dates)}</strong></div><div><span>FILE TOUCHES</span><strong>${number.format(d.fileTouches)}</strong></div><div><span>TEXT LINES + / −</span><strong><em class="number-add">+${number.format(d.added)}</em> / <em class="number-del">−${number.format(d.deleted)}</em></strong></div></div><p class="rhythm-detail-reference">${esc(ratio)}</p>${examples}`;
+}
+function renderRhythmDetail() {
+  if(!rhythmModel) return;
+  const datum=rhythmPinned || rhythmHover;
+  $('rhythm-detail').innerHTML=rhythmDetailMarkup(rhythmModel,datum);
+  const current=rhythmDatumKey(datum || (rhythmModel.peakSlot ? {kind:'slot',index:rhythmModel.peakSlot.index} : null));
+  document.querySelectorAll('#rhythm-explorer [data-rhythm-interactive]').forEach(node=>{
+    const active=rhythmDatumKey({kind:node.dataset.rhythmKind,index:Number(node.dataset.rhythmIndex)})===current;
+    node.classList.toggle('is-active',active);
+    node.setAttribute('aria-pressed',String(Boolean(rhythmPinned && active)));
+  });
+}
+function renderRhythmExplorer(view) {
+  const target=$('rhythm-explorer');
+  target.hidden = !view.contributors.length;
+  if (!view.contributors.length) {rhythmModel=null;return;}
+  const focus=rhythmFocus(view);
+  if(rhythmModel?.focusId!==focus){rhythmHover=null;rhythmPinned=null;}
+  state.rhythmFocus=focus;
+  rhythmModel=workingRhythm(view,focus);
+  const model=rhythmModel;
+  const accent=rhythmStyleFor(model);
+  const picker=[...(view.contributors.length>1 ? [{id:'selection',displayName:'All selected'}] : []),...view.contributors].map(c=>{
+    const active=focus===c.id;
+    return `<button type="button" data-action="rhythm-focus" data-rhythm-focus="${c.id}" class="rhythm-focus-chip ${active?'is-active':''}" ${c.id!=='selection'?`style="${style(c.id)}"`:''} aria-pressed="${active}">${c.id!=='selection'?'<i class="person-dot" aria-hidden="true"></i>':''}${esc(c.displayName)}</button>`;
+  }).join('');
+  $('rhythm-focus-picker').innerHTML=picker;
+  setText('rhythm-focus-name',model.isGroup?'The selected group’s week':`${model.name}'s week`);
+  setText('rhythm-focus-caption',`${view.start} to ${view.end} · ${view.includeMerges?'merges included':'merges excluded'} · ${view.includeReverts?'reverts included':'reverts excluded'} · ${model.isGroup?'all selected contributors':'one selected contributor'}. Changing this focus only affects this explorer.`);
+  const peak=model.peakSlot;
+  const mini=(label,value,desc)=>`<div class="rhythm-kpi"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(desc)}</small></div>`;
+  $('rhythm-kpis').innerHTML=mini('TIMED COMMITS',number.format(model.timedCommits),`${number.format(model.totalCommits)} total · ${model.totalCommits?percent(model.timedCommits/model.totalCommits*100):'—'} recorded times`)+
+    mini('BUSIEST WEEKDAY',model.peakDay?DAY_NAMES[model.peakDay.day]:'—',model.peakDay?`${number.format(model.peakDay.count)} commits · ${percent(model.peakDay.percentage)}`:'No authored hours recorded')+
+    mini('BUSIEST WEEK-HOUR',peak?`${DAY_NAMES[peak.day]} ${String(peak.hour).padStart(2,'0')}:00`:'—',peak?`${number.format(peak.count)} commits across ${number.format(peak.dates)} dates`:'No authored hours recorded')+
+    mini('WEEKEND SHARE',model.weekendShare===null?'—':percent(model.weekendShare),'Of timed commits · Sat + Sun');
+  $('rhythm-weekday-columns').innerHTML=rhythmWeekdayColumns(model,accent);
+  const captions={
+    heatmap:'Day × hour · 7 rows × 24 hourly slots. Colour shows commit counts; scroll sideways for all hours on small screens.',
+    clock:'Circular week · seven weekday rings × 24 hours. Monday is innermost; hours run clockwise.',
+    bars:'Continuous hour-of-week · 168 hourly bars grouped into seven days. One shared scale; scroll sideways on small screens.',
+  };
+  setText('rhythm-display-caption',captions[state.rhythmDisplay]);
+  document.querySelectorAll('[data-rhythm-display]').forEach(btn=>{
+    const active=btn.dataset.rhythmDisplay===state.rhythmDisplay;
+    btn.classList.toggle('active',active);
+    btn.setAttribute('aria-pressed',String(active));
+  });
+  $('rhythm-week-chart').innerHTML=!model.timedCommits?empty('No timed commits in this selection. No hours are inferred from date-only Git records.')
+    :state.rhythmDisplay==='clock'?rhythmClock(model,accent)
+    :state.rhythmDisplay==='bars'?rhythmBars(model,accent):rhythmHeatmap(model,accent);
+  const top=Math.max(0,...model.cells.map(c=>c.count));
+  $('rhythm-legend').innerHTML=`<div class="rhythm-scale"><span>0 commits</span>${[0,.25,.5,.75,1].map(t=>`<i style="background:${rhythmShade(accent,t*Math.max(top,1),Math.max(top,1))}"></i>`).join('')}<span>${number.format(top)} / hour (max)</span></div><span>${number.format(model.missingTime)} commits without authored hours omitted · all views share these ${number.format(model.timedCommits)} timed events</span>`;
+  renderRhythmDetail();
+}
 function renderRhythm(view) {
-  if(!view.contributors.length){$('rhythm').innerHTML=empty('No contributors selected.');return;}
+  $('rhythm-comparison-details').hidden=view.contributors.length<=1;
+  if(!view.contributors.length){$('rhythm').innerHTML=empty('No contributors selected.');renderRhythmExplorer(view);return;}
   const sharedScale=(accessor,total)=>{
     const highest=Math.max(0,...view.contributors.flatMap(c=>{
       const n=total(c);return accessor(c).map(v=>n?v/n*100:0);
     }));
     return Math.min(100,Math.max(10,Math.ceil(highest/10)*10));
   };
-  const weekdayMax=sharedScale(c=>c.weekdays,c=>c.totals.commits);
+  const weekdayMax=sharedScale(c=>c.timedWeekdays,c=>c.timedCommits);
   const timeMax=sharedScale(c=>c.timeBands,c=>c.timedCommits);
-  const heading=`<div class="rhythm-header"><span>CONTRIBUTOR</span><span>DAY OF WEEK · % OF OWN · 0–${weekdayMax}%</span><span>LOCAL HOUR · % OF TIMED · 0–${timeMax}%</span><span>WEEKEND</span></div>`;
+  const heading=`<div class="rhythm-header"><span>CONTRIBUTOR</span><span>DAY OF WEEK · % TIMED · 0–${weekdayMax}%</span><span>LOCAL HOUR · % TIMED · 0–${timeMax}%</span><span>WEEKEND / COVERAGE</span></div>`;
+  const focus=rhythmFocus(view);
   const rows=view.contributors.map(c=>{
     const count=c.totals.commits;
-    const weekend=count?percent(c.weekendCommits/count*100):'—';
+    const weekend=c.timedCommits?percent(c.timedWeekendCommits/c.timedCommits*100):'—';
     const timed=count?percent(c.timedCommits/count*100):'—';
-    return `<div class="rhythm-row"><div class="rhythm-name"><strong style="${style(c.id)}"><i class="person-dot"></i> ${esc(c.displayName)}</strong><small>${number.format(count)} commits · ${c.totals.active_days} days</small></div><div class="rhythm-mobile-label">Day of week · share of own commits · scale 0–${weekdayMax}%</div>${microBars(c.weekdays,DAY_NAMES,c.id,'',weekdayMax)}<div class="rhythm-mobile-label">Authored hour · share of timed commits · scale 0–${timeMax}%</div>${c.timedCommits?microBars(c.timeBands,TIME_BANDS.map(b=>b.label),c.id,'time',timeMax):'<div class="helper">No authored hours in selected commits.</div>'}<div class="rhythm-summary">${weekend}<small>${timed} time coverage</small></div></div>`;
+    return `<div class="rhythm-row ${focus===c.id?'is-focused':''}"><div class="rhythm-name"><strong style="${style(c.id)}"><i class="person-dot"></i> ${esc(c.displayName)}</strong><small>${number.format(count)} commits · ${number.format(c.timedCommits)} timed</small><button type="button" data-action="rhythm-focus" data-rhythm-focus="${c.id}" class="rhythm-explore-link" aria-label="Explore the weekly timing of ${esc(c.displayName)}">Explore ↗</button></div><div class="rhythm-mobile-label">Weekday share · timed commits · scale 0–${weekdayMax}%</div>${c.timedCommits?microBars(c.timedWeekdays,DAY_NAMES,c.id,'',weekdayMax):'<div class="helper">No timed commits.</div>'}<div class="rhythm-mobile-label">Time band share · timed commits · scale 0–${timeMax}%</div>${c.timedCommits?microBars(c.timeBands,TIME_BANDS.map(b=>b.label),c.id,'time',timeMax):'<div class="helper">No timed commits.</div>'}<div class="rhythm-summary">${weekend}<small>${timed} time coverage</small></div></div>`;
   }).join('');
   $('rhythm').innerHTML=`<div class="rhythm-list-wrap">${heading}${rows}</div>`;
+  renderRhythmExplorer(view);
 }
 
 // Independent behaviour slice from the exact same commit cohort. Commit
@@ -846,7 +988,8 @@ function exportSession() {
   const payload={version:2,exportedAt:new Date().toISOString(),rangeYears:Number($('range-select').value),rawLog:$('log-input').value,
     mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails]})),
     scope:{selectedEmails,period:state.period,start:state.start,end:state.end,metric:state.metric,mode:state.mode,denominator:state.denominator,
-      includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode}};
+      includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode,
+      rhythmDisplay:state.rhythmDisplay,rhythmFocusEmail:analysis?.byId.get(state.rhythmFocus)?.emails[0]||null}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const uri=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=uri;a.download=`git-signals-${new Date().toISOString().slice(0,10)}.json`;a.click();
@@ -904,6 +1047,10 @@ const ACTIONS={
   'reset-filters':resetFilters,
   'trend-mode':(_e,t)=>{state.trend=t.dataset.trend;renderDashboard();},
   'pulse-mode':(_e,t)=>{state.pulseMode=t.dataset.pulseMode;renderDashboard();},
+  'rhythm-focus':(_e,t)=>{state.rhythmFocus=t.dataset.rhythmFocus;rhythmHover=null;rhythmPinned=null;renderRhythm(analysis);if(t.classList.contains('rhythm-explore-link'))$('rhythm-explorer').scrollIntoView({behavior:'smooth',block:'start'});},
+  'rhythm-display':(_e,t)=>{state.rhythmDisplay=t.dataset.rhythmDisplay;rhythmHover=null;renderRhythmExplorer(analysis);},
+  'rhythm-inspect':(_e,t)=>{const next={kind:t.dataset.rhythmKind,index:Number(t.dataset.rhythmIndex)};rhythmPinned=rhythmDatumKey(rhythmPinned)===rhythmDatumKey(next)?null:next;rhythmHover=next;renderRhythmDetail();},
+  'rhythm-unpin':()=>{rhythmPinned=null;rhythmHover=null;renderRhythmDetail();},
   'pulse-day':(_e,t)=>{if(pulsePopoverPinned&&pulsePopoverOrigin===t)hidePulsePopover();else showPulsePopover(t,{pin:true});},
   'close-pulse':closePulseAndRestoreFocus,
   'sort-table':(_e,t)=>{const key=t.dataset.sort;state.sortDesc=state.sortKey===key?!state.sortDesc:true;state.sortKey=key;renderTable(analysis);},
@@ -958,6 +1105,36 @@ function init() {
   document.addEventListener('click',handleDocumentClick);
   document.addEventListener('change',handleDocumentChange);
   document.addEventListener('input',handleDocumentInput);
+  $('rhythm-explorer').addEventListener('pointerover',event=>{
+    if (rhythmPinned) return;
+    const target=event.target.closest('[data-rhythm-interactive]');
+    if (!target) return;
+    const next={kind:target.dataset.rhythmKind,index:Number(target.dataset.rhythmIndex)};
+    if (rhythmDatumKey(next)!==rhythmDatumKey(rhythmHover)) {rhythmHover=next;renderRhythmDetail();}
+  });
+  $('rhythm-explorer').addEventListener('pointerout',event=>{
+    if (rhythmPinned || !event.target.closest('[data-rhythm-interactive]')) return;
+    if (event.relatedTarget?.closest?.('[data-rhythm-interactive]')) return;
+    rhythmHover=null;renderRhythmDetail();
+  });
+  $('rhythm-explorer').addEventListener('focusin',event=>{
+    if (rhythmPinned) return;
+    const target=event.target.closest('[data-rhythm-interactive]');
+    if (target){rhythmHover={kind:target.dataset.rhythmKind,index:Number(target.dataset.rhythmIndex)};renderRhythmDetail();}
+  });
+  $('rhythm-explorer').addEventListener('keydown',event=>{
+    const target=event.target.closest('[data-rhythm-kind="slot"]');
+    if (!target) return;
+    if (target.matches('svg *') && (event.key==='Enter' || event.key===' ')) {
+      event.preventDefault();ACTIONS['rhythm-inspect'](event,target);return;
+    }
+    const shifts={ArrowLeft:-1,ArrowRight:1,ArrowUp:-24,ArrowDown:24};
+    const delta=shifts[event.key];
+    if (delta===undefined) return;
+    const next=Math.max(0,Math.min(167,Number(target.dataset.rhythmIndex)+delta));
+    const matching=$('rhythm-week-chart').querySelector(`[data-rhythm-index="${next}"]`);
+    if(matching){event.preventDefault();matching.focus();}
+  });
   $('pulse').addEventListener('pointerover',onPulsePointerOver);
   $('pulse').addEventListener('pointerout',onPulsePointerOut);
   $('pulse').addEventListener('focusin',event=>{const cell=event.target.closest('[data-pulse-day]');if(cell&&!pulsePopoverPinned&&!pulseSuppressFocus)showPulsePopover(cell);});
@@ -966,7 +1143,8 @@ function init() {
   $('pulse-popover').addEventListener('pointerleave',event=>{if(!pulsePopoverPinned&&!pulsePopoverOrigin?.contains(event.relatedTarget))hidePulsePopover();});
   document.addEventListener('keydown',event=>{
     if (event.key !== 'Escape') return;
-    if (identityPicker) {event.preventDefault();closeIdentityPicker();}
+    if (rhythmPinned) {event.preventDefault();rhythmPinned=null;rhythmHover=null;renderRhythmDetail();}
+    else if (identityPicker) {event.preventDefault();closeIdentityPicker();}
     else if (!$('pulse-popover').hidden) closePulseAndRestoreFocus();
   });
   command();

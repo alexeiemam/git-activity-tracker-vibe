@@ -175,3 +175,111 @@
   .identity-option-count{font-size:9px;padding:4px 7px}
 }
 @media(max-width:400px){.identity-option-count{display:none}.merge-add{flex-wrap:wrap}.identity-picker-utilities{align-items:start}.identity-picker-utilities>div{gap:12px}}
+
+/* Focused weekly timing analysis. The overview and detailed charts derive from
+   the same filtered timed-commit cohort; only the encoding is switchable. */
+.rhythm-report-card{padding:0;overflow:hidden}
+.rhythm-explorer{padding:27px clamp(18px,2.5vw,32px) 22px;background:linear-gradient(155deg,#fbfdf9 0%,#f4f8f3 100%)}
+.rhythm-explorer-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:23px}
+.rhythm-explorer-heading h4{font-size:clamp(21px,2.4vw,28px);letter-spacing:-.04em;line-height:1.1;margin:8px 0 8px}
+.rhythm-explorer-heading p{font:11px/1.65 var(--mono);color:var(--muted);max-width:600px;margin:0}
+.rhythm-focus-picker{display:flex;flex-wrap:wrap;gap:7px;align-items:center;justify-content:flex-end;max-width:100%}
+.rhythm-focus-chip{display:inline-flex;gap:8px;align-items:center;white-space:nowrap;padding:8px 11px;font:600 11px var(--mono);border:1px solid #d6dfd5;border-radius:7px;background:#fff;color:#3f5949;transition:background .12s,border-color .12s,box-shadow .12s}
+.rhythm-focus-chip:hover{border-color:#7aaa94;background:#f6fbf7}
+.rhythm-focus-chip.is-active{border-color:#176b52;background:#e5f3eb;color:#17543d;box-shadow:inset 0 0 0 1px #c3dfcf}
+.rhythm-focus-chip .person-dot{width:9px;height:9px}
+.rhythm-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #dfe6dd;border-radius:10px;background:#fff;overflow:hidden;margin-bottom:17px}
+.rhythm-kpi{display:flex;flex-direction:column;gap:6px;min-width:0;padding:17px 18px;border-right:1px solid #ebeee9}
+.rhythm-kpi:last-child{border-right:none}
+.rhythm-kpi>span{font:600 9px var(--mono);letter-spacing:.09em;color:#728078}
+.rhythm-kpi strong{font-size:clamp(17px,2.2vw,25px);line-height:1.3;letter-spacing:-.035em;overflow-wrap:anywhere}
+.rhythm-kpi small{font:10px/1.6 var(--mono);color:var(--muted)}
+.rhythm-plots{display:grid;grid-template-columns:minmax(245px,.73fr) minmax(0,1.55fr);gap:15px;align-items:stretch}
+.rhythm-weekday-card,.rhythm-week-card{min-width:0;border:1px solid #dfe6dd;border-radius:10px;background:#fff;padding:20px 18px 16px}
+.rhythm-panel-title{display:flex;align-items:start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.rhythm-panel-title h5{font-size:17px;letter-spacing:-.025em;margin:5px 0 6px;line-height:1.25}
+.rhythm-week-title{align-items:center}
+.rhythm-display-switch{flex-shrink:0}
+.rhythm-display-switch .segment{font-size:10px;padding:7px 11px;min-height:30px}
+.rhythm-display-caption{font:10px/1.55 var(--mono);color:var(--muted);margin:4px 0 17px;min-height:27px}
+.rhythm-weekday-chart{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding-top:10px;align-items:end;min-height:260px}
+.rhythm-weekday-column{display:flex;flex-direction:column;gap:7px;align-items:center;justify-content:flex-end;min-width:0;padding:0 0 6px;border:0;border-bottom:2px solid transparent;border-radius:5px 5px 2px 2px;color:var(--ink);background:transparent;transition:background .12s}
+.rhythm-weekday-column:hover,.rhythm-weekday-column.is-active{background:#f1f7f2;border-bottom-color:var(--rhythm-accent)}
+.rhythm-weekday-count{font:600 12px var(--mono);color:#455c50}
+.rhythm-weekday-track{width:100%;height:162px;display:flex;align-items:end;background:#f1f5f0;border-radius:4px 4px 0 0;overflow:hidden}
+.rhythm-weekday-bar{width:100%;background:var(--rhythm-accent);min-height:0;border-radius:3px 3px 0 0;transition:height .2s}
+.rhythm-weekday-label{font:600 10px var(--mono)}
+.rhythm-weekday-pct{font:9px var(--mono);color:var(--muted);white-space:nowrap}
+.rhythm-grid-scroll,.rhythm-bars-scroll{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;padding:3px 0 12px}
+.rhythm-grid-board{min-width:460px;width:100%;display:grid;gap:5px}
+.rhythm-grid-heading,.rhythm-grid-row,.rhythm-grid-tail{display:grid;grid-template-columns:46px minmax(0,1fr);gap:6px;align-items:center}
+.rhythm-grid-heading>span,.rhythm-grid-day{font:10px var(--mono);color:var(--muted)}
+.rhythm-grid-hours{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:3px}
+.rhythm-grid-hour{text-align:left;white-space:nowrap;font:9px var(--mono);color:#77847b}
+.rhythm-grid-cell{display:block;min-width:0;width:100%;aspect-ratio:1/1;min-height:13px;border:1px solid #385d4715;border-radius:3px;padding:0;transition:transform .09s,outline-color .09s}
+.rhythm-grid-cell:hover,.rhythm-grid-cell.is-active{outline:2px solid #164f3c;outline-offset:1px;transform:scale(1.08);position:relative;z-index:1}
+.rhythm-grid-tail>div{display:flex;justify-content:space-between;gap:6px;margin-top:4px;font:9px var(--mono);color:var(--muted)}
+.rhythm-grid-tail>div>span{opacity:.5}
+.rhythm-clock-layout{display:flex;align-items:center;justify-content:center;gap:14px;max-width:100%}
+.rhythm-clock{width:min(100%,395px);height:auto;min-width:0;flex:0 1 395px;overflow:visible}
+.rhythm-clock-guide{stroke:#e5e9e4;stroke-width:1;pointer-events:none}
+.rhythm-clock-label{font:10px var(--mono);fill:#65736b}
+.rhythm-clock-centre{font:600 11px var(--mono);fill:#2d6247;letter-spacing:.14em}
+.rhythm-clock-centre-secondary{font:10px var(--mono);fill:#728078;letter-spacing:.15em}
+.rhythm-clock-cell{cursor:pointer;stroke:#ffffff88;stroke-width:.5;transition:filter .12s,stroke-width .12s}
+.rhythm-clock-cell:hover,.rhythm-clock-cell.is-active,.rhythm-clock-cell:focus-visible{stroke:#1c4631;stroke-width:2;filter:drop-shadow(0 0 1px #1c4631)}
+.rhythm-clock-explanation{display:flex;flex-direction:column;gap:11px;min-width:130px;max-width:180px;font:11px/1.65 var(--mono);color:var(--muted)}
+.rhythm-clock-explanation strong{font:600 13px var(--font);color:var(--ink)}
+.rhythm-clock-rings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.rhythm-clock-rings span{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.rhythm-clock-rings i{display:inline-block;width:11px;height:11px;border:2px solid #76ad91;border-radius:100%;box-shadow:inset 0 0 0 2px #fff;opacity:calc(.38 + var(--ring) * .085)}
+.rhythm-bars-week{display:grid;grid-template-columns:repeat(7,150px);gap:7px;min-width:max-content;padding:6px 0}
+.rhythm-bars-day{border-radius:6px;background:#f7f9f5;padding:9px 7px 7px;min-width:0}
+.rhythm-bars-dayname{display:flex;justify-content:space-between;align-items:center;gap:4px;font:600 11px var(--mono);color:var(--ink);margin-bottom:10px}
+.rhythm-bars-dayname small{font:9px var(--mono);color:var(--muted)}
+.rhythm-bars-bars{height:164px;display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:1px;align-items:stretch;border-bottom:1px solid #ccd7ce}
+.rhythm-bars-column{display:flex;align-items:end;width:100%;min-width:0;height:100%;padding:0;border:0;background:none;cursor:pointer;position:relative}
+.rhythm-bars-column:hover,.rhythm-bars-column.is-active{background:#d8eadd;outline:1px solid #1e5f47;outline-offset:1px}
+.rhythm-bars-fill{display:block;width:100%;border-radius:1px 1px 0 0;min-height:0}
+.rhythm-bars-hour-labels{display:flex;justify-content:space-between;font:9px var(--mono);color:#78887c;margin-top:7px}
+.rhythm-legend{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:13px;border-top:1px solid #edf0eb;font:10px/1.5 var(--mono);color:var(--muted)}
+.rhythm-scale{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.rhythm-scale i{display:inline-block;width:15px;height:11px;border-radius:2px}
+.rhythm-scale span:first-child{margin-right:4px}
+.rhythm-scale span:last-child{margin-left:4px}
+.rhythm-detail{background:#fff;border:1px solid #d7e2d9;border-left:4px solid #478a68;border-radius:9px;padding:18px 20px;margin:16px 0 0;min-height:125px}
+.rhythm-detail-head{display:flex;justify-content:space-between;align-items:start;gap:10px;flex-wrap:wrap}
+.rhythm-detail h5{font-size:17px;letter-spacing:-.025em;margin:7px 0 5px}
+.rhythm-detail p{font-size:11px;color:var(--muted);margin:0;line-height:1.65}
+.rhythm-unpin{border:1px solid #c9d9cc;background:#f4f9f5;border-radius:6px;padding:7px 10px;font:600 10px var(--mono);color:#246446}
+.rhythm-unpin:hover{background:#e8f4eb}
+.rhythm-detail-help{font:10px var(--mono);color:#698579}
+.rhythm-detail-facts{display:flex;flex-wrap:wrap;gap:13px 28px;border-top:1px solid #e8ede7;margin-top:15px;padding-top:14px}
+.rhythm-detail-facts>div{display:flex;flex-direction:column;gap:5px}
+.rhythm-detail-facts span{font:9px var(--mono);color:#728176}
+.rhythm-detail-facts strong{font:600 14px var(--mono);color:#263c30}
+.rhythm-detail-facts em{font-style:normal}
+.rhythm-detail-reference{margin-top:13px!important;font:10px/1.6 var(--mono)!important;color:#447356!important}
+.rhythm-evidence{border-top:1px dashed #e2eae2;margin-top:13px;padding-top:13px}
+.rhythm-evidence ul{display:flex;flex-direction:column;gap:8px;list-style:none;margin:10px 0 0;padding:0}
+.rhythm-evidence li{display:grid;grid-template-columns:minmax(175px,.55fr) minmax(0,1.5fr);gap:10px;font-size:11px;line-height:1.5}
+.rhythm-evidence li>span{font:10px var(--mono);color:var(--muted)}
+.rhythm-evidence li>strong{font-weight:500;min-width:0;overflow-wrap:anywhere}
+.rhythm-footnote{color:#5c6c62;font:10px/1.8 var(--mono);margin:18px 0 0}
+.rhythm-footnote strong{color:#2e5940}
+.rhythm-overview-details{border-top:1px solid #dfe5dc;background:#fff;padding:0 clamp(18px,2.5vw,32px)}
+.rhythm-overview-details>summary{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:20px 0;cursor:pointer;list-style:none}
+.rhythm-overview-details>summary::-webkit-details-marker{display:none}
+.rhythm-overview-details>summary>span:first-child{display:grid;gap:4px}
+.rhythm-overview-details>summary strong{font-size:16px;letter-spacing:-.02em}
+.rhythm-overview-details>summary small{font:10px var(--mono);color:var(--muted)}
+.rhythm-overview-chevron{color:#387b59;font-size:19px;transition:transform .15s}
+.rhythm-overview-details[open] .rhythm-overview-chevron{transform:rotate(180deg)}
+.rhythm-overview-details #rhythm{margin-bottom:18px}
+.rhythm-explore-link{display:inline-block;color:#21684a;padding:4px 0 0;margin-top:3px;border:0;background:transparent;font:600 10px var(--mono)}
+.rhythm-explore-link:hover{text-decoration:underline}
+.rhythm-row.is-focused .rhythm-name>strong{color:#15583e}
+.rhythm-explorer [data-rhythm-interactive]:focus-visible{outline:2px solid #195c43;outline-offset:2px}
+@media(max-width:1020px){.rhythm-plots{grid-template-columns:1fr}.rhythm-weekday-chart{min-height:235px}.rhythm-weekday-track{height:145px}.rhythm-week-card{min-height:0}.rhythm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.rhythm-kpi:nth-child(2){border-right:0}.rhythm-kpi:nth-child(-n+2){border-bottom:1px solid #ebeee9}}
+@media(max-width:650px){.rhythm-explorer{padding:20px 14px}.rhythm-explorer-heading h4{font-size:22px}.rhythm-focus-picker{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;padding:4px 2px;max-width:100%}.rhythm-focus-chip{flex-shrink:0}.rhythm-kpi{padding:13px 11px}.rhythm-kpi strong{font-size:19px}.rhythm-kpi>span{font-size:8px}.rhythm-weekday-card,.rhythm-week-card{padding:17px 11px 14px}.rhythm-weekday-chart{gap:3px;min-height:215px}.rhythm-weekday-track{height:133px}.rhythm-weekday-count{font-size:11px}.rhythm-weekday-pct{font-size:8px}.rhythm-weekday-label{font-size:9px}.rhythm-clock-layout{flex-direction:column}.rhythm-clock{width:min(100%,350px);flex:0 1 auto}.rhythm-clock-explanation{max-width:none;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}.rhythm-clock-explanation strong{grid-column:1/-1}.rhythm-clock-rings{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}.rhythm-evidence li{grid-template-columns:1fr;gap:3px}.rhythm-detail{padding:15px 12px}.rhythm-detail-facts{gap:12px 18px}.rhythm-overview-details{padding:0 14px}.rhythm-panel-title h5{font-size:16px}}
+@media(max-width:385px){.rhythm-display-switch .segment{padding:6px 8px;font-size:9px}.rhythm-week-title{align-items:flex-start}.rhythm-kpi small{font-size:9px}}
