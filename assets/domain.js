@@ -51,35 +51,60 @@ export function dayOfWeek(date) {
   return (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
 }
 
-export function parseGitLog(raw) {
+/**
+ * The capture format is deliberately newline-oriented, copy/paste friendly and
+ * backwards-compatible with the original COMMIT|...|subject[|parents] rows.
+ * TAG rows are metadata, not commits. Do not fabricate tag dates or ancestry.
+ */
+export function parseGitHistory(raw) {
   const commits = [];
+  const tags = [];
   let current = null;
-  const flush = () => { if (current) commits.push(current); };
+  const flush = () => { if (current) commits.push(current); current = null; };
 
   for (const original of String(raw || '').split(/\r?\n/)) {
     const line = original.trim();
     if (!line) continue;
+    if (line.startsWith('TAG|')) {
+      flush();
+      const parts = line.split('|');
+      // TAG|name|peeled-hash|object-hash|object-type|creator-date
+      const objectType = parts[4] || 'commit';
+      if (!['commit', 'tag'].includes(objectType)) continue;
+      const commitHash = (objectType === 'tag' ? parts[2] : parts[3])?.trim();
+      if (!commitHash || !/^[a-f0-9]{7,64}$/i.test(commitHash)) continue;
+      const timeText = (parts[5] || '').trim();
+      tags.push({ name: (parts[1] || '').trim(), hash: commitHash,
+        taggedAt: Number.isFinite(Date.parse(timeText)) ? Date.parse(timeText) : null,
+        taggedDate: validDate(timeText.slice(0, 10)) ? timeText.slice(0, 10) : null,
+        timestampSource: objectType === 'tag' ? 'tagger' : 'tagged-commit',
+        annotated: objectType === 'tag' });
+      continue;
+    }
     if (line.startsWith('COMMIT|')) {
       flush();
       const parts = line.split('|');
-      // New command ends with %P. Older exports had only 6 fields. Preserve
-      // literal pipes in subjects instead of silently truncating the message.
       const hasParents = parts.length >= 7 && (/^(?:[a-f0-9]{7,64})(?:\s+[a-f0-9]{7,64})*$/i.test(parts.at(-1)) || parts.at(-1) === '');
-      const subject = parts.slice(5, hasParents ? -1 : undefined).join('|').trim();
-      const authored = (parts[4] || '').trim();
-      const date = authored.slice(0, 10);
       const parents = hasParents ? parts.at(-1).trim().split(/\s+/).filter(Boolean) : [];
+      const modern = /^\d{4}-\d\d-\d\dT/.test(parts[5] || '');
+      const subjectStart = modern ? 6 : 5;
+      const authored = (parts[4] || '').trim();
+      const committed = modern ? (parts[5] || '').trim() : '';
+      const date = authored.slice(0, 10);
       const timeMatch = authored.match(/^\d{4}-\d\d-\d\dT(\d\d):(\d\d):\d\d(?:Z|[+-]\d\d:\d\d)$/);
       const hour = timeMatch ? Number(timeMatch[1]) : null;
       const minute = timeMatch ? Number(timeMatch[2]) : null;
+      const subject = parts.slice(subjectStart, hasParents ? -1 : undefined).join('|').trim();
       current = {
         hash: (parts[1] || '').trim(),
         email: (parts[2] || '?').trim().toLowerCase(),
         name: (parts[3] || '?').trim(),
         date: validDate(date) ? date : null,
         authoredAt: Number.isFinite(Date.parse(authored)) ? Date.parse(authored) : null,
+        committedAt: Number.isFinite(Date.parse(committed)) ? Date.parse(committed) : null,
         hour: Number.isInteger(hour) && hour >= 0 && hour < 24 ? hour : null,
         minute: Number.isInteger(minute) && minute >= 0 && minute < 60 ? minute : null,
+        parents, parentsKnown: hasParents,
         subject,
         isMerge: hasParents ? parents.length > 1 : /^merge(?:d)?\s+(?:branch|pull request|remote|tag|commit|#)/i.test(subject),
         isRevert: /^revert\b/i.test(subject),
@@ -94,16 +119,12 @@ export function parseGitLog(raw) {
       current.files.push({
         added: match[1] === '-' ? 0 : Number(match[1]),
         deleted: match[2] === '-' ? 0 : Number(match[2]),
-        path,
-        binary: match[1] === '-' || match[2] === '-',
+        path, binary: match[1] === '-' || match[2] === '-',
       });
       if (/(^|\/)VERSION$/.test(path)) current.touchesVersion = true;
     }
   }
   flush();
-
-  // A pasted log can contain duplicate revs (for example multiple git-log runs).
-  // Counting the same object twice produces misleading comparisons.
   const seen = new Set();
   const unique = commits.filter(commit => {
     if (!commit.date) return false;
@@ -113,8 +134,10 @@ export function parseGitLog(raw) {
     return true;
   });
   if (!unique.length) throw new Error('No dated commits found. Use the generated git log command.');
-  return unique;
+  return { commits: unique, tags: tags.filter(t => t.name) };
 }
+
+export function parseGitLog(raw) { return parseGitHistory(raw).commits; }
 
 /**
  * Move any number of known email identities into one contributor in a single
@@ -142,8 +165,21 @@ export function getDateBounds(commits) {
   return { min: dates[0] ?? null, max: dates.at(-1) ?? null };
 }
 
-export function periodForPreset(commits, preset = 'all') {
-  const { min, max } = getDateBounds(commits);
+/** Shared calendar scope spans authored commits AND the Git tag events being
+ * visualised. This does not change the author-based attribution of commits. */
+export function getHistoryDateBounds(commits, tags = []) {
+  const bounds=getDateBounds(commits);
+  for (const tag of tags) if (validDate(tag.taggedDate)) {
+    if (!bounds.min || tag.taggedDate < bounds.min) bounds.min=tag.taggedDate;
+    if (!bounds.max || tag.taggedDate > bounds.max) bounds.max=tag.taggedDate;
+  }
+  return bounds;
+}
+
+export function periodForPreset(commits, preset = 'all', bounds = null) {
+  // A caller may include tag dates in the global date-window boundaries.
+  // Commit-only analysis continues using authored dates by default.
+  const { min, max } = bounds ?? getDateBounds(commits);
   if (!min || !max) return { start: null, end: null };
   if (preset === '90d' || preset === '365d' || preset === '730d') {
     const days = Number(preset.slice(0, -1));

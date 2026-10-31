@@ -2,9 +2,11 @@ import {
   METRICS, DAY_NAMES, TIME_BANDS, buildAnalysis, getDateBounds, pulseDayDetails, workingRhythm, mondayOf, dayNumber, dateAtDay,
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
-  parseGitLog,
+  parseGitHistory, getHistoryDateBounds,
 } from './domain.js';
 import { generateDemoLog } from './demo-data.js';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability } from './impact-view.js';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 const $ = id => document.getElementById(id);
@@ -19,6 +21,11 @@ const formatDate = d => d ? new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB
 const metricValue = (c, key) => c?.totals[key] || 0;
 
 let rawCommits = [];
+let rawTags = [];
+let impactModel = null;
+// Tag events may be later than the newest authored commit. The shared
+// window includes their dates, while all contributor counts remain author-based.
+const sourceDateBounds=()=>getHistoryDateBounds(rawCommits,rawTags);
 let mergeGroups = [];
 let identityMeta = new Map();
 let identityPicker = null; // { targetIndex, selected: Set, query } — staged until Apply
@@ -33,6 +40,7 @@ const state = {
   metric: 'commits', mode: 'total', denominator: 'repository',
   trend: 'rolling', pulseMode: 'monthly', rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
   rhythmTab: 'weekly', seasonMode: 'rate', seasonYears: null, sortKey: 'lens', sortDesc: true,
+  impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,
 };
 
 function setText(id, content) { $(id).textContent = content; }
@@ -40,7 +48,7 @@ function command() {
   // Git --since limits commits by the *committer* date. It would silently
   // truncate author-date history (notably rebases and cherry-picks). Import
   // reachable history first, and apply the authored-date window in the UI.
-  setText('git-cmd', 'git log --pretty=format:"COMMIT|%H|%ae|%an|%aI|%s|%P" --numstat | pbcopy');
+  setText('git-cmd', '(git for-each-ref --format="TAG|%(refname:short)|%(*objectname)|%(objectname)|%(objecttype)|%(creatordate:iso-strict)" refs/tags; git log HEAD --tags --pretty=format:"COMMIT|%H|%ae|%an|%aI|%cI|%s|%P" --numstat) | pbcopy');
 }
 function copyCommand() {
   if (!navigator.clipboard) return setText('parse-error', 'Clipboard unavailable. Select and copy the command manually.');
@@ -245,7 +253,7 @@ function analyse() {
   setText('parse-error','');
   const raw = $('log-input').value.trim();
   if (!raw) return setText('parse-error','Paste a git log or load the demo.');
-  try { rawCommits = parseGitLog(raw); }
+  try { const history = parseGitHistory(raw); rawCommits = history.commits; rawTags = history.tags; }
   catch(error) { return setText('parse-error',error.message); }
   pendingImport = null;
   identityMeta = makeIdentityCatalogue(rawCommits);
@@ -266,7 +274,7 @@ function loadDemo() {
   analyse();
 }
 function syncScopeAfterLoad() {
-  const { min,max } = getDateBounds(rawCommits);
+  const { min,max } = sourceDateBounds();
   const years = Math.max(1, Math.min(5, Number($('range-select').value) || 3));
   const anchored = new Date(`${max}T12:00:00Z`);
   const y = anchored.getUTCFullYear() - years, m = anchored.getUTCMonth();
@@ -275,7 +283,7 @@ function syncScopeAfterLoad() {
   const desiredStart = dateAtDay(dayNumber(anniversary)+1);
   const initialStart = min > desiredStart ? min : desiredStart;
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
-    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'' });
+    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false });
   state.selectedIds = new Set(mergeGroups.map((_,i)=>String(i)));
   if (pendingImport?.scope) {
     const s = pendingImport.scope;
@@ -290,6 +298,11 @@ function syncScopeAfterLoad() {
     if (['heatmap','clock','bars'].includes(s.rhythmDisplay)) state.rhythmDisplay=s.rhythmDisplay;
     if (['weekly','years','seasonal'].includes(s.rhythmTab)) state.rhythmTab=s.rhythmTab;
     if (['rate','shape','index'].includes(s.seasonMode)) state.seasonMode=s.seasonMode;
+    if (['timeline','matrix','reach','durability'].includes(s.impactTab)) state.impactTab=s.impactTab;
+    if (IMPACT_METRICS[s.impactMetric]) state.impactMetric=s.impactMetric;
+    if (['touches','within'].includes(s.impactAreaMode)) state.impactAreaMode=s.impactAreaMode;
+    if (typeof s.impactReleaseHash==='string') state.impactReleaseHash=s.impactReleaseHash;
+    state.impactShowAll=!!s.impactShowAll;
     if (Array.isArray(s.seasonYears)) state.seasonYears=new Set(s.seasonYears.filter(y=>Number.isInteger(y)&&y>=1900&&y<=2200));
     if (s.start && s.end && s.start <= s.end && /^\d{4}-\d\d-\d\d$/.test(s.start) && /^\d{4}-\d\d-\d\d$/.test(s.end)) {
       state.start=s.start; state.end=s.end;
@@ -315,21 +328,21 @@ function buildDashboard() {
   $('dashboard').hidden=false;
   $('export-btn').hidden=false;
   $('source-details').open=false;
-  setText('source-status',`${number.format(rawCommits.length)} commits imported · identities reviewed`);
+  setText('source-status',`${number.format(rawCommits.length)} commits · ${number.format(rawTags.length)} tags imported · identities reviewed`);
   $('contributor-search').value='';
   configureOptions();
   renderDashboard();
   $('dashboard').scrollIntoView({ behavior:'smooth',block:'start' });
 }
 function configureOptions() {
-  const years=[...new Set(rawCommits.map(c=>c.date?.slice(0,4)).filter(Boolean))].sort().reverse();
+  const years=[...new Set([...rawCommits.map(c=>c.date?.slice(0,4)),...rawTags.map(t=>t.taggedDate?.slice(0,4))].filter(Boolean))].sort().reverse();
   $('period-select').innerHTML=`<option value="all">All imported dates</option><option value="90d">Latest 90 days</option><option value="365d">Latest 365 days</option><option value="730d">Latest 730 days</option>${years.map(y=>`<option value="year-${y}">Calendar year ${y}</option>`).join('')}<option value="custom">Custom date range</option>`;
   $('metric-select').innerHTML=Object.entries(METRICS).map(([key,m])=>`<option value="${key}">${esc(m.label)}</option>`).join('');
 }
 function updatePeriod(preset) {
   state.period=preset;
   if (preset !== 'custom') {
-    const dates=periodForPreset(rawCommits,preset);
+    const dates=periodForPreset(rawCommits,preset,sourceDateBounds());
     state.start=dates.start;state.end=dates.end;
   }
   renderDashboard();
@@ -348,8 +361,8 @@ function changeDate() {
   renderDashboard();
 }
 function resetFilters() {
-  Object.assign(state,{ period:'all',start:getDateBounds(rawCommits).min,end:getDateBounds(rawCommits).max,
-    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'' });
+  Object.assign(state,{ period:'all',start:sourceDateBounds().min,end:sourceDateBounds().max,
+    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
   setText('scope-error','');
@@ -1156,6 +1169,31 @@ const SIZE_BANDS=[
   {label:'20–199 lines',min:20,max:199,color:'#36886f'},
   {label:'200+ lines',min:200,max:Infinity,color:'#d47c56'},
 ];
+function renderImpact(view) {
+  impactModel=impactAnalysis(view,rawCommits,rawTags,{metric:state.impactMetric});
+  const model=impactModel;
+  $('impact-empty').innerHTML=impactSelectMessage(model);
+  $('impact-panels').hidden=!model.releases.length;
+  if(!model.releases.length)return;
+  if(!model.releases.some(r=>r.hash===state.impactReleaseHash)) state.impactReleaseHash=model.releases.at(-1).hash;
+  const selected=model.releases.find(r=>r.hash===state.impactReleaseHash);
+  $('impact-summary').innerHTML=impactSummary(model);
+  setText('impact-scope',`Tag dates: ${view.start}–${view.end} · Author dates: same range · ${view.includeMerges?'Merges included':'Merges excluded'} · ${view.includeReverts?'Reverts included':'Reverts excluded'} · ${model.referenceLabel} reference · ${model.allReleaseCount-model.releases.length} tagged snapshots outside the selected tag-date window${model.unresolved.length?` · ${model.unresolved.length} unresolved tag refs`:''}. Tag boundaries are graph-based.`);
+  $('impact-timeline').innerHTML=impactTimeline(model,state.impactReleaseHash,state.impactShowAll);
+  $('impact-release-control').innerHTML=impactReleasePicker(model,state.impactReleaseHash);
+  document.querySelectorAll('[data-impact-tab]').forEach(btn=>{const active=btn.dataset.impactTab===state.impactTab;btn.classList.toggle('is-active',active);btn.setAttribute('aria-pressed',String(active));});
+  const titles={timeline:'A release, under the microscope.',matrix:'Who contributed to which release?',reach:'Where did the changes reach?',durability:'What happened after the release?'};
+  setText('impact-tab-title',titles[state.impactTab]);
+
+  $('impact-area-toolbar').hidden=state.impactTab!=='reach';
+  if(state.impactTab==='timeline') $('impact-content').innerHTML=impactReleaseDetail(selected,model.referenceLabel,state.impactMetric);
+  else if(state.impactTab==='matrix') $('impact-content').innerHTML=impactReleaseMatrix(model,state.impactShowAll);
+  else if(state.impactTab==='reach') $('impact-content').innerHTML=impactReach(model,state.impactAreaMode);
+  else $('impact-content').innerHTML=impactDurability(model,state.impactReleaseHash,state.impactShowAll);
+  if($('impact-metric-select'))$('impact-metric-select').value=state.impactMetric;
+  document.querySelectorAll('[data-impact-area-mode]').forEach(btn=>{const active=btn.dataset.impactAreaMode===state.impactAreaMode;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));});
+}
+
 function renderFootprint(view) {
   if(!view.contributors.length){$('footprint').innerHTML=empty('No contributors selected.');return;}
   const rows=view.contributors.map(c=>{
@@ -1213,7 +1251,7 @@ function renderDashboard() {
   });
   updateControls();renderPicker();renderScope(analysis);
   renderStats(analysis);renderRanking(analysis);renderTrend(analysis);renderTable(analysis);
-  renderPulse(analysis);renderRhythm(analysis);renderFootprint(analysis);renderAreas(analysis);renderRecent(analysis);
+  renderPulse(analysis);renderRhythm(analysis);renderImpact(analysis);renderFootprint(analysis);renderAreas(analysis);renderRecent(analysis);
 }
 
 function exportSession() {
@@ -1224,7 +1262,9 @@ function exportSession() {
     scope:{selectedEmails,period:state.period,start:state.start,end:state.end,metric:state.metric,mode:state.mode,denominator:state.denominator,
       includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode,
       rhythmDisplay:state.rhythmDisplay,rhythmTab:state.rhythmTab,seasonMode:state.seasonMode,seasonYears:state.seasonYears?[...state.seasonYears]:null,
-      rhythmFocusEmail:analysis?.byId.get(state.rhythmFocus)?.emails[0]||null}};
+      rhythmFocusEmail:analysis?.byId.get(state.rhythmFocus)?.emails[0]||null,
+      impactTab:state.impactTab,impactMetric:state.impactMetric,impactAreaMode:state.impactAreaMode,
+      impactReleaseHash:state.impactReleaseHash,impactShowAll:state.impactShowAll}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const uri=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=uri;a.download=`git-signals-${new Date().toISOString().slice(0,10)}.json`;a.click();
@@ -1237,9 +1277,9 @@ async function importSession(event) {
   try {payload=JSON.parse(await file.text());}
   catch {return setText('parse-error','Could not parse JSON export.');}
   if(typeof payload?.rawLog!=='string' || !Array.isArray(payload.mergeGroups)) return setText('parse-error','Invalid session: rawLog and mergeGroups required.');
-  let commits;
-  try {commits=parseGitLog(payload.rawLog);}catch(err){return setText('parse-error',err.message);}
-  rawCommits=commits;
+  let history;
+  try {history=parseGitHistory(payload.rawLog);}catch(err){return setText('parse-error',err.message);}
+  rawCommits=history.commits;rawTags=history.tags;
   identityMeta = makeIdentityCatalogue(rawCommits);
   identityPicker = null;
   mergeUndo = null;
@@ -1259,7 +1299,7 @@ async function importSession(event) {
   for(const c of rawCommits){if(used.has(c.email))continue;mergeGroups.push({displayName:c.name||c.email,emails:[c.email]});used.add(c.email);}
   pendingImport=payload;
   buildDashboard();
-  setText('source-status',`${number.format(commits.length)} commits restored from ${file.name}`);
+  setText('source-status',`${number.format(rawCommits.length)} commits · ${number.format(rawTags.length)} tags restored from ${file.name}`);
   setText('parse-error','');
 }
 
@@ -1309,6 +1349,10 @@ const ACTIONS={
     state.seasonYears=null;seasonPinned=null;seasonHover=null;
     renderDashboard();$('pulse-heading').scrollIntoView({behavior:'smooth',block:'start'});
   },
+  'impact-tab':(_e,t)=>{state.impactTab=t.dataset.impactTab;renderImpact(analysis);},
+  'impact-release':(event,t)=>{state.impactReleaseHash=t.dataset.impactHash;state.impactTab='timeline';renderImpact(analysis);if(event.type==='keydown')$('impact-release-select')?.focus();else $('impact-content').scrollIntoView({behavior:'smooth',block:'nearest'});},
+  'impact-toggle-all':()=>{state.impactShowAll=!state.impactShowAll;renderImpact(analysis);},
+  'impact-area-mode':(_e,t)=>{state.impactAreaMode=t.dataset.impactAreaMode;renderImpact(analysis);},
   'rhythm-focus':(_e,t)=>{state.rhythmFocus=t.dataset.rhythmFocus;rhythmHover=null;rhythmPinned=null;renderRhythm(analysis);if(t.classList.contains('rhythm-explore-link'))$('rhythm-explorer').scrollIntoView({behavior:'smooth',block:'start'});},
   'rhythm-display':(_e,t)=>{state.rhythmDisplay=t.dataset.rhythmDisplay;rhythmHover=null;renderRhythmExplorer(analysis);},
   'rhythm-inspect':(_e,t)=>{const next={kind:t.dataset.rhythmKind,index:Number(t.dataset.rhythmIndex)};rhythmPinned=rhythmDatumKey(rhythmPinned)===rhythmDatumKey(next)?null:next;rhythmHover=next;renderRhythmDetail();},
@@ -1353,6 +1397,8 @@ function handleDocumentChange(event) {
     case 'filter-merges':state.includeMerges=t.checked;renderDashboard();break;
     case 'filter-reverts':state.includeReverts=t.checked;renderDashboard();break;
     case 'metric-select':state.metric=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;
+    case 'impact-metric-select':state.impactMetric=t.value;renderImpact(analysis);break;
+    case 'impact-release-select':state.impactReleaseHash=t.value;renderImpact(analysis);break;
     case 'mode-select':state.mode=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;
     case 'denominator-select':state.denominator=t.value;renderDashboard();break;
   }
@@ -1396,6 +1442,14 @@ function init() {
     const next=Math.max(0,Math.min(167,Number(target.dataset.rhythmIndex)+delta));
     const matching=$('rhythm-week-chart').querySelector(`[data-rhythm-index="${next}"]`);
     if(matching){event.preventDefault();matching.focus();}
+  });
+  $('impact-timeline').addEventListener('keydown',event=>{
+    const dot=event.target.closest('[data-impact-hash]');
+    if(dot && (event.key==='Enter'||event.key===' ')) {event.preventDefault();ACTIONS['impact-release'](event,dot);return;}
+    if(dot && (event.key==='ArrowLeft'||event.key==='ArrowRight')) {
+      event.preventDefault();const dots=[...$('impact-timeline').querySelectorAll('[data-impact-hash]')];
+      const index=dots.indexOf(dot);dots[Math.max(0,Math.min(dots.length-1,index+(event.key==='ArrowRight'?1:-1)))].focus();
+    }
   });
   $('season-explorer').addEventListener('pointerover',event=>{
     if(seasonPinned)return;

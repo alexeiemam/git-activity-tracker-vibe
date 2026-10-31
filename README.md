@@ -12,16 +12,104 @@ python3 -m http.server 8000
 
 Open `http://localhost:8000` and choose **Explore demo dataset**, or use the generated `git log` command inside a Git repository. Confirm/merge contributor identities, then build the dashboard. Use **Add identities** on a contributor to open a searchable multi-selector, tick as many Git author emails as needed (including identities currently under other names), and **Move identities** to apply the batch. The picker previews affected commits and source groups; you can cancel, press Escape, or undo the most recent move. Splitting identities still works independently. The example command uses macOS `pbcopy`; on other systems, remove that final pipe and paste the result yourself.
 
-**Authored, not committed:** The generated command uses `%aI` (author timestamp), `%an` (author name) and `%ae` (author email). It intentionally **does not use `git log --since`**, which prunes using committer dates and can silently omit old-authored commits that were rebased/cherry-picked recently. Instead, it imports all history reachable from the current branch and applies the **Initially show: 1–5 years** lookback *in the browser*, anchored to the most recent imported authored date. The scope's `All imported dates` preset remains available. For very large repositories this can produce substantial output, but avoids biasing the historical comparisons. To include commits reachable only from other branches, explicitly add `--all` to the command; branches not included in the log cannot be analysed.
+**Authored, not committed:** The generated command uses `%aI` (author timestamp), `%an` (author name) and `%ae` (author email). It intentionally **does not use `git log --since`**, which prunes using committer dates and can silently omit old-authored commits that were rebased/cherry-picked recently. Instead, it imports all history reachable from the current branch and tags and applies the **Initially show: 1–5 years** lookback *in the browser*, anchored to the most recent imported authored date. The scope's `All imported dates` preset remains available. For very large repositories this can produce substantial output, but avoids biasing the historical comparisons. To include commits reachable only from other branches, use `git log --all` in place of `git log HEAD --tags`; branches not included in the log cannot be analysed. The import also captures `%cI` to support follow-up evidence, without changing the author-time filtering.
 
 No build, install, backend, API key, or CDN for JavaScript is needed. The optional Google Fonts request can fall back to local fonts offline.
+
+## Git-only Impact Explorer: tag-first delivery evidence
+
+**Source of truth:** Git tags are the primary release events. Neither a merge
+commit nor a `VERSION` edit is required. VERSION file touches are rendered as
+secondary, sometimes spurious signals. The importer now captures *all tag refs*
+and commits reachable from `HEAD` **or any tag**, including parent hashes,
+author time and committer time. It handles lightweight and annotated tags:
+
+- **Annotated tag:** tagger date is the release-event date (not a verified deployment time).
+- **Lightweight tag:** Git does not preserve tag-creation time, so we explicitly
+  label the tagged commit's **committer date as an approximation**.
+- **Multiple names at one commit:** collapsed into one release snapshot, with
+  alias tags visible on inspection. SemVer-shaped names (including `v8.9.1`)
+  classify major/minor/patch/pre-release *transitions*; other tags remain
+  available as unclassified release candidates. A SemVer tier is **not** an
+  amount of impact. Non-monotonic versions and divergent branches are marked.
+- **Membership:** for each tagged commit, compare the commits reachable from it
+  against those reachable from its nearest preceding tagged ancestor. This
+  works with fast-forward, squash and multi-parent merge history. A squash
+  merge only exposes the resulting commit's recorded author; the original
+  unreachable commits and unimported co-author trailers cannot be credited. An initial
+  lineage tag is a **baseline snapshot**, not an individual release increment.
+  If parents are missing (shallow/incomplete import), the UI warns and does not
+  claim fully observed follow-up.
+
+The tag events displayed use **tag dates within the global date window**.
+The contributors, dates and merge/revert policy applied to release evidence are
+precisely those used by every other visualisation: *commit attribution is by
+**author date***. These two clocks are shown explicitly. In particular, a
+commit authored months before a release is not reclassified as work authored
+on the release date. If a recent tag is dated after the last authored commit,
+extend the global end date to see that event.
+
+The four connected perspectives are:
+
+1. **Impact Timeline:** tag events, coloured by version transition, plotted by
+   release-event date and the selected measure. The lower band separately
+   shows **all scoped authored activity (including unreleased work)** and
+   distinct VERSION touches. Click or keyboard-activate a tag to inspect its
+   introduced commits, files and changes. A selection also updates the release
+   dropdown and detail. The timeline and contributor/release matrix share a
+   selectable measure: commits, within-reference commit share, line churn,
+   distinct paths or top-level codebase areas. Shares have explicit reference
+   denominators; paths/areas can overlap between contributors.
+2. **People × releases:** consistent contributor-by-release matrix. Only the
+   globally selected contributors are rows. Percentages are scoped to the
+   globally chosen reference group, not the whole repo unless requested.
+   Clicking a cell opens that release's full evidence.
+3. **Codebase reach:** contributor × top-level area matrix with absolute file
+   touches or *within-person* percentages, heuristic commit categories, same-
+   commit test accompaniment and commonly co-changed areas. Uses a **deduplicated
+   union of matching commits introduced by displayed tagged releases**, not
+   unshipped commits or duplicate credit across branching tags. File co-change
+   suggests revisitation patterns, not architectural coupling or influence.
+4. **Change evolution:** distinct paths touched by a release revisited in the
+   next descendant tagged snapshot, plus 30/90/180-day file revisit cohorts
+   where Git has enough subsequent reachable history. The later commits are
+   subject to the same authored-date/contributor-reference and merge/revert
+   rules. Only fully observed windows receive percentages; `—` means missing
+   follow-up, *not* 0%. These are measures of *file revisitation*, **not line
+   survival, quality, customer impact or deployed software usage**. Rewrites,
+   deletions, renames and long-lived files require deeper Git evidence; exact
+   surviving-line counts cannot be derived from numstat and are deliberately
+   not invented.
+
+The "Delivery supporting signals" section reports distinct paths, VERSION
+edits, explicit reverts, conventional-commit category hints, documentation
+file touches and whether commits changing code also changed test files. These
+signals are imperfect, particularly when tests are committed separately.
+
+### Import compatibility and repository scope
+
+The generated command is POSIX-shell compatible and produces a compact text
+stream with `TAG|...` records followed by `COMMIT|...` and Git `--numstat`
+records. It uses `git log HEAD --tags` to cover the current branch and tagged
+histories, not every unmerged local branch. To capture other branches, change
+that portion to `git log --all ...`; doing so also changes the repository
+activity cohort. Remove `| pbcopy` to print output to a terminal or pipe it to
+a text file instead. Import and session export run locally in the browser.
+
+Older COMMIT-only logs and v1/v2 session exports still import and retain all
+legacy activity visualisations. An old import without TAG records shows a
+clear Impact Explorer re-import prompt rather than fabricated releases.
+Export/import includes the selected impact tab, release, matrix measure,
+area-mode and expanded-tag presentation. **Do not use any of these metrics to
+rank employees by productivity.** Git alone cannot measure customer value,
+production adoption, review effort or engineering correctness.
 
 ## Consistent selection model
 
 **Every view** is rendered from one `buildAnalysis(rawCommits, groups, scope)` result in `assets/domain.js`. It applies the following, in this order:
 
 1. **Identity** — reconcile any number of author emails into people using an explicit, searchable batch selector; select all, any subset, or one person (Solo). Moving identities changes only their contributor mapping, not the imported commits. Already-merged source groups lose only the selected emails; empty source groups disappear.
-2. **Dates** — inclusive authored dates; all imported history, latest 90/365/730 days, calendar year or custom. Rolling presets anchor to the *latest imported commit*, not the computer's current date.
+2. **Dates** — inclusive authored dates; all imported history, latest 90/365/730 days, calendar year or custom. Rolling presets anchor to the *latest imported authored commit or tag event*, not the computer's current date. Tag dates extend the available window without changing which commits are attributed by author date.
 3. **Commit policy** — include/exclude merge commits and revert commits; excluded commits disappear from every view and from both the selection and the reference.
 4. **Metric and presentation** — choose commits, active days, line additions/deletions/churn, file touches, VERSION-file changes, revert or merge commits. Display absolute totals, share of a reference group, per active contributor-day, or per calendar week.
 5. **Reference** — entire imported cohort or only the selected people. This changes percentages and repository comparisons, never the selected commit set.
@@ -59,7 +147,7 @@ Trend views offer trailing four-week windows (default), raw calendar weeks and c
 
 ## Session import/export
 
-**Export session** saves the input Git log, merged identities and filters (including trend, monthly/daily pulse, weekly rhythm presentation, historical tab/mode/year selection and the focused contributor (by identity email)) into a JSON file. **Import session** restores it in the browser. v1 exports remain accepted.
+**Export session** saves the input Git log, merged identities and filters (including trend, monthly/daily pulse, weekly rhythm presentation, historical tab/mode/year selection, the focused contributor (by identity email), and the Impact Explorer tab, measure, release, and footprint presentation) into a JSON file. **Import session** restores it in the browser. v1 exports remain accepted.
 
 ## Source and tests
 
@@ -67,6 +155,8 @@ Trend views offer trailing four-week windows (default), raw calendar weeks and c
 - `assets/app.css` — bespoke responsive visual style.
 - `assets/app.js` — unified state, view rendering, session handling and events.
 - `assets/domain.js` — pure parser, filtering, aggregation, scope and date logic.
+- `assets/impact.js` — tag ancestry, release classification and evidence aggregation.
+- `assets/impact-view.js` — accessible impact timelines, matrices and detail views.
 - `assets/demo-data.js` — deterministic demonstration dataset.
 - `tests/` — dependency-free Node checks and regression tests.
 

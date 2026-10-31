@@ -64,48 +64,56 @@ function isoAt(date, hour, minute) {
   return `${yyyy}-${mm}-${dd}T${hh}:${mi}:00+00:00`;
 }
 
+/** Demo history includes full ancestry and tags so impact views work offline. */
 export function generateDemoLog({ years = 3, commits = 520 } = {}) {
   const random = mulberry32(0xC0FFEE);
   const end = new Date();
   end.setHours(12, 0, 0, 0);
   const spanDays = Math.max(1, Math.round(years * 365.25));
   const rows = [];
-
   for (let index = 0; index < commits; index += 1) {
     const daysAgo = Math.floor(random() * spanDays);
     const date = new Date(end);
     date.setDate(date.getDate() - daysAgo);
-
     const contributor = weightedContributor(random);
     const hour = 7 + Math.floor(random() * 13);
     const minute = Math.floor(random() * 60);
-    const version = `2.${Math.floor(index / 80)}.${index % 20}`;
-
     let subject = `${pick(random, VERBS)} ${pick(random, NOUNS)}`;
-    if (index % 47 === 0) subject = `chore: release v${version}`;
+    if (index % 47 === 0) subject = 'chore: update release candidate VERSION';
     else if (index % 41 === 0) subject = `Merge pull request #${100 + index} from demo/feature-${index}`;
     else if (index % 53 === 0) subject = `Revert "${pick(random, VERBS)} ${pick(random, NOUNS)}"`;
-
     const files = [];
     const fileCount = 1 + Math.floor(random() * 4);
-    for (let fileIndex = 0; fileIndex < fileCount; fileIndex += 1) {
-      files.push({
-        added: 1 + Math.floor(random() * 180),
-        deleted: Math.floor(random() * 90),
-        path: pick(random, PATHS),
-      });
-    }
-    if (index % 47 === 0) files.push({ added: 1, deleted: 1, path: 'VERSION' });
-
-    rows.push({
-      date,
-      text: [
-        `COMMIT|${fakeHash(index + 1)}|${contributor.email}|${contributor.name}|${isoAt(date, hour, minute)}|${subject}`,
-        ...files.map(file => `${file.added}\t${file.deleted}\t${file.path}`),
-      ].join('\n'),
+    for (let i=0;i<fileCount;i++) files.push({
+      added:1+Math.floor(random()*180),deleted:Math.floor(random()*90),path:pick(random,PATHS),
     });
+    if (index % 47 === 0) files.push({added:1,deleted:1,path:'VERSION'});
+    rows.push({date,contributor,hour,minute,subject,files,index});
   }
-
-  rows.sort((a, b) => b.date - a.date);
-  return rows.map(row => row.text).join('\n');
+  rows.sort((a,b)=>a.date-b.date || a.index-b.index);
+  const tags=[];
+  const releaseVersion=index=>{
+    if(index>=9) return `v9.${Math.floor((index-9)/3)}.${(index-9)%3}`;
+    return `v8.${7+Math.floor(index/3)}.${index%3}`;
+  };
+  for(let index=0;index<rows.length;index++){
+    const entry=rows[index];
+    const parents=index===0?'':index>4 && index%41===0
+      ? `${fakeHash(index)} ${fakeHash(index-2)}` : fakeHash(index);
+    const author=isoAt(entry.date,entry.hour,entry.minute);
+    entry.text=[
+      `COMMIT|${fakeHash(index+1)}|${entry.contributor.email}|${entry.contributor.name}|${author}|${author}|${entry.subject}|${parents}`,
+      ...entry.files.map(f=>`${f.added}\t${f.deleted}\t${f.path}`),
+    ].join('\n');
+    if((index+1)%60===0 || index===rows.length-1) {
+      const releaseNumber=tags.length;
+      const version=releaseVersion(releaseNumber);
+      const annotated=releaseNumber%3===0;
+      const hash=fakeHash(index+1);
+      tags.push(`TAG|${version}|${annotated?hash:''}|${hash}|${annotated?'tag':'commit'}|${author}`);
+    }
+  }
+  // The tag inventory is emitted before the commit stream, just like the
+  // generated capture command; their timestamps can differ from authored dates.
+  return [...tags,...rows.reverse().map(r=>r.text)].join('\n');
 }
