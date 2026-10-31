@@ -3,10 +3,10 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds,
-} from './domain.js';
-import { generateDemoLog } from './demo-data.js';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability } from './impact-view.js';
+} from './domain.js?v=impact-20261031-2';
+import { generateDemoLog } from './demo-data.js?v=impact-20261031-2';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=impact-20261031-2';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability } from './impact-view.js?v=impact-20261031-2';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 const $ = id => document.getElementById(id);
@@ -44,12 +44,9 @@ const state = {
 };
 
 function setText(id, content) { $(id).textContent = content; }
-function command() {
-  // Git --since limits commits by the *committer* date. It would silently
-  // truncate author-date history (notably rebases and cherry-picks). Import
-  // reachable history first, and apply the authored-date window in the UI.
-  setText('git-cmd', '(git for-each-ref --format="TAG|%(refname:short)|%(*objectname)|%(objectname)|%(objecttype)|%(creatordate:iso-strict)" refs/tags; git log HEAD --tags --pretty=format:"COMMIT|%H|%ae|%an|%aI|%cI|%s|%P" --numstat) | pbcopy');
-}
+// The capture command is static HTML, so it remains visible even if a
+// previously cached JavaScript module fails before it can initialise the UI.
+// The lookback selector affects only the dashboard's initial author-date scope.
 function copyCommand() {
   if (!navigator.clipboard) return setText('parse-error', 'Clipboard unavailable. Select and copy the command manually.');
   navigator.clipboard.writeText($('git-cmd').textContent)
@@ -270,7 +267,6 @@ function analyse() {
 function loadDemo() {
   $('range-select').value='3';
   $('log-input').value=generateDemoLog({years:3,commits:720});
-  command();
   analyse();
 }
 function syncScopeAfterLoad() {
@@ -1251,7 +1247,15 @@ function renderDashboard() {
   });
   updateControls();renderPicker();renderScope(analysis);
   renderStats(analysis);renderRanking(analysis);renderTrend(analysis);renderTable(analysis);
-  renderPulse(analysis);renderRhythm(analysis);renderImpact(analysis);renderFootprint(analysis);renderAreas(analysis);renderRecent(analysis);
+  renderPulse(analysis);renderRhythm(analysis);
+  try { renderImpact(analysis); }
+  catch (error) {
+    console.error('Impact Explorer rendering failed', error);
+    impactModel = null;
+    $('impact-panels').hidden = true;
+    $('impact-empty').innerHTML = `<div class="impact-empty" role="alert"><strong>Impact Explorer could not render</strong><p>The other charts remain available. Try reloading the latest application, then re-importing Git history. Diagnostic: ${esc(error?.message || 'Unknown error')}</p></div>`;
+  }
+  renderFootprint(analysis);renderAreas(analysis);renderRecent(analysis);
 }
 
 function exportSession() {
@@ -1286,7 +1290,6 @@ async function importSession(event) {
   renderMergeFeedback();
   $('log-input').value=payload.rawLog;
   if(Number.isInteger(Number(payload.rangeYears)) && +payload.rangeYears>=1 && +payload.rangeYears<=5) $('range-select').value=String(payload.rangeYears);
-  command();
   const emails=new Set(rawCommits.map(c=>c.email));
   const used=new Set();
   mergeGroups=payload.mergeGroups.flatMap(g=>{
@@ -1390,7 +1393,6 @@ function handleDocumentChange(event) {
     renderDashboard();return;
   }
   switch(t.id){
-    case 'range-select':command();break;
     case 'file-import-input':importSession(event);break;
     case 'period-select':updatePeriod(t.value);break;
     case 'date-from':case 'date-to':changeDate();break;
@@ -1494,6 +1496,5 @@ function init() {
     else if (identityPicker) {event.preventDefault();closeIdentityPicker();}
     else if (!$('pulse-popover').hidden) closePulseAndRestoreFocus();
   });
-  command();
 }
 init();

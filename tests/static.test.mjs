@@ -13,8 +13,8 @@ test('HTML has no inline event handlers or inline style/script blocks', () => {
 });
 
 test('HTML loads external CSS and module JavaScript', () => {
-  assert.match(html, /href="\.\/assets\/app\.css"/);
-  assert.match(html, /type="module" src="\.\/assets\/app\.js"/);
+  assert.match(html, /href="\.\/assets\/app\.css\?v=[^"]+"/);
+  assert.match(html, /type="module" src="\.\/assets\/app\.js\?v=[^"]+"/);
 });
 
 test('UI actions are dispatched centrally rather than through global functions', () => {
@@ -23,16 +23,38 @@ test('UI actions are dispatched centrally rather than through global functions',
   assert.doesNotMatch(app, /window\.[A-Za-z_$][\w$]*\s*=/);
 });
 
-test('generated Git capture command requests author timestamps without a committer-date cutoff', () => {
-  const match = app.match(/setText\('git-cmd',\s*'([^']+)'\)/);
-  assert.ok(match, 'generated command must be a plainly inspectable literal');
-  assert.match(match[1], /%aI/);
-  assert.match(match[1], /%ae/);
-  assert.match(match[1], /%an/);
-  assert.match(match[1], /%cI/, 'commit-time metadata is needed to inspect post-tag follow-up, not to filter authored activity');
-  assert.match(match[1], /git for-each-ref.*refs\/tags/);
-  assert.match(match[1], /git log HEAD --tags/);
-  assert.doesNotMatch(match[1], /--since|--until/);
+test('visible, copyable Git capture command imports tags and complete authored history', () => {
+  const command = html.match(/<code id="git-cmd">([^<]+)<\/code>/)?.[1];
+  assert.ok(command, 'capture command must be available without JavaScript');
+  assert.match(command, /git for-each-ref.*refs\/tags/);
+  assert.match(command, /git log HEAD --tags/);
+  assert.match(command, /%aI/);
+  assert.match(command, /%ae/);
+  assert.match(command, /%an/);
+  assert.match(command, /%cI/);
+  assert.match(command, /%P/);
+  assert.doesNotMatch(command, /--since|--until/);
+  assert.match(app, /clipboard\.writeText\(\$\('git-cmd'\)\.textContent\)/);
+  assert.doesNotMatch(app, /setText\('git-cmd',/);
+});
+
+test('all versioned assets use the same revision, including ES module dependencies', async () => {
+  const entryVersion = html.match(/assets\/app\.js\?v=([^"\s]+)/)?.[1];
+  const cssVersion = html.match(/assets\/app\.css\?v=([^"\s]+)/)?.[1];
+  assert.ok(entryVersion);
+  assert.equal(cssVersion, entryVersion);
+  for (const file of ['assets/app.js', 'assets/impact.js', 'assets/impact-view.js']) {
+    const source = await readFile(new URL(file, root), 'utf8');
+    const imports = [...source.matchAll(/from ['"]\.\/[^'"?]+\.js\?v=([^'"]+)['"]/g)];
+    assert.ok(imports.length, `expected versioned local imports in ${file}`);
+    for (const match of imports) assert.equal(match[1], entryVersion);
+  }
+});
+
+test('Impact panel shows an actionable startup state rather than silent empty markup', () => {
+  assert.match(html, /id="impact-empty"[^>]*>[\s\S]*?Preparing release intelligence/);
+  assert.match(html, /id="impact-panels" hidden/);
+  assert.match(app, /Impact Explorer rendering failed/);
 });
 
 test('Impact Explorer exposes labelled release, matrix, reach and evolution controls', () => {

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css">
+  <link rel="stylesheet" href="./assets/app.css?v=impact-20261031-2">
 </head>
 <body>
   <div class="page">
@@ -30,7 +30,7 @@
         <summary><span class="source-heading"><span class="step-dot">01</span> <strong id="source-title">Load repository history</strong> <span class="subtle" id="source-status">Paste git log output, or try the demo.</span></span><span class="summary-chevron" aria-hidden="true">⌄</span></summary>
         <div class="source-content">
           <div class="source-topline"><label for="range-select">Initially show</label><select id="range-select" aria-label="Initial authored-date window"><option value="1">1 year</option><option value="2">2 years</option><option value="3" selected>3 years</option><option value="4">4 years</option><option value="5">5 years</option></select><span class="helper">Import full reachable history. Start by viewing the latest <strong>authored</strong> years; change dates in the dashboard.</span></div>
-          <div class="command-row"><span class="terminal-mark">$</span><code id="git-cmd"></code><button type="button" data-action="copy-command" class="command-copy">Copy command</button></div>
+          <div class="command-row"><span class="terminal-mark">$</span><code id="git-cmd">(git for-each-ref --format="TAG|%(refname:short)|%(*objectname)|%(objectname)|%(objecttype)|%(creatordate:iso-strict)" refs/tags; git log HEAD --tags --pretty=format:"COMMIT|%H|%ae|%an|%aI|%cI|%s|%P" --numstat) | pbcopy</code><button type="button" data-action="copy-command" class="command-copy">Copy command</button></div>
           <p class="input-hint">Run inside your repository and paste its output below. No committer-date cutoff is applied: older authored changes remain available even if rebased recently. Merge commits are captured so you can include or exclude them later. The command uses macOS <code>pbcopy</code>; on other systems, remove the final pipe and copy terminal output.</p>
           <label class="field-label" for="log-input">Git log output</label>
           <textarea id="log-input" placeholder="TAG|v8.9.1||hash|commit|2026-10-01T09:12:00+01:00&#10;COMMIT|hash|email|name|author-time|committer-time|subject|parents&#10;25  8  app/models/example.rb" spellcheck="false"></textarea>
@@ -126,8 +126,8 @@
       <section class="report-section" id="impact-explorer" aria-labelledby="impact-heading">
         <div class="section-header"><div><span class="eyebrow section-index">06 / EVIDENCE OF DELIVERED CHANGE</span><h3 id="impact-heading">Impact, in context.</h3><p>Which changes reached tagged releases, which areas did they touch, who contributed, and what happened afterwards? Git evidence, not a productivity score.</p></div></div>
         <div class="report-card impact-report-card">
-          <div id="impact-empty" aria-live="polite"></div>
-          <div id="impact-panels">
+          <div id="impact-empty" role="status" aria-live="polite"><div class="impact-empty"><strong>Preparing release intelligence…</strong><p>If this remains visible after the dashboard loads, its JavaScript may not have initialised. Refresh the page to load the latest assets.</p></div></div>
+          <div id="impact-panels" hidden>
             <div id="impact-summary"></div>
             <div class="impact-scope" id="impact-scope"></div>
             <div class="impact-block-heading"><div><span class="eyebrow">01 / THE IMPACT TIMELINE</span><h4>Delivery, over time.</h4><p>Tag events locate releases; ancestry identifies the changes introduced. VERSION edits remain supporting signals.</p></div><div class="impact-release-settings"><div id="impact-release-control" class="impact-release-control"></div><div class="impact-toolbar" id="impact-matrix-toolbar"><label for="impact-metric-select">TIMELINE + MATRIX MEASURE</label><select id="impact-metric-select" class="impact-select"><option value="commits">Commits</option><option value="share">Commit share</option><option value="churn">Line churn</option><option value="paths">Distinct paths</option><option value="areas">Codebase areas</option></select></div></div></div>
@@ -157,6 +157,6 @@
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js"></script>
+  <script type="module" src="./assets/app.js?v=impact-20261031-2"></script>
 </body>
 </html>
