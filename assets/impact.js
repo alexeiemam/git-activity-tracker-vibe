@@ -6,7 +6,7 @@
  * No line-level survival, deploy date, customer value, or team productivity is
  * inferred from numstat; file revisitation is explicitly a proxy.
  */
-import { fileArea } from './domain.js?v=impact-20261031-2';
+import { fileArea } from './domain.js?v=impact-20261031-3';
 
 export const IMPACT_METRICS = Object.freeze({
   commits: 'Commits', churn: 'Line churn', paths: 'Distinct paths', areas: 'Codebase areas', share: 'Commit share',
@@ -305,12 +305,15 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
   });
   const visible=periodReleases;
   const maximum=Math.max(1,...visible.flatMap(r=>r.cells.map(c=>c.value??0)));
-  const monthly=new Map();
+  const monthly=new Map(), daily=new Map();
   for(const commit of view.selectedCommits){
     const month=commit.date.slice(0,7);
     if(!monthly.has(month))monthly.set(month,{month,date:`${month}-01`,count:0,version:0});
     const bucket=monthly.get(month);
     bucket.count++;if(commit.touchesVersion)bucket.version++;
+    if(!daily.has(commit.date))daily.set(commit.date,{date:commit.date,count:0,version:0});
+    const day=daily.get(commit.date);
+    day.count++;if(commit.touchesVersion)day.version++;
   }
   // Code-area co-change means two top-level areas were touched by the same
   // authored commit; it does NOT assert a dependency or reviewer influence.
@@ -324,6 +327,7 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
   }
   const cochanges=[...cochanged].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
   return { activityMonths:[...monthly.values()].sort((a,b)=>a.month.localeCompare(b.month)),
+    activityDays:[...daily.values()].sort((a,b)=>a.date.localeCompare(b.date)),
     versionEvents:view.selectedCommits.filter(c=>c.touchesVersion), cochanges,
     available:!!releases.length, releases:visible, allReleaseCount:releases.length,
     unresolved, metric,followupDays:days,maxCell:maximum,overall, categories,areas,peopleAreas,

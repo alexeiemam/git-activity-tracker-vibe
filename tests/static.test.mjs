@@ -79,3 +79,16 @@ test('impact import uses tag metadata but never replaces author-date scope with 
   assert.equal(view.selectedCommits.length,1);
   assert.equal(impactAnalysis(view,history.commits,history.tags).available,false);
 });
+
+
+test('Impact timeline controls and focus navigation are wired to session-persistent state',()=>{
+  assert.match(app,/impactTimelineMode:'all'/);
+  assert.match(app,/impactTimelineFrom:state\.impactTimelineFrom/);
+  assert.match(app,/impactTimelineTo:state\.impactTimelineTo/);
+  assert.match(app,/case 'impact-release-select':chooseImpactRelease\(t.value/);
+  assert.match(app,/impactTimelineReveal\(impactModel,timelinePreference\(\),hash\)/);
+  assert.match(app,/scrollToImpactMarker\(hash/);
+  assert.match(app,/case 'impact-timeline-from':case 'impact-timeline-to'/);
+  assert.match(app,/case 'impact-timeline-pan'/);
+  assert.match(app,/data\.impactRange|dataset\.impactRange/);
+});

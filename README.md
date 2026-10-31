@@ -62,6 +62,18 @@ The four connected perspectives are:
    selectable measure: commits, within-reference commit share, line churn,
    distinct paths or top-level codebase areas. Shares have explicit reference
    denominators; paths/areas can overlap between contributors.
+   **Timeline navigation:** **All releases** is the default, fitted to the
+   entire available timeline; **Latest 18** focuses the time axis on those
+   18 tagged releases (not just their markers). Use **+ / −** to zoom,
+   **From / To** dates to choose a precise range, and the history navigator
+   slider to pan without altering any global filters. The small overview
+   indicates the current viewing window across all available history.
+   Choosing a release in the dropdown or a comparison table highlights its
+   marker and brings it into view, panning the timeline if it lies outside
+   the selected range; on narrow displays the timeline scrolls horizontally
+   to the selected marker. The current timeline view is saved in session
+   exports. Authored-activity bars are reaggregated from daily commits so
+   partial-month zooms never show whole-month totals.
 2. **People × releases:** consistent contributor-by-release matrix. Only the
    globally selected contributors are rows. Percentages are scoped to the
    globally chosen reference group, not the whole repo unless requested.
@@ -102,7 +114,7 @@ Older COMMIT-only logs and v1/v2 session exports still import and retain all
 legacy activity visualisations. An old import without TAG records shows a
 clear Impact Explorer re-import prompt rather than fabricated releases.
 Export/import includes the selected impact tab, release, matrix measure,
-area-mode and expanded-tag presentation. **Do not use any of these metrics to
+area-mode, expanded-tag presentation and timeline window/zoom. **Do not use any of these metrics to
 rank employees by productivity.** Git alone cannot measure customer value,
 production adoption, review effort or engineering correctness.
 
@@ -149,7 +161,7 @@ Trend views offer trailing four-week windows (default), raw calendar weeks and c
 
 ## Session import/export
 
-**Export session** saves the input Git log, merged identities and filters (including trend, monthly/daily pulse, weekly rhythm presentation, historical tab/mode/year selection, the focused contributor (by identity email), and the Impact Explorer tab, measure, release, and footprint presentation) into a JSON file. **Import session** restores it in the browser. v1 exports remain accepted.
+**Export session** saves the input Git log, merged identities and filters (including trend, monthly/daily pulse, weekly rhythm presentation, historical tab/mode/year selection, the focused contributor (by identity email), and the Impact Explorer tab, measure, release, timeline range, and footprint presentation) into a JSON file. **Import session** restores it in the browser. v1 exports remain accepted.
 
 ## Source and tests
 
@@ -159,6 +171,7 @@ Trend views offer trailing four-week windows (default), raw calendar weeks and c
 - `assets/domain.js` — pure parser, filtering, aggregation, scope and date logic.
 - `assets/impact.js` — tag ancestry, release classification and evidence aggregation.
 - `assets/impact-view.js` — accessible impact timelines, matrices and detail views.
+- `assets/impact-window.js` — pure viewport, zoom, pan and release reveal logic.
 - `assets/demo-data.js` — deterministic demonstration dataset.
 - `tests/` — dependency-free Node checks and regression tests.
 

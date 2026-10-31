@@ -3,10 +3,11 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds,
-} from './domain.js?v=impact-20261031-2';
-import { generateDemoLog } from './demo-data.js?v=impact-20261031-2';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=impact-20261031-2';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability } from './impact-view.js?v=impact-20261031-2';
+} from './domain.js?v=impact-20261031-3';
+import { generateDemoLog } from './demo-data.js?v=impact-20261031-3';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=impact-20261031-3';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability } from './impact-view.js?v=impact-20261031-3';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=impact-20261031-3';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 const $ = id => document.getElementById(id);
@@ -41,6 +42,7 @@ const state = {
   trend: 'rolling', pulseMode: 'monthly', rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
   rhythmTab: 'weekly', seasonMode: 'rate', seasonYears: null, sortKey: 'lens', sortDesc: true,
   impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,
+  impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,
 };
 
 function setText(id, content) { $(id).textContent = content; }
@@ -279,7 +281,8 @@ function syncScopeAfterLoad() {
   const desiredStart = dateAtDay(dayNumber(anniversary)+1);
   const initialStart = min > desiredStart ? min : desiredStart;
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
-    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false });
+    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,
+    impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null });
   state.selectedIds = new Set(mergeGroups.map((_,i)=>String(i)));
   if (pendingImport?.scope) {
     const s = pendingImport.scope;
@@ -299,6 +302,9 @@ function syncScopeAfterLoad() {
     if (['touches','within'].includes(s.impactAreaMode)) state.impactAreaMode=s.impactAreaMode;
     if (typeof s.impactReleaseHash==='string') state.impactReleaseHash=s.impactReleaseHash;
     state.impactShowAll=!!s.impactShowAll;
+    if (['all','latest','custom'].includes(s.impactTimelineMode))state.impactTimelineMode=s.impactTimelineMode;
+    if (typeof s.impactTimelineFrom==='string' && /^\d{4}-\d\d-\d\d$/.test(s.impactTimelineFrom))state.impactTimelineFrom=s.impactTimelineFrom;
+    if (typeof s.impactTimelineTo==='string' && /^\d{4}-\d\d-\d\d$/.test(s.impactTimelineTo))state.impactTimelineTo=s.impactTimelineTo;
     if (Array.isArray(s.seasonYears)) state.seasonYears=new Set(s.seasonYears.filter(y=>Number.isInteger(y)&&y>=1900&&y<=2200));
     if (s.start && s.end && s.start <= s.end && /^\d{4}-\d\d-\d\d$/.test(s.start) && /^\d{4}-\d\d-\d\d$/.test(s.end)) {
       state.start=s.start; state.end=s.end;
@@ -358,7 +364,8 @@ function changeDate() {
 }
 function resetFilters() {
   Object.assign(state,{ period:'all',start:sourceDateBounds().min,end:sourceDateBounds().max,
-    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false });
+    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,
+    impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
   setText('scope-error','');
@@ -1165,6 +1172,52 @@ const SIZE_BANDS=[
   {label:'20–199 lines',min:20,max:199,color:'#36886f'},
   {label:'200+ lines',min:200,max:Infinity,color:'#d47c56'},
 ];
+// Timeline viewport is a presentation preference, independent of the shared
+// author-date and release-date filters used to calculate Git evidence.
+function timelinePreference() {
+  return {mode:state.impactTimelineMode,from:state.impactTimelineFrom,to:state.impactTimelineTo};
+}
+function setTimelinePreference(next) {
+  state.impactTimelineMode=next.mode;
+  state.impactTimelineFrom=next.from || null;
+  state.impactTimelineTo=next.to || null;
+}
+function scrollToImpactMarker(hash, {restoreFocus=null,showTimeline=true}={}) {
+  requestAnimationFrame(()=>{
+    const container=$('impact-timeline').querySelector('.impact-timeline-scroll');
+    const marker=[...(container?.querySelectorAll('[data-impact-hash]')||[])].find(dot=>dot.dataset.impactHash===hash);
+    if(marker && container){
+      const box=container.getBoundingClientRect(), rect=marker.getBoundingClientRect();
+      if(rect.left<box.left+24 || rect.right>box.right-24){
+        const centre=(rect.left+rect.right)/2-(box.left+box.right)/2;
+        container.scrollTo({left:Math.max(0,container.scrollLeft+centre),behavior:'smooth'});
+      }
+    }
+    // Rebuilding the select/marker replaces its DOM node. Retain keyboard
+    // focus without stealing it when the user selected from another view.
+    if(restoreFocus==='select')$('impact-release-select')?.focus({preventScroll:true});
+    else if(restoreFocus==='marker')marker?.focus({preventScroll:true});
+    if(showTimeline){
+      const target=$('impact-timeline');
+      const rect=target.getBoundingClientRect();
+      if(rect.top<0 || rect.bottom>window.innerHeight)target.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+  });
+}
+function chooseImpactRelease(hash, {focus=null,showTimeline=true}={}) {
+  if(!impactModel?.releases.some(r=>r.hash===hash))return;
+  state.impactReleaseHash=hash;
+  state.impactTab='timeline';
+  setTimelinePreference(impactTimelineReveal(impactModel,timelinePreference(),hash));
+  renderImpact(analysis);
+  scrollToImpactMarker(hash,{restoreFocus:focus,showTimeline});
+}
+function selectImpactReleaseWithinWindow() {
+  const window=impactTimelineWindow(impactModel,timelinePreference());
+  if(!window)return;
+  const candidates=impactModel.releases.filter(r=>impactReleasePosition(r)>=window.start&&impactReleasePosition(r)<=window.end);
+  if(candidates.length && !candidates.some(r=>r.hash===state.impactReleaseHash))state.impactReleaseHash=candidates.at(-1).hash;
+}
 function renderImpact(view) {
   impactModel=impactAnalysis(view,rawCommits,rawTags,{metric:state.impactMetric});
   const model=impactModel;
@@ -1175,7 +1228,10 @@ function renderImpact(view) {
   const selected=model.releases.find(r=>r.hash===state.impactReleaseHash);
   $('impact-summary').innerHTML=impactSummary(model);
   setText('impact-scope',`Tag dates: ${view.start}–${view.end} · Author dates: same range · ${view.includeMerges?'Merges included':'Merges excluded'} · ${view.includeReverts?'Reverts included':'Reverts excluded'} · ${model.referenceLabel} reference · ${model.allReleaseCount-model.releases.length} tagged snapshots outside the selected tag-date window${model.unresolved.length?` · ${model.unresolved.length} unresolved tag refs`:''}. Tag boundaries are graph-based.`);
-  $('impact-timeline').innerHTML=impactTimeline(model,state.impactReleaseHash,state.impactShowAll);
+  const timelineScroll=$('impact-timeline').querySelector('.impact-timeline-scroll')?.scrollLeft || 0;
+  $('impact-timeline').innerHTML=impactTimeline(model,state.impactReleaseHash,timelinePreference());
+  const newScroll=$('impact-timeline').querySelector('.impact-timeline-scroll');
+  if(newScroll)newScroll.scrollLeft=timelineScroll;
   $('impact-release-control').innerHTML=impactReleasePicker(model,state.impactReleaseHash);
   document.querySelectorAll('[data-impact-tab]').forEach(btn=>{const active=btn.dataset.impactTab===state.impactTab;btn.classList.toggle('is-active',active);btn.setAttribute('aria-pressed',String(active));});
   const titles={timeline:'A release, under the microscope.',matrix:'Who contributed to which release?',reach:'Where did the changes reach?',durability:'What happened after the release?'};
@@ -1268,7 +1324,8 @@ function exportSession() {
       rhythmDisplay:state.rhythmDisplay,rhythmTab:state.rhythmTab,seasonMode:state.seasonMode,seasonYears:state.seasonYears?[...state.seasonYears]:null,
       rhythmFocusEmail:analysis?.byId.get(state.rhythmFocus)?.emails[0]||null,
       impactTab:state.impactTab,impactMetric:state.impactMetric,impactAreaMode:state.impactAreaMode,
-      impactReleaseHash:state.impactReleaseHash,impactShowAll:state.impactShowAll}};
+      impactReleaseHash:state.impactReleaseHash,impactShowAll:state.impactShowAll,
+      impactTimelineMode:state.impactTimelineMode,impactTimelineFrom:state.impactTimelineFrom,impactTimelineTo:state.impactTimelineTo}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const uri=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=uri;a.download=`git-signals-${new Date().toISOString().slice(0,10)}.json`;a.click();
@@ -1353,7 +1410,22 @@ const ACTIONS={
     renderDashboard();$('pulse-heading').scrollIntoView({behavior:'smooth',block:'start'});
   },
   'impact-tab':(_e,t)=>{state.impactTab=t.dataset.impactTab;renderImpact(analysis);},
-  'impact-release':(event,t)=>{state.impactReleaseHash=t.dataset.impactHash;state.impactTab='timeline';renderImpact(analysis);if(event.type==='keydown')$('impact-release-select')?.focus();else $('impact-content').scrollIntoView({behavior:'smooth',block:'nearest'});},
+  'impact-release':(event,t)=>{
+    const fromMarker=!!t.closest('.impact-timeline-scroll');
+    chooseImpactRelease(t.dataset.impactHash,{focus:event.type==='keydown'&&fromMarker?'marker':null,showTimeline:!fromMarker});
+    if(fromMarker && event.type!=='keydown')$('impact-content').scrollIntoView({behavior:'smooth',block:'nearest'});
+  },
+  'impact-range-preset':(_event,t)=>{
+    setTimelinePreference({mode:t.dataset.impactRange});
+    selectImpactReleaseWithinWindow();renderImpact(analysis);
+  },
+  'impact-zoom':(_event,t)=>{
+    const anchorRelease=impactModel?.releases.find(r=>r.hash===state.impactReleaseHash);
+    const anchor=anchorRelease?impactReleasePosition(anchorRelease):null;
+    setTimelinePreference(impactTimelineZoom(impactModel,timelinePreference(),t.dataset.impactZoom==='in'?0.6:1.7,anchor));
+    renderImpact(analysis);
+    scrollToImpactMarker(state.impactReleaseHash,{showTimeline:false});
+  },
   'impact-toggle-all':()=>{state.impactShowAll=!state.impactShowAll;renderImpact(analysis);},
   'impact-area-mode':(_e,t)=>{state.impactAreaMode=t.dataset.impactAreaMode;renderImpact(analysis);},
   'rhythm-focus':(_e,t)=>{state.rhythmFocus=t.dataset.rhythmFocus;rhythmHover=null;rhythmPinned=null;renderRhythm(analysis);if(t.classList.contains('rhythm-explore-link'))$('rhythm-explorer').scrollIntoView({behavior:'smooth',block:'start'});},
@@ -1400,7 +1472,18 @@ function handleDocumentChange(event) {
     case 'filter-reverts':state.includeReverts=t.checked;renderDashboard();break;
     case 'metric-select':state.metric=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;
     case 'impact-metric-select':state.impactMetric=t.value;renderImpact(analysis);break;
-    case 'impact-release-select':state.impactReleaseHash=t.value;renderImpact(analysis);break;
+    case 'impact-release-select':chooseImpactRelease(t.value,{focus:'select'});break;
+    case 'impact-timeline-from':case 'impact-timeline-to':{
+      let from=$('impact-timeline-from').value,to=$('impact-timeline-to').value;
+      if(from>to){if(t.id==='impact-timeline-from')to=from;else from=to;}
+      const next=impactTimelineCustomRange(impactModel,from,to);
+      if(next){setTimelinePreference(next);selectImpactReleaseWithinWindow();}
+      renderImpact(analysis);break;
+    }
+    case 'impact-timeline-pan':{
+      setTimelinePreference(impactTimelinePan(impactModel,timelinePreference(),Number(t.value)));
+      selectImpactReleaseWithinWindow();renderImpact(analysis);break;
+    }
     case 'mode-select':state.mode=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;
     case 'denominator-select':state.denominator=t.value;renderDashboard();break;
   }

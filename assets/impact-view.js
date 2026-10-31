@@ -1,5 +1,6 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=impact-20261031-2';
+import { IMPACT_METRICS } from './impact.js?v=impact-20261031-3';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=impact-20261031-3';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -31,62 +32,108 @@ export function impactSummary(model) {
   </div>`;
 }
 
-export function impactTimeline(model, selectedHash, expanded=false) {
+/** The viewport changes presentation only: no Git selection, contribution or date filters. */
+export function impactTimeline(model, selectedHash, options={mode:'all'}) {
+  if(!model.releases.length)return '';
+  const extent=impactTimelineExtent(model);
+  const window=impactTimelineWindow(model,options);
+  if(!extent||!window)return '';
+  const {start:min,end:max}=window;
   const all=model.releases;
-  const records=expanded?all:all.slice(-18);
-  if(!records.length)return '';
-  const width=Math.max(790,records.length*66), height=288;
-  // Include authored activity before/after the tagged releases. A plot whose
-  // x-axis ends at the latest tag silently hides genuinely unreleased work.
-  const months=model.activityMonths.map(m=>{
-    const year=Number(m.month.slice(0,4)), month=Number(m.month.slice(5,7))-1;
-    return {...m,start:Date.UTC(year,month,1),end:Date.UTC(year,month+1,1)};
-  });
-  const times=[...records.map(r=>r.timestamp??0),...months.flatMap(m=>[m.start,m.end])];
-  const min=Math.min(...times),max=Math.max(...times);
-  const hi=Math.max(1,...records.map(r=>r.metricValue??0));
+  const records=all.filter(r=>impactReleasePosition(r)>=min&&impactReleasePosition(r)<=max);
+  const width=1100,height=288;
   const x=date=>58+(date-min)/(max-min||1)*(width-94);
-  const y=value=>163-value/hi*120;
-  const monthTicks=[];
-  const firstYear=new Date(min).getUTCFullYear(),lastYear=new Date(max).getUTCFullYear();
-  for(let year=firstYear;year<=lastYear;year++)for(const month of [0,6]){
-    const t=Date.UTC(year,month,1);
-    if(t>=min&&t<=max)monthTicks.push({date:t,label:month===0?String(year):'Jul'});
+  const hi=Math.max(1,...records.map(r=>r.metricValue??0));
+  const y=value=>160-value/hi*108;
+  const windowDates=impactTimelineDates(window), allDates=impactTimelineDates(extent);
+  const isAll=window.mode==='all',isLatest=window.mode==='latest';
+  const spanDays=(max-min)/86400000;
+  // Rebuild author-activity bars from daily evidence: a zoomed partial month
+  // must never display a whole month's count within a smaller date window.
+  const weekly=spanDays<=120,bins=new Map();
+  for(const day of (model.activityDays||[])) {
+    const time=Date.parse(`${day.date}T00:00:00Z`);
+    if(time<min||time>max)continue;
+    const start=weekly?time-((new Date(time).getUTCDay()+6)%7)*86400000:Date.UTC(Number(day.date.slice(0,4)),Number(day.date.slice(5,7))-1,1);
+    const key=weekly?new Date(start).toISOString().slice(0,10):day.date.slice(0,7);
+    if(!bins.has(key))bins.set(key,{start,count:0,version:0,label:weekly?`Week of ${shortDate(key)}`:key});
+    bins.get(key).count+=day.count;bins.get(key).version+=day.version;
   }
-  if (!monthTicks.length) {
-    monthTicks.push({date:min,label:shortDate(new Date(min).toISOString().slice(0,10))});
-    if (max>min)monthTicks.push({date:max,label:shortDate(new Date(max).toISOString().slice(0,10))});
-  }
-  const maxMonthly=Math.max(1,...months.map(m=>m.count));
-  const bars=months.map(m=>{
-    const left=x(m.start), barW=Math.max(2,x(m.end)-left-2);
-    const h=32*m.count/maxMonthly;
-    return `<rect x="${left}" y="${242-h}" width="${barW}" height="${h}" rx="1" fill="#9dbfac" opacity=".8"><title>${e(m.month)} · ${amount(m.count)} authored commits · ${amount(m.version)} VERSION touches</title></rect>`;
+  const barsData=[...bins.values()].sort((a,b)=>a.start-b.start);
+  const barMax=Math.max(1,...barsData.map(b=>b.count));
+  const bars=barsData.map(b=>{
+    const end=weekly?b.start+7*86400000:Date.UTC(new Date(b.start).getUTCFullYear(),new Date(b.start).getUTCMonth()+1,1);
+    const left=x(Math.max(min,b.start)),barW=Math.max(1,x(Math.min(max,end))-left-2);
+    const h=34*b.count/barMax;
+    return `<rect x="${left}" y="${246-h}" width="${barW}" height="${h}" rx="1" fill="#9dbfac" opacity=".85"><title>${e(b.label)} · ${amount(b.count)} authored commits · ${amount(b.version)} VERSION touches (within shown range)</title></rect>`;
   }).join('');
-  const versionMarkers=model.versionEvents.filter(c=>c.authoredAt!=null && c.authoredAt>=min && c.authoredAt<=max).map(c=>{
-    const pos=x(c.authoredAt);
+  const versionMarkers=model.versionEvents.filter(c=>c.authoredAt!=null&&Date.parse(`${c.date}T12:00:00Z`)>=min&&Date.parse(`${c.date}T12:00:00Z`)<=max).map(c=>{
+    const pos=x(Date.parse(`${c.date}T12:00:00Z`));
     return `<path d="M ${pos} 195 l 4 4 l -4 4 l -4 -4 z" fill="#ad7d3c" stroke="#fff" stroke-width=".8"><title>${e(c.date)} · VERSION edit · ${e(c.subject)} · ${e(c.name)}</title></path>`;
   }).join('');
+  const ticks=[];
+  const startDate=new Date(min),endDate=new Date(max);
+  const tickMonths=spanDays<=120?0:spanDays<=365?1:spanDays<=3*365?3:spanDays<=7*365?6:12;
+  if(!tickMonths) {
+    const startWeek=Date.UTC(startDate.getUTCFullYear(),startDate.getUTCMonth(),startDate.getUTCDate());
+    for(let t=startWeek;t<=max;t+=7*86400000)if(t>=min)ticks.push({time:t,label:shortDate(new Date(t).toISOString().slice(0,10))});
+  } else {
+    for(let year=startDate.getUTCFullYear();year<=endDate.getUTCFullYear();year++)for(let month=0;month<12;month+=tickMonths){
+      const t=Date.UTC(year,month,1);
+      if(t>=min&&t<=max)ticks.push({time:t,label:month===0?String(year):new Date(t).toLocaleDateString('en-GB',{month:'short',timeZone:'UTC'})});
+    }
+  }
+  if(ticks.length<2)ticks.push({time:min,label:shortDate(windowDates.from)},{time:max,label:shortDate(windowDates.to)});
+  // Avoid dozens of overlapping labels on a full-history overview.
+  const skip=Math.max(1,Math.ceil(ticks.length/11));
   const stems=records.map(r=>{
     const undefinedMetric=r.metricValue==null;
-    const cx=x(r.timestamp??0),cy=undefinedMetric?181:y(r.metricValue),active=r.hash===selectedHash;
+    const cx=x(impactReleasePosition(r)),cy=undefinedMetric?181:y(r.metricValue),active=r.hash===selectedHash;
     const msg=`${r.tag} · ${shortDate(r.date)} · ${typeLabel(r.transition)} · ${humanMetric(r.metricValue,model.metric)} ${IMPACT_METRICS[model.metric]} · ${amount(r.selectedFootprint.pathsCount)} paths`;
-    return `<line x1="${cx}" y1="168" x2="${cx}" y2="${cy}" stroke="${color(r.transition)}" stroke-opacity=".35" stroke-width="2"/>
-      <circle cx="${cx}" cy="${cy}" r="${active?9:6}" fill="${undefinedMetric?'#fff':color(r.transition)}" stroke="${active?'#152f21':undefinedMetric?'#8d9f91':'#fff'}" stroke-width="${active?3:2}" role="button" tabindex="0" aria-label="${e(msg)}. Select release" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-timeline-dot"><title>${e(msg)}</title></circle>`;
+    return `<line x1="${cx}" y1="170" x2="${cx}" y2="${cy}" stroke="${color(r.transition)}" stroke-opacity="${active?'.8':'.34'}" stroke-width="${active?3:2}"/>
+      ${active?`<circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="#152f21" stroke-width="2" opacity=".5"/>`:''}
+      <circle cx="${cx}" cy="${cy}" r="${active?8:5.5}" fill="${undefinedMetric?'#fff':color(r.transition)}" stroke="${active?'#152f21':undefinedMetric?'#8d9f91':'#fff'}" stroke-width="${active?3:2}" role="button" tabindex="0" aria-current="${active?'true':'false'}" aria-label="${e(msg)}. Select release" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-timeline-dot"><title>${e(msg)}</title></circle>`;
   }).join('');
-  return `<div class="impact-timeline-info"><span>Tag events plotted against ${e(IMPACT_METRICS[model.metric].toLowerCase())} · Below: all scoped authored commits (including unreleased) and VERSION signals</span><span>${records.length}${!expanded&&all.length>18?` of ${all.length}`:''} releases</span></div>
-    <div class="impact-timeline-scroll"><svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="Tag-date release timeline and distinct authored activity strip. Interactive markers select a tagged release.">
+  const selected=records.find(r=>r.hash===selectedHash);
+  const selectedX=selected?x(impactReleasePosition(selected)):0;
+  const selectedText=selected?.tag.length>24?selected.tag.slice(0,21)+'…':selected?.tag||'';
+  const captionW=Math.max(110,Math.min(230,selectedText.length*7+70));
+  const captionLeft=Math.max(50,Math.min(width-captionW-23,selectedX-captionW/2));
+  const caption=selected?`<line x1="${selectedX}" y1="35" x2="${selectedX}" y2="260" stroke="#254e35" stroke-width="1" stroke-dasharray="4 6" opacity=".44" pointer-events="none"/><rect x="${captionLeft}" y="8" width="${captionW}" height="25" rx="5" fill="#244c37" pointer-events="none"/><text x="${captionLeft+10}" y="24.5" font-size="11" font-family="sans-serif" fill="#fff" pointer-events="none">Selected · ${e(selectedText)}</text>`:'';
+  const panSpan=extent.end-extent.start-(max-min);
+  const panProgress=panSpan>0?Math.round(1000*(min-extent.start)/panSpan):0;
+  const overviewStart=100*(min-extent.start)/(extent.end-extent.start);
+  const overviewWidth=Math.max(0.6,100*(max-min)/(extent.end-extent.start));
+  const overviewTicks=all.map(r=>`<i class="impact-overview-tick" style="left:${Math.max(0,Math.min(100,100*(impactReleasePosition(r)-extent.start)/(extent.end-extent.start)))}%" title="${e(r.tag)} · ${e(shortDate(r.date))}"></i>`).join('');
+  return `<div class="impact-timeline-controls">
+      <div class="impact-timeline-presets" role="group" aria-label="Timeline extent">
+        <button type="button" class="impact-preset ${isAll?'is-active':''}" data-action="impact-range-preset" data-impact-range="all" aria-pressed="${isAll}">All releases</button>
+        <button type="button" class="impact-preset ${isLatest?'is-active':''}" data-action="impact-range-preset" data-impact-range="latest" aria-pressed="${isLatest}">Latest 18</button>
+      </div>
+      <div class="impact-timeline-zoom" role="group" aria-label="Zoom timeline">
+        <button type="button" data-action="impact-zoom" data-impact-zoom="out" aria-label="Zoom out" title="Zoom out" ${isAll?'disabled':''}>−</button>
+        <button type="button" data-action="impact-zoom" data-impact-zoom="in" aria-label="Zoom in" title="Zoom in">+</button>
+      </div>
+      <div class="impact-timeline-dates" role="group" aria-label="Visible timeline dates">
+        <label for="impact-timeline-from">FROM <input id="impact-timeline-from" type="date" value="${windowDates.from}" min="${allDates.from}" max="${allDates.to}"></label>
+        <span aria-hidden="true">–</span>
+        <label for="impact-timeline-to">TO <input id="impact-timeline-to" type="date" value="${windowDates.to}" min="${allDates.from}" max="${allDates.to}"></label>
+      </div>
+    </div>
+    <div class="impact-timeline-overview"><span class="impact-overview-label">HISTORY</span><div class="impact-overview-track" aria-hidden="true">${overviewTicks}<span class="impact-overview-window" style="left:${overviewStart}%;width:${overviewWidth}%"></span></div><label class="impact-overview-pan-label" for="impact-timeline-pan">PAN</label><input type="range" id="impact-timeline-pan" min="0" max="1000" value="${panProgress}" ${isAll?'disabled':''} aria-label="Pan timeline through full imported history" aria-valuetext="${e(windowDates.from)} to ${e(windowDates.to)}"></div>
+    <div class="impact-timeline-info"><span>${isAll?'Full timeline':isLatest?'Recent releases':'Custom time window'} · ${e(shortDate(windowDates.from))} – ${e(shortDate(windowDates.to))} · ${records.length} of ${all.length} releases in global scope</span><span>${isAll?'Zoom or set dates to explore':!records.length?'No tags in this range':'Select a tag to inspect · release dropdown locates it'}</span></div>
+    <div class="impact-timeline-scroll"><svg viewBox="0 0 ${width} ${height}" width="100%" role="img" aria-label="Tag-date release timeline from ${e(windowDates.from)} to ${e(windowDates.to)}. Interactive markers select a tagged release.">
       ${[0,.5,1].map(f=>`<line x1="48" y1="${y(f*hi)}" x2="${width-28}" y2="${y(f*hi)}" stroke="#e4ebe1" stroke-dasharray="2 4"/><text x="40" y="${y(f*hi)+4}" text-anchor="end" class="impact-axis">${humanMetric(f*hi,model.metric)}</text>`).join('')}
-      <line x1="48" y1="168" x2="${width-28}" y2="168" stroke="#bbcfc0"/>
-      ${stems}
-      <text x="14" y="230" class="impact-axis" transform="rotate(-90,14,230)">AUTHORED</text>
-      <line x1="48" y1="242" x2="${width-28}" y2="242" stroke="#d6e6d6"/>
+      <line x1="48" y1="170" x2="${width-28}" y2="170" stroke="#bbcfc0"/>
+      ${stems}${caption}
+      <text x="14" y="235" class="impact-axis" transform="rotate(-90,14,235)">AUTHORED</text>
+      <line x1="48" y1="246" x2="${width-28}" y2="246" stroke="#d6e6d6"/>
       ${bars}${versionMarkers}
-      ${monthTicks.map(t=>`<line x1="${x(t.date)}" y1="245" x2="${x(t.date)}" y2="250" stroke="#9aae9c"/><text x="${x(t.date)}" y="266" text-anchor="middle" class="impact-axis">${t.label}</text>`).join('')}
+      ${ticks.filter((_,i)=>i%skip===0).map(t=>`<line x1="${x(t.time)}" y1="249" x2="${x(t.time)}" y2="254" stroke="#9aae9c"/><text x="${x(t.time)}" y="273" text-anchor="middle" class="impact-axis">${e(t.label)}</text>`).join('')}
     </svg></div>
+    ${!records.length?'<p class="impact-muted" role="status">No release tags fall within this timeline range. Adjust the dates or choose a release from the dropdown to locate it.</p>':''}
     <div class="impact-timeline-legend">${['major','minor','patch','prerelease','baseline','unclassified'].map(kind=>`<span><i style="background:${color(kind)}"></i>${typeLabel(kind)}</span>`).join('')}
-      <span><i style="background:#9dbfac;border-radius:1px"></i>Authored commits (incl. unreleased)</span><span><i style="background:#ad7d3c;transform:rotate(45deg);border-radius:0"></i>VERSION touched (author date)</span><span><i style="background:#fff;border:2px solid #8d9f91"></i>Undefined measure</span></div>
-    ${all.length>18?`<button type="button" class="impact-link" data-action="impact-toggle-all">${expanded?'Show latest 18 releases':`Show all ${all.length} releases`}</button>`:''}`;
+      <span><i style="background:#9dbfac;border-radius:1px"></i>Authored commits (including unreleased)</span><span><i style="background:#ad7d3c;transform:rotate(45deg);border-radius:0"></i>VERSION touched (author date)</span><span><i style="background:#fff;border:2px solid #8d9f91"></i>Undefined measure</span></div>`;
 }
 
 export function impactReleasePicker(model, hash) {
