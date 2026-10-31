@@ -329,6 +329,61 @@ export function buildAnalysis(rawCommits, groups, scope = {}) {
   };
 }
 
+
+/**
+ * A single authored day for one selected contributor, using exactly the
+ * eligible commits and reference cohort from buildAnalysis. No second filter
+ * path is introduced for the daily activity pulse or its details.
+ */
+export function pulseDayDetails(view, contributorId, date) {
+  const id = String(contributorId);
+  if (!validDate(date) || date < view.start || date > view.end || !view.selectedIds.has(id)) return null;
+  const contributor = view.byId.get(id);
+  if (!contributor) return null;
+
+  const commits = contributor.commits.filter(c => c.date === date).sort((a, b) =>
+    (b.authoredAt ?? -1) - (a.authoredAt ?? -1) || String(a.hash).localeCompare(String(b.hash)));
+  const files = commits.flatMap(c => c.files);
+  const added = sum(files.map(f => f.added));
+  const deleted = sum(files.map(f => f.deleted));
+  const areas = new Map();
+  const byPath = new Map();
+  for (const file of files) {
+    const area = fileArea(file.path);
+    areas.set(area, (areas.get(area) || 0) + 1);
+    const prior = byPath.get(file.path) || { path:file.path, touches:0, added:0, deleted:0, binaryTouches:0 };
+    prior.touches++;
+    prior.added += file.added;
+    prior.deleted += file.deleted;
+    if (file.binary) prior.binaryTouches++;
+    byPath.set(file.path, prior);
+  }
+  const times = commits.filter(c => Number.isInteger(c.hour))
+    .map(c => `${String(c.hour).padStart(2, '0')}:${String(c.minute ?? 0).padStart(2, '0')}`).sort();
+  const metricValue = contributor.daily[view.metric]?.[date] || 0;
+  const referenceValue = sum(view.referenceContributors.map(c => c.daily[view.metric]?.[date] || 0));
+  const referenceCommits = sum(view.referenceContributors.map(c => c.daily.commits[date] || 0));
+  return {
+    date, contributorId: id, contributorName: contributor.displayName,
+    metric: view.metric, metricValue, referenceValue,
+    reference: view.denominator, share: referenceValue ? metricValue / referenceValue * 100 : null,
+    referenceCommits,
+    commitsCount: commits.length,
+    added, deleted, churn: added + deleted, net: added - deleted,
+    fileTouches: files.length, uniqueFiles: new Set(files.map(f => f.path)).size,
+    binaryTouches: files.filter(f => f.binary).length,
+    merges: commits.filter(c => c.isMerge).length,
+    reverts: commits.filter(c => c.isRevert).length,
+    versionTouches: commits.filter(c => c.touchesVersion).length,
+    firstLocalTime: times[0] ?? null, lastLocalTime: times.at(-1) ?? null,
+    areas: [...areas].map(([name, touches]) => ({ name, touches }))
+      .sort((a, b) => b.touches - a.touches || a.name.localeCompare(b.name)),
+    fileChanges: [...byPath.values()].sort((a, b) =>
+      b.touches - a.touches || (b.added + b.deleted) - (a.added + a.deleted) || a.path.localeCompare(b.path)),
+    commits,
+  };
+}
+
 export function sum(values) {
   return Array.isArray(values) ? values.reduce((a, b) => a + b, 0) : Object.values(values || {}).reduce((a, b) => a + b, 0);
 }

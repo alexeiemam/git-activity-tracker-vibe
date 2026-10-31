@@ -1,5 +1,5 @@
 import {
-  METRICS, DAY_NAMES, TIME_BANDS, buildAnalysis, getDateBounds,
+  METRICS, DAY_NAMES, TIME_BANDS, buildAnalysis, getDateBounds, pulseDayDetails, mondayOf, dayNumber, dateAtDay,
   periodForPreset, seriesForAnalysis,
   valueInMode, displayModeLabel, sum,
   parseGitLog,
@@ -28,7 +28,7 @@ const state = {
   period: 'all', start: null, end: null,
   includeMerges: false, includeReverts: true,
   metric: 'commits', mode: 'total', denominator: 'repository',
-  trend: 'rolling', sortKey: 'lens', sortDesc: true,
+  trend: 'rolling', pulseMode: 'monthly', sortKey: 'lens', sortDesc: true,
 };
 
 function setText(id, content) { $(id).textContent = content; }
@@ -126,7 +126,7 @@ function loadDemo() {
 function syncScopeAfterLoad() {
   const { min,max } = getDateBounds(rawCommits);
   Object.assign(state, { period:'all',start:min,end:max,includeMerges:false,includeReverts:true,
-    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',sortKey:'lens',sortDesc:true,search:'' });
+    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',sortKey:'lens',sortDesc:true,search:'' });
   state.selectedIds = new Set(mergeGroups.map((_,i)=>String(i)));
   if (pendingImport?.scope) {
     const s = pendingImport.scope;
@@ -137,6 +137,7 @@ function syncScopeAfterLoad() {
     state.includeReverts=s.includeReverts !== false;
     if (typeof s.period==='string') state.period=s.period;
     if (['rolling','weekly','cumulative'].includes(s.trend)) state.trend=s.trend;
+    if (['monthly','daily'].includes(s.pulseMode)) state.pulseMode=s.pulseMode;
     if (s.start && s.end && s.start <= s.end && /^\d{4}-\d\d-\d\d$/.test(s.start) && /^\d{4}-\d\d-\d\d$/.test(s.end)) {
       state.start=s.start; state.end=s.end;
     }
@@ -188,7 +189,7 @@ function changeDate() {
 }
 function resetFilters() {
   Object.assign(state,{ period:'all',start:getDateBounds(rawCommits).min,end:getDateBounds(rawCommits).max,
-    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',sortKey:'lens',sortDesc:true,search:'' });
+    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',sortKey:'lens',sortDesc:true,search:'' });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
   setText('scope-error','');
@@ -222,6 +223,7 @@ function updateControls() {
   $('denominator-select').disabled=false;
   $('metric-explanation').textContent=`${METRICS[state.metric].note}. ${state.mode==='share' ? 'Share uses the reference selected below.' : 'Reference is used for percent context and hotspots.'}`;
   document.querySelectorAll('[data-trend]').forEach(btn=>{const yes=btn.dataset.trend===state.trend;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
+  document.querySelectorAll('[data-pulse-mode]').forEach(btn=>{const yes=btn.dataset.pulseMode===state.pulseMode;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
 }
 function renderScope(view) {
   const policy=`${view.includeMerges?'merges included':'merges excluded'} · ${view.includeReverts?'reverts included':'reverts excluded'}`;
@@ -401,9 +403,39 @@ function copyCsv() {
 }
 
 function monthIndex(date) { return Number(date.slice(0,4))*12+Number(date.slice(5,7))-1; }
-function renderPulse(view) {
-  setText('pulse-context',`${METRICS[view.metric].label.toUpperCase()} / MONTHLY TOTALS · SHARED SCALE`);
-  if(!view.contributors.length || !view.spanDays){$('pulse').innerHTML=empty('Select contributors and a valid time window.');return;}
+let pulsePreviousMode = null;
+let pulsePreviousRange = null;
+let pulsePopoverOrigin = null;
+let pulsePopoverPinned = false;
+let pulseSuppressFocus = false;
+let pulseSuppressHoverCell = null;
+
+function closePulseAndRestoreFocus() {
+  const origin=pulsePopoverOrigin;
+  hidePulsePopover();
+  pulseSuppressHoverCell=origin;
+  if(origin){
+    pulseSuppressFocus=true;
+    origin.focus({preventScroll:true});
+    pulseSuppressFocus=false;
+  }
+}
+
+function hidePulsePopover() {
+  const popup = $('pulse-popover');
+  if (!popup) return;
+  popup.hidden = true;
+  popup.classList.remove('is-pinned');
+  popup.setAttribute('role', 'tooltip');
+  pulsePopoverOrigin = null;
+  pulsePopoverPinned = false;
+}
+
+function pulseIntensity(maximum) {
+  return value => !value || !maximum ? 0 : Math.max(1, Math.min(4, Math.ceil(value / maximum * 4)));
+}
+
+function renderMonthlyPulse(view, level) {
   const startMonth=monthIndex(view.start),endMonth=monthIndex(view.end);
   const months=Array.from({length:endMonth-startMonth+1},(_,i)=>startMonth+i);
   const byPerson=view.contributors.map(c=>{
@@ -414,8 +446,7 @@ function renderPulse(view) {
     }
     return {c,map};
   });
-  const mx=Math.max(0,...byPerson.flatMap(p=>[...p.map.values()]));
-  const level=v=>!v||!mx?0:Math.max(1,Math.min(4,Math.ceil(v/mx*4)));
+  const maximum=Math.max(0,...byPerson.flatMap(p=>[...p.map.values()]));
   const columns=`minmax(128px,160px) repeat(${months.length}, minmax(22px, 1fr))`;
   const yearHead=[];
   let i=0;
@@ -430,9 +461,144 @@ function renderPulse(view) {
   const cells=byPerson.map(({c,map})=>`<div class="pulse-label" title="${esc(c.displayName)}">${esc(c.displayName)}</div>${months.map(m=>{
     const v=map.get(m)||0;
     const ym=`${Math.floor(m/12)}-${String(m%12+1).padStart(2,'0')}`;
-    return `<div class="pulse-cell" data-level="${level(v)}" title="${esc(c.displayName)} · ${ym}: ${number.format(v)} ${esc(METRICS[view.metric].unit)}" role="img" aria-label="${esc(c.displayName)}, ${ym}: ${number.format(v)} ${esc(METRICS[view.metric].unit)}"></div>`;
+    return `<div class="pulse-cell" data-level="${level(maximum)(v)}" title="${esc(c.displayName)} · ${ym}: ${number.format(v)} ${esc(METRICS[view.metric].unit)}" role="img" aria-label="${esc(c.displayName)}, ${ym}: ${number.format(v)} ${esc(METRICS[view.metric].unit)}"></div>`;
   }).join('')}`).join('');
   $('pulse').innerHTML=`<div class="pulse-grid" style="grid-template-columns:${columns}"><span></span>${yearHead.join('')}<span></span>${monthLabels}${cells}</div>`;
+  return maximum;
+}
+
+function dailyPulseMonths(view) {
+  const markers=[];
+  let previous=null;
+  view.weeks.forEach((week,index)=>{
+    const start=Math.max(dayNumber(week),dayNumber(view.start));
+    // Label the first in-scope month and then each new month's first full
+    // week; don't mislabel early-month days as the incoming month.
+    const month=monthIndex(dateAtDay(start));
+    if(month!==previous) {
+      markers.push({index,label:new Date(`${dateAtDay(start)}T12:00:00Z`).toLocaleDateString('en-GB',{month:'short',year:'2-digit',timeZone:'UTC'})});
+      previous=month;
+    }
+  });
+  return markers;
+}
+
+function renderDailyPulse(view, level) {
+  const weeks=view.weeks;
+  const max=Math.max(0,...view.contributors.flatMap(c=>Object.values(c.daily[view.metric])));
+  const weekColumns=`repeat(${weeks.length}, var(--pulse-week-size))`;
+  const months=dailyPulseMonths(view).map(m=>`<span class="pulse-daily-month" style="grid-column:${m.index+1}">${esc(m.label)}</span>`).join('');
+  const weekdays=DAY_NAMES.map((day,i)=>`<span aria-hidden="true">${i%2===0?esc(day):''}</span>`).join('');
+  const rows=view.contributors.map(c=>{
+    const cells=weeks.flatMap(week=>Array.from({length:7},(_,i)=>{
+      const day=dateAtDay(dayNumber(week)+i);
+      if(day<view.start||day>view.end) return '<span class="pulse-daily-outside" aria-hidden="true"></span>';
+      const value=c.daily[view.metric][day]||0;
+      const label=`${c.displayName}, ${formatDate(day)}: ${number.format(value)} ${METRICS[view.metric].unit}. View day activity.`;
+      return `<button type="button" class="pulse-cell pulse-daily-cell" data-level="${level(max)(value)}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" aria-label="${esc(label)}" aria-haspopup="dialog" aria-controls="pulse-popover"></button>`;
+    })).join('');
+    return `<div class="pulse-daily-contributor"><div class="pulse-daily-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div><div class="pulse-weekdays">${weekdays}</div><div class="pulse-day-cells" style="grid-template-columns:${weekColumns}">${cells}</div></div>`;
+  }).join('');
+  $('pulse').innerHTML=`<div class="pulse-daily-board" style="--pulse-week-count:${weeks.length}"><div class="pulse-daily-axis"><span class="pulse-daily-spacer"></span><span></span><div class="pulse-daily-months" style="grid-template-columns:${weekColumns}">${months}</div></div>${rows}</div>`;
+  return max;
+}
+
+function renderPulse(view) {
+  hidePulsePopover();
+  const daily=state.pulseMode==='daily';
+  const container=$('pulse');
+  const oldScroll=container.scrollLeft;
+  const range=`${view.start}|${view.end}`;
+  const scrollToLatest=daily&&(pulsePreviousMode!=='daily'||pulsePreviousRange!==range);
+  setText('pulse-hint', daily
+    ? 'Each square is one authored day (Mon–Sun, top to bottom). Hover or focus for detailed activity; click/tap to keep it open. Scroll sideways for older weeks.'
+    : 'One square per person and calendar month. Intensity shows absolute totals, even when the comparison lens above shows a rate or percentage.');
+  if(!view.contributors.length || !view.spanDays){
+    setText('pulse-context',`${METRICS[view.metric].label.toUpperCase()} / ${daily?'DAILY':'MONTHLY'} TOTALS · SHARED SCALE`);
+    container.innerHTML=empty('Select contributors and a valid time window.');
+  } else {
+    const maximum=daily?renderDailyPulse(view,pulseIntensity):renderMonthlyPulse(view,pulseIntensity);
+    setText('pulse-context',`${METRICS[view.metric].label.toUpperCase()} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(maximum)} SCALE`);
+    container.scrollLeft=scrollToLatest?container.scrollWidth:oldScroll;
+  }
+  pulsePreviousMode=state.pulseMode;
+  pulsePreviousRange=range;
+}
+
+function pulseTime(c) {
+  return Number.isInteger(c.hour) ? `${String(c.hour).padStart(2,'0')}:${String(c.minute??0).padStart(2,'0')}` : 'Time unknown';
+}
+function pulseFact(label,value,extraClass='') {
+  return `<div class="pulse-fact ${extraClass}"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
+}
+function pulseDayMarkup(d) {
+  const measure=METRICS[d.metric];
+  const signed=n=>`${n>0?'+':n<0?'−':''}${number.format(Math.abs(n))}`;
+  const share=d.share===null?'— (no reference activity)':`${percent(d.share)} of ${d.reference==='repository'?'repository':'selected cohort'} for this day`;
+  const areas=d.areas.length?d.areas.slice(0,6).map(a=>`<span>${esc(a.name)} <strong>${number.format(a.touches)}</strong></span>`).join(''):'<span>None</span>';
+  const when=d.firstLocalTime ? d.firstLocalTime===d.lastLocalTime?d.firstLocalTime:`${d.firstLocalTime}–${d.lastLocalTime}`:'No authored clock recorded';
+  const flags=[`${number.format(d.merges)} merges`,`${number.format(d.reverts)} reverts`,`${number.format(d.versionTouches)} VERSION touches`].join(' · ');
+  const fileRows=d.fileChanges.map(f=>`<li><span title="${esc(f.path)}">${esc(f.path)}</span><span>${number.format(f.touches)}× · <span class="number-add">+${number.format(f.added)}</span> / <span class="number-del">−${number.format(f.deleted)}</span>${f.binaryTouches?` · ${number.format(f.binaryTouches)} binary`:''}</span></li>`).join('');
+  const events=d.commits.map(c=>{
+    const plus=sum(c.files.map(f=>f.added)),minus=sum(c.files.map(f=>f.deleted));
+    return `<li class="pulse-commit"><span class="pulse-commit-line"><span>${esc(pulseTime(c))} · <code>${esc(c.hash?.slice(0,8)||'—')}</code></span><span><span class="number-add">+${number.format(plus)}</span> / <span class="number-del">−${number.format(minus)}</span> · ${c.files.length} files</span></span><span class="pulse-commit-subject">${esc(c.subject||'(No subject)')}${c.isMerge?'<span class="flag merge">merge</span>':''}${c.isRevert?'<span class="flag revert">revert</span>':''}${c.touchesVersion?'<span class="flag version">VERSION</span>':''}</span></li>`;
+  }).join('');
+  return `<div class="pulse-tip-heading"><div><span class="eyebrow">DAILY ACTIVITY · AUTHOR DATE</span><strong>${esc(new Date(`${d.date}T12:00:00Z`).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}))}</strong><span>${esc(d.contributorName)}</span></div><button type="button" class="pulse-tip-close" data-action="close-pulse" aria-label="Close activity details">×</button></div>
+    <div class="pulse-tip-focus"><strong>${number.format(d.metricValue)}</strong><div><span>${esc(measure.label)} · day total</span><small>${esc(share)} · reference: ${number.format(d.referenceValue)} ${esc(measure.unit)}</small></div></div>
+    <div class="pulse-tip-facts">${pulseFact('COMMITS',number.format(d.commitsCount))}${pulseFact('LINES ADDED',`+${number.format(d.added)}`)}${pulseFact('LINES REMOVED',`−${number.format(d.deleted)}`)}${pulseFact('TOTAL CHURN',number.format(d.churn))}${pulseFact('FILE TOUCHES',number.format(d.fileTouches))}${pulseFact('DISTINCT FILES',number.format(d.uniqueFiles))}</div>
+    <div class="pulse-tip-extra"><span><strong>Net line change</strong> ${signed(d.net)}</span><span><strong>Binary file touches</strong> ${number.format(d.binaryTouches)}</span><span><strong>Author-local hours</strong> ${esc(when)}</span><span><strong>Commit types</strong> ${esc(flags)}</span><span><strong>Reference commits</strong> ${number.format(d.referenceCommits)} on this day</span></div>
+    <div class="pulse-tip-areas"><span class="eyebrow">TOP-LEVEL AREAS · FILE TOUCHES</span><div>${areas}</div></div>
+    <div class="pulse-tip-files"><details><summary>All changed file paths · ${number.format(d.uniqueFiles)} distinct (${number.format(d.fileTouches)} touches)</summary>${d.fileChanges.length?`<ul>${fileRows}</ul>`:'<p>No recorded file changes.</p>'}</details></div>
+    <div class="pulse-tip-events"><span class="eyebrow">ALL ${number.format(d.commitsCount)} COMMITS IN THIS SCOPE</span>${d.commitsCount?`<ol>${events}</ol>`:'<p>No commits for this person on this day. Other contributors may have activity in the reference group.</p>'}</div>
+    <p class="pulse-tip-note">All figures follow the dashboard's people, dates and merge/revert filters. Days use each commit's authored local date; hours use its authored local clock. Counts describe recorded changes, not performance.</p>`;
+}
+function positionPulsePopover(cell) {
+  const popup=$('pulse-popover');
+  const rect=cell.getBoundingClientRect();
+  const width=popup.getBoundingClientRect().width;
+  const left=Math.max(8,Math.min(window.innerWidth-width-8,rect.left+rect.width/2-width/2));
+  popup.style.left=`${left}px`;
+  const height=popup.getBoundingClientRect().height;
+  const below=rect.bottom+8;
+  const above=rect.top-height-8;
+  popup.style.top=`${below+height<=window.innerHeight-8 || above<8 ? Math.max(8,Math.min(below,window.innerHeight-height-8)) : above}px`;
+}
+function showPulsePopover(cell,{pin=false}={}) {
+  if(state.pulseMode!=='daily'||!analysis || (pulsePopoverPinned && !pin)) return;
+  const details=pulseDayDetails(analysis,cell.dataset.personId,cell.dataset.pulseDay);
+  if(!details)return;
+  const popup=$('pulse-popover');
+  const same=pulsePopoverOrigin===cell;
+  popup.innerHTML=pulseDayMarkup(details);
+  popup.hidden=false;
+  popup.classList.toggle('is-pinned',pin);
+  popup.setAttribute('role',pin?'dialog':'tooltip');
+  popup.setAttribute('aria-label',`Day activity: ${details.contributorName}, ${formatDate(details.date)}`);
+  if(!same)popup.scrollTop=0;
+  pulsePopoverOrigin=cell;
+  pulsePopoverPinned=pin;
+  positionPulsePopover(cell);
+}
+function onPulsePointerOver(event) {
+  if(pulsePopoverPinned)return;
+  const cell=event.target.closest('[data-pulse-day]');
+  if(cell && cell===pulseSuppressHoverCell)return;
+  if(cell!==pulseSuppressHoverCell)pulseSuppressHoverCell=null;
+  if(cell && (!pulsePopoverOrigin || pulsePopoverOrigin!==cell))showPulsePopover(cell);
+}
+function onPulsePointerOut(event) {
+  if(pulsePopoverPinned)return;
+  const cell=event.target.closest('[data-pulse-day]');
+  if(!cell)return;
+  if(cell===pulseSuppressHoverCell)pulseSuppressHoverCell=null;
+  const to=event.relatedTarget;
+  if(to && (cell.contains(to)||$('pulse-popover').contains(to)))return;
+  hidePulsePopover();
+}
+function onPulseFocusOut(event) {
+  if(pulsePopoverPinned)return;
+  const to=event.relatedTarget;
+  if(!to || (!to.closest('[data-pulse-day]') && !$('pulse-popover').contains(to)))hidePulsePopover();
 }
 
 function microBars(values,labels,id,className='',maxPercent=100) {
@@ -538,7 +704,7 @@ function exportSession() {
   const payload={version:2,exportedAt:new Date().toISOString(),rangeYears:Number($('range-select').value),rawLog:$('log-input').value,
     mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails]})),
     scope:{selectedEmails,period:state.period,start:state.start,end:state.end,metric:state.metric,mode:state.mode,denominator:state.denominator,
-      includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend}};
+      includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const uri=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=uri;a.download=`git-signals-${new Date().toISOString().slice(0,10)}.json`;a.click();
@@ -586,13 +752,16 @@ const ACTIONS={
   'solo':(_e,t)=>{state.selectedIds=new Set([t.dataset.personId]);renderDashboard();},
   'reset-filters':resetFilters,
   'trend-mode':(_e,t)=>{state.trend=t.dataset.trend;renderDashboard();},
+  'pulse-mode':(_e,t)=>{state.pulseMode=t.dataset.pulseMode;renderDashboard();},
+  'pulse-day':(_e,t)=>{if(pulsePopoverPinned&&pulsePopoverOrigin===t)hidePulsePopover();else showPulsePopover(t,{pin:true});},
+  'close-pulse':closePulseAndRestoreFocus,
   'sort-table':(_e,t)=>{const key=t.dataset.sort;state.sortDesc=state.sortKey===key?!state.sortDesc:true;state.sortKey=key;renderTable(analysis);},
   'copy-csv':copyCsv,
 };
 function handleDocumentClick(event) {
   const trigger=event.target.closest('[data-action]');
-  if(!trigger) return;
-  const fn=ACTIONS[trigger.dataset.action];if(fn)fn(event,trigger);
+  if(trigger){const fn=ACTIONS[trigger.dataset.action];if(fn)fn(event,trigger);}
+  else if(pulsePopoverPinned && !$('pulse-popover').contains(event.target))hidePulsePopover();
 }
 function handleDocumentChange(event) {
   const t=event.target;
@@ -621,6 +790,13 @@ function init() {
   document.addEventListener('click',handleDocumentClick);
   document.addEventListener('change',handleDocumentChange);
   document.addEventListener('input',handleDocumentInput);
+  $('pulse').addEventListener('pointerover',onPulsePointerOver);
+  $('pulse').addEventListener('pointerout',onPulsePointerOut);
+  $('pulse').addEventListener('focusin',event=>{const cell=event.target.closest('[data-pulse-day]');if(cell&&!pulsePopoverPinned&&!pulseSuppressFocus)showPulsePopover(cell);});
+  $('pulse').addEventListener('focusout',onPulseFocusOut);
+  $('pulse').addEventListener('scroll',()=>hidePulsePopover(),{passive:true});
+  $('pulse-popover').addEventListener('pointerleave',event=>{if(!pulsePopoverPinned&&!pulsePopoverOrigin?.contains(event.relatedTarget))hidePulsePopover();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('pulse-popover').hidden)closePulseAndRestoreFocus();});
   command();
 }
 init();

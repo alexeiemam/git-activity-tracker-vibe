@@ -24,7 +24,9 @@ No build, install, backend, API key, or CDN for JavaScript is needed. The option
 4. **Metric and presentation** — choose commits, active days, line additions/deletions/churn, file touches, VERSION-file changes, revert or merge commits. Display absolute totals, share of a reference group, per active contributor-day, or per calendar week.
 5. **Reference** — entire imported cohort or only the selected people. This changes percentages and repository comparisons, never the selected commit set.
 
-The **ranking, trend and comparison table** use the chosen metric and mode. The **monthly pulse** always shows that metric as monthly absolute totals with a common colour scale. **Working rhythm** and **change-size footprint** are purpose-specific distributions of *the same filtered commits* and have explicitly labelled within-person percentage scales; they don't silently switch filters. **File hotspots** always count file touches in the same selected commits against the chosen reference. **Recent commits** contains only filtered records. Searching a name in the picker only narrows that picker, not the underlying selection.
+The **ranking, trend and comparison table** use the chosen metric and mode. The **activity pulse** can show that metric as monthly totals or as a daily calendar, always using absolute values and one shared intensity scale across selected people. Daily hovers show the day’s complete filtered commit list, change metrics and share of the selected reference group; click/tap pins a scrollable detail panel. **Working rhythm** and **change-size footprint** are purpose-specific distributions of *the same filtered commits* and have explicitly labelled within-person percentage scales; they don't silently switch filters. **File hotspots** always count file touches in the same selected commits against the chosen reference. **Recent commits** contains only filtered records. Searching a name in the picker only narrows that picker, not the underlying selection.
+
+The daily pulse uses columns for calendar weeks and rows for Monday–Sunday; its horizontal scroll includes every day in the global date range, including days without commits. Activity details use the selected people, date window, merge/revert policy and reference cohort with no additional filters. Daily metrics include commits, adds/removals, churn, net line change, file touches, distinct paths, binary changes, VERSION touches, merge/revert counts, authored clock range, top-level areas, all changed file paths (expandable), and every matching commit (scroll within the detail card for long days). Zero reference metrics have undefined shares, not 0%. A cell is keyboard focusable; click/tap pins the detail and Escape dismisses it.
 
 Trend views offer trailing four-week windows (default), raw calendar weeks and cumulative values. Rates and shares in rolling/cumulative views are computed from the **sums of their numerators and denominators**, never from averages of percentages; tooltips show the plotted values. Week boundaries are clipped to the selected date window. Shares or per-active-day rates with no valid denominator show **—** or gaps rather than misleading zeros.
 
@@ -39,7 +41,7 @@ Trend views offer trailing four-week windows (default), raw calendar weeks and c
 
 ## Session import/export
 
-**Export session** saves the input Git log, merged identities and filters (including the chosen trend) into a JSON file. **Import session** restores it in the browser. v1 exports remain accepted.
+**Export session** saves the input Git log, merged identities and filters (including the chosen trend and monthly/daily pulse preference) into a JSON file. **Import session** restores it in the browser. v1 exports remain accepted.
 
 ## Source and tests
 

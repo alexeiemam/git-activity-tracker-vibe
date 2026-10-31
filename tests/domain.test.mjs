@@ -3,7 +3,7 @@ import test from 'node:test';
 import { generateDemoLog } from '../assets/demo-data.js';
 import {
   parseGitLog, buildAnalysis, periodForPreset, validDate, longestStreak,
-  longestConsecutiveWorkdays, dayOfWeek, sum, valueInMode, fileArea, seriesForAnalysis,
+  longestConsecutiveWorkdays, dayOfWeek, sum, valueInMode, fileArea, seriesForAnalysis, pulseDayDetails,
 } from '../assets/domain.js';
 
 const GROUPS = [
@@ -175,4 +175,62 @@ test('undefined ratios are null gaps, not fabricated 0% or 0 per-active-day',()=
   assert.deepEqual(seriesForAnalysis(view,{mode:'share',trend:'rolling'}).lines[0].vals,[null,0]);
   assert.deepEqual(seriesForAnalysis(view,{mode:'per_active_day',trend:'weekly'}).lines[0].vals,[0,null]);
   assert.deepEqual(seriesForAnalysis(view,{mode:'total',trend:'weekly'}).lines[0].vals,[0,0]);
+});
+
+
+test('daily pulse detail uses the same authored-date, person and commit filters as every other view',()=>{
+  const view=buildAnalysis(commits,GROUPS,{...base,selectedIds:['0'],denominator:'repository',metric:'churn'});
+  const day=pulseDayDetails(view,'0','2026-10-28');
+  assert.equal(day.contributorName,'Alex');
+  assert.equal(day.metricValue,20); // (10+3+1) added + (3+0+4) deleted
+  assert.equal(day.referenceValue,32); // Blair also changed 12 lines on the day
+  assert.equal(day.share,62.5);
+  assert.equal(day.referenceCommits,3);
+  assert.equal(day.commitsCount,2);
+  assert.deepEqual(new Set(day.commits.map(c=>c.hash)),new Set(['a1','a2']));
+  assert.equal(day.added,13);
+  assert.equal(day.deleted,7);
+  assert.equal(day.churn,20);
+  assert.equal(day.net,6);
+  assert.equal(day.fileTouches,3);
+  assert.equal(day.uniqueFiles,2);
+  assert.deepEqual(day.fileChanges,[{path:'app/models/user.rb',touches:2,added:12,deleted:7,binaryTouches:0},{path:'VERSION',touches:1,added:1,deleted:0,binaryTouches:0}]);
+  assert.equal(day.binaryTouches,0);
+  assert.equal(day.reverts,1);
+  assert.equal(day.merges,0);
+  assert.equal(day.versionTouches,1);
+  assert.equal(day.firstLocalTime,'08:45');
+  assert.equal(day.lastLocalTime,'11:00');
+  assert.deepEqual(day.areas,[{name:'app/',touches:2},{name:'(root)',touches:1}]);
+  assert.deepEqual(day.commits.map(c=>c.hash),['a2','a1']);
+  assert.equal(pulseDayDetails(view,'1','2026-10-28'),null,'unselected people cannot leak into a day');
+  assert.equal(pulseDayDetails(view,'0','2026-10-27'),null,'out-of-scope dates are excluded');
+});
+
+test('daily pulse distinguishes zero activity from an undefined reference share and respects reference choice',()=>{
+  const whole=buildAnalysis(commits,GROUPS,{...base,selectedIds:['0'],metric:'commits'});
+  const quiet=pulseDayDetails(whole,'0','2026-10-29');
+  assert.equal(quiet.commitsCount,0);
+  assert.equal(quiet.metricValue,0);
+  assert.equal(quiet.referenceValue,1);
+  assert.equal(quiet.share,0);
+  assert.deepEqual(quiet.commits,[]);
+  const empty=pulseDayDetails(whole,'0','2026-10-30'); // merge excluded globally
+  assert.equal(empty.referenceValue,0);
+  assert.equal(empty.share,null);
+  const cohort=buildAnalysis(commits,GROUPS,{...base,selectedIds:['0'],denominator:'selection',metric:'commits'});
+  assert.equal(pulseDayDetails(cohort,'0','2026-10-28').share,100);
+  assert.equal(pulseDayDetails(cohort,'0','2026-10-29').share,null);
+  const excluded=buildAnalysis(commits,GROUPS,{...base,selectedIds:['0'],includeReverts:false,includeMerges:true,metric:'commits'});
+  assert.deepEqual(pulseDayDetails(excluded,'0','2026-10-28').commits.map(c=>c.hash),['a1']);
+  assert.deepEqual(pulseDayDetails(excluded,'0','2026-10-30').commits.map(c=>c.hash),['a3']);
+  assert.equal(pulseDayDetails(excluded,'0','2026-10-30').merges,1);
+});
+
+test('daily active-days compare person-days against same-date contributor-day reference',()=>{
+  const view=buildAnalysis(commits,GROUPS,{...base,selectedIds:['0'],metric:'active_days'});
+  const day=pulseDayDetails(view,'0','2026-10-28');
+  assert.equal(day.metricValue,1,'two commits still count as one active author date');
+  assert.equal(day.referenceValue,2,'Blair has activity that day too');
+  assert.equal(day.share,50);
 });
