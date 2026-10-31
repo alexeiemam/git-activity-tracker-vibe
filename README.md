@@ -1,35 +1,53 @@
-# Git Activity Tracker — refactored
+# git:signals — comparable Git activity, from one source of truth
 
-A framework-free, zero-build refactor of the supplied Git Activity Tracker.
-
-## Structure
-
-- `index.html` — semantic document structure only; no inline event handlers or application script.
-- `assets/app.css` — bespoke component/visualisation CSS and accessibility states.
-- `assets/tailwind.config.js` — Tailwind browser configuration retained from the original zero-build setup.
-- `assets/app.js` — UI state, rendering and delegated DOM event handling.
-- `assets/domain.js` — pure git-log parsing, aggregation and streak calculations; no DOM dependencies.
-- `assets/demo-data.js` — deterministic synthetic three-year demo data.
-- `tests/` — dependency-free Node smoke/regression tests.
+A local, zero-build dashboard to compare one or more Git contributors with the **same selection and denominator in every view**. It runs entirely in your browser; imported logs are not uploaded to a server.
 
 ## Run
 
-Because the JavaScript uses ES modules, serve the directory rather than opening `index.html` via `file://`:
+From this directory, serve the static app with:
 
 ```sh
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000`.
+Open `http://localhost:8000` and choose **Explore demo dataset**, or use the generated `git log` command inside a Git repository. Confirm/merge contributor identities, then build the dashboard. The example command uses macOS `pbcopy`; on other systems, remove that final pipe and paste the result yourself.
 
-## Verify
+No build, install, backend, API key, or CDN for JavaScript is needed. The optional Google Fonts request can fall back to local fonts offline.
 
-No package installation is required:
+## Consistent selection model
 
-```sh
-npm test
-```
+**Every view** is rendered from one `buildAnalysis(rawCommits, groups, scope)` result in `assets/domain.js`. It applies the following, in this order:
 
-## Intentional compatibility choice
+1. **Identity** — reconcile author emails into people; select all, any subset, or one person (Solo).
+2. **Dates** — inclusive authored dates; all imported history, latest 90/365/730 days, calendar year or custom. Rolling presets anchor to the *latest imported commit*, not the computer's current date.
+3. **Commit policy** — include/exclude merge commits and revert commits; excluded commits disappear from every view and from both the selection and the reference.
+4. **Metric and presentation** — choose commits, active days, line additions/deletions/churn, file touches, VERSION-file changes, revert or merge commits. Display absolute totals, share of a reference group, per active contributor-day, or per calendar week.
+5. **Reference** — entire imported cohort or only the selected people. This changes percentages and repository comparisons, never the selected commit set.
 
-The original uses Tailwind's browser CDN. This refactor keeps that zero-build characteristic so the delivery remains a directly runnable static bundle. For a production deployment, the next infrastructure step would be compiling Tailwind at build time and self-hosting the generated CSS/fonts; that is deliberately separate from this behavior-preserving source refactor.
+The **ranking, trend and comparison table** use the chosen metric and mode. The **monthly pulse** always shows that metric as monthly absolute totals with a common colour scale. **Working rhythm** and **change-size footprint** are purpose-specific distributions of *the same filtered commits* and have explicitly labelled within-person percentage scales; they don't silently switch filters. **File hotspots** always count file touches in the same selected commits against the chosen reference. **Recent commits** contains only filtered records. Searching a name in the picker only narrows that picker, not the underlying selection.
+
+Trend views offer trailing four-week windows (default), raw calendar weeks and cumulative values. Rates and shares in rolling/cumulative views are computed from the **sums of their numerators and denominators**, never from averages of percentages; tooltips show the plotted values. Week boundaries are clipped to the selected date window. Shares or per-active-day rates with no valid denominator show **—** or gaps rather than misleading zeros.
+
+## Interpreting metrics
+
+- **Active days** are distinct authored dates *per person*. Adding them across people gives *contributor-days*, which differs from unique team calendar days.
+- **Per active day** divides a contributor's measure by their active authored days (and team totals by contributor-days). **Per calendar week** divides by all elapsed days in the selection / 7, including quiet days.
+- **File touches** are changed-file entries across commits, **not** unique paths. **Line churn** is added + removed text lines; binary modifications contribute touches but no line counts.
+- **VERSION touches** are commits modifying a `VERSION` file, **not** authenticated releases. **Reverts** are counted as events, never subtracted from commit totals. Merge detection uses parents when available, otherwise the subject heuristic.
+- A share's denominator is **the same metric** in the selected reference group and time period. The selected group may be a single person, a subset, or everyone.
+- Commit sizes and Git activity aren't reliable measures of individual effectiveness, value, or productivity.
+
+## Session import/export
+
+**Export session** saves the input Git log, merged identities and filters (including the chosen trend) into a JSON file. **Import session** restores it in the browser. v1 exports remain accepted.
+
+## Source and tests
+
+- `index.html` — semantic layout and controls.
+- `assets/app.css` — bespoke responsive visual style.
+- `assets/app.js` — unified state, view rendering, session handling and events.
+- `assets/domain.js` — pure parser, filtering, aggregation, scope and date logic.
+- `assets/demo-data.js` — deterministic demonstration dataset.
+- `tests/` — dependency-free Node checks and regression tests.
+
+Run `npm test` to exercise the core aggregation, scope, parsing, rate and static-contract tests. Run `node --check assets/app.js` for a quick syntax check.

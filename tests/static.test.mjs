@@ -18,7 +18,7 @@ test('HTML loads external CSS and module JavaScript', () => {
 });
 
 test('UI actions are dispatched centrally rather than through global functions', () => {
-  assert.match(app, /const ACTIONS = \{/);
-  assert.match(app, /document\.addEventListener\('click', handleDocumentClick\)/);
+  assert.match(app, /const ACTIONS\s*=\s*\{/);
+  assert.match(app, /document\.addEventListener\('click',\s*handleDocumentClick\)/);
   assert.doesNotMatch(app, /window\.[A-Za-z_$][\w$]*\s*=/);
 });

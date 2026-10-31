@@ -1,310 +1,87 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<!-- Git Activity Tracker -->
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Git Activity Tracker</title>
-  <link rel="icon" type="image/svg+xml"
-    href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzJjMjgyMCIvPgogIDxsaW5lIHgxPSIzIiB5MT0iMTUiIHgyPSIyOSIgeTI9IjE1IiBzdHJva2U9IiM4YTgwNzAiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8bGluZSB4MT0iNSIgIHkxPSIyOSIgeDI9IjUiICB5Mj0iMjYiIHN0cm9rZT0iI2MwMzkyYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNTUiLz4KICA8bGluZSB4MT0iOSIgIHkxPSIyOSIgeDI9IjkiICB5Mj0iMjQiIHN0cm9rZT0iI2MwMzkyYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNzUiLz4KICA8bGluZSB4MT0iMTMiIHkxPSIyOSIgeDI9IjEzIiB5Mj0iMjAiIHN0cm9rZT0iI2MwMzkyYiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjEiLz4KICA8bGluZSB4MT0iMTkiIHkxPSIyOSIgeDI9IjkiIHkyPSIyMiIgc3Ryb2tlPSIjYzAzOTJiIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC44NSIvPgogIDxsaW5lIHgxPSIyNCIgeTE9IjI5IiB4Mj0iMjQiIHkyPSIyNSIgc3Ryb2tlPSIjYzAzOTJiIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC42Ii8+CiAgPGNpcmNsZSBjeD0iMTMuNSIgY3k9IjE1IiByPSI1IiBmaWxsPSIjMmMyODIwIiBzdHJva2U9IiNjMDM5MmIiIHN0cm9rZS13aWR0aD0iMiIvPgogIDxjaXJjbGUgY3g9IjEzLjUiIGN5PSIxNSIgcj0iMiIgZmlsbD0iI2MwMzkyYiIvPgo8L3N2Zz4=" />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap"
-    rel="stylesheet" />
-
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="./assets/tailwind.config.js"></script>
-  <link rel="stylesheet" href="./assets/app.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f5f0">
+  <title>git:signals — Contributor comparisons</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/app.css">
 </head>
-
-<body class="font-sans text-text">
-  <div class="tooltip" id="tooltip" role="tooltip" aria-hidden="true"></div>
-
-  <div class="mx-auto max-w-[1160px] px-8 py-12">
-    <!-- Masthead -->
-    <header class="mb-10 flex flex-wrap items-baseline gap-5 border-b-2 border-ink pb-4">
-      <h1 class="font-mono text-2xl font-semibold tracking-[-0.03em] text-ink">git-activity</h1>
-      <span class="font-mono text-xs uppercase tracking-[0.08em] text-muted">
-        Repository Contributor Analysis · up to 5-year view
-      </span>
-
-      <div class="ml-auto flex items-center gap-2">
-        <input type="file" id="file-import-input" accept="application/json,.json" hidden />
-        <button type="button" data-action="choose-import"
-          class="btn-small inline-flex items-center gap-2 whitespace-nowrap border border-border bg-transparent px-3 py-1.5 font-mono text-[0.65rem] text-muted transition hover:border-ink hover:text-ink">
-          ↑ Import
-        </button>
-        <button type="button" data-action="export" id="export-btn" hidden
-          class="btn-small inline-flex items-center gap-2 whitespace-nowrap border border-border bg-transparent px-3 py-1.5 font-mono text-[0.65rem] text-muted transition hover:border-ink hover:text-ink">
-          ↓ Export
-        </button>
-      </div>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <a href="#top" class="wordmark" aria-label="git:signals home"><span class="mark">g<span class="mark-dot">:</span></span><span>git<span class="wordmark-light">signals</span></span></a>
+      <div class="masthead-right"><span class="eyebrow">REPOSITORY INTELLIGENCE / LOCAL-ONLY ANALYSIS</span><button id="export-btn" type="button" data-action="export" class="button outline" hidden>Export session <span aria-hidden="true">↗</span></button><button type="button" data-action="choose-import" class="button outline">Import session <span aria-hidden="true">↗</span></button><input id="file-import-input" type="file" accept=".json,application/json" hidden></div>
     </header>
 
-    <!-- Import banner -->
-    <div id="import-banner" hidden role="status"
-      class="import-banner mb-5 items-center gap-3 border border-mergeborder bg-mergebg px-4 py-2 font-mono text-[0.72rem] text-[#7a5c00]">
-      <span>📂</span>
-      <span>
-        <strong id="import-banner-filename" class="text-[#5a3c00]"></strong>
-        — loaded from saved session. Merge groups and log data restored.
-      </span>
-      <button type="button" data-action="dismiss-import-banner"
-        class="ib-close ml-auto border-0 bg-transparent px-1 text-base leading-none text-[#a07800] hover:text-[#5a3c00]"
-        title="Dismiss" aria-label="Dismiss import notice">✕</button>
-    </div>
-
-    <!-- Input section -->
-    <section class="panel-label accent mb-9 border border-border bg-surface px-8 py-7" data-label="INPUT" aria-labelledby="input-heading">
-      <h2 id="input-heading" class="visually-hidden">Input</h2>
-      <div class="mb-4 flex flex-wrap items-center gap-3">
-        <label for="range-select" class="font-mono text-[0.7rem] text-muted">Show last</label>
-
-        <select id="range-select"
-          class="range-select cursor-pointer border border-border bg-bg px-2.5 py-1.5 font-mono text-[0.75rem] text-ink outline-none focus:border-accent">
-          <option value="1">1 year</option>
-          <option value="2">2 years</option>
-          <option value="3">3 years</option>
-          <option value="4">4 years</option>
-          <option value="5">5 years</option>
-        </select>
-
-        <span class="font-mono text-[0.7rem] text-muted">of activity</span>
-
-        <label
-          class="merge-toggle-label ml-2 inline-flex cursor-pointer select-none items-center gap-2 font-mono text-[0.68rem] text-muted">
-          <input type="checkbox" id="include-merges" class="cursor-pointer accent-accent" />
-          include merge commits
-        </label>
-        <label
-          class="merge-toggle-label ml-2 inline-flex cursor-pointer select-none items-center gap-2 font-mono text-[0.68rem] text-muted">
-          <input type="checkbox" id="penalise-reverts"
-            class="cursor-pointer accent-accent" />
-          penalise reverts
-        </label>
+    <section class="hero" id="top">
+      <div><div class="eyebrow section-kicker"><span class="live-dot"></span> ENGINEERING ACTIVITY, MADE LEGIBLE</div>
+        <h1>People. Patterns.<br><em>Perspective.</em></h1>
+        <p>Compare one contributor or an entire team. Change the cohort, the time window, or the metric once—and every view follows the same evidence.</p>
       </div>
-
-      <div
-        class="cmd-box mb-4 flex items-center gap-3 overflow-x-auto whitespace-nowrap rounded-[2px] bg-ink px-4 py-3 font-mono text-[0.78rem] text-[#c8f542]">
-        <span class="prompt text-[#666]">$</span>
-        <span id="git-cmd">git log --since="12 months ago" --no-merges
-          --pretty=format:"COMMIT|%H|%ae|%an|%aI|%s" --numstat | pbcopy</span>
-        <button type="button" data-action="copy-command"
-          class="cmd-copy ml-auto flex-shrink-0 rounded-[2px] border border-[#444] bg-transparent px-2.5 py-1 font-mono text-[0.65rem] text-[#888] transition hover:border-[#c8f542] hover:text-[#c8f542]">copy</button>
-      </div>
-
-      <textarea id="log-input" placeholder="Paste git log output here…"
-        class="h-36 w-full resize-y border border-border bg-bg px-4 py-3 font-mono text-[0.72rem] leading-[1.6] text-text outline-none transition focus:border-accent placeholder:text-muted"></textarea>
-
-      <div class="mt-3 flex flex-wrap items-center gap-2.5">
-        <button type="button" data-action="analyse"
-          class="btn-primary bg-accent px-6 py-2.5 font-mono text-[0.78rem] font-semibold tracking-[0.04em] text-white transition hover:bg-accent2">Analyse →</button>
-
-        <button type="button" data-action="load-demo"
-          class="btn-secondary border border-border bg-transparent px-4 py-2.5 font-mono text-[0.72rem] text-muted transition hover:border-ink hover:text-ink">Load demo data (3 years)</button>
-
-        <span class="parse-error font-mono text-[0.72rem] text-accent" id="parse-error" role="alert" aria-live="polite"></span>
-      </div>
+      <div class="hero-art" aria-hidden="true"><div class="hero-track"><span style="height:35%"></span><span style="height:53%"></span><span style="height:42%"></span><span style="height:68%"></span><span style="height:56%"></span><span style="height:78%"></span><span style="height:88%"></span><span style="height:72%"></span><span style="height:100%"></span><span style="height:74%"></span></div><div class="hero-art-caption">THE SIGNAL, NOT THE NOISE.</div></div>
     </section>
 
-    <!-- Merge step -->
-    <section id="merge-step" hidden aria-labelledby="merge-heading">
-      <h2 id="merge-heading" class="visually-hidden">Identity merge</h2>
-      <div class="panel-label merge mb-6 border border-mergeborder bg-mergebg px-8 py-7" data-label="IDENTITY MERGE">
-        <p class="mb-6 font-mono text-[0.78rem] leading-[1.7] text-muted">
-          <strong class="text-ink">Review identities before rendering.</strong>
-          Different emails belonging to the same person can be merged into one contributor.
-        </p>
-
-        <div class="merge-groups flex flex-col gap-2.5" id="merge-groups"></div>
-
-        <button type="button" data-action="add-merge-group"
-          class="btn-small mt-2 inline-flex items-center gap-2 whitespace-nowrap border border-border bg-transparent px-3 py-1.5 font-mono text-[0.65rem] text-muted transition hover:border-ink hover:text-ink">+ New group</button>
-      </div>
-
-      <div class="mb-10 flex flex-wrap items-center gap-2.5">
-        <button type="button" data-action="render-dashboard"
-          class="btn-primary bg-accent px-6 py-2.5 font-mono text-[0.78rem] font-semibold tracking-[0.04em] text-white transition hover:bg-accent2">Render Dashboard →</button>
-
-        <button type="button" data-action="skip-merge"
-          class="btn-secondary border border-border bg-transparent px-4 py-2.5 font-mono text-[0.72rem] text-muted transition hover:border-ink hover:text-ink">Skip — keep all separate</button>
-      </div>
+    <section class="source-card" aria-labelledby="source-title">
+      <details id="source-details" open>
+        <summary><span class="source-heading"><span class="step-dot">01</span> <strong id="source-title">Load repository history</strong> <span class="subtle" id="source-status">Paste git log output, or try the demo.</span></span><span class="summary-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="source-content">
+          <div class="source-topline"><label for="range-select">Capture up to</label><select id="range-select" aria-label="History included in generated command"><option value="1">1 year</option><option value="2">2 years</option><option value="3" selected>3 years</option><option value="4">4 years</option><option value="5">5 years</option></select><span class="helper">This changes the <strong>git command only</strong>. Use the dashboard to filter imported data.</span></div>
+          <div class="command-row"><span class="terminal-mark">$</span><code id="git-cmd"></code><button type="button" data-action="copy-command" class="command-copy">Copy command</button></div>
+          <p class="input-hint">Run inside your repository and paste its output below. Merge commits are captured so you can include or exclude them later. The command uses macOS <code>pbcopy</code>; on other systems, remove the final pipe and copy terminal output.</p>
+          <label class="field-label" for="log-input">Git log output</label>
+          <textarea id="log-input" placeholder="COMMIT|hash|email|name|2026-10-01T09:12:00+01:00|subject|parents&#10;25  8  app/models/example.rb" spellcheck="false"></textarea>
+          <div class="source-actions"><button type="button" data-action="analyse" class="button primary">Analyse history <span aria-hidden="true">→</span></button><button type="button" data-action="load-demo" class="button soft">Explore demo dataset</button><span id="parse-error" class="error-text" role="alert" aria-live="polite"></span></div>
+        </div>
+      </details>
     </section>
 
-    <!-- Dashboard -->
+    <section id="merge-step" class="merge-panel" aria-labelledby="merge-heading" hidden>
+      <div class="block-heading"><span class="step-dot">02</span><div><h2 id="merge-heading">Confirm identities</h2><p>The same person may commit from more than one email. These suggestions can be edited before comparison.</p></div></div>
+      <div id="merge-groups" class="merge-groups"></div>
+      <div class="merge-actions"><button type="button" data-action="add-merge-group" class="button outline">+ Add group</button><span class="push"></span><button type="button" data-action="skip-merge" class="button soft">Keep emails separate</button><button type="button" data-action="render-dashboard" class="button primary">Build dashboard <span aria-hidden="true">→</span></button></div>
+    </section>
+
     <section id="dashboard" hidden aria-labelledby="dashboard-heading">
-      <h2 id="dashboard-heading" class="visually-hidden">Contributor dashboard</h2>
-      <!-- Summary bar -->
-      <!-- Summary bar stays the same -->
-      <div id="summary-bar" class="mb-8 grid grid-cols-4 gap-px border border-border bg-border"></div>
+      <div class="dashboard-intro"><div><div class="eyebrow section-kicker"><span class="step-dot dark">03</span> THE COMPARISON WORKSPACE</div><h2 id="dashboard-heading">One scope. Every angle.</h2><p id="data-coverage" class="subtle"></p></div><button type="button" data-action="reset-filters" class="button outline">Reset filters <span aria-hidden="true">↺</span></button></div>
 
-      <!-- Sticky sidebar + main content -->
-      <div class="dash-shell">
-        <!-- Sticky sidebar -->
-        <aside id="sticky-dock" class="sticky-sidebar" aria-label="Dashboard controls">
-          <div class="sidebar-inner">
-            <div class="sidebar-head">
-              <div class="sidebar-title font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted">Controls</div>
-              <div class="sidebar-sub font-mono text-[0.62rem] text-muted/80">sticky</div>
-            </div>
+      <section class="scope-panel" aria-labelledby="scope-heading">
+        <div class="scope-panel-header"><h3 id="scope-heading">Your comparison scope</h3><span class="scope-rule">All visualisations update together</span></div>
+        <div class="scope-grid">
+          <div class="scope-group people-group"><div class="field-title"><label for="contributor-search">01 / CONTRIBUTORS</label><span id="people-count" class="small-counter"></span></div><input id="contributor-search" type="search" placeholder="Find a person…" autocomplete="off" aria-label="Search contributor picker (does not filter charts)"><div class="picker-actions"><button type="button" data-action="select-all" class="text-button">Select all</button><button type="button" data-action="select-none" class="text-button">Clear</button><span class="helper">Solo = compare just one</span></div><div id="contributor-picker" class="contributor-picker" role="group" aria-label="Contributors included in every view"></div></div>
+          <div class="scope-group"><div class="field-title"><label for="period-select">02 / PERIOD</label></div><select id="period-select" class="field-control" aria-label="Date range preset"></select><div class="date-row"><div><label for="date-from">From (inclusive)</label><input type="date" id="date-from" class="field-control"></div><div><label for="date-to">To (inclusive)</label><input type="date" id="date-to" class="field-control"></div></div><p class="helper">Rolling periods end at the <strong>latest date in the imported log</strong>.</p><div class="filter-options"><label class="check-row"><input id="filter-merges" type="checkbox"> Include merge commits</label><label class="check-row"><input id="filter-reverts" type="checkbox" checked> Include revert commits</label></div><div class="helper">Reverts are never turned into negative commits.</div></div>
+          <div class="scope-group lens-group"><div class="field-title"><label for="metric-select">03 / COMPARISON LENS</label></div><label class="control-label" for="metric-select">Measure</label><select id="metric-select" class="field-control"></select><label class="control-label" for="mode-select">Display values as</label><select id="mode-select" class="field-control"><option value="total">Absolute totals</option><option value="share">% of reference group</option><option value="per_active_day">Per active day</option><option value="per_week">Per calendar week</option></select><label class="control-label" for="denominator-select">Reference for shares & hotspots</label><select id="denominator-select" class="field-control"><option value="repository">Entire imported repository</option><option value="selection">Selected contributors only</option></select><p class="helper" id="metric-explanation"></p></div>
+        </div>
+        <div id="scope-error" class="error-text" role="alert" aria-live="polite"></div>
+        <div class="scope-summary"><span class="scope-pill"><span class="scope-pill-dot"></span> LIVE SCOPE</span><span id="scope-description"></span></div>
+      </section>
 
-            <div class="sidebar-section">
-              <div class="sidebar-label-row">
-                <div class="sidebar-label">Contributors</div>
-                <div class="sidebar-meta" id="sidebar-contrib-meta"></div>
-              </div>
+      <div id="overview-stats" class="stat-grid" aria-label="Summary metrics for selected contributors"></div>
+      <div id="insight-strip" class="insight-strip" aria-live="polite"></div>
 
-              <div class="sidebar-subsection">
-                <div class="sidebar-sublabel">Pinned</div>
-                <div id="sticky-contrib-pinned" class="sidebar-list"></div>
-              </div>
+      <section class="report-section" aria-labelledby="ranking-heading"><div class="section-header"><div><span class="eyebrow section-index">01 / THE COMPARISON</span><h3 id="ranking-heading">Contribution, side by side.</h3><p>One metric and reference scale for everyone. Bars and figures refer to the exact scope above.</p></div></div><div class="report-card"><div class="viz-top"><div id="ranking-context" class="eyebrow"></div><span class="helper" id="ranking-scale"></span></div><div id="ranking" class="ranking-list"></div></div></section>
 
-              <div class="sidebar-subsection">
-                <div class="sidebar-sublabel">Active</div>
-                <div id="sticky-contrib-active" class="sidebar-scroll"></div>
-              </div>
-            </div>
+      <section class="report-section" aria-labelledby="trend-heading"><div class="section-header"><div><span class="eyebrow section-index">02 / HOW IT CHANGED</span><h3 id="trend-heading">Momentum over time.</h3><p>Compare smoothed four-week windows, raw weeks, or cumulative progress. The same mode, metric, and denominator apply here.</p></div><div class="segmented" role="group" aria-label="Trend aggregation"><button type="button" class="segment active" data-action="trend-mode" data-trend="rolling" aria-pressed="true">4-week</button><button type="button" class="segment" data-action="trend-mode" data-trend="weekly" aria-pressed="false">Weekly</button><button type="button" class="segment" data-action="trend-mode" data-trend="cumulative" aria-pressed="false">Cumulative</button></div></div><div class="report-card"><div class="viz-top"><span id="trend-axis-label" class="eyebrow"></span><span class="helper" id="trend-note"></span></div><div id="trend-chart" class="trend-chart" aria-label="Metric trend of selected contributors"></div><div id="trend-legend" class="trend-legend"></div></div></section>
 
-            <div class="sidebar-section">
-              <div class="sidebar-label">Metric</div>
-              <div id="sticky-metric-slot" class="sidebar-list"></div>
-            </div>
+      <section class="report-section" aria-labelledby="table-heading"><div class="section-header"><div><span class="eyebrow section-index">03 / THE NUMBERS</span><h3 id="table-heading">Compare every dimension.</h3><p>All measures use the selected period and commit policy. High values aren't necessarily better outcomes.</p></div><button type="button" data-action="copy-csv" class="button outline">Copy visible table as CSV <span aria-hidden="true">↗</span></button></div><div class="report-card table-card"><div id="scorecard-wrap" class="table-scroll"></div><div class="table-footnote" id="table-note"></div></div></section>
 
-            <div class="sidebar-section">
-              <div class="sidebar-label">Year</div>
-              <div id="sticky-year-slot" class="sidebar-year"></div>
-            </div>
+      <section class="report-section" aria-labelledby="pulse-heading"><div class="section-header"><div><span class="eyebrow section-index">04 / WHEN IT HAPPENED</span><h3 id="pulse-heading">The activity pulse.</h3><p>Monthly intensity using the selected metric, with a single colour scale shared across all selected contributors.</p></div></div><div class="report-card"><div class="viz-top"><span class="eyebrow" id="pulse-context"></span><div class="intensity-key">ZERO <i style="--level:0"></i><i style="--level:1"></i><i style="--level:2"></i><i style="--level:3"></i><i style="--level:4"></i> HIGH</div></div><div id="pulse" class="pulse-scroll"></div></div></section>
 
-            <div class="sidebar-section">
-              <div class="sidebar-label">Filters</div>
-              <div class="sidebar-toggles">
-                <label class="sidebar-toggle">
-                  <input type="checkbox" id="include-merges-sticky" class="cursor-pointer accent-accent" />
-                  <span>include merges</span>
-                </label>
+      <section class="report-section" aria-labelledby="rhythm-heading"><div class="section-header"><div><span class="eyebrow section-index">05 / THE WORKING RHYTHM</span><h3 id="rhythm-heading">Different patterns. Same window.</h3><p>Day-of-week and time-of-day distributions for each selected contributor, based on commit timestamps rather than line volume.</p></div></div><div class="report-card"><div id="rhythm" class="rhythm-list"></div><p class="table-footnote">Within-person percentages describe when their commits occurred (not their relative contribution). Times reflect each commit's authored local clock. Missing timestamps are excluded only from time-of-day proportions.</p></div></section>
 
-                <label class="sidebar-toggle">
-                  <input type="checkbox" id="penalise-reverts-sticky" class="cursor-pointer accent-accent" />
-                  <span>penalise reverts</span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </aside>
+      <section class="report-section" aria-labelledby="footprint-heading"><div class="section-header"><div><span class="eyebrow section-index">06 / THE SHAPE OF CHANGES</span><h3 id="footprint-heading">How big were the changes?</h3><p>Within-person mix of commit sizes: a shared 100% scale, alongside actual commit counts and median change size.</p></div></div><div class="report-card"><div id="footprint"></div><p class="table-footnote">Groups use measured added + removed text lines per commit. Zero includes binary-only changes and commits without numstat entries. Size is not a proxy for effort or quality.</p></div></section>
 
-        <!-- Main dashboard content -->
-        <main class="dash-main">
-          <!-- Comparison panel -->
-          <section class="panel-label accent mb-9 border border-border bg-surface" data-label="CONTRIBUTOR COMPARISON" aria-labelledby="comparison-heading">
-            <h3 id="comparison-heading" class="visually-hidden">Contributor comparison</h3>
-            <div class="comp-tabs mt-2 flex border-b border-border" role="tablist" aria-label="Comparison view">
-              <button type="button"
-                class="comp-tab -mb-px border-b-2 border-transparent bg-transparent px-4 py-3 font-mono text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-muted transition hover:text-ink"
-                id="tab-timeline" data-action="set-comparison" data-tab="timeline" role="tab" aria-controls="comp-timeline" aria-selected="true" tabindex="0">Timeline</button>
-              <button type="button"
-                class="comp-tab -mb-px border-b-2 border-transparent bg-transparent px-4 py-3 font-mono text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-muted transition hover:text-ink"
-                id="tab-share" data-action="set-comparison" data-tab="share" role="tab" aria-controls="comp-share" aria-selected="false" tabindex="-1">Share</button>
-              <button type="button"
-                class="comp-tab -mb-px border-b-2 border-transparent bg-transparent px-4 py-3 font-mono text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-muted transition hover:text-ink"
-                id="tab-pace" data-action="set-comparison" data-tab="pace" role="tab" aria-controls="comp-pace" aria-selected="false" tabindex="-1">Cumulative</button>
-              <button type="button"
-                class="comp-tab -mb-px border-b-2 border-transparent bg-transparent px-4 py-3 font-mono text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-muted transition hover:text-ink"
-                id="tab-h2h" data-action="set-comparison" data-tab="h2h" role="tab" aria-controls="comp-h2h" aria-selected="false" tabindex="-1">Head-to-Head</button>
-            </div>
+      <section class="report-section" aria-labelledby="areas-heading"><div class="section-header"><div><span class="eyebrow section-index">07 / WHERE THE WORK WENT</span><h3 id="areas-heading">Codebase hotspots.</h3><p>Top-level folders grouped by file touches, with selected people compared against the same reference group.</p></div></div><div class="report-card"><div id="areas" class="areas-list"></div><p class="table-footnote">Files in the repository root appear under “(root)”. A file touched in multiple commits counts multiple times. Binary file changes count as touches but not line churn.</p></div></section>
 
-            <div class="comp-body px-8 py-7">
-              <div id="comp-timeline" role="tabpanel" aria-labelledby="tab-timeline">
-                <div id="timeline-legend" class="timeline-legend mb-4 flex flex-wrap gap-3.5"></div>
-                <div id="timeline-wrap" class="timeline-wrap relative">
-                  <div id="timeline-svg-wrap" class="timeline-svg-wrap overflow-x-auto"></div>
-                  <div id="timeline-cursor" class="timeline-cursor"></div>
-                  <div id="timeline-tip" class="timeline-tip"></div>
-                </div>
-              </div>
+      <section class="report-section" aria-labelledby="recent-heading"><div class="section-header"><div><span class="eyebrow section-index">08 / THE UNDERLYING EVENTS</span><h3 id="recent-heading">Recent commits in this slice.</h3><p>Evidence to check the charts against. Only commits matching the global filters appear.</p></div></div><div class="report-card table-card"><div id="recent-commits" class="table-scroll"></div></div></section>
 
-              <div id="comp-share" role="tabpanel" aria-labelledby="tab-share" hidden>
-                <div id="share-bars"></div>
-              </div>
-
-              <div id="comp-pace" role="tabpanel" aria-labelledby="tab-pace" hidden>
-                <p id="pace-info" class="mb-5 font-mono text-[0.7rem] leading-[1.7] text-muted"></p>
-                <div id="pace-svg-wrap"></div>
-              </div>
-
-              <div id="comp-h2h" role="tabpanel" aria-labelledby="tab-h2h" hidden>
-                <div class="h2h-selectors mb-6 flex flex-wrap items-center gap-4">
-                  <select id="h2h-a"
-                    class="h2h-select min-w-[160px] cursor-pointer border border-border bg-bg px-3 py-2 font-mono text-[0.75rem] text-ink outline-none focus:border-accent"></select>
-                  <span class="h2h-vs font-mono text-[0.7rem] font-semibold text-muted">vs</span>
-                  <select id="h2h-b"
-                    class="h2h-select min-w-[160px] cursor-pointer border border-border bg-bg px-3 py-2 font-mono text-[0.75rem] text-ink outline-none focus:border-accent"></select>
-                </div>
-                <div id="h2h-header" class="h2h-header mb-px grid grid-cols-2 gap-px border border-border bg-border">
-                </div>
-                <div id="h2h-metrics" class="h2h-metrics overflow-hidden border border-border"></div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Section titles -->
-          <div
-            class="mb-4 mt-9 flex items-center gap-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-muted">
-            <span>Individual heatmaps</span>
-            <span class="h-px flex-1 bg-border"></span>
-          </div>
-          <div id="committer-heatmaps"></div>
-
-          <div
-            class="mb-4 mt-9 flex items-center gap-3 font-mono text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-muted">
-            <span>Summary table</span>
-            <span class="h-px flex-1 bg-border"></span>
-          </div>
-
-          <table class="committer-table w-full border-collapse font-mono text-[0.72rem]">
-            <thead>
-              <tr>
-                <th
-                  class="border-b border-border px-3 py-2 text-left text-[0.62rem] font-medium uppercase tracking-[0.08em] text-muted">
-                  Committer</th>
-                <th
-                  class="border-b border-border px-3 py-2 text-left text-[0.62rem] font-medium uppercase tracking-[0.08em] text-muted">
-                  Commits</th>
-                <th
-                  class="border-b border-border px-3 py-2 text-left text-[0.62rem] font-medium uppercase tracking-[0.08em] text-muted">
-                  Lines Added</th>
-                <th
-                  class="border-b border-border px-3 py-2 text-left text-[0.62rem] font-medium uppercase tracking-[0.08em] text-muted">
-                  Lines Deleted</th>
-                <th
-                  class="border-b border-border px-3 py-2 text-left text-[0.62rem] font-medium uppercase tracking-[0.08em] text-muted">
-                  Files Changed</th>
-                <th
-                  class="border-b border-border px-3 py-2 text-left text-[0.62rem] font-medium uppercase tracking-[0.08em] text-muted">
-                  Active Days</th>
-                <th
-                  class="border-b border-border px-3 py-2 text-left text-[0.62rem] font-medium uppercase tracking-[0.08em] text-muted">
-                  Releases</th>
-                <th
-                  class="border-b border-border px-3 py-2 text-left text-[0.62rem] font-medium uppercase tracking-[0.08em] text-muted">
-                  First</th>
-                <th
-                  class="border-b border-border px-3 py-2 text-left text-[0.62rem] font-medium uppercase tracking-[0.08em] text-muted">
-                  Last</th>
-              </tr>
-            </thead>
-            <tbody id="summary-tbody"></tbody>
-          </table>
-        </main>
-      </div>
-
+      <footer class="report-footer"><strong>Interpretation guide.</strong> Git logs measure recorded changes—not effort, difficulty, effectiveness, or code quality. A commit's authored date may differ from its integration date. Merge detection uses parent hashes when available (subject heuristics for older logs). “VERSION touches” is a repository-specific proxy, not a verified release count. All comparisons are scoped to the imported history; they do not include uncollected branches or missing dates.</footer>
     </section>
+    <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-
   <script type="module" src="./assets/app.js"></script>
 </body>
-
 </html>
