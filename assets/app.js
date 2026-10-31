@@ -3,12 +3,12 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds,
-} from './domain.js?v=impact-20261031-4';
-import { generateDemoLog } from './demo-data.js?v=impact-20261031-4';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=impact-20261031-4';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability } from './impact-view.js?v=impact-20261031-4';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=impact-20261031-4';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=impact-20261031-4';
+} from './domain.js?v=contrast-20261031-5';
+import { generateDemoLog } from './demo-data.js?v=contrast-20261031-5';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=contrast-20261031-5';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability } from './impact-view.js?v=contrast-20261031-5';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=contrast-20261031-5';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=contrast-20261031-5';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 const $ = id => document.getElementById(id);

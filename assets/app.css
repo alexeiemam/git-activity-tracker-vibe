@@ -377,9 +377,10 @@
 /* Shared numeric encoding: neutral zero, distinctly green positives, hatched missing. */
 .numeric-gradient-key{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:10px/1.5 var(--mono);color:#566c5c}
 .numeric-key-swatches{display:inline-flex;align-items:center;gap:3px}
-.numeric-key-swatch{display:block;width:17px;height:13px;border-radius:3px;border:1px solid #dae2d7}
+.numeric-key-swatch{display:block;width:18px;height:15px;border-radius:3px;border:1px solid #dae2d7}
 .numeric-key-swatch:not(.is-zero){border-color:transparent}
-.numeric-key-swatch.is-zero{margin-right:7px}
+.numeric-key-swatch.is-zero{margin-right:9px}
+.numeric-key-endpoints{font-weight:600;color:#375947;font-variant-numeric:tabular-nums}
 .numeric-key-missing{display:inline-flex;align-items:center;gap:5px;margin-left:5px}
 .numeric-key-missing::before{content:"";display:inline-block;width:17px;height:13px;border:1px solid #d7dfd4;border-radius:2px;background:repeating-linear-gradient(135deg,#f7f8f5 0px,#f7f8f5 5px,#e2e8e0 5px,#e2e8e0 10px)}
 .numeric-key-method{color:#78887a;font-size:9px;white-space:nowrap}

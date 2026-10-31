@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {
-  ZERO_COLOUR, MISSING_BACKGROUND, makeIntensityScale, intensityPosition,
+  ZERO_COLOUR, MISSING_BACKGROUND, POSITIVE_COLOURS, makeIntensityScale, intensityPosition,
   intensityColour, intensityTextColour, intensityStyle, intensityLegend, intensitySwatches,
 } from '../assets/value-colour.js';
 import {impactReleaseMatrix} from '../assets/impact-view.js';
@@ -72,10 +72,11 @@ test('legends present 0, positive gradient and distinct missing state',()=>{
   const scale=makeIntensityScale([0,1,500]);
   const html=intensityLegend(scale,n=>`${Math.round(n)} commits`,{missing:true});
   assert.match(html,/0 · none/);
-  assert.match(html,/500 commits · highest/);
+  assert.match(html,/1 commits → 500 commits · positive range/);
+  assert.match(html,/log by value, not percentile/);
   assert.match(html,/unavailable/);
   assert.match(html,/numeric-key-swatch is-zero/);
-  assert.equal((html.match(/class="numeric-key-swatch /g)||[]).length,6);
+  assert.equal((html.match(/class="numeric-key-swatch /g)||[]).length,8);
 });
 
 test('impact contributor matrix uses the shared scale and distinguishes zero from missing',()=>{
@@ -86,8 +87,61 @@ test('impact contributor matrix uses the shared scale and distinguishes zero fro
   const markup=impactReleaseMatrix(model,true);
   assert.match(markup,/background:#edf1ec/);
   assert.match(markup,/repeating-linear-gradient/);
-  assert.match(markup,/80% · highest/);
+  assert.match(markup,/0.2% → 80% · positive range/);
   assert.doesNotMatch(markup,/background:rgba\(/);
+});
+
+
+test('expanded perceptual ramp has substantially more minimum-to-maximum contrast without changing observed values',()=>{
+  assert.equal(POSITIVE_COLOURS.length,7);
+  const scale=makeIntensityScale([0,1,100]);
+  const first=intensityColour(1,scale), last=intensityColour(100,scale);
+  const previousSpan=luminance('#5f9f7d')-luminance('#19533c');
+  const newSpan=luminance(first)-luminance(last);
+  assert.ok(newSpan>previousSpan*1.65,`Contrast should increase materially: ${newSpan} vs ${previousSpan}`);
+  assert.ok(luminance(ZERO_COLOUR)-luminance(first)>newSpan, 'zero-to-anything remains an even stronger luminance distinction');
+  const shades=POSITIVE_COLOURS.map(luminance);
+  for(let i=1;i<shades.length;i++) assert.ok(shades[i-1]-shades[i]>.02,'positive palette must progress monotonically with legible shade differences');
+});
+
+test('narrow positive ranges do not receive the contrast reserved for major differences',()=>{
+  const tiny=makeIntensityScale([0,10,11]);
+  const moderate=makeIntensityScale([0,1,2]);
+  const large=makeIntensityScale([0,1,100]);
+  const brightnessGap=scale=>luminance(intensityColour(scale.minPositive,scale))-luminance(intensityColour(scale.max,scale));
+  assert.ok(intensityPosition(11,tiny)<.1);
+  assert.ok(brightnessGap(tiny)<.08,'a ten percent difference should be modest');
+  assert.ok(brightnessGap(moderate)<brightnessGap(large),'a doubling should use less contrast than a 100x difference');
+  assert.ok(brightnessGap(large)>.35);
+  assert.equal(intensityPosition(1,makeIntensityScale([0,1])),0);
+  assert.equal(intensityColour(1,makeIntensityScale([0,1])),POSITIVE_COLOURS[0]);
+  assert.notEqual(intensityColour(1,makeIntensityScale([0,1])),POSITIVE_COLOURS.at(-1));
+});
+
+test('logarithmic mapping is monotonic, rank-independent and safe across extreme ratios',()=>{
+  const a=makeIntensityScale([0,1,4,16,64,256]);
+  const b=makeIntensityScale([0,1,1,1,4,4,16,256,256]);
+  for(const value of [1,4,16,64,256]) assert.equal(intensityColour(value,a),intensityColour(value,b));
+  const values=[1,4,16,64,256].map(v=>intensityPosition(v,a));
+  for(let i=1;i<values.length;i++) assert.ok(values[i]>values[i-1]);
+  const wide=makeIntensityScale([0,1e-300,1e300]);
+  assert.ok(Number.isFinite(intensityPosition(1,wide)));
+  assert.equal(intensityPosition(1e300,wide),1);
+  assert.equal(intensitySwatches(wide).at(-1),1e300);
+  assert.equal(intensitySwatches(wide)[1],1e-300);
+  assert.equal(intensityColour(-4,wide),null);
+});
+
+test('numeric legends disclose the positive minimum even when the usual formatting would round it to zero',()=>{
+  const scale=makeIntensityScale([0,.003,.03,.3]);
+  const rounded=x=>new Intl.NumberFormat('en-GB',{maximumFractionDigits:1}).format(x)+'%';
+  const html=intensityLegend(scale,rounded,{missing:true});
+  assert.match(html,/0.003% → 0.3% · positive range/);
+  assert.match(html,/0 · none/);
+  assert.match(html,/unavailable/);
+  const one=intensityLegend(makeIntensityScale([0,7,7]),x=>`${x} commits`);
+  assert.match(one,/7 commits · only positive value/);
+  assert.match(one,/one positive level/);
 });
 
 test('every numeric heatmap is routed through the shared palette rather than opacity',async()=>{
