@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=contrast-20261031-5';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=contrast-20261031-5';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=contrast-20261031-5';
+import { IMPACT_METRICS } from './impact.js?v=github-releases-20261101-1';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=github-releases-20261101-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=github-releases-20261101-1';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -12,10 +12,12 @@ const typeLabel = s => ({baseline:'First tag on lineage',major:'Major',minor:'Mi
 const color = s => ({major:'#b65e49',minor:'#4d70a4',patch:'#2b7957',prerelease:'#a47833',baseline:'#707e70'})[s] || '#84708f';
 const humanMetric = (value,metric) => metric==='share'?p(value):amount(value);
 const precise = x => x < 1 && x > 0 ? Number(x.toPrecision(3)).toString() : n.format(x);
+const releaseClock = r => r.timeSource==='github-published'?'GitHub publication · verified timestamp':r.timeSource==='tagger'?'Annotated tag · tagger date':r.timeSource==='tagged-commit'?'Lightweight tag · commit date (estimate)':'Tagged commit date (estimate)';
+const driverText = r => r.driver?.source==='github-publisher' ? `GitHub publisher @${r.driver.login}${r.driver.groupName?` · ${r.driver.groupName}`:' · not matched to a Git author'}` : r.driver?.source==='annotated-tagger' ? `Annotated tagger ${r.driver.name}${r.driver.groupName?` · ${r.driver.groupName}`:''}` : 'Release driver unknown';
 
 export function impactSelectMessage(model) {
   if(!model.available) return `<div class="impact-empty"><strong>No resolvable release tags in this import</strong><p>Paste a fresh capture using the updated Git command to include annotated and lightweight tags, parent hashes and commit times. Legacy logs and partial Git history still work for activity, but cannot prove release membership. Existing charts remain available.</p></div>`;
-  if(!model.releases.length) return `<div class="impact-empty"><strong>No release tags within this date range</strong><p>Tags are placed by their tag or tagged-commit date. Widen the global date range to see earlier releases; author dates still control which contributing commits count.</p></div>`;
+  if(!model.releases.length) return `<div class="impact-empty"><strong>No release tags within this date range</strong><p>Release events use GitHub publication dates when available, otherwise tag or tagged-commit dates. Widen the global date range to see earlier releases; author dates still control which contributing commits count.</p></div>`;
   return '';
 }
 export function impactSummary(model) {
@@ -29,8 +31,48 @@ export function impactSummary(model) {
     <div><span>TAGGED RELEASES</span><strong>${amount(releases.length)}</strong><small>${majors} major transitions · ${model.allReleaseCount} distinct tagged snapshots in import</small></div>
     <div><span>SCOPED CONTRIBUTIONS</span><strong>${amount(selectedCommits)}</strong><small>Authored commits included in these releases</small></div>
     <div><span>AREAS REACHED</span><strong>${amount(areas.size)}</strong><small>Across selected contributor releases</small></div>
-    <div><span>VERSION SIGNALS</span><strong>${amount(versionTouches)}</strong><small>VERSION-touching commits, not releases</small></div>
+    <div><span>GH-PUBLISHED</span><strong>${amount(model.githubLinkedCount)}</strong><small>${amount(releases.length-model.githubLinkedCount)} tag-only · ${amount(versionTouches)} VERSION touches</small></div>
   </div>`;
+}
+
+/** Import provenance and explicit GitHub account -> Git author identity matching. */
+export function impactGithubStatus(model) {
+  const status=model.githubStatus;
+  const hasMeta=model.githubCount>0;
+  const matched=model.ghActors.filter(actor=>actor.groupId).length;
+  const count=model.ghActors.length;
+  const subtitle=status==='ok' ? `${amount(model.githubPublishedCount)} published GitHub Release records · ${amount(model.githubLinkedCount)} matched tagged snapshots in this date scope${model.githubUnresolvedCount?` · ${amount(model.githubUnresolvedCount)} with no matching imported tag`:''}`
+    : status==='missing-cli' ? 'GitHub CLI was not available. Git tags and author history are still usable.'
+    : status==='unsupported-origin' ? 'Origin is not a recognised github.com remote. Git-only release evidence remains available.'
+    : status==='unavailable' ? 'The GitHub API was unavailable during capture. Git-only release evidence remains available.'
+    : 'This import contains Git tags but no GitHub Release enrichment. Re-run the updated Copy command to add publisher and release-note metadata.';
+  return `<div class="impact-gh-banner"><div class="impact-gh-banner-top"><div><span class="impact-gh-mark">${hasMeta?'GITHUB · ENRICHED':'GIT · TAG-ONLY'}</span><p>${e(subtitle)}</p></div>${hasMeta?`<span class="impact-gh-matched">${matched} / ${count} publishers matched</span>`:''}</div>
+    ${model.captureWarningsCount?`<p class="impact-gh-warning">${amount(model.captureWarningsCount)} GitHub metadata records could not be decoded. The remaining evidence is still available.</p>`:''}
+    ${count?`<details class="impact-identity-mapping"><summary>Match GitHub publishers to contributors <span>${count-matched} not matched · affects driver attribution only</span></summary>
+      <p class="impact-muted">A publisher is an assumed release driver, not proof of deployment. Select the contributor whose Git author identities match this GitHub account. No fuzzy or name-only matching is performed.</p>
+      <div class="impact-actor-grid">${model.ghActors.map(actor=>`<label><span class="impact-gh-login">@${e(actor.login)} <small>${amount(actor.releases)} releases in scope</small></span><select data-gh-actor="${e(actor.login)}" aria-label="Match GitHub publisher ${e(actor.login)} to a contributor"><option value="">Unmatched · no driver credit</option>${model.groups.map(g=>`<option value="${e(g.emails[0])}" ${g.id===actor.groupId?'selected':''}>${e(g.name)} · ${e(g.emails.length===1?g.emails[0]:`${g.emails.length} author identities`)}</option>`).join('')}</select></label>`).join('')}</div>
+    </details>`:''}</div>`;
+}
+
+export function impactIndividualProfiles(model, focus='selection') {
+  const profiles=model.profiles;
+  if(!profiles.length) return '<div class="impact-empty-mini">Select a contributor to compare release involvement.</div>';
+  const chosen=profiles.find(person=>person.id===focus);
+  const picker=`<div class="impact-profile-bar"><div><span class="eyebrow">CONTRIBUTOR LENS</span><h6>Driving releases and shipping changes</h6></div><label for="impact-profile-select">VIEW <select id="impact-profile-select"><option value="selection" ${!chosen?'selected':''}>All selected contributors</option>${profiles.map(p=>`<option value="${e(p.id)}" ${chosen?.id===p.id?'selected':''}>${e(p.name)}</option>`).join('')}</select></label></div>`;
+  if(!chosen) return `${picker}<p class="impact-muted">Role counts use distinct tagged releases. Shipped commits are deduplicated across release branches; commit share always uses the chosen reference group. Drove = mapped GitHub publisher or an annotated-tag email fallback.</p>
+   <div class="impact-person-summary-table"><table><thead><tr><th>CONTRIBUTOR</th><th>DRIVEN</th><th>CONTRIBUTED TO</th><th>BOTH ROLES</th><th>SHIPPED COMMITS</th><th>MEDIAN SHARE</th><th>PATHS REACHED</th></tr></thead><tbody>${profiles.map(person=>`<tr><th><button type="button" data-action="impact-profile-focus" data-impact-focus="${e(person.id)}" class="impact-text-link">${e(person.name)}</button></th><td>${amount(person.driven)}</td><td>${amount(person.contributed)}</td><td>${amount(person.both)}</td><td>${amount(person.shippedCommits)}</td><td>${p(person.medianShare)}</td><td>${amount(person.footprint.pathsCount)}</td></tr>`).join('')}</tbody></table></div>`;
+  const involvement=model.releases.filter(r=>r.driver.groupId===chosen.id || r.cells.some(c=>c.id===chosen.id && c.footprint.commits>0));
+  const yearlyMax=Math.max(1,...chosen.years.map(y=>y.drivenOnly+y.contributedOnly+y.both));
+  const yearly=chosen.years.map(y=>{const total=y.drivenOnly+y.contributedOnly+y.both;return `<div class="impact-involvement-year"><strong>${e(y.year)}</strong><div class="impact-involvement-track" role="img" aria-label="${e(y.year)}: ${y.drivenOnly} driven only, ${y.both} both roles, ${y.contributedOnly} contributed only">${y.drivenOnly?`<i class="as-driver" style="width:${100*y.drivenOnly/yearlyMax}%"></i>`:''}${y.both?`<i class="as-both" style="width:${100*y.both/yearlyMax}%"></i>`:''}${y.contributedOnly?`<i class="as-contributor" style="width:${100*y.contributedOnly/yearlyMax}%"></i>`:''}</div><span>${total} distinct releases</span></div>`;}).join('');
+  const releaseMix=Object.entries(chosen.releaseMix).filter(([,n])=>n).map(([kind,count])=>`${amount(count)} ${typeLabel(kind).toLowerCase()}`).join(' · ') || 'No releases driven in scope';
+  return `${picker}<div class="impact-person-hero"><div class="impact-person-name"><span class="eyebrow">RELEASE INVOLVEMENT · ${e(chosen.name)}</span><h5>${e(chosen.name)}</h5><p>Distinct published/tagged snapshots in the global date scope. Roles are shown independently; no combined productivity score.</p></div>
+    <div class="impact-person-facts"><div><span>DRIVEN</span><strong>${amount(chosen.driven)}</strong></div><div><span>CONTRIBUTED</span><strong>${amount(chosen.contributed)}</strong></div><div><span>BOTH</span><strong>${amount(chosen.both)}</strong></div><div><span>SHIPPED COMMITS</span><strong>${amount(chosen.shippedCommits)}</strong></div><div><span>MEDIAN COMMIT SHARE</span><strong>${p(chosen.medianShare)}</strong></div><div><span>DISTINCT PATHS</span><strong>${amount(chosen.footprint.pathsCount)}</strong></div></div></div>
+    <div class="impact-person-secondary"><div><span>MEDIAN CONTRIBUTORS IN RELEASES DRIVEN</span><strong>${amount(chosen.medianCoordination)}</strong><small>Within reference cohort; measures breadth, not effort</small></div><div><span>AUTHOR → RELEASE EVENT</span><strong>${chosen.leadDays==null?'—':`${n.format(chosen.leadDays)} days`}</strong><small>Median non-negative elapsed time for shipped commits</small></div><div><span>TEST ACCOMPANIMENT</span><strong>${p(chosen.footprint.testAccompaniment)}</strong><small>Same commit touched code and test paths</small></div></div>
+    <p class="impact-person-mix"><strong>Releases driven by kind</strong> · ${e(releaseMix)}</p>
+    ${yearly?`<div class="impact-person-years"><h6>Release involvement by year</h6><p class="impact-muted">Absolute distinct releases in the scoped dates. Short or partial years are not annualised.</p>${yearly}</div>`:''}
+    <div class="impact-person-role-guide"><span><i class="impact-role-driver">D</i> Release driver</span><span><i class="impact-role-contributor">C</i> Authored changes shipped</span><span class="impact-muted">${amount(chosen.drivenOnly)} driven only · ${amount(chosen.contributedOnly)} contributed only</span></div>
+    <div class="impact-person-timeline">${involvement.length?involvement.slice().reverse().slice(0,24).map(r=>{const c=r.cells.find(c=>c.id===chosen.id);const didDrive=r.driver.groupId===chosen.id;return `<button type="button" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-person-release"><span class="impact-person-release-tags">${didDrive?'<i class="impact-role-driver">D</i>':''}${c?.footprint.commits?'<i class="impact-role-contributor">C</i>':''}</span><strong>${e(r.tag)}</strong><small>${e(shortDate(r.date))}</small><span class="impact-person-release-measure">${amount(c?.footprint.commits||0)} commits · ${p(c?.share)}</span></button>`;}).join(''):'<div class="impact-empty-mini">No driven or authored release involvement in this scope.</div>'}</div>
+    ${involvement.length>24?'<p class="impact-muted">Latest 24 involvements shown here; use the release matrix for the complete comparison.</p>':''}`;
 }
 
 /** The viewport changes presentation only: no Git selection, contribution or date filters. */
@@ -90,7 +132,7 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
   const stems=records.map(r=>{
     const undefinedMetric=r.metricValue==null;
     const cx=x(impactReleasePosition(r)),cy=undefinedMetric?181:y(r.metricValue),active=r.hash===selectedHash;
-    const msg=`${r.tag} · ${shortDate(r.date)} · ${typeLabel(r.transition)} · ${humanMetric(r.metricValue,model.metric)} ${IMPACT_METRICS[model.metric]} · ${amount(r.selectedFootprint.pathsCount)} paths`;
+    const msg=`${r.tag} · ${shortDate(r.date)} · ${typeLabel(r.transition)} · ${humanMetric(r.metricValue,model.metric)} ${IMPACT_METRICS[model.metric]} · ${driverText(r)} · ${amount(r.selectedFootprint.pathsCount)} paths`;
     return `<line x1="${cx}" y1="170" x2="${cx}" y2="${cy}" stroke="${color(r.transition)}" stroke-opacity="${active?'.8':'.34'}" stroke-width="${active?3:2}"/>
       ${active?`<circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="#152f21" stroke-width="2" opacity=".5"/>`:''}
       <circle cx="${cx}" cy="${cy}" r="${active?8:5.5}" fill="${undefinedMetric?'#fff':color(r.transition)}" stroke="${active?'#152f21':undefinedMetric?'#8d9f91':'#fff'}" stroke-width="${active?3:2}" role="button" tabindex="0" aria-current="${active?'true':'false'}" aria-label="${e(msg)}. Select release" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-timeline-dot"><title>${e(msg)}</title></circle>`;
@@ -139,7 +181,7 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
 
 export function impactReleasePicker(model, hash) {
   const releases=model.releases;
-  return `<label class="impact-select-label" for="impact-release-select">RELEASE TO INSPECT</label><select class="impact-select" id="impact-release-select">${releases.slice().reverse().map(r=>`<option value="${e(r.hash)}" ${r.hash===hash?'selected':''}>${e(r.tag)} · ${e(shortDate(r.date))} · ${e(typeLabel(r.transition))}</option>`).join('')}</select>`;
+  return `<label class="impact-select-label" for="impact-release-select">RELEASE TO INSPECT</label><select class="impact-select" id="impact-release-select">${releases.slice().reverse().map(r=>`<option value="${e(r.hash)}" ${r.hash===hash?'selected':''}>${e(r.tag)} · ${e(shortDate(r.date))} · ${r.published?'GitHub published':'Git tag'} · ${e(typeLabel(r.transition))}</option>`).join('')}</select>`;
 }
 
 function impactCommits(commits) {
@@ -153,19 +195,23 @@ export function impactReleaseDetail(release, referenceLabel, metric) {
   const kinds=Object.entries(f.kindCounts).filter(([,count])=>count).sort((a,b)=>b[1]-a[1]);
   const categories=kinds.map(([kind,count])=>`<div class="impact-kind-row"><span>${e(kind)}</span><div><i style="width:${f.commits?100*count/f.commits:0}%"></i></div><strong>${amount(count)}</strong></div>`).join('');
   const next=release.nextTagFootprint;
-  return `<div class="impact-release-head"><div><div class="impact-date">${e(shortDate(release.date))} · ${e(release.timeSource==='tagger'?'Annotated tag · tagger date':release.timeSource==='tagged-commit'?'Lightweight tag · commit date':'Approximate commit date')}</div>
+  return `<div class="impact-release-head"><div><div class="impact-date">${e(shortDate(release.date))} · ${e(releaseClock(release))}</div>
     <h5>${e(release.tag)} <span class="impact-kind-badge" style="--kind:${color(release.transition)}">${e(typeLabel(release.transition))}</span></h5>
     <p>${release.previousTag?`Introduced after <strong>${e(release.previousTag)}</strong>`:'First tagged snapshot on this lineage. Includes all reachable prior history, not one release-sized increment.'}
     ${release.aliases.length>1?` · Alias tags: ${release.aliases.map(e).join(', ')}`:''}</p>
-    ${!release.lineageComplete?'<p class="impact-warning">Incomplete parent history: imported commit ancestry does not establish this release difference completely.</p>':''}</div></div>
+    ${!release.lineageComplete?'<p class="impact-warning">Incomplete parent history: imported commit ancestry does not establish this release difference completely.</p>':''}
+    ${release.chronologyWarning?'<p class="impact-warning">Publication dates do not follow code ancestry for this lineage. Git ancestry still determines introduced changes.</p>':''}</div>
+    <div class="impact-release-driver"><span>RELEASE DRIVER · ASSUMED</span><strong>${e(driverText(release))}</strong><small>${release.published?'GitHub published release':release.githubDraft?'Draft GitHub Release; tag remains Git-only evidence':'Tag metadata'}</small></div></div>
+    ${release.github?`<div class="impact-release-notes"><div><span class="impact-gh-mark">GITHUB RELEASE</span>${release.github.url?`<a href="${e(release.github.url)}" target="_blank" rel="noopener noreferrer">Open on GitHub ↗</a>`:''}</div><strong>${e(release.github.title||release.tag)}</strong>${release.github.notes?`<details><summary>Read release notes</summary><div class="impact-notes-text">${e(release.github.notes.slice(0,6000))}${release.github.notes.length>6000?'\n… truncated in this view; open GitHub for full notes.':''}</div></details>`:'<p>No release notes supplied.</p>'}</div>`:''}
     <div class="impact-detail-facts">
     <div><span>SCOPED COMMITS</span><strong>${amount(f.commits)}</strong><small>${amount(release.eligibleIntroduced)} eligible · ${amount(release.totalIntroduced)} DAG-introduced before filters</small></div>
     <div><span>DISTINCT PATHS</span><strong>${amount(f.pathsCount)}</strong><small>${amount(f.areasCount)} top-level areas</small></div>
     <div><span>LINE CHURN</span><strong>${amount(f.churn)}</strong><small>+${amount(f.additions)} / −${amount(f.deletions)}</small></div>
     <div><span>TEST ACCOMPANIMENT</span><strong>${p(f.testAccompaniment)}</strong><small>Code-touching commits also touching test paths</small></div>
     <div><span>VERSION TOUCHES</span><strong>${amount(f.versionTouches)}</strong><small>Independent supporting signal</small></div>
-    <div><span>AUTHOR → TAG</span><strong>${release.leadDays==null?'—':`${n.format(release.leadDays)}d`}</strong><small>Median elapsed days · not delivery lead time</small></div>
+    <div><span>AUTHOR → RELEASE EVENT</span><strong>${release.leadDays==null?'—':`${n.format(release.leadDays)}d`}</strong><small>Median elapsed days · not delivery lead time</small></div>
     </div>
+    <div class="impact-release-people"><h6>Who contributed to this release? <small>Filtered authored commits · publisher role is separate</small></h6><div class="impact-release-people-grid">${release.cells.filter(c=>c.drove || c.footprint.commits).map(c=>`<div class="impact-release-person"><div><strong>${e(c.name)}</strong>${c.drove?'<span class="impact-role-driver">DRIVER</span>':''}</div><p>${amount(c.footprint.commits)} shipped commits · ${p(c.share)} of reference</p><small>${amount(c.footprint.pathsCount)} paths · ${amount(c.footprint.areasCount)} areas · ${p(c.footprint.testAccompaniment)} test accompaniment</small></div>`).join('')||'<p class="impact-muted">No matching contributors in the selected scope.</p>'}</div></div>
     <div class="impact-release-columns"><div><h6>Changes by category <small>Subject heuristics</small></h6>${categories||'<p>None in scope</p>'}</div>
     <div><h6>Later change to touched paths</h6><p class="impact-muted">Reference: ${e(referenceLabel)} · Paths can be revisited for good reasons.</p>
       <div class="impact-revisit-fact"><strong>${next?.share==null?'—':p(next.share)}</strong><span>${next?`${amount(next.count)} of ${amount(f.pathsCount)} paths revisited by ${e(release.nextTag)} relative to this tag`:'No subsequent descendant tag in imported history'}</span></div>
@@ -183,10 +229,10 @@ export function impactReleaseMatrix(model, expanded=false) {
   const scale=makeIntensityScale(releases.flatMap(r=>r.cells.map(c=>c?.value)));
   return `<p class="impact-muted">Each cell is ${e(labels.toLowerCase())} by a selected contributor, within a tagged release and the global authored-date/commit-policy scope. The reference for shares is <strong>${e(model.referenceLabel)}</strong>. Distinct paths/areas can overlap across people.</p>
     <div class="impact-matrix-scroll"><table class="impact-matrix"><thead><tr><th>CONTRIBUTOR</th>${releases.map(r=>`<th><span class="impact-matrix-version">${e(r.tag)}</span><small>${e(r.date||'—')}</small></th>`).join('')}</tr></thead><tbody>
-    ${people.map((person,i)=>`<tr><th title="${e(person.name)}">${e(person.name)}</th>${releases.map(r=>{const cell=r.cells[i];const value=cell?.value;const tooltip=`${person.name} · ${r.tag}: ${humanMetric(value,model.metric)} ${labels}`;return `<td><button type="button" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-matrix-cell" style="${intensityStyle(value,scale)}" title="${e(tooltip)}" aria-label="${e(tooltip)}. Open release detail">${humanMetric(value,model.metric)}</button></td>`;}).join('')}</tr>`).join('')}
+    ${people.map((person,i)=>`<tr><th title="${e(person.name)}">${e(person.name)}</th>${releases.map(r=>{const cell=r.cells[i];const value=cell?.value;const tooltip=`${person.name} · ${r.tag}: ${humanMetric(value,model.metric)} ${labels}${cell?.drove?' · drove release':''}`;return `<td><button type="button" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-matrix-cell ${cell?.drove?'impact-matrix-driver':''}" style="${intensityStyle(value,scale)}" title="${e(tooltip)}" aria-label="${e(tooltip)}. Open release detail">${humanMetric(value,model.metric)}${cell?.drove?'<span class="impact-matrix-driver-mark" aria-hidden="true">D</span>':''}</button></td>`;}).join('')}</tr>`).join('')}
     </tbody></table></div>
     <div class="impact-colour-key">${intensityLegend(scale,x=>model.metric==='share'?`${precise(x)}%`:precise(x),{missing:true})}</div>
-    <p class="impact-muted">${releases.length}${!expanded&&all.length>18?` of ${all.length}`:''} tagged releases. One positive-intensity scale across displayed contributors and releases; unavailable shares are hatched, not zero.</p>`;
+    <p class="impact-muted">${releases.length}${!expanded&&all.length>18?` of ${all.length}`:''} tagged releases. One positive-intensity scale across displayed contributors and releases; D marks a verified/matched driver role, independently of authored contribution. Unavailable shares are hatched, not zero.</p>`;
 }
 
 export function impactReach(model, areaMode='touches') {

@@ -6,8 +6,8 @@ const dayStart = date => {
   const value = Date.parse(`${date}T00:00:00Z`);
   return Number.isFinite(value) && new Date(value).toISOString().slice(0,10) === date ? value : null;
 };
-// Release comparisons are by the recorded tag calendar date, not a UTC day
-// inferred from its timestamp (which can fall on the preceding day).
+// Release positions use their recorded event calendar date (GitHub publication
+// when present, otherwise the tag/date fallback), not an inferred UTC day.
 export const impactReleasePosition = release => {
   const localDay = dayStart(release.date);
   return localDay===null ? (Number.isFinite(release.timestamp)?release.timestamp:null) : localDay + DAY/2;

@@ -10,25 +10,25 @@ From this directory, serve the static app with:
 python3 -m http.server 8000
 ```
 
-Open `http://localhost:8000` and choose **Explore demo dataset**, or use the generated `git log` command inside a Git repository. Confirm/merge contributor identities, then build the dashboard. Use **Add identities** on a contributor to open a searchable multi-selector, tick as many Git author emails as needed (including identities currently under other names), and **Move identities** to apply the batch. The picker previews affected commits and source groups; you can cancel, press Escape, or undo the most recent move. Splitting identities still works independently. The example command uses macOS `pbcopy`; on other systems, remove that final pipe and paste the result yourself.
+Open `http://localhost:8000` and choose **Explore demo dataset**, or use the generated `git log` command inside a Git repository. Confirm/merge contributor identities, then build the dashboard. Use **Add identities** on a contributor to open a searchable multi-selector, tick as many Git author emails as needed (including identities currently under other names), and **Move identities** to apply the batch. The picker previews affected commits and source groups; you can cancel, press Escape, or undo the most recent move. Splitting identities still works independently. The standard command uses macOS `pbcopy` and GitHub CLI (`gh`); on other systems remove the final pipe and copy the output yourself. All imported records, GitHub Release notes, and session exports remain local to your browser unless you choose to share them.
 
 **Authored, not committed:** The generated command uses `%aI` (author timestamp), `%an` (author name) and `%ae` (author email). It intentionally **does not use `git log --since`**, which prunes using committer dates and can silently omit old-authored commits that were rebased/cherry-picked recently. Instead, it imports all history reachable from the current branch and tags and applies the **Initially show: 1–5 years** lookback *in the browser*, anchored to the most recent imported authored date. The scope's `All imported dates` preset remains available. For very large repositories this can produce substantial output, but avoids biasing the historical comparisons. To include commits reachable only from other branches, use `git log --all` in place of `git log HEAD --tags`; branches not included in the log cannot be analysed. The import also captures `%cI` to support follow-up evidence, without changing the author-time filtering.
 
-**Capture command display and cache safety:** The current `TAG|…` + `COMMIT|…` capture command is printed directly inside the **Load repository history** panel and can be selected even if JavaScript fails. The Copy command button copies that exact text. Changing **Initially show** no longer modifies the capture command; it changes the dashboard's initial date filter only. CSS, the application entry point, and its ES-module imports have matching versioned URLs to prevent mixing a newer HTML document with older cached behaviour/Impact assets. When deploying future revisions without a build pipeline, advance the version query token consistently across those imports and `index.html`. If an older deployment appears to lack the new Impact sections, reload the document without cache. The Impact panel now displays a startup or error message rather than an unexplained blank chart.
+**Capture command display and cache safety:** The current `TAG|…` + optional base64-encoded `GHRELEASE|…` + `COMMIT|…` capture command is printed directly inside the **Load repository history** panel and can be selected even if JavaScript fails. The Copy command button copies that exact text. Changing **Initially show** no longer modifies the capture command; it changes the dashboard's initial date filter only. CSS, the application entry point, and its ES-module imports have matching versioned URLs to prevent mixing a newer HTML document with older cached behaviour/Impact assets. When deploying future revisions without a build pipeline, advance the version query token consistently across those imports and `index.html`. If an older deployment appears to lack the new Impact sections, reload the document without cache. The Impact panel now displays a startup or error message rather than an unexplained blank chart.
 
-No build, install, backend, API key, or CDN for JavaScript is needed. The optional Google Fonts request can fall back to local fonts offline.
+No build, install, backend, API key, or CDN for the browser application is needed. The optional Google Fonts request can fall back to local fonts offline. The **capture command** calls an authenticated local GitHub CLI when installed; credentials are handled by `gh`, not by git:signals.
 
-## Git-only Impact Explorer: tag-first delivery evidence
+## Git + GitHub Impact Explorer: tag-first delivery evidence
 
-**Source of truth:** Git tags are the primary release events. Neither a merge
-commit nor a `VERSION` edit is required. VERSION file touches are rendered as
+**Source of truth:** Git tags are the primary release **code boundaries**. Published GitHub Releases enrich those boundaries with the GitHub publication timestamp, title, publisher account, notes and URL. GitHub's `created_at` is **not** treated as a release date. Missing/draft GitHub Releases leave the Git-only tag evidence intact. `release publisher = assumed driver` is a stated **assumption**, not proof of deployment responsibility. No commit author is automatically equated to a GitHub login. The **People & releases** view provides a deliberate publisher → Git author identity matcher; matching persists in exported sessions, by author email, across identity merges.
+
+Neither a merge commit nor a `VERSION` edit is required. VERSION file touches are rendered as
 secondary, sometimes spurious signals. The importer now captures *all tag refs*
 and commits reachable from `HEAD` **or any tag**, including parent hashes,
 author time and committer time. It handles lightweight and annotated tags:
 
-- **Annotated tag:** tagger date is the release-event date (not a verified deployment time).
-- **Lightweight tag:** Git does not preserve tag-creation time, so we explicitly
-  label the tagged commit's **committer date as an approximation**.
+- **Annotated tag:** tagger date is the fallback release-event date if no published GitHub Release exists (not a verified deployment time).
+- **Lightweight tag:** Git does not preserve tag-creation time or tagger identity, so in the absence of a published GitHub Release we explicitly label the tagged commit's **committer date as an approximation**.
 - **Multiple names at one commit:** collapsed into one release snapshot, with
   alias tags visible on inspection. SemVer-shaped names (including `v8.9.1`)
   classify major/minor/patch/pre-release *transitions*; other tags remain
@@ -36,20 +36,21 @@ author time and committer time. It handles lightweight and annotated tags:
   amount of impact. Non-monotonic versions and divergent branches are marked.
 - **Membership:** for each tagged commit, compare the commits reachable from it
   against those reachable from its nearest preceding tagged ancestor. This
-  works with fast-forward, squash and multi-parent merge history. A squash
+  works with fast-forward, squash and multi-parent merge history. Release
+  publications can occur out of chronological order; Git ancestry takes
+  precedence when choosing an earlier code baseline. A squash
   merge only exposes the resulting commit's recorded author; the original
   unreachable commits and unimported co-author trailers cannot be credited. An initial
   lineage tag is a **baseline snapshot**, not an individual release increment.
   If parents are missing (shallow/incomplete import), the UI warns and does not
   claim fully observed follow-up.
 
-The tag events displayed use **tag dates within the global date window**.
+Release events displayed use **GitHub published dates when available**, otherwise tagger dates (annotated tags), or tagged-commit committer dates (lightweight tag approximation).
 The contributors, dates and merge/revert policy applied to release evidence are
 precisely those used by every other visualisation: *commit attribution is by
 **author date***. These two clocks are shown explicitly. In particular, a
 commit authored months before a release is not reclassified as work authored
-on the release date. If a recent tag is dated after the last authored commit,
-extend the global end date to see that event.
+on the release date. The initial and available date bounds include imported GitHub publication dates for matched tag names; a release published after the newest authored commit is not silently excluded.
 
 The four connected perspectives are:
 
@@ -74,7 +75,7 @@ The four connected perspectives are:
    to the selected marker. The current timeline view is saved in session
    exports. Authored-activity bars are reaggregated from daily commits so
    partial-month zooms never show whole-month totals.
-2. **People × releases:** consistent contributor-by-release matrix. Only the
+2. **People & releases:** consistent contributor-by-release matrix. Only the
    globally selected contributors are rows. Percentages are scoped to the
    globally chosen reference group, not the whole repo unless requested.
    Clicking a cell opens that release's full evidence.
@@ -103,8 +104,15 @@ signals are imperfect, particularly when tests are committed separately.
 ### Import compatibility and repository scope
 
 The generated command is POSIX-shell compatible and produces a compact text
-stream with `TAG|...` records followed by `COMMIT|...` and Git `--numstat`
-records. It uses `git log HEAD --tags` to cover the current branch and tagged
+stream of `TAG|...` records, optional `GHRELEASE|<base64 UTF-8 JSON>` and
+`GHSTATUS|...` records, followed by `COMMIT|...` and Git `--numstat` records.
+It attempts `git fetch origin --tags` first, then calls `gh api --paginate`
+with `GH_REPO` taken explicitly from the GitHub `origin` remote. Run `gh auth login`
+first to access private repositories. Failures to fetch or to reach GitHub leave
+locally available tags and commits usable, with source status displayed.
+GitHub notes are UTF-8/base64 encoded before being pasted, so arbitrary
+newlines and `|` separators cannot corrupt the commit parser. The dashboard
+never calls GitHub from JavaScript or requires authentication tokens. It uses `git log HEAD --tags` to cover the current branch and tagged
 histories, not every unmerged local branch. To capture other branches, change
 that portion to `git log --all ...`; doing so also changes the repository
 activity cohort. Remove `| pbcopy` to print output to a terminal or pipe it to
@@ -114,9 +122,32 @@ Older COMMIT-only logs and v1/v2 session exports still import and retain all
 legacy activity visualisations. An old import without TAG records shows a
 clear Impact Explorer re-import prompt rather than fabricated releases.
 Export/import includes the selected impact tab, release, matrix measure,
-area-mode, expanded-tag presentation and timeline window/zoom. **Do not use any of these metrics to
+area-mode, expanded-tag presentation and timeline window/zoom, plus the
+explicit GitHub publisher → contributor mappings and focused impact contributor. **Do not use any of these metrics to
 rank employees by productivity.** Git alone cannot measure customer value,
 production adoption, review effort or engineering correctness.
+
+### Individual release impact
+
+The **People & releases** tab separates **releases driven** (GitHub publishers
+explicitly matched to Git author groups, or annotated tagger email fallback)
+from **releases contributed to** (author-date scoped commits introduced by a
+release's tagged Git graph boundary). A person may occupy both roles, neither,
+or just one. It shows distinct releases, the overlap of both roles, released
+commits deduplicated across branches, median per-release commit share and
+codebase reach. The release matrix displays driver badges independently of the
+numeric metric, so a release driver with zero authored commits still appears.
+The release inspector shows publisher identity, publication time, title,
+notes, a safe GitHub link, and per-person shipped change evidence.
+
+**Caveats:** Publishing a GitHub Release does not establish who tagged it,
+approved or deployed it; bots can publish releases. Annotated-tag email is a
+fallback, and lightweight Git tags cannot identify who created them. A release
+record without an imported tag cannot establish a code boundary and is shown
+as unmatched metadata, not a reconstructed release. Baseline tags include
+reachable prior history, not just a release-sized increment. Shares and lead
+times always use the existing contributor/date/merge/revert/reference scope.
+No combined impact score is calculated.
 
 ## Consistent selection model
 

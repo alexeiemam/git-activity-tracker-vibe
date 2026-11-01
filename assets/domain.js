@@ -56,15 +56,57 @@ export function dayOfWeek(date) {
  * backwards-compatible with the original COMMIT|...|subject[|parents] rows.
  * TAG rows are metadata, not commits. Do not fabricate tag dates or ancestry.
  */
+/** GitHub Release metadata arrives as base64 UTF-8 JSON, one record per line.
+ * Notes may contain newlines, vertical bars and Unicode; never split that JSON.
+ * Git tags/ancestry remain independent of this optional enrichment.
+ */
+export function decodeGithubRelease(value) {
+  if (typeof value !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(value) || value.length > 4_000_000) return null;
+  try {
+    const binary = atob(value);
+    const json = new TextDecoder('utf-8', {fatal:true}).decode(Uint8Array.from(binary, char => char.charCodeAt(0)));
+    const item = JSON.parse(json);
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+    const tag = String(item.tag_name || '').trim();
+    if (!tag || tag.length > 300) return null;
+    const publishedText = String(item.published_at || '');
+    const publishedAt = publishedText && Number.isFinite(Date.parse(publishedText)) ? Date.parse(publishedText) : null;
+    const login = typeof item.author?.login === 'string' ? item.author.login.trim() : '';
+    return {
+      tag, title:String(item.name || '').slice(0,400), notes:String(item.body || '').slice(0,120_000),
+      publisher:login.slice(0,150), publisherType:String(item.author?.type || '').slice(0,40),
+      publishedAt, publishedDate:publishedAt===null?null:new Date(publishedAt).toISOString().slice(0,10),
+      draft:item.draft === true, prerelease:item.prerelease === true,
+      url:typeof item.html_url === 'string' && /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/releases\/tag\//i.test(item.html_url) ? item.html_url.slice(0,2000) : null,
+    };
+  } catch { return null; }
+}
+
 export function parseGitHistory(raw) {
   const commits = [];
   const tags = [];
+  const githubReleases = [];
+  const captureWarnings = [];
+  let githubStatus = 'not-captured';
   let current = null;
   const flush = () => { if (current) commits.push(current); current = null; };
 
   for (const original of String(raw || '').split(/\r?\n/)) {
     const line = original.trim();
     if (!line) continue;
+    if (line.startsWith('GHRELEASE|')) {
+      flush();
+      const record=decodeGithubRelease(line.slice('GHRELEASE|'.length));
+      if(record) githubReleases.push(record);
+      else captureWarnings.push('A GitHub Release metadata record could not be decoded.');
+      continue;
+    }
+    if (line.startsWith('GHSTATUS|')) {
+      flush();
+      const status=line.slice('GHSTATUS|'.length);
+      if (['ok','unavailable','missing-cli','unsupported-origin'].includes(status)) githubStatus=status;
+      continue;
+    }
     if (line.startsWith('TAG|')) {
       flush();
       const parts = line.split('|');
@@ -78,7 +120,10 @@ export function parseGitHistory(raw) {
         taggedAt: Number.isFinite(Date.parse(timeText)) ? Date.parse(timeText) : null,
         taggedDate: validDate(timeText.slice(0, 10)) ? timeText.slice(0, 10) : null,
         timestampSource: objectType === 'tag' ? 'tagger' : 'tagged-commit',
-        annotated: objectType === 'tag' });
+        annotated: objectType === 'tag',
+        taggerName:objectType === 'tag' ? String(parts[6] || '').trim() : '',
+        taggerEmail:objectType === 'tag' ? String(parts[7] || '').trim().replace(/^<|>$/g,'').toLowerCase() : '',
+      });
       continue;
     }
     if (line.startsWith('COMMIT|')) {
@@ -134,7 +179,7 @@ export function parseGitHistory(raw) {
     return true;
   });
   if (!unique.length) throw new Error('No dated commits found. Use the generated git log command.');
-  return { commits: unique, tags: tags.filter(t => t.name) };
+  return { commits: unique, tags: tags.filter(t => t.name), githubReleases, githubStatus, captureWarnings };
 }
 
 export function parseGitLog(raw) { return parseGitHistory(raw).commits; }
@@ -167,11 +212,16 @@ export function getDateBounds(commits) {
 
 /** Shared calendar scope spans authored commits AND the Git tag events being
  * visualised. This does not change the author-based attribution of commits. */
-export function getHistoryDateBounds(commits, tags = []) {
+export function getHistoryDateBounds(commits, tags = [], githubReleases = []) {
   const bounds=getDateBounds(commits);
   for (const tag of tags) if (validDate(tag.taggedDate)) {
     if (!bounds.min || tag.taggedDate < bounds.min) bounds.min=tag.taggedDate;
     if (!bounds.max || tag.taggedDate > bounds.max) bounds.max=tag.taggedDate;
+  }
+  const knownTags=new Set(tags.map(t=>t.name));
+  for(const release of githubReleases) if (!release.draft && release.publishedDate && knownTags.has(release.tag)) {
+    if (!bounds.min || release.publishedDate < bounds.min) bounds.min=release.publishedDate;
+    if (!bounds.max || release.publishedDate > bounds.max) bounds.max=release.publishedDate;
   }
   return bounds;
 }

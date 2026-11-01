@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=contrast-20261031-5">
+  <link rel="stylesheet" href="./assets/app.css?v=github-releases-20261101-1">
 </head>
 <body>
   <div class="page">
@@ -30,10 +30,33 @@
         <summary><span class="source-heading"><span class="step-dot">01</span> <strong id="source-title">Load repository history</strong> <span class="subtle" id="source-status">Paste git log output, or try the demo.</span></span><span class="summary-chevron" aria-hidden="true">⌄</span></summary>
         <div class="source-content">
           <div class="source-topline"><label for="range-select">Initially show</label><select id="range-select" aria-label="Initial authored-date window"><option value="1">1 year</option><option value="2">2 years</option><option value="3" selected>3 years</option><option value="4">4 years</option><option value="5">5 years</option></select><span class="helper">Import full reachable history. Start by viewing the latest <strong>authored</strong> years; change dates in the dashboard.</span></div>
-          <div class="command-row"><span class="terminal-mark">$</span><code id="git-cmd">(git for-each-ref --format="TAG|%(refname:short)|%(*objectname)|%(objectname)|%(objecttype)|%(creatordate:iso-strict)" refs/tags; git log HEAD --tags --pretty=format:"COMMIT|%H|%ae|%an|%aI|%cI|%s|%P" --numstat) | pbcopy</code><button type="button" data-action="copy-command" class="command-copy">Copy command</button></div>
-          <p class="input-hint">Run inside your repository and paste its output below. No committer-date cutoff is applied: older authored changes remain available even if rebased recently. Merge commits are captured so you can include or exclude them later. The command uses macOS <code>pbcopy</code>; on other systems, remove the final pipe and copy terminal output.</p>
-          <label class="field-label" for="log-input">Git log output</label>
-          <textarea id="log-input" placeholder="TAG|v8.9.1||hash|commit|2026-10-01T09:12:00+01:00&#10;COMMIT|hash|email|name|author-time|committer-time|subject|parents&#10;25  8  app/models/example.rb" spellcheck="false"></textarea>
+          <div class="command-row"><span class="terminal-mark">$</span><code id="git-cmd">(
+  if ! git fetch origin --tags --quiet; then echo "Note: origin tag fetch failed; using locally available tags." &gt;&amp;2; fi
+  git for-each-ref --format='TAG|%(refname:short)|%(*objectname)|%(objectname)|%(objecttype)|%(creatordate:iso-strict)|%(taggername)|%(taggeremail:trim)' refs/tags
+  origin="$(git remote get-url origin 2&gt;/dev/null || :)"
+  case "$origin" in
+    git@github.com:*) repo="${origin#git@github.com:}" ;;
+    https://github.com/*) repo="${origin#https://github.com/}" ;;
+    ssh://git@github.com/*) repo="${origin#ssh://git@github.com/}" ;;
+    *) repo='' ;;
+  esac
+  repo="${repo%.git}"
+  if [ -z "$repo" ]; then
+    printf 'GHSTATUS|unsupported-origin\n'
+  elif ! command -v gh &gt;/dev/null 2&gt;&amp;1; then
+    printf 'GHSTATUS|missing-cli\n'
+  elif release_rows="$(GH_REPO="$repo" gh api --paginate 'repos/{owner}/{repo}/releases?per_page=100' --jq '.[] | @base64')"; then
+    if [ -n "$release_rows" ]; then printf '%s\n' "$release_rows" | sed 's/^/GHRELEASE|/'; fi
+    printf 'GHSTATUS|ok\n'
+  else
+    printf 'GHSTATUS|unavailable\n'
+    echo 'Note: GitHub Releases unavailable; captured Git tags and commits remain usable.' &gt;&amp;2
+  fi
+  git log HEAD --tags --pretty=format:'COMMIT|%H|%ae|%an|%aI|%cI|%s|%P' --numstat
+) | pbcopy</code><button type="button" data-action="copy-command" class="command-copy">Copy command</button></div>
+          <p class="input-hint">Run inside your repository. This fetches tags from <code>origin</code>, adds GitHub Releases via authenticated <code>gh</code> (when available), and copies commit history without a committer-date cutoff. No GitHub token or API response is sent to git:signals; the import stays in your browser. The command uses macOS <code>pbcopy</code>; on other systems, remove the final pipe and copy terminal output.</p>
+          <label class="field-label" for="log-input">Git history + optional GitHub Releases output</label>
+          <textarea id="log-input" placeholder="TAG|v8.9.1||hash|commit|2026-10-01T09:12:00+01:00&#10;GHRELEASE|base64-encoded-GitHub-Release-metadata&#10;COMMIT|hash|email|name|author-time|committer-time|subject|parents&#10;25  8  app/models/example.rb" spellcheck="false"></textarea>
           <div class="source-actions"><button type="button" data-action="analyse" class="button primary">Analyse history <span aria-hidden="true">→</span></button><button type="button" data-action="load-demo" class="button soft">Explore demo dataset</button><span id="parse-error" class="error-text" role="alert" aria-live="polite"></span></div>
         </div>
       </details>
@@ -129,12 +152,13 @@
           <div id="impact-empty" role="status" aria-live="polite"><div class="impact-empty"><strong>Preparing release intelligence…</strong><p>If this remains visible after the dashboard loads, its JavaScript may not have initialised. Refresh the page to load the latest assets.</p></div></div>
           <div id="impact-panels" hidden>
             <div id="impact-summary"></div>
+            <div id="impact-github-status" class="impact-gh-status" role="status"></div>
             <div class="impact-scope" id="impact-scope"></div>
-            <div class="impact-block-heading"><div><span class="eyebrow">01 / THE IMPACT TIMELINE</span><h4>Delivery, over time.</h4><p>Tag events locate releases; ancestry identifies the changes introduced. VERSION edits remain supporting signals.</p></div><div class="impact-release-settings"><div id="impact-release-control" class="impact-release-control"></div><div class="impact-toolbar" id="impact-matrix-toolbar"><label for="impact-metric-select">TIMELINE + MATRIX MEASURE</label><select id="impact-metric-select" class="impact-select"><option value="commits">Commits</option><option value="share">Commit share</option><option value="churn">Line churn</option><option value="paths">Distinct paths</option><option value="areas">Codebase areas</option></select></div></div></div>
-            <div id="impact-timeline" aria-label="Tag-dated releases by contributed commits"></div>
+            <div class="impact-block-heading"><div><span class="eyebrow">01 / THE IMPACT TIMELINE</span><h4>Delivery, over time.</h4><p>Git tags define release contents; GitHub publication dates locate published Releases. VERSION edits remain supporting signals.</p></div><div class="impact-release-settings"><div id="impact-release-control" class="impact-release-control"></div><div class="impact-toolbar" id="impact-matrix-toolbar"><label for="impact-metric-select">TIMELINE + MATRIX MEASURE</label><select id="impact-metric-select" class="impact-select"><option value="commits">Commits</option><option value="share">Commit share</option><option value="churn">Line churn</option><option value="paths">Distinct paths</option><option value="areas">Codebase areas</option></select></div></div></div>
+            <div id="impact-timeline" aria-label="Release events by scoped authored contributions"></div>
             <div class="impact-tabs" role="group" aria-label="Impact analysis perspective">
               <button type="button" class="impact-tab is-active" data-action="impact-tab" data-impact-tab="timeline" aria-pressed="true">Release detail</button>
-              <button type="button" class="impact-tab" data-action="impact-tab" data-impact-tab="matrix" aria-pressed="false">People × releases</button>
+              <button type="button" class="impact-tab" data-action="impact-tab" data-impact-tab="matrix" aria-pressed="false">People &amp; releases</button>
               <button type="button" class="impact-tab" data-action="impact-tab" data-impact-tab="reach" aria-pressed="false">Codebase reach</button>
               <button type="button" class="impact-tab" data-action="impact-tab" data-impact-tab="durability" aria-pressed="false">Change evolution</button>
             </div>
@@ -142,7 +166,7 @@
               <div class="impact-toolbar" id="impact-area-toolbar" hidden><span class="helper">SHOW AREA ACTIVITY AS</span><div class="segmented" role="group" aria-label="Codebase reach measure"><button type="button" class="segment active" data-action="impact-area-mode" data-impact-area-mode="touches" aria-pressed="true">File touches</button><button type="button" class="segment" data-action="impact-area-mode" data-impact-area-mode="within" aria-pressed="false">Within-person %</button></div></div>
             </div>
             <div id="impact-content" aria-live="polite"></div>
-            <p class="impact-footnote">The date scope is shared: contribution counts use <strong>authored dates</strong>, while release events use <strong>tag dates</strong>. Tagged release contents are reconstructed from the Git ancestry graph, independent of merge commits or VERSION changes. File revisitation, test accompaniment, codebase breadth and commit-subject categories are <strong>proxies</strong>, not proof of value, production deployment, code quality or hours worked.</p>
+            <p class="impact-footnote">For GitHub-published releases, the publication timestamp locates the event and the publisher is an <em>assumed</em> release driver; the publisher is not proof of who deployed. Lightweight Git tags have no tagger identity. Explicit publisher-to-author mapping is required before driver counts are assigned. The date scope is shared: contribution counts use <strong>authored dates</strong>, while release events use <strong>GitHub publication dates when available</strong> (otherwise annotated-tag or tagged-commit dates). Tagged release contents are reconstructed from the Git ancestry graph, independent of merge commits or VERSION changes. File revisitation, test accompaniment, codebase breadth and commit-subject categories are <strong>proxies</strong>, not proof of value, production deployment, code quality or hours worked.</p>
           </div>
         </div>
       </section>
@@ -157,6 +181,6 @@
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=contrast-20261031-5"></script>
+  <script type="module" src="./assets/app.js?v=github-releases-20261101-1"></script>
 </body>
 </html>

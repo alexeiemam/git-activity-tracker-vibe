@@ -1,12 +1,13 @@
 /**
  * Git-only delivery evidence. Author dates define the dashboard's contributor
- * scope; tag (or tagged-commit) dates locate releases. Release membership is
+ * scope; GitHub publication dates locate published releases, with tag or
+ * tagged-commit dates as fallbacks. Release membership is
  * commit DAG reachability, never the author date or a VERSION-file edit.
  *
  * No line-level survival, deploy date, customer value, or team productivity is
  * inferred from numstat; file revisitation is explicitly a proxy.
  */
-import { fileArea } from './domain.js?v=contrast-20261031-5';
+import { fileArea } from './domain.js?v=github-releases-20261101-1';
 
 export const IMPACT_METRICS = Object.freeze({
   commits: 'Commits', churn: 'Line churn', paths: 'Distinct paths', areas: 'Codebase areas', share: 'Commit share',
@@ -138,7 +139,7 @@ function canonicalTag(tags) {
   })[0];
 }
 
-function nearestTagAncestor(hash, releaseByHash, graph, timestamp) {
+function nearestTagAncestor(hash, releaseByHash, graph) {
   const start=graph.byHash.get(hash);
   if (!start?.parentsKnown) return null;
   // Prefer the release line's first-parent chain: the closest tag on a
@@ -150,7 +151,7 @@ function nearestTagAncestor(hash, releaseByHash, graph, timestamp) {
   while(mainline && !mainlineSeen.has(mainline)) {
     mainlineSeen.add(mainline);
     const candidate=releaseByHash.get(mainline);
-    if(candidate && (timestamp==null || candidate.timestamp==null || candidate.timestamp<=timestamp)) return candidate;
+    if(candidate) return candidate;
     const parent=graph.byHash.get(mainline);
     if(!parent?.parentsKnown) break;
     mainline=parent.parents[0];
@@ -163,7 +164,7 @@ function nearestTagAncestor(hash, releaseByHash, graph, timestamp) {
     if(visited.has(item.hash)) continue;
     visited.add(item.hash);
     const candidate=releaseByHash.get(item.hash);
-    if(candidate && (timestamp==null || candidate.timestamp==null || candidate.timestamp<=timestamp)) {
+    if(candidate) {
       if(!nearest || item.depth<nearestDepth || candidate.timestamp>nearest.timestamp) {
         nearest=candidate;nearestDepth=item.depth;
       }
@@ -215,6 +216,17 @@ function followUpInWindow(release, descendants, referenceCommits, days, knownEnd
  */
 export function impactAnalysis(view, allCommits, rawTags, options={}) {
   const metric=IMPACT_METRICS[options.metric] ? options.metric : 'commits';
+  const githubReleases=Array.isArray(options.githubReleases) ? options.githubReleases : [];
+  const githubByTag=new Map(githubReleases.filter(item=>item?.tag).map(item=>[item.tag,item]));
+  // GitHub logins cannot safely be inferred from Git author names/emails.
+  // Explicit mappings store a canonical author email so group merges remain valid.
+  const actorMap=options.actorMap && typeof options.actorMap==='object' ? options.actorMap : {};
+  const groupForEmail=email=>view.allContributors.find(group=>group.emails.includes(String(email||'').toLowerCase())) || null;
+  const mappedActor=login=>{
+    const key=String(login||'').toLowerCase();
+    const email=Object.hasOwn(actorMap,key) ? actorMap[key] : null;
+    return email ? groupForEmail(email) : null;
+  };
   const days=FOLLOWUP_WINDOWS.includes(options.followupDays) ? options.followupDays : 90;
   const graph=createGraph(allCommits);
   const scopedByHash=new Map(view.eligibleCommits.map(c=>[c.hash,c]));
@@ -228,13 +240,28 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
     tagGroups.get(tag.hash).push(tag);
   }
   const releases=[...tagGroups].map(([hash,tags])=>{
-    const main=canonicalTag(tags);
+    // Prefer a GitHub-published tag over alias tags on the same commit.
+    const publishedTags=tags.filter(tag=>{
+      const gh=githubByTag.get(tag.name);
+      return gh && !gh.draft && gh.publishedAt!=null;
+    });
+    const main=canonicalTag(publishedTags.length ? publishedTags : tags);
+    const github=githubByTag.get(main.name) || tags.map(t=>githubByTag.get(t.name)).find(Boolean) || null;
+    const published=!!github && !github.draft && github.publishedAt!=null;
     const commit=graph.byHash.get(hash);
-    const timestamp=main.taggedAt ?? commit?.committedAt ?? null;
-    const date=timestamp==null?null:(main.taggedAt!=null?main.taggedDate:new Date(timestamp).toISOString().slice(0,10));
+    const timestamp=published ? github.publishedAt : main.taggedAt ?? commit?.committedAt ?? null;
+    const date=timestamp==null?null:(published ? github.publishedDate : main.taggedAt!=null ? main.taggedDate : new Date(timestamp).toISOString().slice(0,10));
+    const login=published ? github.publisher : '';
+    const publisherGroup=login ? mappedActor(login) : null;
+    const taggerGroup=!login && main.taggerEmail ? groupForEmail(main.taggerEmail) : null;
+    const driver=login ? {source:'github-publisher',login,name:login,groupId:publisherGroup?.id??null,groupName:publisherGroup?.displayName??null}
+      : main.taggerEmail ? {source:'annotated-tagger',login:null,name:main.taggerName||main.taggerEmail,groupId:taggerGroup?.id??null,groupName:taggerGroup?.displayName??null}
+      : {source:'unknown',login:null,name:null,groupId:null,groupName:null};
     return { hash, tag:main.name, aliases:tags.map(t=>t.name), date, timestamp,
-      timeSource:main.taggedAt==null?'fallback-commit':main.timestampSource,
-      version:parseTagVersion(main.name), taggedAt:main.taggedAt, annotated:main.annotated };
+      timeSource:published?'github-published':main.taggedAt==null?'fallback-commit':main.timestampSource,
+      version:parseTagVersion(main.name), taggedAt:main.taggedAt, annotated:main.annotated,
+      github:github&&!github.draft?github:null,githubDraft:github?.draft===true, published,
+      driver,taggerName:main.taggerName,taggerEmail:main.taggerEmail };
   }).sort((a,b)=>(a.timestamp??0)-(b.timestamp??0)||a.tag.localeCompare(b.tag));
   const byReleaseHash=new Map(releases.map(r=>[r.hash,r]));
   const periodReleases=releases.filter(r=>r.date && (!view.start || r.date>=view.start) && (!view.end || r.date<=view.end));
@@ -242,7 +269,9 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
   // A complete follow-up requires visible graph descendants far enough after
   // the tag, not simply wall-clock time passing or unrelated branches moving.
   for(const release of periodReleases) {
-    const previous=nearestTagAncestor(release.hash,byReleaseHash,graph,release.timestamp);
+    // Release publication can be delayed, recreated or backdated. Membership
+    // always follows ancestry, even when publication chronology disagrees.
+    const previous=nearestTagAncestor(release.hash,byReleaseHash,graph);
     const currentReach=graph.ancestry(release.hash);
     const oldReach=previous?graph.ancestry(previous.hash):{hashes:new Set(),complete:true};
     const introduced=[...currentReach.hashes].filter(hash=>!oldReach.hashes.has(hash) && graph.byHash.has(hash));
@@ -251,11 +280,13 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
     const reference=matched.filter(c=>referenceIds.has(c.groupId));
     const cohorts=view.contributors.map(g=>({
       id:g.id,name:g.displayName,
+      drove:release.driver.groupId===g.id,
       commits:selected.filter(c=>c.groupId===g.id),
     })).map(entry=>({ ...entry,footprint:changeFootprint(entry.commits) }));
     const referenceFootprint=changeFootprint(reference),selectedFootprint=changeFootprint(selected);
     Object.assign(release,{
       previousTag:previous?.tag ?? null, previousHash:previous?.hash ?? null,
+      chronologyWarning:previous?.timestamp!=null && release.timestamp!=null && previous.timestamp>release.timestamp,
       transition:previous ? releaseKind(release.version,previous.version) : 'baseline',
       lineageComplete:currentReach.complete && oldReach.complete,
       baseline:!previous, totalIntroduced:introduced.length, eligibleIntroduced:matched.length,
@@ -268,6 +299,7 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
     release.cells=cohorts.map(c=>({
       ...c, value:releaseMetric(c.footprint,metric,referenceFootprint),
       share:releaseMetric(c.footprint,'share',referenceFootprint),
+      drove:c.drove,
     }));
     const descendants=graph.descendantsOf(release.hash);
     const later=referenceCommits.filter(c=>c.committedAt>release.timestamp && descendants.has(c.hash));
@@ -275,7 +307,8 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
     release.followup=FOLLOWUP_WINDOWS.map(window=>release.lineageComplete
       ? followUpInWindow(release,descendants,referenceCommits,window,knownEnd)
       : {days:window,observed:false,count:null,share:null});
-    const next=releases.find(r=>r.timestamp>release.timestamp && descendants.has(r.hash));
+    const next=releases.filter(r=>r.hash!==release.hash && descendants.has(r.hash))
+      .sort((a,b)=>graph.ancestry(a.hash).hashes.size-graph.ancestry(b.hash).hashes.size)[0];
     release.nextTag=next?.tag || null;
     release.nextTagFootprint=null;
     if(next && release.lineageComplete) {
@@ -326,11 +359,62 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
     }
   }
   const cochanges=[...cochanged].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  const ghActors=[...new Set(githubReleases.filter(r=>!r.draft && r.publishedAt!=null && r.publisher)
+    .map(r=>r.publisher.toLowerCase()))].sort().map(login=>({
+    login, groupId:mappedActor(login)?.id??null,
+    groupName:mappedActor(login)?.displayName??null,
+    releases:periodReleases.filter(r=>r.driver.login?.toLowerCase()===login).length,
+  }));
+  const profiles=view.contributors.map(person=>{
+    const participation=periodReleases.filter(r=>r.cells.some(c=>c.id===person.id && c.footprint.commits>0));
+    const driving=periodReleases.filter(r=>r.driver.groupId===person.id);
+    const both=driving.filter(r=>participation.includes(r));
+    const ownReleased=allScoped.filter(c=>c.groupId===person.id);
+    const shares=participation.map(r=>r.cells.find(c=>c.id===person.id)?.share).filter(v=>v!=null).sort((a,b)=>a-b);
+    const middle=Math.floor(shares.length/2);
+    const medianShare=shares.length ? shares.length%2 ? shares[middle] : (shares[middle-1]+shares[middle])/2 : null;
+    const footprint=changeFootprint(ownReleased);
+    const median=items=>{
+      const values=items.filter(Number.isFinite).sort((a,b)=>a-b);
+      if(!values.length)return null;
+      const index=Math.floor(values.length/2);
+      return values.length%2?values[index]:(values[index-1]+values[index])/2;
+    };
+    const medianCoordination=median(driving.map(r=>r.referenceFootprint.contributors.size));
+    const leadDays=median(participation.flatMap(r=>
+      (r.cells.find(c=>c.id===person.id)?.commits||[]).map(c=>c.authoredAt==null||r.timestamp==null?null:(r.timestamp-c.authoredAt)/86400000)
+    ).filter(days=>days!=null&&days>=0));
+    const releaseMix=Object.fromEntries(['major','minor','patch','prerelease','baseline','unclassified','divergent','same-version'].map(k=>[k,driving.filter(r=>r.transition===k).length]));
+    const years=new Map();
+    for(const r of periodReleases){
+      if(!r.date)continue;
+      const didDrive=r.driver.groupId===person.id;
+      const contributed=r.cells.some(c=>c.id===person.id&&c.footprint.commits>0);
+      if(!didDrive&&!contributed)continue;
+      const year=r.date.slice(0,4);
+      if(!years.has(year))years.set(year,{year,drivenOnly:0,contributedOnly:0,both:0});
+      const value=years.get(year);
+      if(didDrive&&contributed)value.both++;
+      else if(didDrive)value.drivenOnly++;
+      else value.contributedOnly++;
+    }
+    return {id:person.id,name:person.displayName,emails:person.emails,
+      driven:driving.length,contributed:participation.length,both:both.length,
+      drivenOnly:driving.length-both.length,contributedOnly:participation.length-both.length,
+      shippedCommits:ownReleased.length,medianShare,footprint,
+      medianCoordination,leadDays,releaseMix,years:[...years.values()].sort((a,b)=>b.year.localeCompare(a.year))};
+  });
   return { activityMonths:[...monthly.values()].sort((a,b)=>a.month.localeCompare(b.month)),
     activityDays:[...daily.values()].sort((a,b)=>a.date.localeCompare(b.date)),
     versionEvents:view.selectedCommits.filter(c=>c.touchesVersion), cochanges,
     available:!!releases.length, releases:visible, allReleaseCount:releases.length,
     unresolved, metric,followupDays:days,maxCell:maximum,overall, categories,areas,peopleAreas,
+    githubStatus:options.githubStatus||'not-captured',githubCount:githubReleases.length,
+    githubPublishedCount:githubReleases.filter(r=>!r.draft && r.publishedAt!=null).length,
+    githubLinkedCount:periodReleases.filter(r=>r.published).length,
+    githubUnresolvedCount:githubReleases.filter(r=>!r.draft && !rawTags.some(t=>t.name===r.tag)).length,
+    captureWarningsCount:Number(options.captureWarningsCount)||0,
+    groups:view.allContributors.map(g=>({id:g.id,name:g.displayName,emails:g.emails})),ghActors,profiles,
     allCommits:allScoped, referenceLabel:view.denominator==='repository'?'all imported contributors':'selected contributors',
     scopedDateStart:view.start, scopedDateEnd:view.end };
 }

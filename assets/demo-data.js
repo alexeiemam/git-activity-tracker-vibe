@@ -91,7 +91,8 @@ export function generateDemoLog({ years = 3, commits = 520 } = {}) {
     rows.push({date,contributor,hour,minute,subject,files,index});
   }
   rows.sort((a,b)=>a.date-b.date || a.index-b.index);
-  const tags=[];
+  const tags=[], github=[];
+  const publishers=['casey-demo','priya-demo','lin-demo','hugo-demo'];
   const releaseVersion=index=>{
     if(index>=9) return `v9.${Math.floor((index-9)/3)}.${(index-9)%3}`;
     return `v8.${7+Math.floor(index/3)}.${index%3}`;
@@ -110,10 +111,18 @@ export function generateDemoLog({ years = 3, commits = 520 } = {}) {
       const version=releaseVersion(releaseNumber);
       const annotated=releaseNumber%3===0;
       const hash=fakeHash(index+1);
-      tags.push(`TAG|${version}|${annotated?hash:''}|${hash}|${annotated?'tag':'commit'}|${author}`);
+      tags.push(`TAG|${version}|${annotated?hash:''}|${hash}|${annotated?'tag':'commit'}|${author}|${annotated?entry.contributor.name:''}|${annotated?`<${entry.contributor.email}>`:''}`);
+      // Synthetic published GitHub Releases: exercise publisher attribution and
+      // multiline notes without making external requests in demo mode.
+      const publisher=publishers[releaseNumber%publishers.length];
+      const event={tag_name:version,name:`Release ${version}`,author:{login:publisher,type:'User'},
+        published_at:author,prerelease:false,draft:false,
+        body:`Demo release ${version}:\n- Improvements to dashboard and API workflows\n- Tests and maintenance follow-ups`,
+        html_url:`https://github.com/example/demo/releases/tag/${version}`};
+      github.push(`GHRELEASE|${btoa(JSON.stringify(event))}`);
     }
   }
   // The tag inventory is emitted before the commit stream, just like the
   // generated capture command; their timestamps can differ from authored dates.
-  return [...tags,...rows.reverse().map(r=>r.text)].join('\n');
+  return [...tags,...github,'GHSTATUS|ok',...rows.reverse().map(r=>r.text)].join('\n');
 }
