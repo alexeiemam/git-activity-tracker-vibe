@@ -219,3 +219,7 @@ Within a given visualisation the scale is **shared across all displayed people, 
 - `tests/` — dependency-free Node checks and regression tests.
 
 Run `npm test` to exercise the core aggregation, scope, parsing, rate and static-contract tests. Run `node --check assets/app.js` for a quick syntax check.
+
+### Exploring all tagged releases in People & Releases
+
+The contributor-by-release matrix **browses the complete globally scoped release history** by default, 18 columns at a time (choose 36 or 54 if useful). Use **Older/Newer** or **Oldest/Latest** to navigate, filter its displayed columns by release year, or **Jump to release** for any tag. **Latest 18** is now a quick view, not a hard limit. An **Export all · CSV** action includes every release/contributor pair in the current global scope, irrespective of matrix page, year or quick view. Matrix navigation does not modify global contributor/date/merge/revert filters. Its value-to-colour scale is calculated across *all* globally scoped releases, so colours remain comparable when browsing pages. The matrix is windowed to avoid rendering hundreds of columns simultaneously.

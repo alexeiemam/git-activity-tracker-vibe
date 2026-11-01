@@ -507,3 +507,23 @@
 @keyframes work-pulse{50%{opacity:.35;transform:scale(.7)}}
 @media(max-width:600px){.work-progress{top:auto;right:12px;bottom:12px;width:calc(100vw - 24px);padding:12px 15px}}
 @media(prefers-reduced-motion:reduce){.work-progress-pulse{animation:none!important}.work-progress progress::-webkit-progress-value{transition:none}}
+
+/* Windowed contributor-by-release comparison: expose the whole history without
+   mounting hundreds of release columns in the DOM in one render. */
+.impact-matrix-nav{background:#f8fbf7;border:1px solid #dce9db;border-radius:10px;padding:13px 15px;margin:15px 0 11px;display:grid;gap:12px}
+.impact-matrix-nav-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.impact-matrix-export{border:1px solid #b9d7c1;background:#fff;color:#236647;border-radius:6px;padding:10px 13px;font:650 11px var(--mono);cursor:pointer}
+.impact-matrix-export:hover{background:#e9f4e9;border-color:#7fb396}
+.impact-matrix-nav-fields{display:grid;grid-template-columns:minmax(120px,1fr) minmax(125px,1fr) minmax(225px,2fr);gap:11px}
+.impact-matrix-nav-fields label{display:grid;gap:6px;color:#627d67;font:650 9px var(--mono);letter-spacing:.045em}
+.impact-matrix-nav-fields .impact-select{font-size:11px}
+.impact-matrix-page-nav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #e0e9de;padding-top:12px}
+.impact-matrix-page-status{font:11px/1.5 var(--mono);color:#4b7056}
+.impact-matrix-page-buttons{display:flex;flex-wrap:wrap;gap:5px}
+.impact-matrix-page-buttons button{padding:9px 10px;background:#fff;border:1px solid #c9decc;border-radius:5px;color:#27684b;font:600 10px var(--mono);cursor:pointer}
+.impact-matrix-page-buttons button:hover:not(:disabled){background:#e9f4ea;border-color:#9abfa4}
+.impact-matrix-page-buttons button:disabled{opacity:.4;cursor:not-allowed}
+.impact-matrix thead th.is-selected{background:#d8eee0;box-shadow:inset 0 -3px #247b51}
+.impact-matrix td.is-selected{background:#eaf6ed}
+.impact-matrix-scroll:focus-visible,.impact-matrix-nav button:focus-visible,.impact-matrix-nav select:focus-visible{outline:2px solid #227451;outline-offset:2px}
+@media(max-width:700px){.impact-matrix-nav-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.impact-matrix-nav-fields label:last-child{grid-column:1/-1}.impact-matrix-nav-top .impact-timeline-presets{width:100%}.impact-matrix-nav-top .impact-preset{flex:1}.impact-matrix-page-nav{align-items:stretch}.impact-matrix-page-status{width:100%}.impact-matrix-page-buttons{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.impact-matrix-page-buttons button{padding:10px 3px;font-size:9px}}

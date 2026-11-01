@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=performance-20261101-1';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=performance-20261101-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=performance-20261101-1';
+import { IMPACT_METRICS } from './impact.js?v=matrix-history-20261101-1';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=matrix-history-20261101-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=matrix-history-20261101-1';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -231,19 +231,97 @@ export function impactReleaseDetail(release, referenceLabel, metric) {
     <details class="impact-evidence"><summary>Inspect commit evidence <span>${amount(release.selected.length)} matching commits</span></summary>${impactCommits(release.selected)}</details>`;
 }
 
-export function impactReleaseMatrix(model, expanded=false) {
+/** Only render a bounded slice of the release matrix, while retaining all releases
+ *  for navigation, colouring and export. Pages are numbered newest first. */
+export const IMPACT_MATRIX_PAGE_SIZES = Object.freeze([18, 36, 54]);
+export function impactMatrixWindow(all, options={}) {
+  const mode=options.mode==='latest'?'latest':'all';
+  const size=mode==='latest'?18:(IMPACT_MATRIX_PAGE_SIZES.includes(Number(options.size))?Number(options.size):18);
+  const requestedYear=typeof options.year==='string'?options.year:'all';
+  const year=mode==='latest'||!all.some(r=>r.date?.startsWith(`${requestedYear}-`))?'all':requestedYear;
+  const available=mode==='latest' ? all.slice(-18) : all.filter(r=>year==='all'||r.date?.startsWith(`${year}-`));
+  const pages=Math.max(1,Math.ceil(available.length/size));
+  const requested=Number(options.page);
+  const page=mode==='latest'?0:(Number.isInteger(requested)?Math.max(0,Math.min(requested,pages-1)):0);
+  const end=Math.max(0,available.length-page*size);
+  const start=Math.max(0,end-size);
+  return {mode,year,size,page,pages,total:available.length,fullCount:all.length,
+    start,end,releases:available.slice(start,end)};
+}
+
+export function impactMatrixPageForRelease(releases,hash,size=18) {
+  const index=releases.findIndex(r=>r.hash===hash);
+  if(index<0)return null;
+  const perPage=IMPACT_MATRIX_PAGE_SIZES.includes(size)?size:18;
+  return Math.floor((releases.length-1-index)/perPage);
+}
+
+const matrixCsvField = value => {
+  const text=String(value ?? '');
+  // Git tag names, author aliases and release titles are not trusted CSV formulae.
+  const safe=/^\s*[=+@-]/.test(text) ? `'${text}` : text;
+  return `"${safe.replace(/"/g,'""')}"`;
+};
+/** Export every globally scoped release, independent of browsing/page/year. */
+export function impactReleaseMatrixCsv(model) {
+  const heading=['Release','Release date','Release kind','GitHub publisher','Contributor',
+    'Release driver','Metric','Metric value','Commits','Commit share (%)',
+    'Distinct paths','Codebase areas','Line churn'];
+  const rows=[heading];
+  for(const release of model.releases) {
+    for(const cell of release.cells) {
+      rows.push([release.tag,release.date,release.transition,release.driver?.login||'',cell.name,
+        cell.drove?'Yes':'No',model.metric,cell.value ?? '',cell.footprint?.commits ?? 0,
+        cell.share ?? '',cell.footprint?.pathsCount ?? 0,cell.footprint?.areasCount ?? 0,
+        cell.footprint?.churn ?? 0]);
+    }
+  }
+  return rows.map(row=>row.map(matrixCsvField).join(',')).join('\r\n')+'\r\n';
+}
+
+export function impactReleaseMatrix(model, options={}) {
   const all=model.releases;
-  const releases=expanded?all:all.slice(-18);
+  const window=impactMatrixWindow(all,options);
+  const releases=window.releases;
+  if(!all.length)return '';
   const people=releases[0]?.cells || [];
-  if (!releases.length)return '';
   const labels=model.metric==='share'?'Percent of reference commits':IMPACT_METRICS[model.metric];
-  const scale=makeIntensityScale(releases.flatMap(r=>r.cells.map(c=>c?.value)));
+  // The SAME scale is used on every page. Recomputing from visible cells would
+  // imply that equal values mean different things after a page change.
+  const scale=makeIntensityScale(all.flatMap(r=>r.cells.map(c=>c?.value)));
+  const years=[...new Set(all.map(r=>r.date?.slice(0,4)).filter(Boolean))].sort().reverse();
+  const first=releases[0],last=releases.at(-1);
+  const pageLabel=window.total?`${window.start+1}–${window.end} of ${window.total}`:'No releases';
+  const selection=options.selectedHash;
   return `<p class="impact-muted">Each cell is ${e(labels.toLowerCase())} by a selected contributor, within a tagged release and the global authored-date/commit-policy scope. The reference for shares is <strong>${e(model.referenceLabel)}</strong>. Distinct paths/areas can overlap across people.</p>
-    <div class="impact-matrix-scroll"><table class="impact-matrix"><thead><tr><th>CONTRIBUTOR</th>${releases.map(r=>`<th><span class="impact-matrix-version">${e(r.tag)}</span><small>${e(r.date||'—')}</small></th>`).join('')}</tr></thead><tbody>
-    ${people.map((person,i)=>`<tr><th title="${e(person.name)}">${e(person.name)}</th>${releases.map(r=>{const cell=r.cells[i];const value=cell?.value;const tooltip=`${person.name} · ${r.tag}: ${humanMetric(value,model.metric)} ${labels}${cell?.drove?' · drove release':''}`;return `<td><button type="button" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-matrix-cell ${cell?.drove?'impact-matrix-driver':''}" style="${intensityStyle(value,scale)}" title="${e(tooltip)}" aria-label="${e(tooltip)}. Open release detail">${humanMetric(value,model.metric)}${cell?.drove?'<span class="impact-matrix-driver-mark" aria-hidden="true">D</span>':''}</button></td>`;}).join('')}</tr>`).join('')}
-    </tbody></table></div>
+    <div class="impact-matrix-nav">
+      <div class="impact-matrix-nav-top">
+        <div class="impact-timeline-presets" role="group" aria-label="Matrix release history">
+          <button type="button" class="impact-preset ${window.mode==='all'?'is-active':''}" data-action="impact-matrix-mode" data-matrix-mode="all" aria-pressed="${window.mode==='all'}">Browse all ${amount(all.length)}</button>
+          <button type="button" class="impact-preset ${window.mode==='latest'?'is-active':''}" data-action="impact-matrix-mode" data-matrix-mode="latest" aria-pressed="${window.mode==='latest'}">Latest 18</button>
+        </div>
+        <button type="button" class="impact-matrix-export" data-action="impact-export-matrix" aria-label="Export all ${all.length} scoped releases to CSV">Export all ${amount(all.length)} · CSV ↓</button>
+      </div>
+      ${window.mode==='all'?`<div class="impact-matrix-nav-fields">
+        <label>RELEASE YEAR<select class="impact-select" id="impact-matrix-year"><option value="all" ${window.year==='all'?'selected':''}>All years</option>${years.map(year=>`<option value="${e(year)}" ${window.year===year?'selected':''}>${e(year)}</option>`).join('')}</select></label>
+        <label>RELEASES PER PAGE<select class="impact-select" id="impact-matrix-size">${IMPACT_MATRIX_PAGE_SIZES.map(size=>`<option value="${size}" ${window.size===size?'selected':''}>${size}</option>`).join('')}</select></label>
+        <label>JUMP TO RELEASE<select class="impact-select" id="impact-matrix-release-select" aria-label="Jump to a tagged release in the matrix"><option value="">Choose a release…</option>${all.slice().reverse().map(r=>`<option value="${e(r.hash)}">${e(r.tag)} · ${e(r.date||'Undated')}</option>`).join('')}</select></label>
+      </div>`:''}
+      <div class="impact-matrix-page-nav" aria-live="polite">
+        <span class="impact-matrix-page-status">${window.mode==='latest'?`Showing latest ${releases.length} of ${all.length} releases`:`${pageLabel} releases · page ${window.pages-window.page} of ${window.pages}${window.year!=='all'?` · ${e(window.year)} (${all.length} total in scope)`:''}`}${first&&last?` · ${e(first.tag)} to ${e(last.tag)}`:''}</span>
+        ${window.mode==='all'?`<div class="impact-matrix-page-buttons" role="group" aria-label="Browse tagged releases">
+          <button type="button" data-action="impact-matrix-page" data-matrix-page="oldest" ${window.page>=window.pages-1?'disabled':''} aria-label="First page, oldest releases">« Oldest</button>
+          <button type="button" data-action="impact-matrix-page" data-matrix-page="older" ${window.page>=window.pages-1?'disabled':''}>‹ Older</button>
+          <button type="button" data-action="impact-matrix-page" data-matrix-page="newer" ${window.page===0?'disabled':''}>Newer ›</button>
+          <button type="button" data-action="impact-matrix-page" data-matrix-page="latest" ${window.page===0?'disabled':''} aria-label="Last page, newest releases">Latest »</button>
+        </div>`:''}
+      </div>
+    </div>
+    ${releases.length?`<div class="impact-matrix-scroll" tabindex="0" role="region" aria-label="Contributor by release matrix; scroll horizontally to compare releases"><table class="impact-matrix"><thead><tr><th>CONTRIBUTOR</th>${releases.map(r=>`<th data-matrix-release="${e(r.hash)}" class="${r.hash===selection?'is-selected':''}" ${r.hash===selection?'aria-current="true"':''}><span class="impact-matrix-version">${e(r.tag)}</span><small>${e(r.date||'—')}</small></th>`).join('')}</tr></thead><tbody>
+    ${people.map((person,i)=>`<tr><th title="${e(person.name)}">${e(person.name)}</th>${releases.map(r=>{const cell=r.cells[i];const value=cell?.value;const tooltip=`${person.name} · ${r.tag}: ${humanMetric(value,model.metric)} ${labels}${cell?.drove?' · drove release':''}`;return `<td class="${r.hash===selection?'is-selected':''}"><button type="button" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-matrix-cell ${cell?.drove?'impact-matrix-driver':''}" style="${intensityStyle(value,scale)}" title="${e(tooltip)}" aria-label="${e(tooltip)}. Open release detail">${humanMetric(value,model.metric)}${cell?.drove?'<span class="impact-matrix-driver-mark" aria-hidden="true">D</span>':''}</button></td>`;}).join('')}</tr>`).join('')}
+    </tbody></table></div>`:'<div class="impact-empty-mini">No releases in this year. Choose All years.</div>'}
     <div class="impact-colour-key">${intensityLegend(scale,x=>model.metric==='share'?`${precise(x)}%`:precise(x),{missing:true})}</div>
-    <p class="impact-muted">${releases.length}${!expanded&&all.length>18?` of ${all.length}`:''} tagged releases. One positive-intensity scale across displayed contributors and releases; D marks a verified/matched driver role, independently of authored contribution. Unavailable shares are hatched, not zero.</p>`;
+    <p class="impact-muted">${window.mode==='latest'?`Latest ${releases.length} of ${all.length}`:`Browsing all ${all.length} scoped releases · ${releases.length} rendered on this page`} to keep the dashboard responsive. Colour intensity uses <strong>one scale for the entire scoped release history</strong> regardless of page or year. D marks a verified/matched driver independently of authored contribution. Unavailable shares are hatched, not zero. Matrix navigation changes only what is displayed, not the global data filters.</p>`;
 }
 
 export function impactReach(model, areaMode='touches') {

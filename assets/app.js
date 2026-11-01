@@ -3,12 +3,12 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=performance-20261101-1';
-import { generateDemoLog } from './demo-data.js?v=performance-20261101-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=performance-20261101-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=performance-20261101-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=performance-20261101-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=performance-20261101-1';
+} from './domain.js?v=matrix-history-20261101-1';
+import { generateDemoLog } from './demo-data.js?v=matrix-history-20261101-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=matrix-history-20261101-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=matrix-history-20261101-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=matrix-history-20261101-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=matrix-history-20261101-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -23,7 +23,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=performance-20261101-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=matrix-history-20261101-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -159,7 +159,7 @@ const state = {
   metric: 'commits', mode: 'total', denominator: 'repository',
   trend: 'rolling', pulseMode: 'monthly', rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
   rhythmTab: 'weekly', seasonMode: 'rate', seasonYears: null, sortKey: 'lens', sortDesc: true,
-  impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,
+  impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
   impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,
   impactFocus:'selection', impactActorMap:{},
 };
@@ -409,7 +409,7 @@ function syncScopeAfterLoad() {
   const desiredStart = dateAtDay(dayNumber(anniversary)+1);
   const initialStart = min > desiredStart ? min : desiredStart;
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
-    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,
+    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
   state.selectedIds = new Set(mergeGroups.map((_,i)=>String(i)));
   if (pendingImport?.scope) {
@@ -440,6 +440,10 @@ function syncScopeAfterLoad() {
         .map(([login,email])=>[login.toLowerCase(),email.toLowerCase()]));
     }
     state.impactShowAll=!!s.impactShowAll;
+    if(['all','latest'].includes(s.impactMatrixMode)) state.impactMatrixMode=s.impactMatrixMode;
+    if(Number.isInteger(s.impactMatrixPage) && s.impactMatrixPage>=0) state.impactMatrixPage=Math.min(100000,s.impactMatrixPage);
+    if(s.impactMatrixYear==='all' || (typeof s.impactMatrixYear==='string' && /^\d{4}$/.test(s.impactMatrixYear)))state.impactMatrixYear=s.impactMatrixYear;
+    if([18,36,54].includes(s.impactMatrixSize))state.impactMatrixSize=s.impactMatrixSize;
     if (['all','latest','custom'].includes(s.impactTimelineMode))state.impactTimelineMode=s.impactTimelineMode;
     if (typeof s.impactTimelineFrom==='string' && /^\d{4}-\d\d-\d\d$/.test(s.impactTimelineFrom))state.impactTimelineFrom=s.impactTimelineFrom;
     if (typeof s.impactTimelineTo==='string' && /^\d{4}-\d\d-\d\d$/.test(s.impactTimelineTo))state.impactTimelineTo=s.impactTimelineTo;
@@ -502,7 +506,7 @@ function changeDate() {
 }
 function resetFilters() {
   Object.assign(state,{ period:'all',start:sourceDateBounds().min,end:sourceDateBounds().max,
-    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,
+    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
@@ -1348,6 +1352,57 @@ function selectImpactReleaseWithinWindow() {
   const candidates=impactModel.releases.filter(r=>impactReleasePosition(r)>=window.start&&impactReleasePosition(r)<=window.end);
   if(candidates.length && !candidates.some(r=>r.hash===state.impactReleaseHash))state.impactReleaseHash=candidates.at(-1).hash;
 }
+function matrixOptions() {
+  return {mode:state.impactMatrixMode,page:state.impactMatrixPage,year:state.impactMatrixYear,
+    size:state.impactMatrixSize,selectedHash:state.impactReleaseHash};
+}
+function revealMatrixSelection() {
+  const scroll=$('impact-matrix-section')?.querySelector('.impact-matrix-scroll');
+  const column=[...(scroll?.querySelectorAll('[data-matrix-release]')||[])].find(th=>th.dataset.matrixRelease===state.impactReleaseHash);
+  if(scroll && column) {
+    const outer=scroll.getBoundingClientRect(), inner=column.getBoundingClientRect();
+    if(inner.left<outer.left+20 || inner.right>outer.right-20)
+      scroll.scrollLeft+=((inner.left+inner.right)-(outer.left+outer.right))/2;
+  }
+}
+function refreshImpactMatrix({reveal=false,focus=null}={}) {
+  const region=$('impact-matrix-section');
+  if(!region || !impactModel)return renderImpact(analysis);
+  region.innerHTML=impactReleaseMatrix(impactModel,matrixOptions());
+  if(reveal || focus)requestAnimationFrame(()=>{
+    if(reveal)revealMatrixSelection();
+    if(focus) {
+      let target;
+      if(focus.kind==='page') {
+        target=[...region.querySelectorAll('[data-action="impact-matrix-page"]')].find(btn=>btn.dataset.matrixPage===focus.value&&!btn.disabled);
+        target ||= region.querySelector('[data-action="impact-matrix-page"]:not([disabled])');
+      } else if(focus.kind==='mode') {
+        target=[...region.querySelectorAll('[data-action="impact-matrix-mode"]')].find(btn=>btn.dataset.matrixMode===focus.value);
+      } else target=region.querySelector(focus.kind==='year'?'#impact-matrix-year':'#impact-matrix-size');
+      target?.focus({preventScroll:true});
+    }
+  });
+}
+function matrixJump(hash) {
+  const index=impactModel?.releases.findIndex(r=>r.hash===hash)??-1;
+  if(index<0)return;
+  state.impactReleaseHash=hash;
+  state.impactMatrixMode='all';
+  // An explicit tag jump takes precedence over an earlier year restriction.
+  state.impactMatrixYear='all';
+  state.impactMatrixPage=impactMatrixPageForRelease(impactModel.releases,hash,state.impactMatrixSize);
+  setTimelinePreference(impactTimelineReveal(impactModel,timelinePreference(),hash));
+  renderImpact(analysis);
+  requestAnimationFrame(revealMatrixSelection);
+}
+function exportImpactMatrix() {
+  if(!impactModel?.releases.length)return;
+  const blob=new Blob(['\ufeff',impactReleaseMatrixCsv(impactModel)],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');link.href=url;
+  link.download=`git-signals-release-matrix-${new Date().toISOString().slice(0,10)}.csv`;
+  link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
 function renderImpact(view) {
   // The expensive release reconstruction is computed once in the worker.
   // Interacting with the timeline, tab, or release picker only rerenders HTML.
@@ -1375,7 +1430,7 @@ function renderImpact(view) {
 
   $('impact-area-toolbar').hidden=state.impactTab!=='reach';
   if(state.impactTab==='timeline') $('impact-content').innerHTML=impactReleaseDetail(selected,model.referenceLabel,state.impactMetric);
-  else if(state.impactTab==='matrix') $('impact-content').innerHTML=impactIndividualProfiles(model,state.impactFocus)+impactReleaseMatrix(model,state.impactShowAll);
+  else if(state.impactTab==='matrix') $('impact-content').innerHTML=impactIndividualProfiles(model,state.impactFocus)+`<div id="impact-matrix-section">${impactReleaseMatrix(model,matrixOptions())}</div>`;
   else if(state.impactTab==='reach') $('impact-content').innerHTML=impactReach(model,state.impactAreaMode);
   else $('impact-content').innerHTML=impactDurability(model,state.impactReleaseHash,state.impactShowAll);
   if($('impact-metric-select'))$('impact-metric-select').value=state.impactMetric;
@@ -1493,6 +1548,8 @@ function exportSession() {
       rhythmFocusEmail:analysis?.byId.get(state.rhythmFocus)?.emails[0]||null,
       impactTab:state.impactTab,impactMetric:state.impactMetric,impactAreaMode:state.impactAreaMode,
       impactReleaseHash:state.impactReleaseHash,impactShowAll:state.impactShowAll,
+      impactMatrixMode:state.impactMatrixMode,impactMatrixPage:state.impactMatrixPage,
+      impactMatrixYear:state.impactMatrixYear,impactMatrixSize:state.impactMatrixSize,
       impactFocusEmail:analysis?.byId.get(state.impactFocus)?.emails[0]||null,
       impactActorMap:state.impactActorMap,
       impactTimelineMode:state.impactTimelineMode,impactTimelineFrom:state.impactTimelineFrom,impactTimelineTo:state.impactTimelineTo}};
@@ -1604,6 +1661,16 @@ const ACTIONS={
     scrollToImpactMarker(state.impactReleaseHash,{showTimeline:false});
   },
   'impact-toggle-all':()=>{state.impactShowAll=!state.impactShowAll;renderImpact(analysis);},
+  'impact-matrix-mode':(_event,t)=>{state.impactMatrixMode=t.dataset.matrixMode==='latest'?'latest':'all';refreshImpactMatrix({focus:{kind:'mode',value:state.impactMatrixMode}});},
+  'impact-matrix-page':(_event,t)=>{
+    const w=impactMatrixWindow(impactModel.releases,matrixOptions());
+    if(t.dataset.matrixPage==='oldest')state.impactMatrixPage=w.pages-1;
+    else if(t.dataset.matrixPage==='older')state.impactMatrixPage=Math.min(w.pages-1,w.page+1);
+    else if(t.dataset.matrixPage==='newer')state.impactMatrixPage=Math.max(0,w.page-1);
+    else if(t.dataset.matrixPage==='latest')state.impactMatrixPage=0;
+    refreshImpactMatrix({focus:{kind:'page',value:t.dataset.matrixPage}});
+  },
+  'impact-export-matrix':exportImpactMatrix,
   'impact-profile-focus':(_event,t)=>{state.impactFocus=t.dataset.impactFocus;renderImpact(analysis);},
   'impact-area-mode':(_e,t)=>{state.impactAreaMode=t.dataset.impactAreaMode;renderImpact(analysis);},
   'rhythm-focus':(_e,t)=>{state.rhythmFocus=t.dataset.rhythmFocus;rhythmHover=null;rhythmPinned=null;renderRhythm(analysis);if(t.classList.contains('rhythm-explore-link'))$('rhythm-explorer').scrollIntoView({behavior:'smooth',block:'start'});},
@@ -1659,6 +1726,9 @@ function handleDocumentChange(event) {
     case 'metric-select':state.metric=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;
     case 'impact-metric-select':state.impactMetric=t.value;renderDashboard();break;
     case 'impact-profile-select':state.impactFocus=t.value;renderImpact(analysis);$('impact-profile-select')?.focus({preventScroll:true});break;
+    case 'impact-matrix-year':state.impactMatrixYear=t.value;state.impactMatrixPage=0;refreshImpactMatrix({focus:{kind:'year'}});break;
+    case 'impact-matrix-size':state.impactMatrixSize=[18,36,54].includes(Number(t.value))?Number(t.value):18;state.impactMatrixPage=0;refreshImpactMatrix({focus:{kind:'size'}});break;
+    case 'impact-matrix-release-select':if(t.value)matrixJump(t.value);break;
     case 'impact-release-select':chooseImpactRelease(t.value,{focus:'select'});break;
     case 'impact-timeline-from':case 'impact-timeline-to':{
       let from=$('impact-timeline-from').value,to=$('impact-timeline-to').value;

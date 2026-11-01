@@ -1,6 +1,6 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis } from './domain.js?v=performance-20261101-1';
-import { impactAnalysis } from './impact.js?v=performance-20261101-1';
+import { parseGitHistory, buildAnalysis } from './domain.js?v=matrix-history-20261101-1';
+import { impactAnalysis } from './impact.js?v=matrix-history-20261101-1';
 
 let history = null;
 const progress = (id, phase, value, message) =>
