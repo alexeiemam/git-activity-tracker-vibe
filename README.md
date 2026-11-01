@@ -103,7 +103,9 @@ signals are imperfect, particularly when tests are committed separately.
 
 ### Import compatibility and repository scope
 
-The generated command is POSIX-shell compatible and produces a compact text
+The generated command uses portable shell syntax (compatible with macOS zsh
+and Bash) and resolves the GitHub repository explicitly from `origin`, without
+shell `case` patterns. It produces a compact text
 stream of `TAG|...` records, optional `GHRELEASE|<base64 UTF-8 JSON>` and
 `GHSTATUS|...` records, followed by `COMMIT|...` and Git `--numstat` records.
 It attempts `git fetch origin --tags` first, then calls `gh api --paginate`

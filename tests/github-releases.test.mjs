@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFileSync,mkdtempSync,rmSync,writeFileSync} from 'node:fs';
-import {execFileSync} from 'node:child_process';
+import {execFileSync,spawnSync} from 'node:child_process';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {parseGitHistory,decodeGithubRelease,buildAnalysis,getHistoryDateBounds} from '../assets/domain.js';
@@ -115,20 +115,30 @@ test('the visible command targets origin, captures GitHub releases, and falls ba
     assert.ok(source,'command embedded in static HTML');
     const command=source.replaceAll('&gt;','>').replaceAll('&amp;','&').replace(/\s*\| pbcopy\s*$/, '');
     const sample=github('v1.0.0','tester-gh','2026-03-01T12:00:00Z');
-    const shell=`git() { if [ "$1" = fetch ]; then return 0; fi; if [ "$1" = remote ] && [ "$2" = get-url ]; then printf 'git@github.com:example/repo.git\\n'; return 0; fi; command git "$@"; }
+    assert.doesNotMatch(command,/^\s*(?:case\b|#)/m,'copyable zsh command must not depend on case syntax or interactive comments');
+    const shellScript=`git() { if [ "$1" = fetch ]; then return 0; fi; if [ "$1" = remote ] && [ "$2" = get-url ]; then printf '%s\\n' "$ORIGIN_REMOTE"; return 0; fi; command git "$@"; }
       gh() { if [ "$GH_REPO" != 'example/repo' ]; then return 12; fi; printf '%s\\n' "$GH_SAMPLE"; }
       ${command}`;
-    const result=execFileSync('bash',['-c',shell],{cwd:repo,encoding:'utf8',env:{...process.env,GH_SAMPLE:Buffer.from(JSON.stringify(sample)).toString('base64')}});
-    const parsed=parseGitHistory(result);
-    assert.equal(parsed.githubStatus,'ok');
-    assert.equal(parsed.githubReleases[0].publisher,'tester-gh');
-    assert.equal(parsed.tags[0].taggerEmail,'tester@work');
-    assert.equal(parsed.commits.length,1);
-    const failed=execFileSync('bash',['-c',shell.replace(/gh\(\) \{[^}]+\}/, 'gh() { return 1; }')],{cwd:repo,encoding:'utf8'});
-    const fall=parseGitHistory(failed);
-    assert.equal(fall.githubStatus,'unavailable');
-    assert.equal(fall.tags.length,1);
-    assert.equal(fall.commits.length,1);
+    const env={...process.env,GH_SAMPLE:Buffer.from(JSON.stringify(sample)).toString('base64')};
+    const shells=['bash','sh'];
+    if (spawnSync('zsh',['-c','exit 0']).status===0) shells.push('zsh');
+    for (const shell of shells) {
+      for (const origin of ['git@github.com:example/repo.git','https://github.com/example/repo.git','ssh://git@github.com/example/repo.git','git@github.com:example/repo']) {
+        const result=execFileSync(shell,['-c',shellScript],{cwd:repo,encoding:'utf8',env:{...env,ORIGIN_REMOTE:origin}});
+        const parsed=parseGitHistory(result);
+        assert.equal(parsed.githubStatus,'ok',`${shell}: ${origin}`);
+        assert.equal(parsed.githubReleases[0].publisher,'tester-gh');
+        assert.equal(parsed.tags[0].taggerEmail,'tester@work');
+        assert.equal(parsed.commits.length,1);
+      }
+      const unknown=execFileSync(shell,['-c',shellScript],{cwd:repo,encoding:'utf8',env:{...env,ORIGIN_REMOTE:'git@other.example:example/repo.git'}});
+      assert.equal(parseGitHistory(unknown).githubStatus,'unsupported-origin',`${shell}: reject non-GitHub remotes`);
+      const failed=execFileSync(shell,['-c',shellScript.replace(/gh\(\) \{[^}]+\}/, 'gh() { return 1; }')],{cwd:repo,encoding:'utf8',env:{...env,ORIGIN_REMOTE:'git@github.com:example/repo.git'}});
+      const fall=parseGitHistory(failed);
+      assert.equal(fall.githubStatus,'unavailable');
+      assert.equal(fall.tags.length,1);
+      assert.equal(fall.commits.length,1);
+    }
   } finally {rmSync(repo,{recursive:true,force:true});}
 });
 

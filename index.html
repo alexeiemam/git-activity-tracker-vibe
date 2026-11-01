@@ -34,13 +34,7 @@
   if ! git fetch origin --tags --quiet; then echo "Note: origin tag fetch failed; using locally available tags." &gt;&amp;2; fi
   git for-each-ref --format='TAG|%(refname:short)|%(*objectname)|%(objectname)|%(objecttype)|%(creatordate:iso-strict)|%(taggername)|%(taggeremail:trim)' refs/tags
   origin="$(git remote get-url origin 2&gt;/dev/null || :)"
-  case "$origin" in
-    git@github.com:*) repo="${origin#git@github.com:}" ;;
-    https://github.com/*) repo="${origin#https://github.com/}" ;;
-    ssh://git@github.com/*) repo="${origin#ssh://git@github.com/}" ;;
-    *) repo='' ;;
-  esac
-  repo="${repo%.git}"
+  repo="$(printf '%s\n' "$origin" | sed -nE 's#^(git@github[.]com:|https://github[.]com/|ssh://git@github[.]com/)([^/]+/[^/]+)$#\2#p' | sed 's/[.]git$//')"
   if [ -z "$repo" ]; then
     printf 'GHSTATUS|unsupported-origin\n'
   elif ! command -v gh &gt;/dev/null 2&gt;&amp;1; then
