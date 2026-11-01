@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=github-releases-20261101-1">
+  <link rel="stylesheet" href="./assets/app.css?v=performance-20261101-1">
 </head>
 <body>
   <div class="page">
@@ -16,6 +16,13 @@
       <a href="#top" class="wordmark" aria-label="git:signals home"><span class="mark">g<span class="mark-dot">:</span></span><span>git<span class="wordmark-light">signals</span></span></a>
       <div class="masthead-right"><span class="eyebrow">REPOSITORY INTELLIGENCE / LOCAL-ONLY ANALYSIS</span><button id="export-btn" type="button" data-action="export" class="button outline" hidden>Export session <span aria-hidden="true">↗</span></button><button type="button" data-action="choose-import" class="button outline">Import session <span aria-hidden="true">↗</span></button><input id="file-import-input" type="file" accept=".json,application/json" hidden></div>
     </header>
+
+    <aside id="work-progress" class="work-progress" role="status" aria-live="polite" aria-atomic="true" hidden>
+      <div class="work-progress-head"><span class="work-progress-pulse" aria-hidden="true"></span><span class="work-progress-eyebrow">ANALYSING LOCALLY</span><strong id="work-percent">0%</strong></div>
+      <strong id="work-phase">Preparing analysis</strong>
+      <p id="work-detail">Reading the evidence</p>
+      <progress id="work-progress-value" max="100" value="0" aria-label="Dashboard processing progress"></progress>
+    </aside>
 
     <section class="hero" id="top">
       <div><div class="eyebrow section-kicker"><span class="live-dot"></span> ENGINEERING ACTIVITY, MADE LEGIBLE</div>
@@ -160,7 +167,7 @@
               <div class="impact-toolbar" id="impact-area-toolbar" hidden><span class="helper">SHOW AREA ACTIVITY AS</span><div class="segmented" role="group" aria-label="Codebase reach measure"><button type="button" class="segment active" data-action="impact-area-mode" data-impact-area-mode="touches" aria-pressed="true">File touches</button><button type="button" class="segment" data-action="impact-area-mode" data-impact-area-mode="within" aria-pressed="false">Within-person %</button></div></div>
             </div>
             <div id="impact-content" aria-live="polite"></div>
-            <p class="impact-footnote">For GitHub-published releases, the publication timestamp locates the event and the publisher is an <em>assumed</em> release driver; the publisher is not proof of who deployed. Lightweight Git tags have no tagger identity. Explicit publisher-to-author mapping is required before driver counts are assigned. The date scope is shared: contribution counts use <strong>authored dates</strong>, while release events use <strong>GitHub publication dates when available</strong> (otherwise annotated-tag or tagged-commit dates). Tagged release contents are reconstructed from the Git ancestry graph, independent of merge commits or VERSION changes. File revisitation, test accompaniment, codebase breadth and commit-subject categories are <strong>proxies</strong>, not proof of value, production deployment, code quality or hours worked.</p>
+            <p class="impact-footnote">For GitHub-published releases, the publication timestamp locates the event and the publisher is an <em>assumed</em> release driver; the publisher is not proof of who deployed. Lightweight Git tags have no tagger identity. Publishers are automatically linked only when imported Git identities give an unambiguous exact match; manual assignments override inference. The date scope is shared: contribution counts use <strong>authored dates</strong>, while release events use <strong>GitHub publication dates when available</strong> (otherwise annotated-tag or tagged-commit dates). Tagged release contents are reconstructed from the Git ancestry graph, independent of merge commits or VERSION changes. File revisitation, test accompaniment, codebase breadth and commit-subject categories are <strong>proxies</strong>, not proof of value, production deployment, code quality or hours worked.</p>
           </div>
         </div>
       </section>
@@ -175,6 +182,6 @@
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=github-releases-20261101-1"></script>
+  <script type="module" src="./assets/app.js?v=performance-20261101-1"></script>
 </body>
 </html>

@@ -420,6 +420,20 @@ export function buildAnalysis(rawCommits, groups, scope = {}) {
     }
   }
   const spanDays = validDate(start) && validDate(end) && start <= end ? dayNumber(end) - dayNumber(start) + 1 : 0;
+  return withWeekAggregation({
+    start, end, min, max, spanDays, weeks, metric,
+    selectedIds, groupDefs, allContributors, contributors, byId,
+    eligibleCommits, selectedCommits, referenceCommits, referenceContributors,
+    selectedSummary, referenceSummary,
+    denominator: scope.denominator === 'selection' ? 'selection' : 'repository',
+    includeMerges, includeReverts,
+    referenceTotal: referenceSummary.totals[metric],
+  });
+}
+
+/** Reattach the tiny week-aggregation helper after a structured worker clone. */
+export function withWeekAggregation(view) {
+  const {weeks}=view;
   const sumsByWeek = (stats, key) => {
     const weekly = new Map(weeks.map(week => [week, 0]));
     for (const contributor of stats) {
@@ -430,16 +444,8 @@ export function buildAnalysis(rawCommits, groups, scope = {}) {
     }
     return weekly;
   };
-  return {
-    start, end, min, max, spanDays, weeks, metric,
-    selectedIds, groupDefs, allContributors, contributors, byId,
-    eligibleCommits, selectedCommits, referenceCommits, referenceContributors,
-    selectedSummary, referenceSummary,
-    denominator: scope.denominator === 'selection' ? 'selection' : 'repository',
-    includeMerges, includeReverts,
-    sumsByWeek,
-    referenceTotal: referenceSummary.totals[metric],
-  };
+  view.sumsByWeek=sumsByWeek;
+  return view;
 }
 
 

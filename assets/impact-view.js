@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=github-releases-20261101-1';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=github-releases-20261101-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=github-releases-20261101-1';
+import { IMPACT_METRICS } from './impact.js?v=performance-20261101-1';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=performance-20261101-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=performance-20261101-1';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -46,11 +46,22 @@ export function impactGithubStatus(model) {
     : status==='unsupported-origin' ? 'Origin is not a recognised github.com remote. Git-only release evidence remains available.'
     : status==='unavailable' ? 'The GitHub API was unavailable during capture. Git-only release evidence remains available.'
     : 'This import contains Git tags but no GitHub Release enrichment. Re-run the updated Copy command to add publisher and release-note metadata.';
-  return `<div class="impact-gh-banner"><div class="impact-gh-banner-top"><div><span class="impact-gh-mark">${hasMeta?'GITHUB · ENRICHED':'GIT · TAG-ONLY'}</span><p>${e(subtitle)}</p></div>${hasMeta?`<span class="impact-gh-matched">${matched} / ${count} publishers matched</span>`:''}</div>
+  const automatic=model.ghActors.filter(actor=>actor.groupId && !['manual','excluded'].includes(actor.matchSource)).length;
+  const manual=model.ghActors.filter(actor=>actor.groupId && actor.matchSource==='manual').length;
+  const description={
+    'github-noreply':'Exact GitHub noreply address',
+    'email-local':'Exact email username',
+    'author-name':'Exact contributor/author name',
+    'manual':'Manually confirmed',
+    'ambiguous':'Conflicting contributor identities · review',
+    'unmatched':'No matching author identity',
+    'excluded':'Explicitly unassigned',
+  };
+  return `<div class="impact-gh-banner"><div class="impact-gh-banner-top"><div><span class="impact-gh-mark">${hasMeta?'GITHUB · ENRICHED':'GIT · TAG-ONLY'}</span><p>${e(subtitle)}</p></div>${hasMeta?`<span class="impact-gh-matched">${matched} / ${count} publishers matched · ${automatic} automatic · ${manual} confirmed</span>`:''}</div>
     ${model.captureWarningsCount?`<p class="impact-gh-warning">${amount(model.captureWarningsCount)} GitHub metadata records could not be decoded. The remaining evidence is still available.</p>`:''}
-    ${count?`<details class="impact-identity-mapping"><summary>Match GitHub publishers to contributors <span>${count-matched} not matched · affects driver attribution only</span></summary>
-      <p class="impact-muted">A publisher is an assumed release driver, not proof of deployment. Select the contributor whose Git author identities match this GitHub account. No fuzzy or name-only matching is performed.</p>
-      <div class="impact-actor-grid">${model.ghActors.map(actor=>`<label><span class="impact-gh-login">@${e(actor.login)} <small>${amount(actor.releases)} releases in scope</small></span><select data-gh-actor="${e(actor.login)}" aria-label="Match GitHub publisher ${e(actor.login)} to a contributor"><option value="">Unmatched · no driver credit</option>${model.groups.map(g=>`<option value="${e(g.emails[0])}" ${g.id===actor.groupId?'selected':''}>${e(g.name)} · ${e(g.emails.length===1?g.emails[0]:`${g.emails.length} author identities`)}</option>`).join('')}</select></label>`).join('')}</div>
+    ${count?`<details class="impact-identity-mapping"><summary>Publisher identity matches <span>${count-matched} require review · affects driver attribution only</span></summary>
+      <p class="impact-muted">Release-driver credit is inferred only from exact, unambiguous Git author identities already grouped under a contributor. GitHub noreply addresses are strongest; exact email usernames or author aliases can also match. Manual choices override automatic matches. Similar names are never guessed.</p>
+      <div class="impact-actor-grid">${model.ghActors.map(actor=>`<label><span class="impact-gh-login">@${e(actor.login)} <small>${amount(actor.releases)} releases · ${e(description[actor.matchSource] || 'Unmatched')}${actor.groupName?` · ${e(actor.groupName)}`:''}</small></span><select data-gh-actor="${e(actor.login)}" aria-label="Match GitHub publisher ${e(actor.login)} to a contributor"><option value="__auto__" ${actor.matchSource!=='manual'&&actor.matchSource!=='excluded'?'selected':''}>Automatic matching${actor.groupName?` · ${e(actor.groupName)}`:''}</option><option value="__none__" ${actor.matchSource==='excluded'?'selected':''}>Do not attribute</option>${model.groups.map(g=>`<option value="${e(g.emails[0])}" ${g.id===actor.groupId&&actor.matchSource==='manual'?'selected':''}>${e(g.name)} · ${e(g.emails.length===1?g.emails[0]:`${g.emails.length} author identities`)}</option>`).join('')}</select></label>`).join('')}</div>
     </details>`:''}</div>`;
 }
 

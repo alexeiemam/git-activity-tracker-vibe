@@ -7,7 +7,7 @@
  * No line-level survival, deploy date, customer value, or team productivity is
  * inferred from numstat; file revisitation is explicitly a proxy.
  */
-import { fileArea } from './domain.js?v=github-releases-20261101-1';
+import { fileArea } from './domain.js?v=performance-20261101-1';
 
 export const IMPACT_METRICS = Object.freeze({
   commits: 'Commits', churn: 'Line churn', paths: 'Distinct paths', areas: 'Codebase areas', share: 'Commit share',
@@ -92,33 +92,53 @@ export function changeFootprint(commits) {
  * Incomplete/shallow exports cannot be treated as a full release diff.
  */
 function createGraph(commits) {
-  const byHash = new Map(commits.filter(c => c.hash).map(c => [c.hash,c]));
-  const cache = new Map();
+  const byHash = new Map(commits.filter(c => c.hash).map(c => [c.hash, c]));
+  const hashes = [...byHash.keys()];
+  const index = new Map(hashes.map((hash, i) => [hash, i]));
   const children = new Map();
   for (const commit of commits) for (const parent of commit.parents || []) {
     if (!children.has(parent)) children.set(parent, []);
     children.get(parent).push(commit.hash);
   }
-  const ancestry = (hash) => {
-    if (cache.has(hash)) return cache.get(hash);
-    const visited = new Set(), stack=[hash];
-    let complete = true;
+
+  // Each tagged release needs ancestry membership, not a separate Set of
+  // thousands of hashes. Packed bits use ~1/8 byte per commit per tag and
+  // make comparisons O(1); the previous tiny Set cache repeatedly traversed
+  // the entire graph for each release and became quadratic on real histories.
+  const releaseCache = new Map();
+  const bytes = Math.ceil(hashes.length / 8);
+  function ancestry(hash) {
+    if (releaseCache.has(hash)) return releaseCache.get(hash);
+    const bits = new Uint8Array(bytes), stack = [hash];
+    let complete = true, size = 0;
     while (stack.length) {
       const next = stack.pop();
-      if (visited.has(next)) continue;
-      visited.add(next);
+      const i = index.get(next);
+      if (i === undefined) { complete = false; continue; }
+      const mask = 1 << (i & 7), byte = i >> 3;
+      if (bits[byte] & mask) continue;
+      bits[byte] |= mask;
+      size++;
       const commit = byHash.get(next);
-      if (!commit || !commit.parentsKnown) { complete = false; continue; }
-      for (const parent of commit.parents) if (!visited.has(parent)) stack.push(parent);
+      if (!commit?.parentsKnown) { complete = false; continue; }
+      for (const parent of commit.parents) stack.push(parent);
     }
-    const result={hashes:visited,complete};
-    cache.set(hash,result);
-    // A large Git repository can have thousands of tags. Keeping a full
-    // ancestor set for every tag grows quadratically with repository age.
-    // Keep only the most recently queried release boundaries.
-    if (cache.size > 12) cache.delete(cache.keys().next().value);
+    const result = {bits, complete, size};
+    releaseCache.set(hash, result);
     return result;
+  }
+  const contains = (reach, hash) => {
+    const i = index.get(hash);
+    return i !== undefined && !!(reach.bits[i >> 3] & (1 << (i & 7)));
   };
+  function difference(current, previous) {
+    const result = [];
+    for (let i = 0; i < hashes.length; i++) {
+      const mask = 1 << (i & 7), byte = i >> 3;
+      if ((current.bits[byte] & mask) && !(previous?.bits[byte] & mask)) result.push(hashes[i]);
+    }
+    return result;
+  }
   const descendantsOf = hash => {
     const visited = new Set(), stack = [hash];
     while (stack.length) {
@@ -127,9 +147,59 @@ function createGraph(commits) {
       visited.add(next);
       for (const child of children.get(next) || []) stack.push(child);
     }
-    return visited; // computed per inspected tag, not cached for every commit
+    return visited;
   };
-  return {byHash,ancestry,descendantsOf};
+  return {byHash, ancestry, contains, difference, descendantsOf};
+}
+
+/**
+ * Match GitHub logins only to unambiguous, already-merged Git author identities.
+ * An explicit choice always wins. We accept exact GitHub noreply handles,
+ * unique exact email local-parts, or exact existing contributor/author aliases.
+ * Similar-looking names and cross-group collisions are never silently assigned.
+ */
+export function autoMatchGithubPublishers(githubReleases, groups, commits, overrides = {}) {
+  const byEmail = new Map();
+  for (const group of groups) for (const email of group.emails) byEmail.set(email.toLowerCase(), group);
+  const namesByEmail = new Map();
+  for (const commit of commits) {
+    const email = String(commit.email || '').toLowerCase();
+    if (!namesByEmail.has(email)) namesByEmail.set(email, new Set());
+    if (commit.name) namesByEmail.get(email).add(commit.name.trim().toLowerCase());
+  }
+  const logins = [...new Set(githubReleases.filter(r => !r.draft && r.publishedAt != null && r.publisher)
+    .map(r => r.publisher.toLowerCase()))].sort();
+  const candidates = (login, kind) => {
+    const matches = new Map();
+    for (const [email, group] of byEmail) {
+      const local = email.split('@')[0];
+      const noreply = email.endsWith('@users.noreply.github.com') &&
+        (local === login || local.match(/^[0-9]+\+(.+)$/)?.[1] === login);
+      const emailMatch = local === login;
+      const nameMatch = group.displayName.trim().toLowerCase() === login || namesByEmail.get(email)?.has(login);
+      if ((kind === 'github-noreply' && noreply) ||
+          (kind === 'email-local' && emailMatch) ||
+          (kind === 'author-name' && nameMatch)) {
+        if (!matches.has(group.id)) matches.set(group.id, {group, email});
+      }
+    }
+    return [...matches.values()];
+  };
+  return new Map(logins.map(login => {
+    const explicit = Object.hasOwn(overrides, login) ? String(overrides[login] || '').toLowerCase() : null;
+    if (explicit !== null) {
+      const group = byEmail.get(explicit);
+      // An explicit empty value means 'do not attribute' and overrides inference.
+      return [login, {group:group || null, email:group ? explicit : null, source:group?'manual':'excluded'}];
+    }
+    for (const kind of ['github-noreply','email-local','author-name']) {
+      const found = candidates(login, kind);
+      if (found.length === 1) return [login, {group:found[0].group,email:found[0].email,source:kind}];
+      // Do not fall back to a weaker clue when a stronger clue is ambiguous.
+      if (found.length > 1) return [login, {group:null,email:null,source:'ambiguous'}];
+    }
+    return [login, {group:null,email:null,source:'unmatched'}];
+  }));
 }
 
 function canonicalTag(tags) {
@@ -193,17 +263,16 @@ function leadTime(commits, taggedAt) {
   return values.length%2 ? values[half] : (values[half-1]+values[half])/2;
 }
 
-function followUpInWindow(release, descendants, referenceCommits, days, knownEnd) {
+function followUpInWindow(release, laterCommits, days, knownEnd) {
   const total=release.selectedFootprint.pathsCount;
   if(!total || release.timestamp==null || knownEnd==null || knownEnd<release.timestamp+days*86400000)
     return {days,observed:false,count:null,share:null};
   const paths=release.selectedFootprint.paths;
   const changed=new Set();
-  for(const commit of referenceCommits) {
-    if(commit.committedAt==null || commit.committedAt<=release.timestamp || commit.committedAt>release.timestamp+days*86400000) continue;
-    if(!descendants.has(commit.hash) || commit.hash===release.hash) continue;
+  for(const commit of laterCommits) {
+    if(commit.committedAt>release.timestamp+days*86400000)continue;
     for(const file of commit.files) if(paths.has(file.path)) changed.add(file.path);
-    if(changed.size===total) break;
+    if(changed.size===total)break;
   }
   return {days,observed:true,count:changed.size,share:100*changed.size/total};
 }
@@ -218,15 +287,12 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
   const metric=IMPACT_METRICS[options.metric] ? options.metric : 'commits';
   const githubReleases=Array.isArray(options.githubReleases) ? options.githubReleases : [];
   const githubByTag=new Map(githubReleases.filter(item=>item?.tag).map(item=>[item.tag,item]));
-  // GitHub logins cannot safely be inferred from Git author names/emails.
-  // Explicit mappings store a canonical author email so group merges remain valid.
+  // Explicit mappings survive identity merges; automatic matches are derived
+  // from the same consolidated author groups, never stored as separate credit.
   const actorMap=options.actorMap && typeof options.actorMap==='object' ? options.actorMap : {};
   const groupForEmail=email=>view.allContributors.find(group=>group.emails.includes(String(email||'').toLowerCase())) || null;
-  const mappedActor=login=>{
-    const key=String(login||'').toLowerCase();
-    const email=Object.hasOwn(actorMap,key) ? actorMap[key] : null;
-    return email ? groupForEmail(email) : null;
-  };
+  const actorMatches=autoMatchGithubPublishers(githubReleases,view.allContributors,allCommits,actorMap);
+  const mappedActor=login=>actorMatches.get(String(login||'').toLowerCase())?.group || null;
   const days=FOLLOWUP_WINDOWS.includes(options.followupDays) ? options.followupDays : 90;
   const graph=createGraph(allCommits);
   const scopedByHash=new Map(view.eligibleCommits.map(c=>[c.hash,c]));
@@ -254,7 +320,7 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
     const login=published ? github.publisher : '';
     const publisherGroup=login ? mappedActor(login) : null;
     const taggerGroup=!login && main.taggerEmail ? groupForEmail(main.taggerEmail) : null;
-    const driver=login ? {source:'github-publisher',login,name:login,groupId:publisherGroup?.id??null,groupName:publisherGroup?.displayName??null}
+    const driver=login ? {source:'github-publisher',login,name:login,groupId:publisherGroup?.id??null,groupName:publisherGroup?.displayName??null,matchSource:actorMatches.get(login.toLowerCase())?.source||'unmatched'}
       : main.taggerEmail ? {source:'annotated-tagger',login:null,name:main.taggerName||main.taggerEmail,groupId:taggerGroup?.id??null,groupName:taggerGroup?.displayName??null}
       : {source:'unknown',login:null,name:null,groupId:null,groupName:null};
     return { hash, tag:main.name, aliases:tags.map(t=>t.name), date, timestamp,
@@ -266,15 +332,21 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
   const byReleaseHash=new Map(releases.map(r=>[r.hash,r]));
   const periodReleases=releases.filter(r=>r.date && (!view.start || r.date>=view.start) && (!view.end || r.date<=view.end));
   const referenceCommits=view.referenceCommits.filter(c=>c.committedAt!=null);
+  // Cache only compact ancestry bitsets for tagged snapshots (not every commit).
+  // This includes tagged siblings, whose relationships cannot be inferred from dates.
+  const reachByHash = new Map(releases.map(r => [r.hash, graph.ancestry(r.hash)]));
+  const emptyReach = {bits: new Uint8Array(Math.ceil(graph.byHash.size / 8)), complete:true, size:0};
   // A complete follow-up requires visible graph descendants far enough after
   // the tag, not simply wall-clock time passing or unrelated branches moving.
-  for(const release of periodReleases) {
+  for(const [releaseIndex, release] of periodReleases.entries()) {
+    if (releaseIndex % Math.max(1, Math.ceil(periodReleases.length / 25)) === 0)
+      options.progress?.({phase:'release-analysis', current:releaseIndex, total:periodReleases.length});
     // Release publication can be delayed, recreated or backdated. Membership
     // always follows ancestry, even when publication chronology disagrees.
     const previous=nearestTagAncestor(release.hash,byReleaseHash,graph);
-    const currentReach=graph.ancestry(release.hash);
-    const oldReach=previous?graph.ancestry(previous.hash):{hashes:new Set(),complete:true};
-    const introduced=[...currentReach.hashes].filter(hash=>!oldReach.hashes.has(hash) && graph.byHash.has(hash));
+    const currentReach=reachByHash.get(release.hash);
+    const oldReach=previous?reachByHash.get(previous.hash):emptyReach;
+    const introduced=graph.difference(currentReach,oldReach);
     const matched=introduced.map(hash=>scopedByHash.get(hash)).filter(Boolean);
     const selected=matched.filter(c=>selectedIds.has(c.groupId));
     const reference=matched.filter(c=>referenceIds.has(c.groupId));
@@ -303,25 +375,25 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
     }));
     const descendants=graph.descendantsOf(release.hash);
     const later=referenceCommits.filter(c=>c.committedAt>release.timestamp && descendants.has(c.hash));
-    const knownEnd=later.length ? Math.max(...later.map(c=>c.committedAt)) : null;
+    const knownEnd=later.length ? later.reduce((max,c)=>Math.max(max,c.committedAt),-Infinity) : null;
     release.followup=FOLLOWUP_WINDOWS.map(window=>release.lineageComplete
-      ? followUpInWindow(release,descendants,referenceCommits,window,knownEnd)
+      ? followUpInWindow(release,later,window,knownEnd)
       : {days:window,observed:false,count:null,share:null});
     const next=releases.filter(r=>r.hash!==release.hash && descendants.has(r.hash))
-      .sort((a,b)=>graph.ancestry(a.hash).hashes.size-graph.ancestry(b.hash).hashes.size)[0];
+      .sort((a,b)=>reachByHash.get(a.hash).size-reachByHash.get(b.hash).size)[0];
     release.nextTag=next?.tag || null;
     release.nextTagFootprint=null;
     if(next && release.lineageComplete) {
-      const nextReach=graph.ancestry(next.hash).hashes;
-      const current=new Set(currentReach.hashes);
+      const nextReach=reachByHash.get(next.hash);
       const paths=new Set();
       for(const commit of view.referenceCommits) {
-        if(!nextReach.has(commit.hash)||current.has(commit.hash)) continue;
+        if(!graph.contains(nextReach,commit.hash)||graph.contains(currentReach,commit.hash))continue;
         for(const file of commit.files) if(selectedFootprint.paths.has(file.path)) paths.add(file.path);
       }
       release.nextTagFootprint={ count:paths.size, share:selectedFootprint.pathsCount?100*paths.size/selectedFootprint.pathsCount:null };
     }
   }
+  options.progress?.({phase:'release-analysis',current:periodReleases.length,total:periodReleases.length});
   // All Impact breakdowns share *released* contributor evidence. The authored
   // activity strip alone intentionally includes unreleased commits (labelled).
   // Deduplicate across divergent tag lineages so totals do not double-credit.
@@ -337,7 +409,7 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
     return {id:c.id,name:c.displayName,footprint:f};
   });
   const visible=periodReleases;
-  const maximum=Math.max(1,...visible.flatMap(r=>r.cells.map(c=>c.value??0)));
+  const maximum=visible.reduce((max,r)=>r.cells.reduce((local,c)=>Math.max(local,c.value??0),max),1);
   const monthly=new Map(), daily=new Map();
   for(const commit of view.selectedCommits){
     const month=commit.date.slice(0,7);
@@ -359,10 +431,10 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
     }
   }
   const cochanges=[...cochanged].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
-  const ghActors=[...new Set(githubReleases.filter(r=>!r.draft && r.publishedAt!=null && r.publisher)
-    .map(r=>r.publisher.toLowerCase()))].sort().map(login=>({
-    login, groupId:mappedActor(login)?.id??null,
-    groupName:mappedActor(login)?.displayName??null,
+  const ghActors=[...actorMatches].map(([login, match])=>({
+    login, groupId:match.group?.id??null,
+    groupName:match.group?.displayName??null,
+    matchSource:match.source, matchEmail:match.email,
     releases:periodReleases.filter(r=>r.driver.login?.toLowerCase()===login).length,
   }));
   const profiles=view.contributors.map(person=>{

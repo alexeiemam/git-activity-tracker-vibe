@@ -2,15 +2,129 @@ import {
   METRICS, DAY_NAMES, TIME_BANDS, buildAnalysis, getDateBounds, pulseDayDetails, workingRhythm, mondayOf, dayNumber, dateAtDay,
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
-  parseGitHistory, getHistoryDateBounds,
-} from './domain.js?v=github-releases-20261101-1';
-import { generateDemoLog } from './demo-data.js?v=github-releases-20261101-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=github-releases-20261101-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=github-releases-20261101-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=github-releases-20261101-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=github-releases-20261101-1';
+  parseGitHistory, getHistoryDateBounds, withWeekAggregation,
+} from './domain.js?v=performance-20261101-1';
+import { generateDemoLog } from './demo-data.js?v=performance-20261101-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=performance-20261101-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=performance-20261101-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=performance-20261101-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=performance-20261101-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
+// The analysis worker owns the expensive import and release-DAG calculations.
+// Main-thread fallback keeps local/file deployments usable if module workers
+// are unavailable; it is not the normal path for sizeable histories.
+let analysisWorker = null, workerSerial = 0, workerFaulted = false;
+const workerJobs = new Map();
+let renderGeneration = 0, progressGeneration = 0, progressTimer = null;
+let computedKey = null, computedResult = null, importRevision = 0;
+
+function createAnalysisWorker() {
+  if (workerFaulted || typeof Worker === 'undefined') return null;
+  if (analysisWorker) return analysisWorker;
+  try {
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=performance-20261101-1', import.meta.url), {type:'module'});
+    analysisWorker.onmessage = ({data}) => {
+      const job = workerJobs.get(data.id);
+      if (!job) return;
+      if (data.type === 'progress') return job.progress?.(data);
+      workerJobs.delete(data.id);
+      if (data.type === 'error') job.reject(new Error(data.message));
+      else job.resolve(data.result);
+    };
+    analysisWorker.onerror = event => {
+      console.warn('Git analysis worker unavailable; using fallback', event.message);
+      workerFaulted = true;
+      analysisWorker?.terminate(); analysisWorker = null;
+      for (const [,job] of workerJobs) job.reject(new Error('Analysis worker unavailable'));
+      workerJobs.clear();
+    };
+    return analysisWorker;
+  } catch (error) {
+    console.warn('Git analysis worker unavailable; using fallback',error);
+    workerFaulted = true;
+    return null;
+  }
+}
+function askWorker(type, payload, progress) {
+  const worker = createAnalysisWorker();
+  if (!worker) return null;
+  return new Promise((resolve,reject) => {
+    const id = ++workerSerial;
+    workerJobs.set(id,{resolve,reject,progress});
+    try { worker.postMessage({id,type,...payload}); }
+    catch (error) {workerJobs.delete(id);reject(error);}
+  });
+}
+function showProgress(phase, value=0, message='', generation=progressGeneration) {
+  if (generation !== progressGeneration) return;
+  clearTimeout(progressTimer);
+  const root=document.getElementById('work-progress');
+  root.hidden=false;
+  root.classList.remove('is-complete','is-error');
+  document.getElementById('work-phase').textContent=phase;
+  document.getElementById('work-detail').textContent=message;
+  document.getElementById('work-progress-value').value=Math.max(0,Math.min(100,value));
+  document.getElementById('work-percent').textContent=`${Math.round(value)}%`;
+}
+function finishProgress(generation, error=null, successTitle='Dashboard ready', successDetail='All views use the same filtered evidence.') {
+  if (generation !== progressGeneration) return;
+  const root=document.getElementById('work-progress');
+  root.classList.add(error?'is-error':'is-complete');
+  document.getElementById('work-phase').textContent=error?'Analysis failed':successTitle;
+  document.getElementById('work-detail').textContent=error?.message||successDetail;
+  document.getElementById('work-percent').textContent=error?'!':'100%';
+  document.getElementById('work-progress-value').value=error?0:100;
+  if (!error) progressTimer=setTimeout(()=>{if(generation===progressGeneration)root.hidden=true;},1800);
+}
+const yieldToUI = () => new Promise(resolve => setTimeout(resolve,0));
+async function processImportedHistory(raw, generation) {
+  const request=askWorker('parse',{raw},data=>showProgress(data.phase,Math.round(data.value*.9),data.message,generation));
+  if (request) {
+    try {return await request;} catch (error) {
+      if (!workerFaulted) throw error; // A malformed import is not a worker failure.
+    }
+  }
+  showProgress('Reading history',8,'Using compatibility processing on this browser',generation);
+  await yieldToUI();
+  return parseGitHistory(raw);
+}
+function analysisScope() {
+  return {selectedIds:new Set(state.selectedIds),start:state.start,end:state.end,
+    includeMerges:state.includeMerges,includeReverts:state.includeReverts,
+    metric:state.metric,denominator:state.denominator};
+}
+function analysisCacheKey(scope,groups,impactOptions) {
+  return JSON.stringify([importRevision,groups, [...scope.selectedIds].sort(),scope.start,scope.end,
+    scope.includeMerges,scope.includeReverts,scope.metric,scope.denominator,
+    impactOptions.metric, impactOptions.actorMap]);
+}
+async function computeViewAndImpact(groups,scope,impactOptions,generation) {
+  const key=analysisCacheKey(scope,groups,impactOptions);
+  if (computedKey===key && computedResult) return computedResult;
+  const request=askWorker('build',{groups,scope,impactOptions},data=>{
+    showProgress(data.phase,12+Math.round(data.value*.64),data.message,generation);
+  });
+  let result;
+  if (request) {
+    try {result=await request;} catch(error) {
+      if (!workerFaulted) throw error;
+    }
+  }
+  if (!result) {
+    showProgress('Building comparisons',17,'Using compatibility processing on this browser',generation);
+    await yieldToUI();
+    const view=buildAnalysis(rawCommits,groups,scope);
+    showProgress('Reconstructing releases',32,'Calculating tagged-release evidence',generation);
+    await yieldToUI();
+    const impact=impactAnalysis(view,rawCommits,rawTags,{...impactOptions,githubReleases:rawGithubReleases});
+    result={view,impact};
+  }
+  withWeekAggregation(result.view);
+  if (generation===progressGeneration) {computedKey=key;computedResult=result;}
+  return result;
+}
+
 const $ = id => document.getElementById(id);
 const number = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 });
 const decimal = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
@@ -253,13 +367,21 @@ function skipMerge() {
   mergeGroups = [...byEmail.entries()].map(([email,name])=>({ displayName:name, emails:[email] }));
   buildDashboard();
 }
-function analyse() {
+async function analyse() {
   setText('parse-error','');
   const raw = $('log-input').value.trim();
   if (!raw) return setText('parse-error','Paste a git log or load the demo.');
-  try { const history = parseGitHistory(raw); rawCommits = history.commits; rawTags = history.tags;
-    rawGithubReleases=history.githubReleases; githubStatus=history.githubStatus; githubWarnings=history.captureWarnings; }
-  catch(error) { return setText('parse-error',error.message); }
+  renderGeneration++; // Invalidate unfinished renders of an older import.
+  const generation=++progressGeneration;
+  showProgress('Reading history',2,'Decoding Git records without blocking the dashboard',generation);
+  let history;
+  try {history=await processImportedHistory(raw,generation);}
+  catch(error) {finishProgress(generation,error);return setText('parse-error',error.message);}
+  if (generation!==progressGeneration) return;
+  ({commits:rawCommits,tags:rawTags,githubReleases:rawGithubReleases,
+    githubStatus,captureWarnings:githubWarnings}=history);
+  importRevision++;computedKey=null;computedResult=null;
+  finishProgress(generation,null,'History ready','Review the proposed contributor identities, then build your dashboard.');
   pendingImport = null;
   identityMeta = makeIdentityCatalogue(rawCommits);
   identityPicker = null;
@@ -288,7 +410,7 @@ function syncScopeAfterLoad() {
   const initialStart = min > desiredStart ? min : desiredStart;
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
     metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,
-    impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection' });
+    impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
   state.selectedIds = new Set(mergeGroups.map((_,i)=>String(i)));
   if (pendingImport?.scope) {
     const s = pendingImport.scope;
@@ -314,7 +436,7 @@ function syncScopeAfterLoad() {
     if (s.impactActorMap && typeof s.impactActorMap==='object' && !Array.isArray(s.impactActorMap)) {
       const knownEmails=new Set(mergeGroups.flatMap(g=>g.emails));
       state.impactActorMap=Object.fromEntries(Object.entries(s.impactActorMap).filter(([login,email])=>
-        /^[\w-]{1,100}$/.test(login) && typeof email==='string' && knownEmails.has(email.toLowerCase()))
+        /^[\w-]{1,100}$/.test(login) && typeof email==='string' && (!email || knownEmails.has(email.toLowerCase())))
         .map(([login,email])=>[login.toLowerCase(),email.toLowerCase()]));
     }
     state.impactShowAll=!!s.impactShowAll;
@@ -381,7 +503,7 @@ function changeDate() {
 function resetFilters() {
   Object.assign(state,{ period:'all',start:sourceDateBounds().min,end:sourceDateBounds().max,
     includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,
-    impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection' });
+    impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
   setText('scope-error','');
@@ -1227,8 +1349,9 @@ function selectImpactReleaseWithinWindow() {
   if(candidates.length && !candidates.some(r=>r.hash===state.impactReleaseHash))state.impactReleaseHash=candidates.at(-1).hash;
 }
 function renderImpact(view) {
-  impactModel=impactAnalysis(view,rawCommits,rawTags,{metric:state.impactMetric,
-    githubReleases:rawGithubReleases,githubStatus,actorMap:state.impactActorMap,captureWarningsCount:githubWarnings.length});
+  // The expensive release reconstruction is computed once in the worker.
+  // Interacting with the timeline, tab, or release picker only rerenders HTML.
+  if (!view || !impactModel) return;
   const model=impactModel;
   $('impact-empty').innerHTML=impactSelectMessage(model);
   $('impact-panels').hidden=!model.releases.length;
@@ -1307,24 +1430,56 @@ function renderRecent(view) {
     return `<tr><td>${esc(c.date+hour)}</td><td class="name-cell"><span style="${style(c.groupId)}"><i class="person-dot"></i>${esc(author?.displayName||c.name)}</span></td><td><span class="commit-subject" title="${esc(c.subject)}">${esc(c.hash?.slice(0,7)||'—')} · ${esc(c.subject)}${c.isMerge?'<span class="flag merge">merge</span>':''}${c.isRevert?'<span class="flag revert">revert</span>':''}${c.touchesVersion?'<span class="flag version">VERSION</span>':''}</span></td><td class="right"><span class="number-add">+${number.format(added)}</span> / <span class="number-del">−${number.format(deleted)}</span></td><td class="right">${c.files.length}</td></tr>`;
   }).join('')}</tbody></table>`;
 }
-function renderDashboard() {
+async function renderDashboard() {
   if(!rawCommits.length || $('dashboard').hidden) return;
-  analysis=buildAnalysis(rawCommits,mergeGroups,{
-    selectedIds:state.selectedIds, start:state.start,end:state.end,
-    includeMerges:state.includeMerges,includeReverts:state.includeReverts,
-    metric:state.metric,denominator:state.denominator,
-  });
-  updateControls();renderPicker();renderScope(analysis);
-  renderStats(analysis);renderRanking(analysis);renderTrend(analysis);renderTable(analysis);
-  renderPulse(analysis);renderRhythm(analysis);
-  try { renderImpact(analysis); }
-  catch (error) {
-    console.error('Impact Explorer rendering failed', error);
-    impactModel = null;
-    $('impact-panels').hidden = true;
-    $('impact-empty').innerHTML = `<div class="impact-empty" role="alert"><strong>Impact Explorer could not render</strong><p>The other charts remain available. Try reloading the latest application, then re-importing Git history. Diagnostic: ${esc(error?.message || 'Unknown error')}</p></div>`;
+  const generation=++progressGeneration;
+  const run=++renderGeneration;
+  const scope=analysisScope();
+  const groups=mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails]}));
+  const impactOptions={metric:state.impactMetric,githubStatus,
+    actorMap:{...state.impactActorMap},captureWarningsCount:githubWarnings.length};
+  $('dashboard').setAttribute('aria-busy','true');
+  showProgress('Building comparisons',6,'Keeping the interface responsive while analysing Git history',generation);
+  await yieldToUI();
+  try {
+    const result=await computeViewAndImpact(groups,scope,impactOptions,generation);
+    if(run!==renderGeneration || $('dashboard').hidden) return;
+    analysis=result.view;impactModel=result.impact;
+    const stages=[
+      ['Preparing overview',78,'Summary, ranking, trends and comparison table',()=>{
+        updateControls();renderPicker();renderScope(analysis);renderStats(analysis);
+        renderRanking(analysis);renderTrend(analysis);renderTable(analysis);
+      }],
+      ['Rendering activity pulse',83,'Monthly or daily activity across selected contributors',()=>renderPulse(analysis)],
+      ['Rendering working rhythm',88,'Weekdays, hours and seasonality',()=>renderRhythm(analysis)],
+      ['Rendering release intelligence',93,'Timeline, publishers and tagged release evidence',()=>renderImpact(analysis)],
+      ['Finishing evidence views',97,'Codebase footprint, hotspots and recent commits',()=>{
+        renderFootprint(analysis);renderAreas(analysis);renderRecent(analysis);
+      }],
+    ];
+    for (const [phase,value,detail,render] of stages) {
+      if (run!==renderGeneration) return;
+      showProgress(phase,value,detail,generation);
+      await yieldToUI();
+      if (run!==renderGeneration) return;
+      try {render();}
+      catch (error) {
+        console.error(phase==='Rendering release intelligence'?'Impact Explorer rendering failed':`${phase} failed`,error);
+        if (phase==='Rendering release intelligence') {
+          $('impact-panels').hidden=true;
+          $('impact-empty').innerHTML=`<div class="impact-empty" role="alert"><strong>Impact Explorer could not render</strong><p>${esc(error.message||'Unknown error')}</p></div>`;
+        } else throw error;
+      }
+    }
+    if (run===renderGeneration) finishProgress(generation);
+  } catch(error) {
+    if (run!==renderGeneration) return;
+    console.error('Dashboard analysis failed',error);
+    finishProgress(generation,error);
+    $('scope-error').textContent=`Analysis failed: ${error.message}. Try re-importing history or reloading the application.`;
+  } finally {
+    if (run===renderGeneration)$('dashboard').removeAttribute('aria-busy');
   }
-  renderFootprint(analysis);renderAreas(analysis);renderRecent(analysis);
 }
 
 function exportSession() {
@@ -1353,10 +1508,16 @@ async function importSession(event) {
   try {payload=JSON.parse(await file.text());}
   catch {return setText('parse-error','Could not parse JSON export.');}
   if(typeof payload?.rawLog!=='string' || !Array.isArray(payload.mergeGroups)) return setText('parse-error','Invalid session: rawLog and mergeGroups required.');
+  renderGeneration++; // Prevent an earlier session build from rendering over this one.
+  const generation=++progressGeneration;
+  showProgress('Restoring session',3,'Reading Git history from the session export',generation);
   let history;
-  try {history=parseGitHistory(payload.rawLog);}catch(err){return setText('parse-error',err.message);}
+  try {history=await processImportedHistory(payload.rawLog,generation);}
+  catch(err){finishProgress(generation,err);return setText('parse-error',err.message);}
+  if (generation!==progressGeneration)return;
   rawCommits=history.commits;rawTags=history.tags;
   rawGithubReleases=history.githubReleases;githubStatus=history.githubStatus;githubWarnings=history.captureWarnings;
+  importRevision++;computedKey=null;computedResult=null;
   identityMeta = makeIdentityCatalogue(rawCommits);
   identityPicker = null;
   mergeUndo = null;
@@ -1396,8 +1557,8 @@ const ACTIONS={
   'select-none':()=>{state.selectedIds=new Set();renderDashboard();},
   'solo':(_e,t)=>{state.selectedIds=new Set([t.dataset.personId]);renderDashboard();},
   'reset-filters':resetFilters,
-  'trend-mode':(_e,t)=>{state.trend=t.dataset.trend;renderDashboard();},
-  'pulse-mode':(_e,t)=>{state.pulseMode=t.dataset.pulseMode;renderDashboard();},
+  'trend-mode':(_e,t)=>{state.trend=t.dataset.trend;if(analysis)renderTrend(analysis);},
+  'pulse-mode':(_e,t)=>{state.pulseMode=t.dataset.pulseMode;if(analysis)renderPulse(analysis);},
   'rhythm-tab':(_e,t)=>{state.rhythmTab=t.dataset.rhythmTab;seasonHover=null;seasonPinned=null;renderRhythmExplorer(analysis);},
   'season-mode':(_e,t)=>{state.seasonMode=t.dataset.seasonMode;seasonHover=null;seasonPinned=null;renderSeasonality(analysis);},
   'season-all-years':()=>{state.seasonYears=null;seasonHover=null;seasonPinned=null;renderSeasonality(analysis);},
@@ -1480,12 +1641,10 @@ function handleDocumentChange(event) {
   if(t.dataset.ghActor!==undefined){
     const login=t.dataset.ghActor.toLowerCase();
     const group=analysis?.allContributors.find(g=>g.emails.includes(t.value.toLowerCase()));
-    if(group)state.impactActorMap[login]=t.value.toLowerCase();
-    else delete state.impactActorMap[login];
-    renderImpact(analysis);
-    const restored=[...$('impact-github-status').querySelectorAll('[data-gh-actor]')]
-      .find(element=>element.dataset.ghActor.toLowerCase()===login);
-    restored?.focus({preventScroll:true});return;
+    if (t.value==='__auto__') delete state.impactActorMap[login];
+    else if(t.value==='__none__')state.impactActorMap[login]='';
+    else if(group)state.impactActorMap[login]=t.value.toLowerCase();
+    renderDashboard();return;
   }
   if(t.dataset.personId!==undefined && t.type==='checkbox') {
     if(t.checked)state.selectedIds.add(t.dataset.personId);else state.selectedIds.delete(t.dataset.personId);
@@ -1498,7 +1657,7 @@ function handleDocumentChange(event) {
     case 'filter-merges':state.includeMerges=t.checked;renderDashboard();break;
     case 'filter-reverts':state.includeReverts=t.checked;renderDashboard();break;
     case 'metric-select':state.metric=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;
-    case 'impact-metric-select':state.impactMetric=t.value;renderImpact(analysis);break;
+    case 'impact-metric-select':state.impactMetric=t.value;renderDashboard();break;
     case 'impact-profile-select':state.impactFocus=t.value;renderImpact(analysis);$('impact-profile-select')?.focus({preventScroll:true});break;
     case 'impact-release-select':chooseImpactRelease(t.value,{focus:'select'});break;
     case 'impact-timeline-from':case 'impact-timeline-to':{
