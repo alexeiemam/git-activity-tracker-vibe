@@ -3,14 +3,17 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=story-explorer-20261102-1';
-import { generateDemoLog } from './demo-data.js?v=story-explorer-20261102-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=story-explorer-20261102-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=story-explorer-20261102-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=story-explorer-20261102-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=story-explorer-20261102-1';
-import { buildStoryAnalysis } from './stories.js?v=story-explorer-20261102-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=story-explorer-20261102-1';
+} from './domain.js?v=perspectives-20261102-2';
+import { generateDemoLog } from './demo-data.js?v=perspectives-20261102-2';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=perspectives-20261102-2';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=perspectives-20261102-2';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=perspectives-20261102-2';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=perspectives-20261102-2';
+import { buildStoryAnalysis } from './stories.js?v=perspectives-20261102-2';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=perspectives-20261102-2';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=perspectives-20261102-2';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=perspectives-20261102-2';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=perspectives-20261102-2';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -25,7 +28,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=story-explorer-20261102-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=perspectives-20261102-2', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -121,7 +124,16 @@ async function computeViewAndImpact(groups,scope,impactOptions,generation) {
     await yieldToUI();
     const impact=impactAnalysis(view,rawCommits,rawTags,{...impactOptions,githubReleases:rawGithubReleases});
     const stories=buildStoryAnalysis(view,impact);
-    result={view,impact,stories};
+    const bounds=sourceDateBounds();
+    const fullView=buildAnalysis(rawCommits,groups,{
+      start:bounds.min,end:bounds.max,selectedIds:new Set(groups.map((_,i)=>String(i))),
+      includeMerges:scope.includeMerges,includeReverts:scope.includeReverts,
+      metric:'commits',denominator:'repository',
+    });
+    const fullImpact=impactAnalysis(fullView,rawCommits,rawTags,{
+      ...impactOptions,githubReleases:rawGithubReleases,metric:'commits',skipFollowup:true,
+    });
+    result={view,impact,stories,primaryIndex:buildEvidenceIndex(fullView,fullImpact,bounds)};
   }
   withWeekAggregation(result.view);
   if (generation===progressGeneration) {computedKey=key;computedResult=result;}
@@ -146,6 +158,7 @@ let githubStatus = 'not-captured';
 let githubWarnings = [];
 let impactModel = null;
 let storyModel = null;
+let perspectiveIndex = null;
 let evidenceRenderedRun = -1, evidenceRenderPromise = null;
 // Tag events may be later than the newest authored commit. The shared
 // window includes their dates, while all contributor counts remain author-based.
@@ -167,10 +180,48 @@ const state = {
   impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
   impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,
   impactFocus:'selection', impactActorMap:{},
-  viewMode:'stories', storyPerspective:'team', storyFocus:'selection', storyTopic:'all', storyCategory:'noteworthy',
+  viewMode:'observatory', storyPerspective:'team', storyFocus:'selection', storyTopic:'all', storyCategory:'noteworthy',
   storyShowAll:false, storyFindingId:null, storyMonth:null, storyDismissed:new Set(),storyTrail:[],
   storyPairA:null,storyPairB:null,
 };
+
+let primary=primaryDefaults();
+function restorePrimary(scope){ primary=restorePrimaryState(scope,mergeGroups); }
+
+function initialisePrimary(){
+  if(!perspectiveIndex)return;
+  if(!primary.periodFrom||!primary.periodTo){
+    const window=windowOf(perspectiveIndex,14);primary.periodFrom=window.from;primary.periodTo=window.to;
+  }
+  const groups=perspectiveIndex.groups;
+  if(!groups.some(g=>g.id===primary.contributorFocus))primary.contributorFocus=groups[0]?.id??null;
+  if(primary.compareB && !groups.some(g=>g.id===primary.compareB))primary.compareB=null;
+  if(primary.compareC && !groups.some(g=>g.id===primary.compareC))primary.compareC=null;
+  if(!perspectiveIndex.releases.some(r=>r.hash===primary.releaseHash))
+    primary.releaseHash=perspectiveIndex.releases.at(-1)?.hash||null;
+}
+function renderPrimary(){
+  if(!perspectiveIndex)return;
+  initialisePrimary();
+  primary.mode=state.viewMode==='evidence'?primary.mode:state.viewMode;
+  $('stories-view').innerHTML=renderPrimaryExplorer(perspectiveIndex,primary);
+}
+function primarySnapshot(){
+  const {trail,...snapshot}=primary;
+  return {...snapshot,label:({observatory:'Observatory',periods:'Periods',contributors:'Contributors',codebase:'Codebase'})[primary.mode]};
+}
+
+function goPrimary(mode,change={}, {remember=true,scroll=true}={}){
+  if(!['observatory','periods','contributors','codebase'].includes(mode))return;
+  if(remember && (mode!==primary.mode||Object.keys(change).length))primary.trail=[...primary.trail,primarySnapshot()].slice(-8);
+  Object.assign(primary,change,{mode});state.viewMode=mode;
+  setExperienceVisibility();renderPrimary();
+  if(scroll)$('stories-view').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function resetPrimaryOnLoad(){
+  restorePrimary(pendingImport?.scope);
+  if(pendingImport?.scope?.primary && state.viewMode!=='evidence')state.viewMode=primary.mode;
+}
 
 function setText(id, content) { $(id).textContent = content; }
 // The capture command is static HTML, so it remains visible even if a
@@ -423,9 +474,10 @@ function syncScopeAfterLoad() {
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
     metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{},
-    viewMode:'stories',storyPerspective:'team',storyFocus:'selection',storyTopic:'all',storyCategory:'noteworthy',storyShowAll:false,
+    viewMode:'observatory',storyPerspective:'team',storyFocus:'selection',storyTopic:'all',storyCategory:'noteworthy',storyShowAll:false,
     storyFindingId:null,storyMonth:null,storyPairA:null,storyPairB:null,storyTrail:[],storyDismissed:new Set() });
   state.selectedIds = new Set(mergeGroups.map((_,i)=>String(i)));
+  if (!pendingImport)restorePrimary(null);
   if (pendingImport?.scope) {
     const s = pendingImport.scope;
     if (METRICS[s.metric]) state.metric=s.metric;
@@ -469,7 +521,7 @@ function syncScopeAfterLoad() {
       const i=mergeGroups.findIndex(g=>g.emails.includes(s.rhythmFocusEmail));
       state.rhythmFocus=i<0?'selection':String(i);
     }
-    if (['stories','evidence'].includes(s.viewMode))state.viewMode=s.viewMode;
+    if (['observatory','periods','contributors','codebase','evidence'].includes(s.viewMode))state.viewMode=s.viewMode;
     if (['team','person','compare'].includes(s.storyPerspective))state.storyPerspective=s.storyPerspective;
     if (['all','activity','rhythm','delivery','focus','seasonality','context'].includes(s.storyTopic))state.storyTopic=s.storyTopic;
     if (['noteworthy','hidden'].includes(s.storyCategory))state.storyCategory=s.storyCategory;
@@ -487,6 +539,7 @@ function syncScopeAfterLoad() {
       state.selectedIds = new Set(mergeGroups.flatMap((g,i)=>g.emails.some(e=>emails.has(e)) ? [String(i)] : []));
     }
   }
+  resetPrimaryOnLoad();
   pendingImport=null;
 }
 function buildDashboard() {
@@ -1596,10 +1649,11 @@ async function ensureEvidenceRendered(run=renderGeneration,generation=progressGe
   try{await job;}finally{if(evidencePendingRun===run){evidencePendingRun=-1;evidenceRenderPromise=null;}}
 }
 async function switchExperience(next,{target=null}={}) {
-  if(!['stories','evidence'].includes(next))return;
+  if(!['observatory','periods','contributors','codebase','evidence'].includes(next))return;
   state.viewMode=next;
+  if(next!=='evidence')primary.mode=next;
   setExperienceVisibility();
-  if(next==='stories')renderStories();
+  if(next!=='evidence')renderPrimary();
   else if(evidenceRenderedRun!==renderGeneration && analysis){
     const generation=++progressGeneration;
     showProgress('Opening the evidence workbench',76,'Rendering the requested charts in manageable stages',generation);
@@ -1636,16 +1690,17 @@ async function renderDashboard() {
     const result=await computeViewAndImpact(groups,scope,impactOptions,generation);
     if(run!==renderGeneration||$('dashboard').hidden)return;
     analysis=result.view;impactModel=result.impact;storyModel=result.stories||buildStoryAnalysis(analysis,impactModel);
+    perspectiveIndex=result.primaryIndex;
     evidenceRenderedRun=-1;
     updateControls();renderPicker();renderScope(analysis);
     setExperienceVisibility();
     showProgress('Composing the story',78,'Checking baselines, sample sizes and supporting releases',generation);
     await yieldToUI();
     if(run!==renderGeneration)return;
-    renderStories();
+    renderPrimary();
     if(state.viewMode==='evidence')await ensureEvidenceRendered(run,generation);
-    if(run===renderGeneration)finishProgress(generation,null,state.viewMode==='stories'?'Stories ready':'Dashboard ready',
-      'Every observation and chart uses the same scoped Git evidence.');
+    if(run===renderGeneration)finishProgress(generation,null,state.viewMode==='evidence'?'Evidence ready':'Repository ready',
+      'Tag-defined releases and authored activity are ready to explore.');
   }catch(error){
     if(run!==renderGeneration)return;
     console.error('Git analysis failed',error);
@@ -1677,7 +1732,8 @@ function exportSession() {
       storyPairAEmail:analysis?.byId.get(state.storyPairA)?.emails[0]||null,
       storyPairBEmail:analysis?.byId.get(state.storyPairB)?.emails[0]||null,
       storyMonth:state.storyMonth,storyDismissed:[...state.storyDismissed].slice(0,300),
-      storyFindingId:state.storyFindingId,storyTrail:state.storyTrail.slice(-8)}};
+      storyFindingId:state.storyFindingId,storyTrail:state.storyTrail.slice(-8),
+      primary:primaryStateForExport(primary,mergeGroups)}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const uri=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=uri;a.download=`git-signals-${new Date().toISOString().slice(0,10)}.json`;a.click();
@@ -1723,7 +1779,69 @@ async function importSession(event) {
 }
 
 const ACTIONS={
-  'experience-mode':(_event,target)=>switchExperience(target.dataset.experience),
+  'experience-mode':(_event,target)=>{
+    if(target.dataset.experience==='evidence')switchExperience('evidence');
+    else goPrimary(target.dataset.experience,{}, {remember:true});
+  },
+  'primary-evidence-filters':async()=>{
+    $('legacy-scope-details').open=true;
+    await switchExperience('evidence',{target:'scope-heading'});
+  },
+  'primary-nav':(_e,t)=>goPrimary(t.dataset.to),
+  'primary-back':()=>{
+    const previous=primary.trail.pop();if(!previous)return;
+    const trail=primary.trail;
+    Object.assign(primary,previous,{trail});state.viewMode=primary.mode;
+    setExperienceVisibility();renderPrimary();
+    $('stories-view').scrollIntoView({behavior:'smooth',block:'start'});
+  },
+  'primary-open-release':(_e,t)=>{goPrimary('observatory',{releaseHash:t.dataset.hash,releaseType:'all',releaseYear:'all',releaseBin:null,releaseQuery:'',releasePage:0},{scroll:false});$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
+  'primary-select-release':(_e,t)=>{primary.releaseHash=t.dataset.hash;renderPrimary();$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
+  'primary-open-person':(_e,t)=>goPrimary('contributors',{contributorFocus:t.dataset.person,contributorTab:'delivery',contributorRange:primary.mode==='periods'?'period':'all'}),
+  'primary-open-area':(_e,t)=>goPrimary('codebase',{codeArea:t.dataset.area,codebaseRange:primary.mode==='periods'?'period':'all'}),
+  'primary-select-area':(_e,t)=>{primary.codeArea=t.dataset.area;renderPrimary();},
+  'primary-release-page':(_e,t)=>{primary.releasePage=Math.max(0,Number(t.dataset.page)||0);renderPrimary();},
+  'primary-reset-release-search':()=>{Object.assign(primary,{releaseBin:null,releaseYear:'all',releaseType:'all',releaseQuery:'',releasePage:0});renderPrimary();},
+  'primary-reset-release-bin':()=>{primary.releaseBin=null;renderPrimary();},
+  'primary-filter-release-type':(_e,t)=>{primary.releaseType=t.dataset.type;primary.releasePage=0;renderPrimary();},
+  'primary-observatory-bin':(_e,t)=>{primary.releaseBin=t.dataset.bin;primary.releasePage=0;renderPrimary();$('primary-release-type')?.scrollIntoView({behavior:'smooth',block:'center'});},
+  'primary-release-period':(_e,t)=>{
+    const date=t.dataset.date;if(!date)return;
+    const at=dayNumber(date);
+    goPrimary('periods',{periodFrom:dateAtDay(at-6),periodTo:dateAtDay(at+7),periodPreset:'custom'});
+  },
+  'primary-period-preset':(_e,t)=>{
+    const length=Number(t.dataset.days),window=windowOf(perspectiveIndex,length);
+    Object.assign(primary,{periodPreset:String(length),periodFrom:window.from,periodTo:window.to,periodBucket:null});renderPrimary();
+  },
+  'primary-period-custom':()=>{primary.periodPreset='custom';renderPrimary();$('primary-period-from')?.focus({preventScroll:true});},
+  'primary-period-bin':(_e,t)=>{primary.periodBucket=t.dataset.bin;renderPrimary();},
+  'primary-period-reset':()=>{primary.periodBucket=null;renderPrimary();},
+  'primary-period-cell':(_e,t)=>{primary.periodFocusPerson=t.dataset.person;primary.periodFocusArea=t.dataset.area;renderPrimary();$('primary-copy-status')?.closest('.primary-panel')?.previousElementSibling?.scrollIntoView({behavior:'smooth',block:'nearest'});},
+  'primary-contributor-tab':(_e,t)=>{primary.contributorTab=t.dataset.tab;if(primary.contributorTab==='compare'&&!primary.compareB)primary.compareB=perspectiveIndex.groups.find(g=>g.id!==primary.contributorFocus)?.id||null;renderPrimary();},
+  'primary-open-month':(_e,t)=>{
+    const [y,m]=t.dataset.month.split('-').map(Number),to=new Date(Date.UTC(y,m,0)).toISOString().slice(0,10);
+    goPrimary('periods',{periodFrom:`${y}-${String(m).padStart(2,'0')}-01`,periodTo:to,periodPreset:'custom'});
+  },
+  'primary-open-year':(_e,t)=>goPrimary('periods',{periodFrom:`${t.dataset.year}-01-01`,periodTo:`${t.dataset.year}-12-31`,periodPreset:'custom'}),
+  'primary-person-period':(_e,t)=>{const window=windowOf(perspectiveIndex,30);goPrimary('periods',{periodFrom:window.from,periodTo:window.to,periodPreset:'30',periodSelectedId:t.dataset.person});},
+  'primary-open-rhythm':async()=>{state.viewMode='evidence';state.rhythmFocus=primary.contributorFocus;await switchExperience('evidence',{target:'rhythm-heading'});},
+  'primary-evidence-person':async(_e,t)=>{state.rhythmFocus=t.dataset.person;await switchExperience('evidence',{target:'ranking-heading'});renderRhythm(analysis);},
+  'primary-evidence-release':async(_e,t)=>storyOpenEvidence('impact-explorer',t.dataset.hash),
+  'primary-copy-briefing':()=>{
+    const text=periodBriefingForUi(perspectiveIndex,primary);
+    if(!text)return;
+    const status=$('primary-copy-status');
+    if(!navigator.clipboard?.writeText){
+      if(status)status.textContent='Clipboard is unavailable in this browser; use a localhost HTTP server or select the briefing below.';
+      let fallback=$('primary-briefing-fallback');
+      if(!fallback && status){fallback=document.createElement('textarea');fallback.id='primary-briefing-fallback';fallback.className='primary-briefing-fallback';fallback.setAttribute('aria-label','Period briefing to copy');status.after(fallback);}
+      if(fallback){fallback.value=text;fallback.select();}
+      return;
+    }
+    navigator.clipboard.writeText(text).then(()=>{if(status)status.textContent='Briefing copied';})
+      .catch(()=>{if(status)status.textContent='Clipboard blocked. Select the briefing below.';let fallback=$('primary-briefing-fallback');if(!fallback&&status){fallback=document.createElement('textarea');fallback.id='primary-briefing-fallback';fallback.className='primary-briefing-fallback';fallback.setAttribute('aria-label','Period briefing to copy');status.after(fallback);}if(fallback){fallback.value=text;fallback.select();}});
+  },
   'story-perspective':(_event,target)=>{state.storyPerspective=target.dataset.storyPerspective;state.storyFindingId=null;state.storyMonth=null;state.storyShowAll=false;renderStories();document.querySelector(`[data-story-perspective=\"${state.storyPerspective}\"]`)?.focus({preventScroll:true});},
   'story-inspect':(_event,target)=>{
     const id=target.dataset.storyId;
@@ -1877,6 +1995,23 @@ function handleDocumentChange(event) {
     if(t.checked)state.selectedIds.add(t.dataset.personId);else state.selectedIds.delete(t.dataset.personId);
     renderDashboard();return;
   }
+  const primaryFields={
+    'primary-release-type':'releaseType','primary-release-year':'releaseYear','primary-cohort-by':'cohortBy',
+    'primary-period-from':'periodFrom','primary-period-to':'periodTo',
+    'primary-period-comparison':'periodComparison','primary-compare-from':'compareFrom','primary-compare-to':'compareTo',
+    'primary-contributor-focus':'contributorFocus','primary-contributor-range':'contributorRange',
+    'primary-period-person':'periodSelectedId','primary-codebase-range':'codebaseRange',
+    'primary-compare-a':'contributorFocus','primary-compare-b':'compareB','primary-compare-c':'compareC',
+  };
+  if(primaryFields[t.id]){
+    const key=primaryFields[t.id];
+    primary[key]=t.value||null;
+    if(t.id==='primary-period-from'||t.id==='primary-period-to'){primary.periodPreset='custom';primary.periodBucket=null;primary.periodFocusPerson=null;primary.periodFocusArea=null;}
+    if(t.id==='primary-period-person'){primary.periodBucket=null;primary.periodFocusPerson=null;primary.periodFocusArea=null;}
+    if(t.id==='primary-release-type'||t.id==='primary-release-year')primary.releasePage=0;
+    if(t.id==='primary-contributor-focus'&&primary.compareB===primary.contributorFocus)primary.compareB=null;
+    renderPrimary();return;
+  }
   switch(t.id){
     case 'story-focus':state.storyFocus=t.value;state.storyFindingId=null;state.storyMonth=null;renderStories();$('story-focus')?.focus({preventScroll:true});break;
     case 'story-topic':state.storyTopic=t.value;state.storyShowAll=false;state.storyFindingId=null;renderStories();$('story-topic')?.focus({preventScroll:true});break;
@@ -1919,6 +2054,7 @@ function handleDocumentInput(event) {
   if(t.dataset.mergeName!==undefined){const g=mergeGroups[Number(t.dataset.mergeName)];if(g){g.displayName=t.value; if(mergeUndo)forgetUndo();}}
   if(t.matches('[data-identity-search]') && identityPicker){identityPicker.query=t.value;refreshIdentityOptions();}
   if(t.id==='contributor-search'){state.search=t.value;renderPicker();}
+  if(t.id==='primary-release-query'){primary.releaseQuery=t.value;primary.releasePage=0;renderPrimary();$('primary-release-query')?.focus({preventScroll:true});}
   if(t.id==='story-journey-pan'){
     const person=storyPerson(),index=Number(t.value);
     const scroll=$('story-journey-scroll');

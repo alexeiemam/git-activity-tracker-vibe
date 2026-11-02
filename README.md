@@ -1,6 +1,6 @@
-# git:signals — comparable Git activity, from one source of truth
+# git:signals — follow the releases, periods and people behind software delivery
 
-A local, zero-build dashboard to compare one or more Git contributors with the **same selection and denominator in every view**. It runs entirely in your browser; imported logs are not uploaded to a server.
+A local, zero-build Git evidence explorer with three connected ways into a repository: **the releases, a chosen period, or its contributors**. Tagged snapshots keep their complete code ancestry; authored activity remains a separate observation clock. Imported logs are processed locally in the browser, not uploaded to a service.
 
 ## Run
 
@@ -20,61 +20,88 @@ Open `http://localhost:8000` and choose **Explore demo dataset**, or use the gen
 
 No build, install, backend, API key, or CDN for the browser application is needed. The optional Google Fonts request can fall back to local fonts offline. The **capture command** calls an authenticated local GitHub CLI when installed; credentials are handled by `gh`, not by git:signals.
 
-## Stories — from measurements to evidence-led interpretation
+## Three first-class perspectives
 
-After building the dashboard, **Stories** is the default reading experience.
-**Explore Evidence** opens the complete pre-existing analytics dashboard on
-request. The evidence workbench is rendered *lazily*, in progressive stages,
-not before the first story appears. All observations derive from the **same
-contributor selection, merged Git identities, authored-date range, merge/revert
-policy and release ancestry** as the analytical workbench; changing a global
-filter recomputes the worker's story model, not a hidden secondary dataset.
+After importing history and confirming merged author identities, the app opens
+**Observatory**, not the earlier standalone Stories experience. Use the main
+navigation to switch perspectives without reimporting data:
 
-- **The team:** a handful of the most relevant observations across the selected
-  group, each with precise values, provenance, interpretation boundaries and a
-  direct link to the original supporting chart.
-- **One contributor:** the contributor's internal active-day gap distribution,
-  matched before/after periods, release involvement and codebase focus, plus a
-  month-by-month **Contribution Journey** with evidence-linked markers and separate **Authored**, **Shipped**
-  (included in a tagged release increment) and **Driven** (matched publisher)
-  lanes. Select a year, month or related release to inspect it. Journey chapters
-  describe *observed history*, not inferred employment stages.
-- **Compare people:** a common, explicitly labelled table for multiple selected
-  contributors, plus an editable two-person focus with aligned seven-day ×
-  twenty-four-hour heatmaps. Each person's heatmap normalises by **their own
-  timed authored commit count** to compare *when* activity is recorded, while
-  using **one shared positive-value colour scale** across the two heatmaps.
-  Absolute activity counts and sample sizes remain visible, and zero is neutral.
-- **Investigate a finding:** check its original sample, earlier and recent
-  equal-duration periods, evidence values and limitations, copy a plain-text
-  evidence summary, or open the relevant existing graph. Findings can be hidden
-  and restored; an exploration trail records visited findings. These preferences
-  and the current perspective/selected person are preserved in session export.
+- **Observatory — start with releases.** A release landscape shows aligned
+  calendar-bucket lanes for release counts, contributor appearances and codebase
+  area occurrences. Empty buckets remain visible, so quiet delivery periods
+  cannot disappear. Browse **all tagged releases**, search by tag, filter by
+  year and SemVer transition, or inspect release cohorts (patch/minor/major).
+  Compare release cohorts by **SemVer transition, matched release driver or calendar year**. Select any release to open its **Release Anatomy**: complete Git-ancestry
+  incremental commits, recorded contributors and their commit shares, the
+  matched publisher/driver, changed code areas, commit-subject categories,
+  GitHub publication details and notes, and the underlying hashes. The initial
+  baseline tag is labelled non-incremental; releases with missing ancestry
+  warn that their evidence may be incomplete. "Drove release" is a distinct
+  GitHub publisher/tagger role, not a claim about who authored its code.
+- **Periods — start with time.** Choose **7, 14, 30, 90 days, or any custom
+  inclusive interval**. Switch between an immediately preceding equal-duration
+  window, the same calendar period last year, a custom baseline or no
+  comparison. The **period unfolding** timeline aligns authored commits,
+  distinct contributors and tagged-release events at daily, weekly or monthly
+  resolution. Select a time bucket to examine the exact recorded commits and
+  releases. A zero-aware **contributor × top-level code area** matrix reveals
+  who touched what; select a cell to inspect its commits, or follow a person,
+  area or release. Short, supported period observations explain actual
+  differences and explicitly flag incomplete comparison coverage. GitHub
+  release notes provide *recorded* purpose, not invented motivation. Copy a
+  traceable **Period Briefing** including scope, activity, released events,
+  components, comparison and limitations.
+- **Contributors — start with a person.** Select any **reconciled** contributor
+  (all their merged author emails), then explore their **Delivery / Focus /
+  Behaviour / Evolution / Compare** views. The release portfolio distinguishes
+  tagged releases they authored for, releases they drove, and both; rates use
+  the same release-event population across compared people. Focus shows where
+  their authored files changed. Behaviour shows author-local 7×24 rhythms,
+  internal active-day gaps and sample counts. Evolution displays separate
+  monthly lanes for authorship, participation and release driving, and annual
+  summaries. Compare two or three people over the *same* imported-history,
+  365-day or selected period window, using measured values and separately
+  normalised rhythm grids—not a composite productivity score.
 
-**Deterministic, sample-gated, never a performance score.** The detector compares
-*internal* gaps between active author dates against the same contributor's
-other observed gaps; it never calls an import-boundary gap an absence. Changes
-in author-day frequency and commit concentration use **equal 60–365-day
-windows**; participation is measured per eligible tagged release increment,
-not by months elapsed. Release-gap observations only begin after that
-contributor's first observed release contribution. Recurring monthly
-seasonality requires at least **three complete calendar years** with adequate
-activity. When evidence is insufficient to support a notable change, the UI
-shows only explicitly labelled **descriptive context**, or an empty state.
+**Follow the contribution.** A release, contributor, area or period is
+selectable from the relevant views. The application preserves an investigation
+trail with a Back control and keeps the selected period as context when
+following a contributor or code area. **Codebase** is a contextual fourth
+view, showing released areas, the contributors who touched them and related
+release snapshots. The existing deep **Detailed analytical workbench** remains
+available on demand, including the daily/monthly Activity Pulse, weekly
+rhythm clock/grid/bars, annual seasonality, old impact matrices and recent
+commit tables. It renders lazily rather than blocking the Observatory.
 
-**Not observable from this import:** actual working hours, effort, performance,
-reasons for a quiet period, production deployment, opportunities on another
-branch or repository, and how many *unmerged* authored commits ever reached a
-release. Consequently, **authored-to-shipped conversion is not reported**;
-single-branch Git ancestry cannot establish it. Missing timestamp data remains
-missing, not zero. Tag-based delivery and authored activity use different,
-explicitly labelled dates, and a Github publisher is an *assumed* release
-driver after identity matching, not a verified deployment operator.
+### Two explicit clocks, no silent truncation
 
-The implementation lives in `assets/stories.js` (pure worker-side analysis)
-and `assets/story-view.js` (escaped, dependency-light rendering); regression
-tests are in `tests/stories.test.mjs`. The new experience does not require
-an AI provider or an external service.
+A tagged release is defined by its **exact Git ancestry** (and the declared
+merge/revert inclusion policy). It is not redefined when an individual opens a
+fortnight or a contributor portrait. Release *events* are selected by GitHub
+published date when available, otherwise annotated-tag date or a labelled
+lightweight-tag approximation. An authored-period view selects commits by
+**author timestamp**, including their original author-local hour; the same
+period can independently contain releases whose introduced commits were
+written much earlier. Personal focus changes the highlighted authorship,
+not the complete contents or denominator of a release. Within the Detailed
+analytical workbench the legacy author-date scope can deliberately narrow
+release analytics; the UI labels that narrower perspective explicitly.
+
+**Interpretation limits:** Git shows recorded contributions and reachable
+release history—not hours worked, performance, business value, collaboration
+outside Git, unpublished branches or reliable authored-to-shipped conversion.
+Shared file touches do not establish ownership. Gaps are gaps in *matching
+imported authorship*, not absences from work. No AI-generated statements or
+unverified claims of intent are presented as facts.
+
+**Implementation:** `assets/perspectives.js` builds the reusable, compact
+release-first evidence index in `assets/analysis-worker.js` independently of
+workbench author-date scope. `assets/perspective-view.js` renders the three
+views and Codebase drill-down; `assets/perspective-state.js` restores bounded
+navigation and durable contributor identity selections across session exports.
+`assets/stories.js` and `assets/story-view.js` remain in the codebase for
+compatibility with existing tests, but Stories is no longer the primary UX.
+The app remains dependency-free and local-first.
 
 ## Git + GitHub Impact Explorer: tag-first delivery evidence
 
@@ -209,9 +236,9 @@ reachable prior history, not just a release-sized increment. Shares and lead
 times always use the existing contributor/date/merge/revert/reference scope.
 No combined impact score is calculated.
 
-## Consistent selection model
+## Detailed workbench: consistent authored-date selection
 
-**Every view** is rendered from one `buildAnalysis(rawCommits, groups, scope)` result in `assets/domain.js`. It applies the following, in this order:
+Within the **Detailed analytical workbench**, each chart is rendered from one shared `buildAnalysis(rawCommits, groups, scope)` result in `assets/domain.js`. Its author-date/selection rules are distinct from the primary complete-release Observatory, which preserves full tagged contents. The workbench applies the following, in this order:
 
 1. **Identity** — reconcile any number of author emails into people using an explicit, searchable batch selector; select all, any subset, or one person (Solo). Moving identities changes only their contributor mapping, not the imported commits. Already-merged source groups lose only the selected emails; empty source groups disappear.
 2. **Dates** — inclusive authored dates; all imported history, latest 90/365/730 days, calendar year or custom. Rolling presets anchor to the *latest imported authored commit or tag event*, not the computer's current date. Tag dates extend the available window without changing which commits are attributed by author date.

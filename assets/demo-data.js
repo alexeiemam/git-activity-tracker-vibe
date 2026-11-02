@@ -92,7 +92,7 @@ export function generateDemoLog({ years = 3, commits = 520 } = {}) {
   }
   rows.sort((a,b)=>a.date-b.date || a.index-b.index);
   const tags=[], github=[];
-  const publishers=['casey-demo','priya-demo','lin-demo','hugo-demo'];
+  const publishers=['casey','priya','lin','hugo'];
   const releaseVersion=index=>{
     if(index>=9) return `v9.${Math.floor((index-9)/3)}.${(index-9)%3}`;
     return `v8.${7+Math.floor(index/3)}.${index%3}`;

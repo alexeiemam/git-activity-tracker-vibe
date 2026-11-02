@@ -7,7 +7,7 @@
  * No line-level survival, deploy date, customer value, or team productivity is
  * inferred from numstat; file revisitation is explicitly a proxy.
  */
-import { fileArea } from './domain.js?v=story-explorer-20261102-1';
+import { fileArea } from './domain.js?v=perspectives-20261102-2';
 
 export const IMPACT_METRICS = Object.freeze({
   commits: 'Commits', churn: 'Line churn', paths: 'Distinct paths', areas: 'Codebase areas', share: 'Commit share',
@@ -373,6 +373,10 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
       share:releaseMetric(c.footprint,'share',referenceFootprint),
       drove:c.drove,
     }));
+    if(options.skipFollowup){
+      release.followup=[];release.nextTag=null;release.nextTagFootprint=null;
+      continue;
+    }
     const descendants=graph.descendantsOf(release.hash);
     const later=referenceCommits.filter(c=>c.committedAt>release.timestamp && descendants.has(c.hash));
     const knownEnd=later.length ? later.reduce((max,c)=>Math.max(max,c.committedAt),-Infinity) : null;

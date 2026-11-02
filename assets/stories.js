@@ -4,7 +4,7 @@
  * Findings are descriptive, deterministic and sample-gated. No inferred
  * employment, effort, productivity, deployment or missing-branch outcomes.
  */
-import { dateAtDay, dayNumber, dayOfWeek, fileArea, validDate } from './domain.js?v=story-explorer-20261102-1';
+import { dateAtDay, dayNumber, dayOfWeek, fileArea, validDate } from './domain.js?v=perspectives-20261102-2';
 
 const DAY_MS = 86_400_000;
 const min = (a,b) => a < b ? a : b;

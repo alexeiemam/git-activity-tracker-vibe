@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f5f0">
-  <title>git:signals — Stories & evidence</title>
+  <title>git:signals — Observatory, Periods & Contributors</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=story-explorer-20261102-1">
+  <link rel="stylesheet" href="./assets/app.css?v=perspectives-20261102-2">
 </head>
 <body>
   <div class="page">
@@ -26,8 +26,8 @@
 
     <section class="hero" id="top">
       <div><div class="eyebrow section-kicker"><span class="live-dot"></span> ENGINEERING ACTIVITY, MADE LEGIBLE</div>
-        <h1>People. Patterns.<br><em>Perspective.</em></h1>
-        <p>Compare one contributor or an entire team. Change the cohort, the time window, or the metric once—and every view follows the same evidence.</p>
+        <h1>What shipped.<br><em>Who shaped it.</em></h1>
+        <p>Start with a release, a period, or a person. Follow the evidence connecting software, people and change. All analysis stays on your device.</p>
       </div>
       <div class="hero-art" aria-hidden="true"><div class="hero-track"><span style="height:35%"></span><span style="height:53%"></span><span style="height:42%"></span><span style="height:68%"></span><span style="height:56%"></span><span style="height:78%"></span><span style="height:88%"></span><span style="height:72%"></span><span style="height:100%"></span><span style="height:74%"></span></div><div class="hero-art-caption">THE SIGNAL, NOT THE NOISE.</div></div>
     </section>
@@ -71,8 +71,18 @@
     </section>
 
     <section id="dashboard" hidden aria-labelledby="dashboard-heading">
-      <div class="dashboard-intro"><div><div class="eyebrow section-kicker"><span class="step-dot dark">03</span> THE COMPARISON WORKSPACE</div><h2 id="dashboard-heading">One scope. Every angle.</h2><p id="data-coverage" class="subtle"></p></div><button type="button" data-action="reset-filters" class="button outline">Reset filters <span aria-hidden="true">↺</span></button></div>
+      <div class="dashboard-intro"><div><div class="eyebrow section-kicker"><span class="step-dot dark">03</span> THREE WAYS TO EXPLORE</div><h2 id="dashboard-heading">Follow the evidence.</h2><p id="data-coverage" class="subtle"></p></div><button type="button" data-action="primary-evidence-filters" class="button outline">Advanced evidence filters <span aria-hidden="true">↗</span></button></div>
 
+      <nav class="experience-switch" aria-label="Choose a primary repository perspective">
+        <button type="button" class="experience-choice is-current" data-action="experience-mode" data-experience="observatory" aria-pressed="true" aria-controls="stories-view"><span class="experience-symbol" aria-hidden="true">◈</span><span><strong>Observatory</strong><small>What shipped · Release anatomy and history</small></span></button>
+        <button type="button" class="experience-choice" data-action="experience-mode" data-experience="periods" aria-pressed="false" aria-controls="stories-view"><span class="experience-symbol" aria-hidden="true">▥</span><span><strong>Periods</strong><small>What happened · Any interval, compared</small></span></button>
+        <button type="button" class="experience-choice" data-action="experience-mode" data-experience="contributors" aria-pressed="false" aria-controls="stories-view"><span class="experience-symbol" aria-hidden="true">◎</span><span><strong>Contributors</strong><small>Who contributed · Portraits and comparisons</small></span></button>
+      </nav>
+      <div class="primary-aux-nav"><span>Follow the evidence further</span><button type="button" data-action="experience-mode" data-experience="codebase">Explore codebase ↗</button><button type="button" data-action="experience-mode" data-experience="evidence">Detailed analytical workbench ↗</button></div>
+      <section id="stories-view" class="stories-view" aria-label="Release-first repository explorer"><div class="story-empty">Preparing release and contributor evidence…</div></section>
+      <div id="evidence-view" hidden>
+      <div class="primary-evidence-intro"><span class="primary-eyebrow">DETAILED ANALYTICAL WORKBENCH</span><h3>Every measurement, when you need it.</h3><p>Author-date filtering is explicit here. These legacy evidence charts can intentionally restrict included release commits by author date; the primary Observatory and release anatomy never do.</p></div>
+      <details id="legacy-scope-details" class="primary-legacy-scope"><summary>Adjust authored-date scope, commit policy and comparison measures</summary>
       <section class="scope-panel" aria-labelledby="scope-heading">
         <div class="scope-panel-header"><h3 id="scope-heading">Your comparison scope</h3><span class="scope-rule">All visualisations update together</span></div>
         <div class="scope-grid">
@@ -84,12 +94,8 @@
         <div class="scope-summary"><span class="scope-pill"><span class="scope-pill-dot"></span> LIVE SCOPE</span><span id="scope-description"></span></div>
       </section>
 
-      <nav class="experience-switch" aria-label="Choose how to explore the repository">
-        <button type="button" class="experience-choice is-current" data-action="experience-mode" data-experience="stories" aria-pressed="true" aria-controls="stories-view"><span class="experience-symbol" aria-hidden="true">✳</span><span><strong>Stories</strong><small>Noteworthy changes, trajectories and their evidence</small></span></button>
-        <button type="button" class="experience-choice" data-action="experience-mode" data-experience="evidence" aria-pressed="false" aria-controls="evidence-view"><span class="experience-symbol" aria-hidden="true">▥</span><span><strong>Explore evidence</strong><small>All the charts, release intelligence and detailed comparisons</small></span></button>
-      </nav>
-      <section id="stories-view" class="stories-view" aria-label="Evidence-led stories"><div class="story-empty">Preparing the story from your imported history…</div></section>
-      <div id="evidence-view" hidden>
+      <button type="button" data-action="reset-filters" class="button outline">Reset detailed filters ↺</button>
+      </details>
       <div id="overview-stats" class="stat-grid" aria-label="Summary metrics for selected contributors"></div>
       <div id="insight-strip" class="insight-strip" aria-live="polite"></div>
 
@@ -189,6 +195,6 @@
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=story-explorer-20261102-1"></script>
+  <script type="module" src="./assets/app.js?v=perspectives-20261102-2"></script>
 </body>
 </html>

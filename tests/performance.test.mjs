@@ -94,6 +94,9 @@ test('module worker parses and aggregates data without blocking the caller or lo
       impactOptions:{metric:'commits',actorMap:{}}});
     assert.equal(result.view.selectedCommits.length,1);
     assert.equal(result.impact.releases.length,1);
+    assert.equal(result.primaryIndex.releases.length,1,'worker must also return complete tag-defined evidence');
+    assert.equal(result.primaryIndex.releases[0].tag,'v1.0.0');
+    assert.equal(result.primaryIndex.activity.length,1);
     assert.equal(typeof result.view.sumsByWeek,'undefined','worker boundary should contain structured data only');
     assert.equal(typeof withWeekAggregation(result.view).sumsByWeek,'function');
     assert.ok(reports.includes('Reading history') && reports.includes('Reconstructing releases'));
