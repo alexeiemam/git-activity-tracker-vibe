@@ -20,6 +20,62 @@ Open `http://localhost:8000` and choose **Explore demo dataset**, or use the gen
 
 No build, install, backend, API key, or CDN for the browser application is needed. The optional Google Fonts request can fall back to local fonts offline. The **capture command** calls an authenticated local GitHub CLI when installed; credentials are handled by `gh`, not by git:signals.
 
+## Stories — from measurements to evidence-led interpretation
+
+After building the dashboard, **Stories** is the default reading experience.
+**Explore Evidence** opens the complete pre-existing analytics dashboard on
+request. The evidence workbench is rendered *lazily*, in progressive stages,
+not before the first story appears. All observations derive from the **same
+contributor selection, merged Git identities, authored-date range, merge/revert
+policy and release ancestry** as the analytical workbench; changing a global
+filter recomputes the worker's story model, not a hidden secondary dataset.
+
+- **The team:** a handful of the most relevant observations across the selected
+  group, each with precise values, provenance, interpretation boundaries and a
+  direct link to the original supporting chart.
+- **One contributor:** the contributor's internal active-day gap distribution,
+  matched before/after periods, release involvement and codebase focus, plus a
+  month-by-month **Contribution Journey** with evidence-linked markers and separate **Authored**, **Shipped**
+  (included in a tagged release increment) and **Driven** (matched publisher)
+  lanes. Select a year, month or related release to inspect it. Journey chapters
+  describe *observed history*, not inferred employment stages.
+- **Compare people:** a common, explicitly labelled table for multiple selected
+  contributors, plus an editable two-person focus with aligned seven-day ×
+  twenty-four-hour heatmaps. Each person's heatmap normalises by **their own
+  timed authored commit count** to compare *when* activity is recorded, while
+  using **one shared positive-value colour scale** across the two heatmaps.
+  Absolute activity counts and sample sizes remain visible, and zero is neutral.
+- **Investigate a finding:** check its original sample, earlier and recent
+  equal-duration periods, evidence values and limitations, copy a plain-text
+  evidence summary, or open the relevant existing graph. Findings can be hidden
+  and restored; an exploration trail records visited findings. These preferences
+  and the current perspective/selected person are preserved in session export.
+
+**Deterministic, sample-gated, never a performance score.** The detector compares
+*internal* gaps between active author dates against the same contributor's
+other observed gaps; it never calls an import-boundary gap an absence. Changes
+in author-day frequency and commit concentration use **equal 60–365-day
+windows**; participation is measured per eligible tagged release increment,
+not by months elapsed. Release-gap observations only begin after that
+contributor's first observed release contribution. Recurring monthly
+seasonality requires at least **three complete calendar years** with adequate
+activity. When evidence is insufficient to support a notable change, the UI
+shows only explicitly labelled **descriptive context**, or an empty state.
+
+**Not observable from this import:** actual working hours, effort, performance,
+reasons for a quiet period, production deployment, opportunities on another
+branch or repository, and how many *unmerged* authored commits ever reached a
+release. Consequently, **authored-to-shipped conversion is not reported**;
+single-branch Git ancestry cannot establish it. Missing timestamp data remains
+missing, not zero. Tag-based delivery and authored activity use different,
+explicitly labelled dates, and a Github publisher is an *assumed* release
+driver after identity matching, not a verified deployment operator.
+
+The implementation lives in `assets/stories.js` (pure worker-side analysis)
+and `assets/story-view.js` (escaped, dependency-light rendering); regression
+tests are in `tests/stories.test.mjs`. The new experience does not require
+an AI provider or an external service.
+
 ## Git + GitHub Impact Explorer: tag-first delivery evidence
 
 **Source of truth:** Git tags are the primary release **code boundaries**. Published GitHub Releases enrich those boundaries with the GitHub publication timestamp, title, publisher account, notes and URL. GitHub's `created_at` is **not** treated as a release date. Missing/draft GitHub Releases leave the Git-only tag evidence intact. `release publisher = assumed driver` is a stated **assumption**, not proof of deployment responsibility. GitHub publishers are automatically linked to existing merged Git author groups when an exact, unambiguous identity is available (GitHub noreply email, unique email username, or exact author/contributor name). Ambiguous or unknown publishers remain unassigned rather than guessed. The **People & releases** view provides a reviewable publisher → contributor matcher; explicit overrides and exclusions persist in exported sessions, by author email, across identity merges.

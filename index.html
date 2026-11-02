@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f5f0">
-  <title>git:signals — Contributor comparisons</title>
+  <title>git:signals — Stories & evidence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=matrix-history-20261101-1">
+  <link rel="stylesheet" href="./assets/app.css?v=story-explorer-20261102-1">
 </head>
 <body>
   <div class="page">
@@ -84,6 +84,12 @@
         <div class="scope-summary"><span class="scope-pill"><span class="scope-pill-dot"></span> LIVE SCOPE</span><span id="scope-description"></span></div>
       </section>
 
+      <nav class="experience-switch" aria-label="Choose how to explore the repository">
+        <button type="button" class="experience-choice is-current" data-action="experience-mode" data-experience="stories" aria-pressed="true" aria-controls="stories-view"><span class="experience-symbol" aria-hidden="true">✳</span><span><strong>Stories</strong><small>Noteworthy changes, trajectories and their evidence</small></span></button>
+        <button type="button" class="experience-choice" data-action="experience-mode" data-experience="evidence" aria-pressed="false" aria-controls="evidence-view"><span class="experience-symbol" aria-hidden="true">▥</span><span><strong>Explore evidence</strong><small>All the charts, release intelligence and detailed comparisons</small></span></button>
+      </nav>
+      <section id="stories-view" class="stories-view" aria-label="Evidence-led stories"><div class="story-empty">Preparing the story from your imported history…</div></section>
+      <div id="evidence-view" hidden>
       <div id="overview-stats" class="stat-grid" aria-label="Summary metrics for selected contributors"></div>
       <div id="insight-strip" class="insight-strip" aria-live="polite"></div>
 
@@ -179,9 +185,10 @@
       <section class="report-section" aria-labelledby="recent-heading"><div class="section-header"><div><span class="eyebrow section-index">09 / THE UNDERLYING EVENTS</span><h3 id="recent-heading">Recent commits in this slice.</h3><p>Evidence to check the charts against. Only commits matching the global filters appear.</p></div></div><div class="report-card table-card"><div id="recent-commits" class="table-scroll"></div></div></section>
 
       <footer class="report-footer"><strong>Interpretation guide.</strong> Git logs measure recorded changes—not effort, difficulty, effectiveness, or code quality. A commit's authored date may differ from its integration date. Merge detection uses parent hashes when available (subject heuristics for older logs). “VERSION touches” is a repository-specific proxy, not a verified release count. All comparisons are scoped to the imported history; they do not include uncollected branches or missing dates.</footer>
+      </div>
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=matrix-history-20261101-1"></script>
+  <script type="module" src="./assets/app.js?v=story-explorer-20261102-1"></script>
 </body>
 </html>

@@ -105,5 +105,5 @@ test('full-history controls only rerender the matrix and persist through exporte
   assert.match(app,/impactMatrixMode:state\.impactMatrixMode/);
   assert.match(app,/state\.impactMatrixMode=s\.impactMatrixMode/);
   const version=html.match(/assets\/app\.js\?v=([^"\s]+)/)?.[1];
-  assert.equal(version,'matrix-history-20261101-1');
+  assert.match(version,/^[a-z][\w-]+-20\d{6}-\d+$/);
 });

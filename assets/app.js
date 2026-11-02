@@ -3,12 +3,14 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=matrix-history-20261101-1';
-import { generateDemoLog } from './demo-data.js?v=matrix-history-20261101-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=matrix-history-20261101-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=matrix-history-20261101-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=matrix-history-20261101-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=matrix-history-20261101-1';
+} from './domain.js?v=story-explorer-20261102-1';
+import { generateDemoLog } from './demo-data.js?v=story-explorer-20261102-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=story-explorer-20261102-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=story-explorer-20261102-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=story-explorer-20261102-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=story-explorer-20261102-1';
+import { buildStoryAnalysis } from './stories.js?v=story-explorer-20261102-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=story-explorer-20261102-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -23,7 +25,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=matrix-history-20261101-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=story-explorer-20261102-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -118,7 +120,8 @@ async function computeViewAndImpact(groups,scope,impactOptions,generation) {
     showProgress('Reconstructing releases',32,'Calculating tagged-release evidence',generation);
     await yieldToUI();
     const impact=impactAnalysis(view,rawCommits,rawTags,{...impactOptions,githubReleases:rawGithubReleases});
-    result={view,impact};
+    const stories=buildStoryAnalysis(view,impact);
+    result={view,impact,stories};
   }
   withWeekAggregation(result.view);
   if (generation===progressGeneration) {computedKey=key;computedResult=result;}
@@ -142,6 +145,8 @@ let rawGithubReleases = [];
 let githubStatus = 'not-captured';
 let githubWarnings = [];
 let impactModel = null;
+let storyModel = null;
+let evidenceRenderedRun = -1, evidenceRenderPromise = null;
 // Tag events may be later than the newest authored commit. The shared
 // window includes their dates, while all contributor counts remain author-based.
 const sourceDateBounds=()=>getHistoryDateBounds(rawCommits,rawTags,rawGithubReleases);
@@ -162,6 +167,9 @@ const state = {
   impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
   impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,
   impactFocus:'selection', impactActorMap:{},
+  viewMode:'stories', storyPerspective:'team', storyFocus:'selection', storyTopic:'all', storyCategory:'noteworthy',
+  storyShowAll:false, storyFindingId:null, storyMonth:null, storyDismissed:new Set(),storyTrail:[],
+  storyPairA:null,storyPairB:null,
 };
 
 function setText(id, content) { $(id).textContent = content; }
@@ -323,6 +331,7 @@ function applyIdentityPicker() {
   const next = moveContributorIdentities(mergeGroups, targetIndex, moved);
   if (next === mergeGroups) return closeIdentityPicker();
   mergeGroups = next;
+  state.storyDismissed.clear();state.storyTrail=[];state.storyFindingId=null;
   identityPicker = null;
   mergeUndo = original;
   renderMergeUI();
@@ -334,6 +343,7 @@ function applyIdentityPicker() {
 function undoIdentityMerge() {
   if (!mergeUndo || requireResolvedIdentitySelection()) return;
   mergeGroups = mergeUndo;
+  state.storyDismissed.clear();state.storyTrail=[];state.storyFindingId=null;
   mergeUndo = null;
   identityPicker = null;
   renderMergeUI();
@@ -345,6 +355,7 @@ function splitEmail(index, email) {
   identityPicker = null;
   forgetUndo();
   group.emails = group.emails.filter(e => e !== email);
+  state.storyDismissed.clear();state.storyTrail=[];state.storyFindingId=null;
   if (!group.emails.length) mergeGroups.splice(index, 1);
   mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email]});
   renderMergeUI();
@@ -355,6 +366,7 @@ function splitGroup(index) {
   identityPicker = null;
   forgetUndo();
   const emails = [...group.emails];
+  state.storyDismissed.clear();state.storyTrail=[];state.storyFindingId=null;
   mergeGroups.splice(index, 1);
   for (const email of emails) mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email]});
   renderMergeUI();
@@ -410,7 +422,9 @@ function syncScopeAfterLoad() {
   const initialStart = min > desiredStart ? min : desiredStart;
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
     metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
-    impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
+    impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{},
+    viewMode:'stories',storyPerspective:'team',storyFocus:'selection',storyTopic:'all',storyCategory:'noteworthy',storyShowAll:false,
+    storyFindingId:null,storyMonth:null,storyPairA:null,storyPairB:null,storyTrail:[],storyDismissed:new Set() });
   state.selectedIds = new Set(mergeGroups.map((_,i)=>String(i)));
   if (pendingImport?.scope) {
     const s = pendingImport.scope;
@@ -455,6 +469,19 @@ function syncScopeAfterLoad() {
       const i=mergeGroups.findIndex(g=>g.emails.includes(s.rhythmFocusEmail));
       state.rhythmFocus=i<0?'selection':String(i);
     }
+    if (['stories','evidence'].includes(s.viewMode))state.viewMode=s.viewMode;
+    if (['team','person','compare'].includes(s.storyPerspective))state.storyPerspective=s.storyPerspective;
+    if (['all','activity','rhythm','delivery','focus','seasonality','context'].includes(s.storyTopic))state.storyTopic=s.storyTopic;
+    if (['noteworthy','hidden'].includes(s.storyCategory))state.storyCategory=s.storyCategory;
+    state.storyShowAll=!!s.storyShowAll;
+    if (Array.isArray(s.storyDismissed))state.storyDismissed=new Set(s.storyDismissed.filter(id=>typeof id==='string' && id.length<180).slice(0,300));
+    const idForEmail=email=>{const index=mergeGroups.findIndex(g=>g.emails.includes(String(email||'').toLowerCase()));return index<0?null:String(index);};
+    state.storyFocus=idForEmail(s.storyFocusEmail)||'selection';
+    state.storyPairA=idForEmail(s.storyPairAEmail);
+    state.storyPairB=idForEmail(s.storyPairBEmail);
+    if (typeof s.storyMonth==='string' && /^\d{4}-\d\d$/.test(s.storyMonth))state.storyMonth=s.storyMonth;
+    if (Array.isArray(s.storyTrail))state.storyTrail=s.storyTrail.filter(id=>typeof id==='string'&&id.length<180).slice(-8);
+    if (typeof s.storyFindingId==='string'&&s.storyFindingId.length<180)state.storyFindingId=s.storyFindingId;
     if (Array.isArray(s.selectedEmails)) {
       const emails = new Set(s.selectedEmails);
       state.selectedIds = new Set(mergeGroups.flatMap((g,i)=>g.emails.some(e=>emails.has(e)) ? [String(i)] : []));
@@ -1485,8 +1512,117 @@ function renderRecent(view) {
     return `<tr><td>${esc(c.date+hour)}</td><td class="name-cell"><span style="${style(c.groupId)}"><i class="person-dot"></i>${esc(author?.displayName||c.name)}</span></td><td><span class="commit-subject" title="${esc(c.subject)}">${esc(c.hash?.slice(0,7)||'—')} · ${esc(c.subject)}${c.isMerge?'<span class="flag merge">merge</span>':''}${c.isRevert?'<span class="flag revert">revert</span>':''}${c.touchesVersion?'<span class="flag version">VERSION</span>':''}</span></td><td class="right"><span class="number-add">+${number.format(added)}</span> / <span class="number-del">−${number.format(deleted)}</span></td><td class="right">${c.files.length}</td></tr>`;
   }).join('')}</tbody></table>`;
 }
+function storyPerson() {
+  if(!storyModel)return null;
+  if(state.storyPerspective==='team')return storyModel.people.find(p=>p.id==='selection');
+  return storyModel.people.find(p=>p.id===state.storyFocus&&p.id!=='selection') ||
+    storyModel.people.find(p=>p.id!=='selection') || null;
+}
+function setExperienceVisibility() {
+  const stories=state.viewMode!=='evidence';
+  $('stories-view').hidden=!stories;
+  $('evidence-view').hidden=stories;
+  for(const button of document.querySelectorAll('[data-experience]')){
+    const active=button.dataset.experience===state.viewMode;
+    button.classList.toggle('is-current',active);
+    button.setAttribute('aria-pressed',String(active));
+  }
+}
+function renderStories() {
+  if(!storyModel)return;
+  const model=storyModel;
+  const eligible=new Set(model.allFindings.map(f=>f.id));
+  if(state.storyFindingId&&!eligible.has(state.storyFindingId))state.storyFindingId=null;
+  if(!model.people.some(p=>p.id===state.storyFocus&&p.id!=='selection'))state.storyFocus=model.people.find(p=>p.id!=='selection')?.id||'selection';
+  const person=storyPerson();
+  if(state.storyMonth&&!person?.months.some(m=>m.month===state.storyMonth))state.storyMonth=null;
+  const root=$('stories-view');
+  const scroller=$('story-journey-scroll');
+  const previousScroll=scroller?.scrollLeft||0;
+  root.innerHTML=renderStoryExplorer(model,{
+    perspective:state.storyPerspective,focus:state.storyFocus,topic:state.storyTopic,category:state.storyCategory,
+    showAll:state.storyShowAll,findingId:state.storyFindingId,month:state.storyMonth,
+    dismissed:state.storyDismissed,trail:state.storyTrail,pairA:state.storyPairA,pairB:state.storyPairB,
+  });
+  const nextScroll=$('story-journey-scroll');
+  if(nextScroll)nextScroll.scrollLeft=previousScroll;
+  const a=$('story-person-a'),b=$('story-person-b');
+  if(a&&b){
+    const rows=model.comparison;
+    if(!rows.some(r=>r.id===state.storyPairA))state.storyPairA=rows[0]?.id||null;
+    if(!rows.some(r=>r.id===state.storyPairB&&r.id!==state.storyPairA))state.storyPairB=rows.find(r=>r.id!==state.storyPairA)?.id||null;
+    if(state.storyPairA)a.value=state.storyPairA;
+    if(state.storyPairB)b.value=state.storyPairB;
+  }
+}
+function focusStoryMonth() {
+  const cell=[...document.querySelectorAll('.story-month')].find(t=>t.dataset.storyMonth===state.storyMonth);
+  if(cell){cell.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});cell.focus({preventScroll:true});}
+}
+let evidencePendingRun=-1;
+async function ensureEvidenceRendered(run=renderGeneration,generation=progressGeneration) {
+  if(evidenceRenderedRun===run || !analysis)return;
+  if(evidenceRenderPromise && evidencePendingRun===run)return evidenceRenderPromise;
+  evidencePendingRun=run;
+  const job=(async()=>{
+    const stages=[
+      ['Preparing comparisons',79,'Summary, trends and contributor scorecard',()=>{
+        renderStats(analysis);renderRanking(analysis);renderTrend(analysis);renderTable(analysis);
+      }],
+      ['Rendering activity pulse',84,'Comparing authored dates',()=>renderPulse(analysis)],
+      ['Rendering weekly rhythms',89,'Weekdays, hours and seasonality',()=>renderRhythm(analysis)],
+      ['Rendering impact evidence',94,'Tagged releases and contributor roles',()=>renderImpact(analysis)],
+      ['Finishing the evidence',98,'Footprint, codebase areas and commit history',()=>{
+        renderFootprint(analysis);renderAreas(analysis);renderRecent(analysis);
+      }],
+    ];
+    for(const [label,value,help,render] of stages){
+      if(run!==renderGeneration)return;
+      showProgress(label,value,help,generation);
+      await yieldToUI();
+      if(run!==renderGeneration)return;
+      try{render();}
+      catch(error){
+        if(label==='Rendering impact evidence'){
+          console.error('Impact Explorer rendering failed',error);
+          $('impact-panels').hidden=true;
+          $('impact-empty').innerHTML=`<div class="impact-empty" role="alert"><strong>Impact Explorer could not render</strong><p>${esc(error.message||'Unknown error')}</p></div>`;
+        } else throw error;
+      }
+    }
+    if(run===renderGeneration)evidenceRenderedRun=run;
+  })();
+  evidenceRenderPromise=job;
+  try{await job;}finally{if(evidencePendingRun===run){evidencePendingRun=-1;evidenceRenderPromise=null;}}
+}
+async function switchExperience(next,{target=null}={}) {
+  if(!['stories','evidence'].includes(next))return;
+  state.viewMode=next;
+  setExperienceVisibility();
+  if(next==='stories')renderStories();
+  else if(evidenceRenderedRun!==renderGeneration && analysis){
+    const generation=++progressGeneration;
+    showProgress('Opening the evidence workbench',76,'Rendering the requested charts in manageable stages',generation);
+    try{await ensureEvidenceRendered(renderGeneration,generation);finishProgress(generation);}
+    catch(error){finishProgress(generation,error);$('scope-error').textContent=`Evidence rendering failed: ${error.message}`;}
+  }
+  if(target){
+    const node=$(target);
+    if(node && !node.closest('[hidden]'))node.scrollIntoView({behavior:'smooth',block:'start'});
+  } else $('dashboard-heading').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function storyOpenEvidence(anchor='ranking-heading',releaseHash=null) {
+  if(releaseHash) {state.impactTab='timeline';state.impactReleaseHash=releaseHash;}
+  await switchExperience('evidence',{target:anchor});
+  if(releaseHash&&impactModel?.releases.some(r=>r.hash===releaseHash))chooseImpactRelease(releaseHash,{showTimeline:false});
+  if(anchor==='rhythm-heading' && state.storyPerspective==='person' && analysis?.selectedIds.has(state.storyFocus)){
+    state.rhythmFocus=state.storyFocus;
+    if(evidenceRenderedRun===renderGeneration)renderRhythm(analysis);
+  }
+  if(anchor==='impact-explorer' && evidenceRenderedRun===renderGeneration)renderImpact(analysis);
+}
 async function renderDashboard() {
-  if(!rawCommits.length || $('dashboard').hidden) return;
+  if(!rawCommits.length || $('dashboard').hidden)return;
   const generation=++progressGeneration;
   const run=++renderGeneration;
   const scope=analysisScope();
@@ -1494,46 +1630,29 @@ async function renderDashboard() {
   const impactOptions={metric:state.impactMetric,githubStatus,
     actorMap:{...state.impactActorMap},captureWarningsCount:githubWarnings.length};
   $('dashboard').setAttribute('aria-busy','true');
-  showProgress('Building comparisons',6,'Keeping the interface responsive while analysing Git history',generation);
+  showProgress('Building comparisons',6,'Reconstructing evidence in the background',generation);
   await yieldToUI();
   try {
     const result=await computeViewAndImpact(groups,scope,impactOptions,generation);
-    if(run!==renderGeneration || $('dashboard').hidden) return;
-    analysis=result.view;impactModel=result.impact;
-    const stages=[
-      ['Preparing overview',78,'Summary, ranking, trends and comparison table',()=>{
-        updateControls();renderPicker();renderScope(analysis);renderStats(analysis);
-        renderRanking(analysis);renderTrend(analysis);renderTable(analysis);
-      }],
-      ['Rendering activity pulse',83,'Monthly or daily activity across selected contributors',()=>renderPulse(analysis)],
-      ['Rendering working rhythm',88,'Weekdays, hours and seasonality',()=>renderRhythm(analysis)],
-      ['Rendering release intelligence',93,'Timeline, publishers and tagged release evidence',()=>renderImpact(analysis)],
-      ['Finishing evidence views',97,'Codebase footprint, hotspots and recent commits',()=>{
-        renderFootprint(analysis);renderAreas(analysis);renderRecent(analysis);
-      }],
-    ];
-    for (const [phase,value,detail,render] of stages) {
-      if (run!==renderGeneration) return;
-      showProgress(phase,value,detail,generation);
-      await yieldToUI();
-      if (run!==renderGeneration) return;
-      try {render();}
-      catch (error) {
-        console.error(phase==='Rendering release intelligence'?'Impact Explorer rendering failed':`${phase} failed`,error);
-        if (phase==='Rendering release intelligence') {
-          $('impact-panels').hidden=true;
-          $('impact-empty').innerHTML=`<div class="impact-empty" role="alert"><strong>Impact Explorer could not render</strong><p>${esc(error.message||'Unknown error')}</p></div>`;
-        } else throw error;
-      }
-    }
-    if (run===renderGeneration) finishProgress(generation);
-  } catch(error) {
-    if (run!==renderGeneration) return;
-    console.error('Dashboard analysis failed',error);
+    if(run!==renderGeneration||$('dashboard').hidden)return;
+    analysis=result.view;impactModel=result.impact;storyModel=result.stories||buildStoryAnalysis(analysis,impactModel);
+    evidenceRenderedRun=-1;
+    updateControls();renderPicker();renderScope(analysis);
+    setExperienceVisibility();
+    showProgress('Composing the story',78,'Checking baselines, sample sizes and supporting releases',generation);
+    await yieldToUI();
+    if(run!==renderGeneration)return;
+    renderStories();
+    if(state.viewMode==='evidence')await ensureEvidenceRendered(run,generation);
+    if(run===renderGeneration)finishProgress(generation,null,state.viewMode==='stories'?'Stories ready':'Dashboard ready',
+      'Every observation and chart uses the same scoped Git evidence.');
+  }catch(error){
+    if(run!==renderGeneration)return;
+    console.error('Git analysis failed',error);
     finishProgress(generation,error);
-    $('scope-error').textContent=`Analysis failed: ${error.message}. Try re-importing history or reloading the application.`;
-  } finally {
-    if (run===renderGeneration)$('dashboard').removeAttribute('aria-busy');
+    $('scope-error').textContent=`Analysis failed: ${error.message}. Check your history import and try again.`;
+  }finally{
+    if(run===renderGeneration)$('dashboard').removeAttribute('aria-busy');
   }
 }
 
@@ -1552,7 +1671,13 @@ function exportSession() {
       impactMatrixYear:state.impactMatrixYear,impactMatrixSize:state.impactMatrixSize,
       impactFocusEmail:analysis?.byId.get(state.impactFocus)?.emails[0]||null,
       impactActorMap:state.impactActorMap,
-      impactTimelineMode:state.impactTimelineMode,impactTimelineFrom:state.impactTimelineFrom,impactTimelineTo:state.impactTimelineTo}};
+      impactTimelineMode:state.impactTimelineMode,impactTimelineFrom:state.impactTimelineFrom,impactTimelineTo:state.impactTimelineTo,
+      viewMode:state.viewMode,storyPerspective:state.storyPerspective,storyTopic:state.storyTopic,storyCategory:state.storyCategory,
+      storyShowAll:state.storyShowAll,storyFocusEmail:analysis?.byId.get(state.storyFocus)?.emails[0]||null,
+      storyPairAEmail:analysis?.byId.get(state.storyPairA)?.emails[0]||null,
+      storyPairBEmail:analysis?.byId.get(state.storyPairB)?.emails[0]||null,
+      storyMonth:state.storyMonth,storyDismissed:[...state.storyDismissed].slice(0,300),
+      storyFindingId:state.storyFindingId,storyTrail:state.storyTrail.slice(-8)}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const uri=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=uri;a.download=`git-signals-${new Date().toISOString().slice(0,10)}.json`;a.click();
@@ -1598,6 +1723,41 @@ async function importSession(event) {
 }
 
 const ACTIONS={
+  'experience-mode':(_event,target)=>switchExperience(target.dataset.experience),
+  'story-perspective':(_event,target)=>{state.storyPerspective=target.dataset.storyPerspective;state.storyFindingId=null;state.storyMonth=null;state.storyShowAll=false;renderStories();document.querySelector(`[data-story-perspective=\"${state.storyPerspective}\"]`)?.focus({preventScroll:true});},
+  'story-inspect':(_event,target)=>{
+    const id=target.dataset.storyId;
+    if(!storyModel?.allFindings.some(f=>f.id===id))return;
+    state.storyFindingId=id;
+    state.storyTrail=[...state.storyTrail.filter(key=>key!==id),id].slice(-6);
+    renderStories();
+    $('story-detail-title')?.focus({preventScroll:true});
+    $('story-investigation-panel')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },
+  'story-back':()=>{state.storyFindingId=null;renderStories();},
+  'story-close-detail':()=>{const id=state.storyFindingId;state.storyFindingId=null;renderStories();const button=[...document.querySelectorAll('[data-action=\"story-inspect\"]')].find(b=>b.dataset.storyId===id);button?.focus({preventScroll:true});},
+  'story-dismiss':(_event,target)=>{state.storyDismissed.add(target.dataset.storyId);if(state.storyFindingId===target.dataset.storyId)state.storyFindingId=null;renderStories();document.querySelector('.story-card [data-action=\"story-inspect\"]')?.focus({preventScroll:true});},
+  'story-restore':(_event,target)=>{state.storyDismissed.delete(target.dataset.storyId);renderStories();},
+  'story-more':()=>{state.storyShowAll=true;renderStories();},
+  'story-less':()=>{state.storyShowAll=false;renderStories();},
+  'story-month':(_event,target)=>{state.storyMonth=target.dataset.storyMonth;renderStories();focusStoryMonth();},
+  'story-year':(_event,target)=>{
+    const selected=storyPerson()?.months.find(m=>m.month.startsWith(target.dataset.storyYear));
+    if(selected){state.storyMonth=selected.month;renderStories();focusStoryMonth();}
+  },
+  'story-release':(_event,target)=>storyOpenEvidence('impact-explorer',target.dataset.storyRelease),
+  'story-evidence':(_event,target)=>{
+    const finding=storyModel?.allFindings.find(f=>f.id===target.dataset.storyId);
+    if(finding)storyOpenEvidence(finding.link,finding.releaseHash);
+  },
+  'story-evidence-general':()=>storyOpenEvidence('ranking-heading'),
+  'story-copy':async(_event,target)=>{
+    const finding=storyModel?.allFindings.find(f=>f.id===target.dataset.storyId);
+    if(!finding)return;
+    const notice=$('story-notice');
+    try {await navigator.clipboard.writeText(storyCopyText(finding,storyModel));notice.textContent='Evidence summary copied.';}
+    catch {notice.textContent='Clipboard access was blocked by the browser. Try another browser context or use the visible evidence details.';}
+  },
   'choose-import':()=> $('file-import-input').click(),
   'export':exportSession,'copy-command':copyCommand,'analyse':analyse,'load-demo':loadDemo,
   'add-merge-group':()=>{if(requireResolvedIdentitySelection())return;forgetUndo();mergeGroups.push({displayName:'New contributor',emails:[]});identityPicker=null;renderMergeUI();openIdentityPicker(mergeGroups.length-1);},
@@ -1718,6 +1878,15 @@ function handleDocumentChange(event) {
     renderDashboard();return;
   }
   switch(t.id){
+    case 'story-focus':state.storyFocus=t.value;state.storyFindingId=null;state.storyMonth=null;renderStories();$('story-focus')?.focus({preventScroll:true});break;
+    case 'story-topic':state.storyTopic=t.value;state.storyShowAll=false;state.storyFindingId=null;renderStories();$('story-topic')?.focus({preventScroll:true});break;
+    case 'story-card-filter':state.storyCategory=t.value;state.storyShowAll=false;state.storyFindingId=null;renderStories();$('story-card-filter')?.focus({preventScroll:true});break;
+    case 'story-person-a':state.storyPairA=t.value;if(state.storyPairA===state.storyPairB)state.storyPairB=null;renderStories();break;
+    case 'story-person-b':state.storyPairB=t.value;if(state.storyPairA===state.storyPairB)state.storyPairA=null;renderStories();break;
+    case 'story-journey-pan':{
+      const person=storyPerson();const month=person?.months[Number(t.value)];
+      if(month){state.storyMonth=month.month;renderStories();focusStoryMonth();}break;
+    }
     case 'file-import-input':importSession(event);break;
     case 'period-select':updatePeriod(t.value);break;
     case 'date-from':case 'date-to':changeDate();break;
@@ -1750,6 +1919,12 @@ function handleDocumentInput(event) {
   if(t.dataset.mergeName!==undefined){const g=mergeGroups[Number(t.dataset.mergeName)];if(g){g.displayName=t.value; if(mergeUndo)forgetUndo();}}
   if(t.matches('[data-identity-search]') && identityPicker){identityPicker.query=t.value;refreshIdentityOptions();}
   if(t.id==='contributor-search'){state.search=t.value;renderPicker();}
+  if(t.id==='story-journey-pan'){
+    const person=storyPerson(),index=Number(t.value);
+    const scroll=$('story-journey-scroll');
+    const cell=scroll?.querySelectorAll('.story-month')[index];
+    if(cell && scroll)scroll.scrollLeft=Math.max(0,cell.offsetLeft-scroll.clientWidth/2+cell.clientWidth/2);
+  }
 }
 function init() {
   document.addEventListener('click',handleDocumentClick);

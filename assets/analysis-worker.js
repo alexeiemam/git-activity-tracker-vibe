@@ -1,6 +1,7 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis } from './domain.js?v=matrix-history-20261101-1';
-import { impactAnalysis } from './impact.js?v=matrix-history-20261101-1';
+import { parseGitHistory, buildAnalysis } from './domain.js?v=story-explorer-20261102-1';
+import { impactAnalysis } from './impact.js?v=story-explorer-20261102-1';
+import { buildStoryAnalysis } from './stories.js?v=story-explorer-20261102-1';
 
 let history = null;
 const progress = (id, phase, value, message) =>
@@ -25,11 +26,13 @@ self.onmessage = ({data}) => {
         progress: ({current,total}) => progress(id,'Reconstructing releases',25+Math.round(68*current/Math.max(1,total)),
           `${current.toLocaleString()} / ${total.toLocaleString()} scoped release snapshots analysed`),
       });
-      progress(id,'Preparing visualisations',96,'Transferring computed evidence to the dashboard');
+      progress(id,'Finding stories',95,'Detecting noteworthy changes with evidence thresholds');
+      const stories = buildStoryAnalysis(view,impact);
+      progress(id,'Preparing visualisations',97,'Transferring scoped evidence and findings to the dashboard');
       // Functions cannot cross worker boundaries. The main thread restores the
       // deterministic week helper after receiving the structured data.
       const {sumsByWeek, ...serializableView}=view;
-      self.postMessage({id,type:'result',result:{view:serializableView,impact}});
+      self.postMessage({id,type:'result',result:{view:serializableView,impact,stories}});
     } else throw new Error('Unknown processing request.');
   } catch (error) {
     self.postMessage({id,type:'error',message:error?.message||'Unknown analysis error'});
