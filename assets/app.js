@@ -3,18 +3,19 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=co-release-export-20261102-1';
-import { generateDemoLog } from './demo-data.js?v=co-release-export-20261102-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=co-release-export-20261102-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=co-release-export-20261102-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=co-release-export-20261102-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=co-release-export-20261102-1';
-import { buildStoryAnalysis } from './stories.js?v=co-release-export-20261102-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=co-release-export-20261102-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=co-release-export-20261102-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=co-release-export-20261102-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=co-release-export-20261102-1';
-import { downloadFilename } from './download-names.js?v=co-release-export-20261102-1';
+} from './domain.js?v=heroku-deployments-20261102-1';
+import { generateDemoLog } from './demo-data.js?v=heroku-deployments-20261102-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=heroku-deployments-20261102-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=heroku-deployments-20261102-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=heroku-deployments-20261102-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=heroku-deployments-20261102-1';
+import { buildStoryAnalysis } from './stories.js?v=heroku-deployments-20261102-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=heroku-deployments-20261102-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=heroku-deployments-20261102-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=heroku-deployments-20261102-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=heroku-deployments-20261102-1';
+import { downloadFilename } from './download-names.js?v=heroku-deployments-20261102-1';
+import { buildDeploymentIndex } from './deployments.js?v=heroku-deployments-20261102-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -29,7 +30,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=co-release-export-20261102-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=heroku-deployments-20261102-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -134,7 +135,9 @@ async function computeViewAndImpact(groups,scope,impactOptions,generation) {
     const fullImpact=impactAnalysis(fullView,rawCommits,rawTags,{
       ...impactOptions,githubReleases:rawGithubReleases,metric:'commits',skipFollowup:true,
     });
-    result={view,impact,stories,primaryIndex:buildEvidenceIndex(fullView,fullImpact,bounds)};
+    const primaryIndex=buildEvidenceIndex(fullView,fullImpact,bounds);
+    primaryIndex.deployments=buildDeploymentIndex(rawHerokuReleases,rawCommits,primaryIndex,herokuStatus);
+    result={view,impact,stories,primaryIndex};
   }
   withWeekAggregation(result.view);
   if (generation===progressGeneration) {computedKey=key;computedResult=result;}
@@ -157,13 +160,15 @@ let rawTags = [];
 let rawGithubReleases = [];
 let githubStatus = 'not-captured';
 let githubWarnings = [];
+let rawHerokuReleases = [];
+let herokuStatus = {};
 let impactModel = null;
 let storyModel = null;
 let perspectiveIndex = null;
 let evidenceRenderedRun = -1, evidenceRenderPromise = null;
 // Tag events may be later than the newest authored commit. The shared
 // window includes their dates, while all contributor counts remain author-based.
-const sourceDateBounds=()=>getHistoryDateBounds(rawCommits,rawTags,rawGithubReleases);
+const sourceDateBounds=()=>getHistoryDateBounds(rawCommits,rawTags,rawGithubReleases,rawHerokuReleases);
 let mergeGroups = [];
 let identityMeta = new Map();
 let identityPicker = null; // { targetIndex, selected: Set, query } — staged until Apply
@@ -210,11 +215,11 @@ function renderPrimary(){
 }
 function primarySnapshot(){
   const {trail,...snapshot}=primary;
-  return {...snapshot,label:({observatory:'Observatory',periods:'Periods',contributors:'Contributors',codebase:'Codebase'})[primary.mode]};
+  return {...snapshot,label:({observatory:'Observatory',periods:'Periods',contributors:'Contributors',codebase:'Codebase',deployments:'Deployments'})[primary.mode]};
 }
 
 function goPrimary(mode,change={}, {remember=true,scroll=true}={}){
-  if(!['observatory','periods','contributors','codebase'].includes(mode))return;
+  if(!['observatory','periods','contributors','codebase','deployments'].includes(mode))return;
   if(remember && (mode!==primary.mode||Object.keys(change).length))primary.trail=[...primary.trail,primarySnapshot()].slice(-8);
   Object.assign(primary,change,{mode});state.viewMode=mode;
   setExperienceVisibility();renderPrimary();
@@ -444,7 +449,7 @@ async function analyse() {
   catch(error) {finishProgress(generation,error);return setText('parse-error',error.message);}
   if (generation!==progressGeneration) return;
   ({commits:rawCommits,tags:rawTags,githubReleases:rawGithubReleases,
-    githubStatus,captureWarnings:githubWarnings}=history);
+    githubStatus,herokuReleases:rawHerokuReleases,herokuStatus,captureWarnings:githubWarnings}=history);
   importRevision++;computedKey=null;computedResult=null;
   finishProgress(generation,null,'History ready','Review the proposed contributor identities, then build your dashboard.');
   pendingImport = null;
@@ -523,7 +528,7 @@ function syncScopeAfterLoad() {
       const i=mergeGroups.findIndex(g=>g.emails.includes(s.rhythmFocusEmail));
       state.rhythmFocus=i<0?'selection':String(i);
     }
-    if (['observatory','periods','contributors','codebase','evidence'].includes(s.viewMode))state.viewMode=s.viewMode;
+    if (['observatory','periods','contributors','codebase','deployments','evidence'].includes(s.viewMode))state.viewMode=s.viewMode;
     if (['team','person','compare'].includes(s.storyPerspective))state.storyPerspective=s.storyPerspective;
     if (['all','activity','rhythm','delivery','focus','seasonality','context'].includes(s.storyTopic))state.storyTopic=s.storyTopic;
     if (['noteworthy','hidden'].includes(s.storyCategory))state.storyCategory=s.storyCategory;
@@ -554,14 +559,14 @@ function buildDashboard() {
   $('dashboard').hidden=false;
   $('export-btn').hidden=false;
   $('source-details').open=false;
-  setText('source-status',`${number.format(rawCommits.length)} commits · ${number.format(rawTags.length)} tags · ${number.format(rawGithubReleases.length)} GitHub Releases · identities reviewed`);
+  setText('source-status',`${number.format(rawCommits.length)} commits · ${number.format(rawTags.length)} tags · ${number.format(rawGithubReleases.length)} GitHub Releases · ${number.format(rawHerokuReleases.length)} Heroku events · identities reviewed`);
   $('contributor-search').value='';
   configureOptions();
   renderDashboard();
   $('dashboard').scrollIntoView({ behavior:'smooth',block:'start' });
 }
 function configureOptions() {
-  const years=[...new Set([...rawCommits.map(c=>c.date?.slice(0,4)),...rawTags.map(t=>t.taggedDate?.slice(0,4)),...rawGithubReleases.filter(r=>!r.draft).map(r=>r.publishedDate?.slice(0,4))].filter(Boolean))].sort().reverse();
+  const years=[...new Set([...rawCommits.map(c=>c.date?.slice(0,4)),...rawTags.map(t=>t.taggedDate?.slice(0,4)),...rawGithubReleases.filter(r=>!r.draft).map(r=>r.publishedDate?.slice(0,4)),...rawHerokuReleases.map(r=>r.date?.slice(0,4))].filter(Boolean))].sort().reverse();
   $('period-select').innerHTML=`<option value="all">All imported dates</option><option value="90d">Latest 90 days</option><option value="365d">Latest 365 days</option><option value="730d">Latest 730 days</option>${years.map(y=>`<option value="year-${y}">Calendar year ${y}</option>`).join('')}<option value="custom">Custom date range</option>`;
   $('metric-select').innerHTML=Object.entries(METRICS).map(([key,m])=>`<option value="${key}">${esc(m.label)}</option>`).join('');
 }
@@ -1651,7 +1656,7 @@ async function ensureEvidenceRendered(run=renderGeneration,generation=progressGe
   try{await job;}finally{if(evidencePendingRun===run){evidencePendingRun=-1;evidenceRenderPromise=null;}}
 }
 async function switchExperience(next,{target=null}={}) {
-  if(!['observatory','periods','contributors','codebase','evidence'].includes(next))return;
+  if(!['observatory','periods','contributors','codebase','deployments','evidence'].includes(next))return;
   state.viewMode=next;
   if(next!=='evidence')primary.mode=next;
   setExperienceVisibility();
@@ -1756,7 +1761,7 @@ async function importSession(event) {
   catch(err){finishProgress(generation,err);return setText('parse-error',err.message);}
   if (generation!==progressGeneration)return;
   rawCommits=history.commits;rawTags=history.tags;
-  rawGithubReleases=history.githubReleases;githubStatus=history.githubStatus;githubWarnings=history.captureWarnings;
+  rawGithubReleases=history.githubReleases;githubStatus=history.githubStatus;rawHerokuReleases=history.herokuReleases;herokuStatus=history.herokuStatus;githubWarnings=history.captureWarnings;
   importRevision++;computedKey=null;computedResult=null;
   identityMeta = makeIdentityCatalogue(rawCommits);
   identityPicker = null;
@@ -1776,7 +1781,7 @@ async function importSession(event) {
   for(const c of rawCommits){if(used.has(c.email))continue;mergeGroups.push({displayName:c.name||c.email,emails:[c.email]});used.add(c.email);}
   pendingImport=payload;
   buildDashboard();
-  setText('source-status',`${number.format(rawCommits.length)} commits · ${number.format(rawTags.length)} tags · ${number.format(rawGithubReleases.length)} GitHub Releases restored from ${file.name}`);
+  setText('source-status',`${number.format(rawCommits.length)} commits · ${number.format(rawTags.length)} tags · ${number.format(rawHerokuReleases.length)} Heroku events restored from ${file.name}`);
   setText('parse-error','');
 }
 
@@ -1790,6 +1795,11 @@ const ACTIONS={
     await switchExperience('evidence',{target:'scope-heading'});
   },
   'primary-nav':(_e,t)=>goPrimary(t.dataset.to),
+  'deployment-open':(_e,t)=>{const entry=perspectiveIndex?.deployments?.events.find(e=>e.id===t.dataset.deploymentId);if(!entry)return;
+    goPrimary('deployments',{deploymentFocus:entry.id,deploymentEnv:'all',deploymentYear:'all',deploymentPage:0},{scroll:false});
+    $('deployment-inspector')?.scrollIntoView({behavior:'smooth',block:'start'});},
+  'deployment-select':(_e,t)=>{primary.deploymentFocus=t.dataset.deploymentId;renderPrimary();$('deployment-inspector')?.scrollIntoView({behavior:'smooth',block:'nearest'});},
+  'deployment-page':(_e,t)=>{primary.deploymentPage=Math.max(0,Number(t.dataset.page)||0);primary.deploymentFocus=null;renderPrimary();},
   'primary-back':()=>{
     const previous=primary.trail.pop();if(!previous)return;
     const trail=primary.trail;
@@ -2036,6 +2046,8 @@ function handleDocumentChange(event) {
     case 'filter-merges':state.includeMerges=t.checked;renderDashboard();break;
     case 'filter-reverts':state.includeReverts=t.checked;renderDashboard();break;
     case 'metric-select':state.metric=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;
+    case 'deployment-env':primary.deploymentEnv=t.value;primary.deploymentFocus=null;primary.deploymentPage=0;renderPrimary();break;
+    case 'deployment-year':primary.deploymentYear=t.value;primary.deploymentFocus=null;primary.deploymentPage=0;renderPrimary();break;
     case 'impact-metric-select':state.impactMetric=t.value;renderDashboard();break;
     case 'impact-profile-select':state.impactFocus=t.value;renderImpact(analysis);$('impact-profile-select')?.focus({preventScroll:true});break;
     case 'impact-matrix-year':state.impactMatrixYear=t.value;state.impactMatrixPage=0;refreshImpactMatrix({focus:{kind:'year'}});break;

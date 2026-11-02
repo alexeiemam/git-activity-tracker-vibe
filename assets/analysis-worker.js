@@ -1,8 +1,9 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=co-release-export-20261102-1';
-import { impactAnalysis } from './impact.js?v=co-release-export-20261102-1';
-import { buildStoryAnalysis } from './stories.js?v=co-release-export-20261102-1';
-import { buildEvidenceIndex } from './perspectives.js?v=co-release-export-20261102-1';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=heroku-deployments-20261102-1';
+import { impactAnalysis } from './impact.js?v=heroku-deployments-20261102-1';
+import { buildStoryAnalysis } from './stories.js?v=heroku-deployments-20261102-1';
+import { buildEvidenceIndex } from './perspectives.js?v=heroku-deployments-20261102-1';
+import { buildDeploymentIndex } from './deployments.js?v=heroku-deployments-20261102-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;
@@ -16,7 +17,7 @@ self.onmessage = ({data}) => {
       progress(id,'Reading history',5,'Parsing commit records, Git tags and GitHub Releases');
       history = parseGitHistory(data.raw);
       cachedPrimary=null;cachedPrimaryKey=null;
-      progress(id,'Reading history',95,`${history.commits.length.toLocaleString()} commits parsed`);
+      progress(id,'Reading history',95,`${history.commits.length.toLocaleString()} commits · ${history.herokuReleases.length.toLocaleString()} Heroku events parsed`);
       self.postMessage({id,type:'result',result:history});
     } else if (type === 'build') {
       if (!history) throw new Error('Import history before building the dashboard.');
@@ -37,7 +38,7 @@ self.onmessage = ({data}) => {
       const key=JSON.stringify([data.groups,data.scope.includeMerges,data.scope.includeReverts,data.impactOptions.actorMap]);
       if(key!==cachedPrimaryKey||!cachedPrimary){
         progress(id,'Building the release observatory',96,'Preserving complete tag-defined release contents');
-        const bounds=getHistoryDateBounds(history.commits,history.tags,history.githubReleases);
+        const bounds=getHistoryDateBounds(history.commits,history.tags,history.githubReleases,history.herokuReleases);
         const fullView=buildAnalysis(history.commits,data.groups,{
           start:bounds.min,end:bounds.max,
           selectedIds:new Set(data.groups.map((_,i)=>String(i))),
@@ -49,6 +50,8 @@ self.onmessage = ({data}) => {
           githubReleases:history.githubReleases,
         });
         cachedPrimary=buildEvidenceIndex(fullView,fullImpact,bounds);
+        progress(id,'Connecting deployments',97,'Matching independent STAG/BETA histories and production revisions');
+        cachedPrimary.deployments=buildDeploymentIndex(history.herokuReleases,history.commits,cachedPrimary,history.herokuStatus);
         cachedPrimaryKey=key;
       }
       progress(id,'Preparing visualisations',98,'Transferring releases, people and period evidence to the dashboard');

@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=co-release-export-20261102-1';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=co-release-export-20261102-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=co-release-export-20261102-1';
+import { IMPACT_METRICS } from './impact.js?v=heroku-deployments-20261102-1';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=heroku-deployments-20261102-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=heroku-deployments-20261102-1';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});

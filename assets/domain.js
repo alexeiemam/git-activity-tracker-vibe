@@ -4,6 +4,8 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=heroku-deployments-20261102-1';
+
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },
   active_days: { label: 'Active days', unit: 'contributor-days', note: 'Distinct author dates per contributor' },
@@ -86,6 +88,8 @@ export function parseGitHistory(raw) {
   const commits = [];
   const tags = [];
   const githubReleases = [];
+  const herokuReleases = [];
+  const herokuStatus = Object.fromEntries(DEPLOYMENT_ENVS.map(env=>[env,'not-captured']));
   const captureWarnings = [];
   let githubStatus = 'not-captured';
   let current = null;
@@ -94,6 +98,20 @@ export function parseGitHistory(raw) {
   for (const original of String(raw || '').split(/\r?\n/)) {
     const line = original.trim();
     if (!line) continue;
+    if (line.startsWith('HEROKU|')) {
+      flush();
+      const match=line.match(/^HEROKU\|(STAG|BETA|PROD)\|(.+)$/);
+      const decoded=match?decodeHerokuBatch(match[2],match[1]):null;
+      if(decoded)herokuReleases.push(...decoded);
+      else captureWarnings.push('A Heroku deployment batch could not be decoded.');
+      continue;
+    }
+    if (line.startsWith('HEROKUSTATUS|')) {
+      flush();
+      const match=line.match(/^HEROKUSTATUS\|(STAG|BETA|PROD)\|(ok|unavailable|missing-cli|missing-remote)$/);
+      if(match)herokuStatus[match[1]]=match[2];
+      continue;
+    }
     if (line.startsWith('GHRELEASE|')) {
       flush();
       const record=decodeGithubRelease(line.slice('GHRELEASE|'.length));
@@ -179,7 +197,7 @@ export function parseGitHistory(raw) {
     return true;
   });
   if (!unique.length) throw new Error('No dated commits found. Use the generated git log command.');
-  return { commits: unique, tags: tags.filter(t => t.name), githubReleases, githubStatus, captureWarnings };
+  return { commits: unique, tags: tags.filter(t => t.name), githubReleases, githubStatus, herokuReleases, herokuStatus, captureWarnings };
 }
 
 export function parseGitLog(raw) { return parseGitHistory(raw).commits; }
@@ -212,7 +230,7 @@ export function getDateBounds(commits) {
 
 /** Shared calendar scope spans authored commits AND the Git tag events being
  * visualised. This does not change the author-based attribution of commits. */
-export function getHistoryDateBounds(commits, tags = [], githubReleases = []) {
+export function getHistoryDateBounds(commits, tags = [], githubReleases = [], herokuReleases = []) {
   const bounds=getDateBounds(commits);
   for (const tag of tags) if (validDate(tag.taggedDate)) {
     if (!bounds.min || tag.taggedDate < bounds.min) bounds.min=tag.taggedDate;
@@ -222,6 +240,10 @@ export function getHistoryDateBounds(commits, tags = [], githubReleases = []) {
   for(const release of githubReleases) if (!release.draft && release.publishedDate && knownTags.has(release.tag)) {
     if (!bounds.min || release.publishedDate < bounds.min) bounds.min=release.publishedDate;
     if (!bounds.max || release.publishedDate > bounds.max) bounds.max=release.publishedDate;
+  }
+  for(const record of herokuReleases)if(validDate(record.date)){
+    if(!bounds.min||record.date<bounds.min)bounds.min=record.date;
+    if(!bounds.max||record.date>bounds.max)bounds.max=record.date;
   }
   return bounds;
 }

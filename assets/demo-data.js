@@ -69,6 +69,7 @@ export function generateDemoLog({ years = 3, commits = 520 } = {}) {
   const random = mulberry32(0xC0FFEE);
   const end = new Date();
   end.setHours(12, 0, 0, 0);
+  end.setDate(end.getDate()-7); // Keep illustrative deployment dates in the past.
   const spanDays = Math.max(1, Math.round(years * 365.25));
   const rows = [];
   for (let index = 0; index < commits; index += 1) {
@@ -92,6 +93,7 @@ export function generateDemoLog({ years = 3, commits = 520 } = {}) {
   }
   rows.sort((a,b)=>a.date-b.date || a.index-b.index);
   const tags=[], github=[];
+  const heroku={STAG:[],BETA:[],PROD:[]};
   const publishers=['casey','priya','lin','hugo'];
   const releaseVersion=index=>{
     if(index>=9) return `v9.${Math.floor((index-9)/3)}.${(index-9)%3}`;
@@ -120,9 +122,22 @@ export function generateDemoLog({ years = 3, commits = 520 } = {}) {
         body:`Demo release ${version}:\n- Improvements to dashboard and API workflows\n- Tests and maintenance follow-ups`,
         html_url:`https://github.com/example/demo/releases/tag/${version}`};
       github.push(`GHRELEASE|${btoa(JSON.stringify(event))}`);
+      // Demo deployments intentionally use STAG and BETA independently.
+      const addEvent=(env,offset,desc,sha=hash)=>{
+        const at=new Date(entry.date.getTime()+offset*86400000);
+        heroku[env].push({version:heroku[env].length+1,created_at:at.toISOString(),
+          description:desc,commit:sha});
+      };
+      if(releaseNumber%2===0)addEvent('STAG',0.3,`Deploy ${hash.slice(0,8)}`);
+      if(releaseNumber%3!==0)addEvent('BETA',0.7,`Deploy ${hash.slice(0,8)}`);
+      if(releaseNumber%3!==1)addEvent('PROD',1.5,`Deploy ${hash.slice(0,8)}`);
+      if(releaseNumber%4===0)addEvent('PROD',2.2,'Config change for demo environment',null);
     }
   }
   // The tag inventory is emitted before the commit stream, just like the
   // generated capture command; their timestamps can differ from authored dates.
-  return [...tags,...github,'GHSTATUS|ok',...rows.reverse().map(r=>r.text)].join('\n');
+  return [...tags,...github,'GHSTATUS|ok',
+    ...Object.entries(heroku).flatMap(([env,history])=>[
+      `HEROKU|${env}|${btoa(JSON.stringify(history))}`,`HEROKUSTATUS|${env}|ok`,
+    ]),...rows.reverse().map(r=>r.text)].join('\n');
 }

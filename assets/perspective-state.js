@@ -5,18 +5,18 @@ export const primaryDefaults=()=>({
   periodBucket:null,periodSelectedId:null,periodFocusPerson:null,periodFocusArea:null,
   contributorFocus:null,contributorTab:'delivery',contributorRange:'all',compareB:null,compareC:null,
   coReleasePartner:null,coReleaseSort:'shared',
-  codeArea:null,codebaseRange:'all',trail:[],
+  codeArea:null,codebaseRange:'all',deploymentEnv:'all',deploymentYear:'all',deploymentFocus:null,deploymentPage:0,trail:[],
 });
 const keys=['contributorFocus','compareB','compareC','coReleasePartner','periodSelectedId','periodFocusPerson'];
 const accepted={
-  mode:['observatory','periods','contributors','codebase'],cohortBy:['type','driver','year'],
+  mode:['observatory','periods','contributors','codebase','deployments'],cohortBy:['type','driver','year'],
   releaseType:['all','major','minor','patch','prerelease','unclassified','divergent','baseline','same-version'],
   periodComparison:['none','previous','year','custom'],
   contributorTab:['delivery','together','focus','behaviour','evolution','compare'],
   coReleaseSort:['shared','overlap'],
-  contributorRange:['all','year','period'],codebaseRange:['all','period'],
+  contributorRange:['all','year','period'],codebaseRange:['all','period'],deploymentEnv:['all','STAG','BETA','PROD'],
 };
-const safeValue=(name,val)=>name==='releasePage'
+const safeValue=(name,val)=>['releasePage','deploymentPage'].includes(name)
   ? Number.isInteger(val)&&val>=0&&val<=100000
   : val===null||(typeof val==='string'&&val.length<=200);
 

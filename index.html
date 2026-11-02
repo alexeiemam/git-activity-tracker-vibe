@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=co-release-export-20261102-1">
+  <link rel="stylesheet" href="./assets/app.css?v=heroku-deployments-20261102-1">
 </head>
 <body>
   <div class="page">
@@ -53,11 +53,25 @@
     printf 'GHSTATUS|unavailable\n'
     echo 'Note: GitHub Releases unavailable; captured Git tags and commits remain usable.' &gt;&amp;2
   fi
+  for environment in STAG BETA PROD; do
+    if ! command -v heroku &gt;/dev/null 2&gt;&amp;1; then
+      printf 'HEROKUSTATUS|%s|missing-cli\n' "$environment"
+    elif ! git remote get-url "$environment" &gt;/dev/null 2&gt;&amp;1; then
+      printf 'HEROKUSTATUS|%s|missing-remote\n' "$environment"
+    elif deployment_rows="$(heroku releases --json --num 1000 -r "$environment" 2&gt;/dev/null)" &amp;&amp; [ -n "$deployment_rows" ]; then
+      encoded="$(printf '%s' "$deployment_rows" | base64 | tr -d '\r\n')"
+      printf 'HEROKU|%s|%s\n' "$environment" "$encoded"
+      printf 'HEROKUSTATUS|%s|ok\n' "$environment"
+    else
+      printf 'HEROKUSTATUS|%s|unavailable\n' "$environment"
+      printf 'Note: Heroku %s history unavailable; Git and other environments remain usable.\n' "$environment" &gt;&amp;2
+    fi
+  done
   git log HEAD --tags --pretty=format:'COMMIT|%H|%ae|%an|%aI|%cI|%s|%P' --numstat
 ) | pbcopy</code><button type="button" data-action="copy-command" class="command-copy">Copy command</button></div>
-          <p class="input-hint">Run inside your repository. This fetches tags from <code>origin</code>, adds GitHub Releases via authenticated <code>gh</code> (when available), and copies commit history without a committer-date cutoff. No GitHub token or API response is sent to git:signals; the import stays in your browser. The command uses macOS <code>pbcopy</code>; on other systems, remove the final pipe and copy terminal output.</p>
-          <label class="field-label" for="log-input">Git history + optional GitHub Releases output</label>
-          <textarea id="log-input" placeholder="TAG|v8.9.1||hash|commit|2026-10-01T09:12:00+01:00&#10;GHRELEASE|base64-encoded-GitHub-Release-metadata&#10;COMMIT|hash|email|name|author-time|committer-time|subject|parents&#10;25  8  app/models/example.rb" spellcheck="false"></textarea>
+          <p class="input-hint">Run inside your repository. This fetches tags from <code>origin</code>, adds GitHub Releases via <code>gh</code>, independently captures up to 1,000 Heroku releases each from remotes <code>STAG</code>, <code>BETA</code> and <code>PROD</code> (when authenticated), and copies commit history without a committer-date cutoff. No credentials or Heroku config values are requested; the imported release metadata and Git history stay in your browser. Incomplete Heroku access is reported per environment. The command uses macOS <code>pbcopy</code>; on other systems, remove the final pipe and copy terminal output.</p>
+          <label class="field-label" for="log-input">Git history + optional GitHub and Heroku release evidence</label>
+          <textarea id="log-input" placeholder="TAG|v8.9.1||hash|commit|2026-10-01T09:12:00+01:00&#10;GHRELEASE|base64-encoded-GitHub-Release-metadata&#10;HEROKU|PROD|base64-encoded-Heroku-release-list&#10;COMMIT|hash|email|name|author-time|committer-time|subject|parents&#10;25  8  app/models/example.rb" spellcheck="false"></textarea>
           <div class="source-actions"><button type="button" data-action="analyse" class="button primary">Analyse history <span aria-hidden="true">→</span></button><button type="button" data-action="load-demo" class="button soft">Explore demo dataset</button><span id="parse-error" class="error-text" role="alert" aria-live="polite"></span></div>
         </div>
       </details>
@@ -78,7 +92,7 @@
         <button type="button" class="experience-choice" data-action="experience-mode" data-experience="periods" aria-pressed="false" aria-controls="stories-view"><span class="experience-symbol" aria-hidden="true">▥</span><span><strong>Periods</strong><small>What happened · Any interval, compared</small></span></button>
         <button type="button" class="experience-choice" data-action="experience-mode" data-experience="contributors" aria-pressed="false" aria-controls="stories-view"><span class="experience-symbol" aria-hidden="true">◎</span><span><strong>Contributors</strong><small>Who contributed · Portraits and comparisons</small></span></button>
       </nav>
-      <div class="primary-aux-nav"><span>Follow the evidence further</span><button type="button" data-action="experience-mode" data-experience="codebase">Explore codebase ↗</button><button type="button" data-action="experience-mode" data-experience="evidence">Detailed analytical workbench ↗</button></div>
+      <div class="primary-aux-nav"><span>Follow the evidence further</span><button type="button" data-action="experience-mode" data-experience="deployments">Deployment history ↗</button><button type="button" data-action="experience-mode" data-experience="codebase">Explore codebase ↗</button><button type="button" data-action="experience-mode" data-experience="evidence">Detailed analytical workbench ↗</button></div>
       <section id="stories-view" class="stories-view" aria-label="Release-first repository explorer"><div class="story-empty">Preparing release and contributor evidence…</div></section>
       <div id="evidence-view" hidden>
       <div class="primary-evidence-intro"><span class="primary-eyebrow">DETAILED ANALYTICAL WORKBENCH</span><h3>Every measurement, when you need it.</h3><p>Author-date filtering is explicit here. These legacy evidence charts can intentionally restrict included release commits by author date; the primary Observatory and release anatomy never do.</p></div>
@@ -195,6 +209,6 @@
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=co-release-export-20261102-1"></script>
+  <script type="module" src="./assets/app.js?v=heroku-deployments-20261102-1"></script>
 </body>
 </html>
