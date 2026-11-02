@@ -3,22 +3,23 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=git-heroku-ux-20261102-2';
-import { generateDemoLog } from './demo-data.js?v=git-heroku-ux-20261102-2';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-heroku-ux-20261102-2';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-heroku-ux-20261102-2';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-heroku-ux-20261102-2';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-heroku-ux-20261102-2';
-import { buildStoryAnalysis } from './stories.js?v=git-heroku-ux-20261102-2';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-heroku-ux-20261102-2';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-heroku-ux-20261102-2';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-heroku-ux-20261102-2';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-heroku-ux-20261102-2';
-import { downloadFilename } from './download-names.js?v=git-heroku-ux-20261102-2';
-import { buildDeploymentIndex } from './deployments.js?v=git-heroku-ux-20261102-2';
-import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-heroku-ux-20261102-2';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-heroku-ux-20261102-2';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-heroku-ux-20261102-2';
+} from './domain.js?v=git-gzip-session-20261102-1';
+import { generateDemoLog } from './demo-data.js?v=git-gzip-session-20261102-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-gzip-session-20261102-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-gzip-session-20261102-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-gzip-session-20261102-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-gzip-session-20261102-1';
+import { buildStoryAnalysis } from './stories.js?v=git-gzip-session-20261102-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-gzip-session-20261102-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-gzip-session-20261102-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-gzip-session-20261102-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-gzip-session-20261102-1';
+import { downloadFilename } from './download-names.js?v=git-gzip-session-20261102-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-gzip-session-20261102-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-gzip-session-20261102-1';
+import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-gzip-session-20261102-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-gzip-session-20261102-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-gzip-session-20261102-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -28,12 +29,13 @@ let analysisWorker = null, workerSerial = 0, workerFaulted = false;
 const workerJobs = new Map();
 let renderGeneration = 0, progressGeneration = 0, progressTimer = null;
 let computedKey = null, computedResult = null, importRevision = 0;
+let sessionTransferBusy = false;
 
 function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-heroku-ux-20261102-2', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-gzip-session-20261102-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -1824,20 +1826,71 @@ function sessionPayload() {
       primary:primaryStateForExport(primary,mergeGroups)}};
   return payload;
 }
-function exportSession() {
-  const payload=sessionPayload();if(!payload)return;
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+function setSessionTransferBusy(busy) {
+  sessionTransferBusy=busy;
+  $('export-btn').disabled=busy;
+  document.querySelector('[data-action="choose-import"]').disabled=busy;
+}
+function downloadSessionBlob(blob, compressed) {
   const uri=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=uri;a.download=downloadFilename('session');a.click();
-  setTimeout(()=>URL.revokeObjectURL(uri),1000);
+  const a=document.createElement('a');
+  a.href=uri;a.download=downloadFilename(compressed?'session':'session-json');
+  document.body.appendChild(a);
+  a.click();a.remove();
+  // Allow browsers time to consume large object URLs before releasing them.
+  setTimeout(()=>URL.revokeObjectURL(uri),60000);
+}
+const formatSize = bytes => bytes >= 1048576 ? `${(bytes/1048576).toFixed(1)} MiB` : `${Math.max(1,Math.round(bytes/1024))} KiB`;
+async function exportSession() {
+  if(sessionTransferBusy)return;
+  const payload=sessionPayload();if(!payload)return;
+  setSessionTransferBusy(true);
+  const generation=++progressGeneration;
+  showProgress('Preparing session export',4,'Packaging imported history and session preferences locally',generation);
+  await yieldToUI();
+  try {
+    const request=askWorker('session-export',{payload},p=>showProgress(p.phase,p.value,p.message,generation));
+    let archive;
+    if(request) {
+      try {archive=await request;} catch(error) {if(!workerFaulted)throw error;}
+    }
+    if(!archive){
+      showProgress('Preparing session export',12,'Using browser compatibility processing',generation);
+      await yieldToUI();
+      archive=await encodeSessionArchive(payload,{onProgress:p=>showProgress(p.phase,p.value,p.message,generation)});
+    }
+    downloadSessionBlob(archive.blob,archive.compressed);
+    const ratio=archive.compressed?` (${Math.round(100*(1-archive.blob.size/archive.originalBytes))}% smaller)`:' (uncompressed fallback)';
+    finishProgress(generation,null,'Session archive ready',`${formatSize(archive.blob.size)}${ratio}. Download prepared locally.`);
+  }catch(error){
+    finishProgress(generation,error);
+    setText('scope-error',`Could not export session: ${error.message}`);
+  }finally{setSessionTransferBusy(false);}
 }
 async function importSession(event) {
   const file=event.target.files?.[0];event.target.value='';
-  if(!file) return;
-  let payload;
-  try {payload=JSON.parse(await file.text());}
-  catch {return setText('parse-error','Could not parse JSON export.');}
-  localDatasetId=null;return restoreSessionPayload(payload,file.name);
+  if(!file||sessionTransferBusy)return;
+  setSessionTransferBusy(true);
+  const generation=++progressGeneration;
+  showProgress('Opening session',4,'Detecting JSON or gzip archive format',generation);
+  await yieldToUI();
+  try {
+    const request=askWorker('session-import',{file},p=>showProgress(p.phase,p.value,p.message,generation));
+    let payload;
+    if(request){
+      try {payload=await request;} catch(error){if(!workerFaulted)throw error;}
+    }
+    if(!payload){
+      showProgress('Opening session',12,'Using browser compatibility processing',generation);
+      await yieldToUI();
+      payload=await decodeSessionArchive(file,{onProgress:p=>showProgress(p.phase,p.value,p.message,generation)});
+    }
+    localDatasetId=null;
+    await restoreSessionPayload(payload,file.name);
+  }catch(error){
+    finishProgress(generation,error);
+    setText('parse-error',`Could not import session: ${error.message}`);
+  }finally{setSessionTransferBusy(false);}
 }
 async function restoreSessionPayload(payload,filename='imported session') {
   if(typeof payload?.rawLog!=='string' || !Array.isArray(payload.mergeGroups)) return setText('parse-error','Invalid session: rawLog and mergeGroups required.');

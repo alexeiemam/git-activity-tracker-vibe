@@ -2,7 +2,8 @@
 export function downloadFilename(kind, date = new Date()) {
   if (!(date instanceof Date) || !Number.isFinite(date.getTime())) throw new TypeError('A valid date is required');
   const types = {
-    session: ['git-signals-session', 'json'],
+    session: ['git-signals-session', 'json.gz'],
+    'session-json': ['git-signals-session', 'json'],
     'release-matrix': ['git-signals-release-matrix', 'csv'],
   };
   const type = types[kind];

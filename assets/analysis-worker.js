@@ -1,19 +1,26 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-heroku-ux-20261102-2';
-import { impactAnalysis } from './impact.js?v=git-heroku-ux-20261102-2';
-import { buildStoryAnalysis } from './stories.js?v=git-heroku-ux-20261102-2';
-import { buildEvidenceIndex } from './perspectives.js?v=git-heroku-ux-20261102-2';
-import { buildDeploymentIndex } from './deployments.js?v=git-heroku-ux-20261102-2';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-gzip-session-20261102-1';
+import { impactAnalysis } from './impact.js?v=git-gzip-session-20261102-1';
+import { buildStoryAnalysis } from './stories.js?v=git-gzip-session-20261102-1';
+import { buildEvidenceIndex } from './perspectives.js?v=git-gzip-session-20261102-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-gzip-session-20261102-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-gzip-session-20261102-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;
 const progress = (id, phase, value, message) =>
   self.postMessage({id, type:'progress', phase, value, message});
 
-self.onmessage = ({data}) => {
+self.onmessage = async ({data}) => {
   const {id, type} = data;
   try {
-    if (type === 'parse') {
+    if (type === 'session-export') {
+      const archive = await encodeSessionArchive(data.payload, {onProgress: p => progress(id, p.phase, p.value, p.message)});
+      self.postMessage({id, type:'result', result:archive});
+    } else if (type === 'session-import') {
+      const payload = await decodeSessionArchive(data.file, {onProgress: p => progress(id, p.phase, p.value, p.message)});
+      self.postMessage({id, type:'result', result:payload});
+    } else if (type === 'parse') {
       progress(id,'Reading history',5,'Parsing commit records, Git tags and GitHub Releases');
       history = parseGitHistory(data.raw);
       cachedPrimary=null;cachedPrimaryKey=null;

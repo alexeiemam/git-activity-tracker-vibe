@@ -295,14 +295,29 @@ Within a given visualisation the scale is **shared across all displayed people, 
 
 ## Session import/export
 
-**Export session** downloads `git-signals-session-YYYY-MM-DD_HH-mm-ss.json`.
-**Export all · CSV** for the People & Releases matrix downloads
-`git-signals-release-matrix-YYYY-MM-DD_HH-mm-ss.csv`. Timestamps use the
-browser's local clock; names are fixed and never include pasted Git content,
-release notes, contributor names or other unbounded data. Export contents and
-file formats are unchanged.
+**Export session** now downloads a lossless, gzip-compressed file named
+`git-signals-session-YYYY-MM-DD_HH-mm-ss.json.gz`, using your browser's local
+clock. The compact JSON payload preserves the full Git, GitHub and Heroku
+capture, merged identities, selections, filters, navigation state and all
+other session settings; it is merely compressed, not abbreviated. Session
+compression and decompression run in the existing Web Worker when available,
+with visible progress. Nothing is uploaded to a server.
 
-**Export session** saves the input Git log, merged identities and filters (including trend, monthly/daily pulse, weekly rhythm presentation, historical tab/mode/year selection, the focused contributor (by identity email), and the Impact Explorer tab, measure, release, timeline range, and footprint presentation) into a JSON file. **Import session** restores it in the browser. v1 exports remain accepted. Co-release view, partner and sorting preferences are persisted using reconciled author identities.
+**Import session** accepts both the new `.json.gz` archives and all existing
+`.json` exports, including legacy session schema versions. It identifies gzip
+by the file contents, validates decompressed JSON and restores it through the
+same existing import path. Malformed or truncated archives display an error,
+with a 1 GiB decompressed-size safety limit. Native browser gzip streams
+are used, with no third-party library. On a browser without gzip compression,
+export falls back to the original `.json` format; a browser without gzip
+*decompression* can still import legacy JSON, or a `.json.gz` file can first
+be unpacked with `gunzip -k session.json.gz` and the resulting JSON imported.
+You can also unpack exported archives with `gunzip` or `gzip -d` outside the app.
+
+**Export all · CSV** for People & Releases remains plain CSV, named
+`git-signals-release-matrix-YYYY-MM-DD_HH-mm-ss.csv`. Its format is unchanged.
+Export filenames remain short, descriptive and never contain imported Git text,
+release notes, identities or other user content.
 
 ## Source and tests
 
@@ -315,6 +330,7 @@ file formats are unchanged.
 - `assets/impact-window.js` — pure viewport, zoom, pan and release reveal logic.
 - `assets/co-release.js` — complete-release co-participation and evidence by pair.
 - `assets/download-names.js` — bounded descriptive export filenames with local timestamps.
+- `assets/session-archive.js` — browser-native gzip session archive export/import with legacy JSON compatibility.
 - `assets/demo-data.js` — deterministic demonstration dataset.
 - `tests/` — dependency-free Node checks and regression tests.
 

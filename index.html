@@ -8,13 +8,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=git-heroku-ux-20261102-2">
+  <link rel="stylesheet" href="./assets/app.css?v=git-gzip-session-20261102-1">
 </head>
 <body>
   <div class="page">
     <header class="masthead">
       <a href="#top" class="wordmark" aria-label="git:signals home"><span class="mark">g<span class="mark-dot">:</span></span><span>git<span class="wordmark-light">signals</span></span></a>
-      <div class="masthead-right"><span class="eyebrow">REPOSITORY INTELLIGENCE / LOCAL-ONLY ANALYSIS</span><button id="export-btn" type="button" data-action="export" class="button outline" hidden>Export session <span aria-hidden="true">↗</span></button><button type="button" data-action="choose-import" class="button outline">Import session <span aria-hidden="true">↗</span></button><input id="file-import-input" type="file" accept=".json,application/json" hidden></div>
+      <div class="masthead-right"><span class="eyebrow">REPOSITORY INTELLIGENCE / LOCAL-ONLY ANALYSIS</span><button id="export-btn" type="button" data-action="export" class="button outline" title="Download a compressed .json.gz session (or JSON on older browsers)" hidden>Export session <span aria-hidden="true">↗</span></button><button type="button" data-action="choose-import" class="button outline" title="Import a .json.gz or existing .json session">Import session <span aria-hidden="true">↗</span></button><input id="file-import-input" type="file" accept=".json,.json.gz,.gz,application/json,application/gzip,application/x-gzip" hidden></div>
     </header>
 
     <aside id="work-progress" class="work-progress" role="status" aria-live="polite" aria-atomic="true" hidden>
@@ -325,6 +325,6 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=git-heroku-ux-20261102-2"></script>
+  <script type="module" src="./assets/app.js?v=git-gzip-session-20261102-1"></script>
 </body>
 </html>
