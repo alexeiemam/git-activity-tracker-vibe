@@ -3,21 +3,22 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=git-history-links-20261102-1';
-import { generateDemoLog } from './demo-data.js?v=git-history-links-20261102-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-history-links-20261102-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-history-links-20261102-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-history-links-20261102-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-history-links-20261102-1';
-import { buildStoryAnalysis } from './stories.js?v=git-history-links-20261102-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-history-links-20261102-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-history-links-20261102-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-history-links-20261102-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-history-links-20261102-1';
-import { downloadFilename } from './download-names.js?v=git-history-links-20261102-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-history-links-20261102-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-history-links-20261102-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-history-links-20261102-1';
+} from './domain.js?v=git-heroku-ux-20261102-2';
+import { generateDemoLog } from './demo-data.js?v=git-heroku-ux-20261102-2';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-heroku-ux-20261102-2';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-heroku-ux-20261102-2';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-heroku-ux-20261102-2';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-heroku-ux-20261102-2';
+import { buildStoryAnalysis } from './stories.js?v=git-heroku-ux-20261102-2';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-heroku-ux-20261102-2';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-heroku-ux-20261102-2';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-heroku-ux-20261102-2';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-heroku-ux-20261102-2';
+import { downloadFilename } from './download-names.js?v=git-heroku-ux-20261102-2';
+import { buildDeploymentIndex } from './deployments.js?v=git-heroku-ux-20261102-2';
+import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-heroku-ux-20261102-2';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-heroku-ux-20261102-2';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-heroku-ux-20261102-2';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -32,7 +33,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-history-links-20261102-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-heroku-ux-20261102-2', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -311,7 +312,7 @@ function copyCommand() {
 }
 
 // ---- Identity reconciliation: email is the durable identity key. ----
-function makeIdentityCatalogue(commits) {
+function makeIdentityCatalogue(commits,github=[],heroku=[]) {
   const catalogue = new Map();
   for (const commit of commits) {
     if (!catalogue.has(commit.email)) catalogue.set(commit.email, {
@@ -322,10 +323,12 @@ function makeIdentityCatalogue(commits) {
     item.nameCounts.set(commit.name, (item.nameCounts.get(commit.name) || 0) + 1);
     if (commit.date > item.date) item.date = commit.date;
   }
-  return new Map([...catalogue].map(([email, item]) => {
+  const authors=new Map([...catalogue].map(([email, item]) => {
     const best = [...item.nameCounts].sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)[0]?.[0] || email;
-    return [email, { name: best, aliases: [...item.nameCounts.keys()], commits: item.commits, date: item.date }];
+    return [email, { name: best, aliases: [...item.nameCounts.keys()], commits: item.commits, date: item.date,kind:'Git author' }];
   }));
+  for(const [key,entry] of externalIdentities(github,heroku))authors.set(key,entry);
+  return authors;
 }
 function makeMergeSuggestions() {
   const byName = new Map();
@@ -334,7 +337,9 @@ function makeMergeSuggestions() {
     if (!byName.has(key)) byName.set(key, { displayName: meta.name, emails: [] });
     byName.get(key).emails.push(email);
   }
-  return [...byName.values()].sort((a, b) => a.displayName.localeCompare(b.displayName));
+  const git=[...byName.values()].filter(group=>group.emails.some(email=>!email.startsWith('github:')&&!email.startsWith('heroku:')));
+  return reconcileProviderGroups(git,externalIdentities(rawGithubReleases,rawHerokuReleases),rawGithubReleases,rawCommits)
+    .sort((a,b)=>a.displayName.localeCompare(b.displayName));
 }
 function mergeCandidates(index, query = '') {
   const text = query.trim().toLocaleLowerCase();
@@ -368,19 +373,19 @@ function identityRows(index) {
       return `<label class="identity-option ${checked ? 'is-selected' : ''}">
         <input type="checkbox" data-identity-email="${esc(email)}" ${checked ? 'checked' : ''}>
         <span class="identity-option-text"><strong>${esc(meta?.name || group.displayName)}</strong><small title="${esc(email)}">${esc(email)}</small></span>
-        <span class="identity-option-count">${countWord(meta?.commits || 0, 'commit')}</span>
+        <span class="identity-option-count">${meta?.kind==='Git author'?countWord(meta.commits,'commit'):countWord(meta?.events||0,'event')}</span>
       </label>`;
     }).join('')}
   </div>`).join('');
 }
 function renderIdentityPicker(index) {
   const all = mergeCandidates(index).flatMap(g => g.emails).length;
-  return `<div id="identity-picker-${index}" class="identity-picker" aria-label="Add Git identities to ${esc(mergeGroups[index].displayName)}">
-    <div class="identity-picker-heading"><div><span class="eyebrow">LINK GIT IDENTITIES</span><h3>Add multiple identities</h3><p>Choose any number of author emails. Only checked identities will move to this contributor.</p></div><button type="button" class="identity-picker-close" data-action="cancel-identity-picker" aria-label="Close identity picker">×</button></div>
+  return `<div id="identity-picker-${index}" class="identity-picker" aria-label="Add identities to ${esc(mergeGroups[index].displayName)}">
+    <div class="identity-picker-heading"><div><span class="eyebrow">RECONCILE IDENTITIES</span><h3>Add multiple identities</h3><p>Select Git author emails, GitHub publishers or Heroku release actors. Only checked identities will move.</p></div><button type="button" class="identity-picker-close" data-action="cancel-identity-picker" aria-label="Close identity picker">×</button></div>
     <label for="identity-search-${index}" class="identity-search-label">FIND IDENTITIES <span>${number.format(all)} available</span></label>
     <input id="identity-search-${index}" class="identity-search" type="search" data-identity-search placeholder="Search contributor or email…" autocomplete="off" spellcheck="false">
     <div class="identity-picker-utilities"><span id="identity-visible-${index}" class="helper">${countWord(all, 'identity', 'identities')} shown</span><div><button type="button" class="text-button" data-action="select-visible-identities">Select shown</button><button type="button" class="text-button" data-action="clear-identity-selection">Clear selection</button></div></div>
-    <div class="identity-option-list" id="identity-list-${index}" role="group" aria-label="Available author identities">${identityRows(index)}</div>
+    <div class="identity-option-list" id="identity-list-${index}" role="group" aria-label="Available Git and provider identities">${identityRows(index)}</div>
     <div class="identity-picker-bottom"><div class="identity-picker-recap" id="identity-recap-${index}" role="status" aria-live="polite"></div><div class="identity-picker-buttons"><button type="button" class="button outline" data-action="cancel-identity-picker">Cancel</button><button type="button" class="button primary" id="identity-apply-${index}" data-action="apply-identity-picker" disabled>Move selected identities</button></div></div>
   </div>`;
 }
@@ -391,9 +396,9 @@ function renderMergeUI() {
     const groupCommits = sum(group.emails.map(email => identityMeta.get(email)?.commits || 0));
     return `<article class="merge-group ${open ? 'merge-group-open' : ''}">
       <div class="merge-group-main">
-        <div class="merge-group-name"><label for="merge-name-${index}">CONTRIBUTOR NAME</label><input id="merge-name-${index}" data-merge-name="${index}" value="${esc(group.displayName)}" placeholder="Name this contributor" maxlength="160"><p class="merge-group-caption">${countWord(groupCommits, 'commit')} in imported history</p></div>
-        <div class="merge-group-identities"><div class="merge-identity-heading"><span>AUTHOR EMAILS</span><span class="merge-identity-total">${countWord(group.emails.length, 'identity', 'identities')}</span></div>
-          <div class="identity-chips">${group.emails.length ? group.emails.map(email => `<span class="chip"><span title="${esc(email)}">${esc(email)}</span>${group.emails.length > 1 ? `<button type="button" data-action="split-email" data-group="${index}" data-email="${esc(email)}" aria-label="Separate ${esc(email)} from ${esc(group.displayName)}" title="Separate this identity">×</button>` : ''}</span>`).join('') : '<span class="merge-group-caption">No identities yet. Select author emails to build this contributor.</span>'}</div>
+        <div class="merge-group-name"><label for="merge-name-${index}">CONTRIBUTOR NAME</label><input id="merge-name-${index}" data-merge-name="${index}" value="${esc(group.displayName)}" placeholder="Name this contributor" maxlength="160"><p class="merge-group-caption">${countWord(groupCommits, 'authored commit')} in imported history</p></div>
+        <div class="merge-group-identities"><div class="merge-identity-heading"><span>LINKED IDENTITIES</span><span class="merge-identity-total">${countWord(group.emails.length, 'identity', 'identities')}</span></div>
+          <div class="identity-chips">${group.emails.length ? group.emails.map(email => `<span class="chip"><span title="${esc(email)}">${esc(identityMeta.get(email)?.kind||'Git author')} · ${esc(identityMeta.get(email)?.name||email)}</span>${group.emails.length > 1 ? `<button type="button" data-action="split-email" data-group="${index}" data-email="${esc(email)}" aria-label="Separate ${esc(email)} from ${esc(group.displayName)}" title="Separate this identity">×</button>` : ''}</span>`).join('') : '<span class="merge-group-caption">No identities yet. Select author emails to build this contributor.</span>'}</div>
           <div class="merge-add"><button type="button" class="merge-add-trigger" data-action="toggle-identity-picker" data-group="${index}" aria-expanded="${open}" ${open ? `aria-controls="identity-picker-${index}"` : ''} ${!available ? 'disabled title="No other identities available"' : ''}><span class="merge-plus" aria-hidden="true">${open ? '−' : '+'}</span>${open ? 'Close selector' : 'Add identities'}<span class="merge-plus-chevron" aria-hidden="true">${open ? '⌃' : '⌄'}</span></button>${group.emails.length > 1 ? `<button class="mini-button" type="button" data-action="split-group" data-group="${index}">Separate all</button>` : ''}</div>
         </div>
       </div>
@@ -499,11 +504,10 @@ function splitGroup(index) {
   renderMergeUI();
 }
 function skipMerge() {
-  const byEmail = new Map();
-  for (const c of rawCommits) if (!byEmail.has(c.email)) byEmail.set(c.email,c.name);
   identityPicker = null;
   mergeUndo = null;
-  mergeGroups = [...byEmail.entries()].map(([email,name])=>({ displayName:name, emails:[email] }));
+  // Keep every known identity separate, including GitHub/Heroku-only actors.
+  mergeGroups = [...identityMeta].map(([email,meta])=>({displayName:meta.name,emails:[email]}));
   buildDashboard();
 }
 async function analyse() {
@@ -522,7 +526,7 @@ async function analyse() {
   importRevision++;computedKey=null;computedResult=null;
   finishProgress(generation,null,'History ready','Review the proposed contributor identities, then build your dashboard.');
   pendingImport = null;localDatasetId=null;
-  identityMeta = makeIdentityCatalogue(rawCommits);
+  identityMeta = makeIdentityCatalogue(rawCommits,rawGithubReleases,rawHerokuReleases);
   identityPicker = null;
   mergeUndo = null;
   renderMergeFeedback();
@@ -1848,13 +1852,13 @@ async function restoreSessionPayload(payload,filename='imported session') {
   rawCommits=history.commits;rawTags=history.tags;
   rawGithubReleases=history.githubReleases;githubStatus=history.githubStatus;rawHerokuReleases=history.herokuReleases;herokuStatus=history.herokuStatus;githubWarnings=history.captureWarnings;
   importRevision++;computedKey=null;computedResult=null;
-  identityMeta = makeIdentityCatalogue(rawCommits);
+  identityMeta = makeIdentityCatalogue(rawCommits,rawGithubReleases,rawHerokuReleases);
   identityPicker = null;
   mergeUndo = null;
   renderMergeFeedback();
   $('log-input').value=payload.rawLog;
   if(Number.isInteger(Number(payload.rangeYears)) && +payload.rangeYears>=1 && +payload.rangeYears<=5) $('range-select').value=String(payload.rangeYears);
-  const emails=new Set(rawCommits.map(c=>c.email));
+  const emails=new Set(identityMeta.keys());
   const used=new Set();
   mergeGroups=payload.mergeGroups.flatMap(g=>{
     if(!g || !Array.isArray(g.emails)) return [];
@@ -1863,7 +1867,13 @@ async function restoreSessionPayload(payload,filename='imported session') {
     valid.forEach(e=>used.add(e));
     return valid.length?[{displayName:String(g.displayName||valid[0]),emails:valid}]:[];
   });
-  for(const c of rawCommits){if(used.has(c.email))continue;mergeGroups.push({displayName:c.name||c.email,emails:[c.email]});used.add(c.email);}
+  // Preserve historical manual assignments; add provider accounts that were
+  // introduced in a newer import or an older session format without duplication.
+  mergeGroups=reconcileProviderGroups(mergeGroups,externalIdentities(rawGithubReleases,rawHerokuReleases),rawGithubReleases,rawCommits);
+  const restoredKeys=new Set(mergeGroups.flatMap(g=>g.emails));
+  for(const [email,meta] of identityMeta){if(restoredKeys.has(email))continue;
+    mergeGroups.push({displayName:meta.name,emails:[email]});restoredKeys.add(email);
+  }
   pendingImport=payload;
   buildDashboard();
   setText('source-status',`${number.format(rawCommits.length)} commits · ${number.format(rawTags.length)} tags · ${number.format(rawHerokuReleases.length)} Heroku events restored from ${filename}`);
@@ -1875,6 +1885,7 @@ const ACTIONS={
     if(target.dataset.experience==='evidence')switchExperience('evidence');
     else goPrimary(target.dataset.experience,{}, {remember:true});
   },
+  'review-identities':()=>{identityPicker=null;renderMergeUI();$('merge-step').hidden=false;$('merge-step').scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-evidence-filters':async()=>{
     $('legacy-scope-details').open=true;
     await switchExperience('evidence',{target:'scope-heading'});

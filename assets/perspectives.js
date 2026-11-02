@@ -4,8 +4,8 @@
  * complete introduced Git ancestry (subject only to the explicitly declared
  * merge/revert policy); an authored period is a different observation clock.
  */
-import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=git-history-links-20261102-1';
-import { changeCategory, fileKind } from './impact.js?v=git-history-links-20261102-1';
+import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=git-heroku-ux-20261102-2';
+import { changeCategory, fileKind } from './impact.js?v=git-heroku-ux-20261102-2';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);

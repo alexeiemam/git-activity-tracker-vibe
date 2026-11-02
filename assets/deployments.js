@@ -6,6 +6,7 @@
 export const DEPLOYMENT_ENVS=Object.freeze(['STAG','BETA','PROD']);
 const SHA_RE=/^[a-f\d]{7,64}$/i;
 const MAX_BATCH=16_000_000;
+export const HEROKU_CAPTURE_LIMIT=3000;
 const iso=value=>{
   const ms=Date.parse(String(value||''));
   return Number.isFinite(ms)?ms:null;
@@ -15,6 +16,20 @@ const clean=(value,max=140)=>String(value??'').trim().slice(0,max);
 const releaseNumber=v=>{
   const match=String(v??'').match(/^v?(\d+)$/i);
   return match?Number(match[1]):null;
+};
+const releaseActor=item=>{
+  const value=typeof item.user==='string'?item.user:item.user?.email??item.actor?.email??item.user_email;
+  const email=String(value||'').trim().toLowerCase();
+  return /^[^\s@<>]{1,100}@[^\s@<>]{1,120}$/.test(email)?email.slice(0,220):null;
+};
+const isConfigDescription=value=>
+  /^\s*(?:Config\b|(?:Set|Unset|Remove|Update|Changed?|Add|Delete)\b.*\bconfig\s+vars?\b|(?:Set|Unset|Update)\s+config\b)/i.test(value);
+const configLabel=value=>{
+  // Retain the action, never config keys, values or arbitrary descriptions.
+  const verb=String(value).trim().match(/^(Set|Unset|Remove|Update|Changed?|Add|Delete)\b/i)?.[1]?.toLowerCase();
+  return verb==='set'||verb==='add'?'Set config vars':
+    verb==='unset'||verb==='remove'||verb==='delete'?'Unset config vars':
+    verb==='update'||verb==='change'||verb==='changed'?'Update config vars':'Configuration change';
 };
 const shaFromDescription=description=>{
   // Do not treat an arbitrary SHA mentioned in a note as a deployment.
@@ -40,18 +55,18 @@ export function decodeHerokuBatch(encoded,env) {
       const description=clean(item.description??item.change,500);
       const rawSha=[item.commit,item.git_sha,item.sha,item.source_blob?.version,shaFromDescription(description)]
         .find(v=>typeof v==='string'&&SHA_RE.test(v.trim()))?.trim().toLowerCase()||null;
-      const kind=/^\s*(?:Config\b|Set config\b|Update config\b)/i.test(description)?'config':
+      const kind=isConfigDescription(description)?'config':
         /\brollback\b/i.test(description)?'rollback':
         /^\s*(?:Deploy|Build)\b/i.test(description)?'deploy':'other';
       const targetVersion=description.match(/\brollback\s+to\s+v?(\d+)\b/i)?.[1];
       // Config keys may be sensitive; do not retain config descriptions or
       // unknown JSON fields in the analysed model. Raw clipboard import is user-owned.
-      const label=kind==='config'?'Configuration change':clean(description,160);
+      const label=kind==='config'?configLabel(description):clean(description,160);
       const outcome=clean(item.status,30).toLowerCase()||'unreported';
-      const unique=`${env}|${version??'?'}|${at}|${rawSha||''}`;
+      const unique=`${env}|${version??'?'}|${at}|${rawSha||''}|${label}`;
       if(seen.has(unique))continue;
       seen.add(unique);
-      result.push({env,version,at,date:day(at),description:label,kind,rawSha,outcome,
+      result.push({env,version,at,date:day(at),description:label,kind,rawSha,outcome,actorEmail:releaseActor(item),
         targetVersion:targetVersion?Number(targetVersion):null});
     }
     return result.sort((a,b)=>a.at-b.at||(a.version??0)-(b.version??0));
@@ -102,6 +117,7 @@ export function buildDeploymentIndex(records=[],commits=[],index=null,status={})
   };
   const authoredByHash=new Map((index?.activity||[]).map(c=>[c.hash.toLowerCase(),c]));
   const names=new Map((index?.groups||[]).map(g=>[g.id,g.displayName]));
+  const identityGroup=new Map((index?.groups||[]).flatMap(g=>g.emails.map(email=>[email.toLowerCase(),g])));
   const entries=[],state={},groups={};
   const firstProduction=new Map();
   const seenProduction=new Set();
@@ -148,7 +164,9 @@ export function buildDeploymentIndex(records=[],commits=[],index=null,status={})
         const member=people.get(commit.groupId)||{id:commit.groupId,name:names.get(commit.groupId)||'Unknown',commits:0,paths:new Set()};
         member.commits++;for(const file of commit.files){member.paths.add(file.area);areas.set(file.area,(areas.get(file.area)||0)+1);}people.set(commit.groupId,member);
       }
+      const actor=record.actorEmail?identityGroup.get(`heroku:${record.actorEmail}`)||identityGroup.get(record.actorEmail):null;
       const event={id:`${env}-${record.version??i}-${i}`,env,version:record.version,at:record.at,date:record.date,
+        actorEmail:record.actorEmail||null,actorGroupId:actor?.id??null,actorName:actor?.displayName||null,
         type,description:record.description,outcome:record.outcome,codeSha,rawSha:record.rawSha,
         shaSource,hashStatus:record.rawSha&&!matched.hash?matched.reason:null,
         deltaReliable:!!reliableDiff,allNewCommits:reliableDiff?diff.length:null,
@@ -157,7 +175,7 @@ export function buildDeploymentIndex(records=[],commits=[],index=null,status={})
         areas:[...areas].sort((a,b)=>b[1]-a[1]).slice(0,12),
         sample:introduced.slice(-15),
         firstProdCommits:0,initialObservation:!prior?.codeSha,
-        releaseTags:[]};
+        releaseTags:[],introducedReleaseTags:[]};
       if(env==='PROD'&&succeeded&&codeSha&&graph?.complete){
         // Seed the earliest known production snapshot without crediting its
         // historical commits as freshly deployed. A later rollback or
@@ -184,6 +202,7 @@ export function buildDeploymentIndex(records=[],commits=[],index=null,status={})
           const tagHash=release.hash.toLowerCase();
           if(!has(graph,tagHash))continue;
           event.releaseTags.push(release.tag);
+          if(reliableDiff&&!has(before,tagHash))event.introducedReleaseTags.push(release.tag);
           const observation=releaseObservations.get(release.hash);
           if(!observation.byEnv[env]){
             const certainty=before?.complete&&!has(before,tagHash)&&changed?'introduced': 'observed-by';
@@ -202,7 +221,7 @@ export function buildDeploymentIndex(records=[],commits=[],index=null,status={})
       codeEvents:events.filter(e=>['code','config-and-code','divergent-revision','revision-rollback'].includes(e.type)).length,
       configEvents:events.filter(e=>['config','config-and-code'].includes(e.type)).length,
       unknownEvents:events.filter(e=>['unknown','unsuccessful'].includes(e.type)).length,
-      possibleTruncation:events.length>=1000};
+      possibleTruncation:events.length>=HEROKU_CAPTURE_LIMIT||status[env]==='partial'};
   }
   entries.sort((a,b)=>a.at-b.at||DEPLOYMENT_ENVS.indexOf(a.env)-DEPLOYMENT_ENVS.indexOf(b.env));
   const qaComparison=Object.fromEntries(['STAG','BETA'].map(env=>{

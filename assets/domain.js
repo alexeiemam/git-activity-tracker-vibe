@@ -4,7 +4,7 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=git-history-links-20261102-1';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=git-heroku-ux-20261102-2';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },
@@ -122,7 +122,7 @@ export function parseGitHistory(raw) {
     }
     if (line.startsWith('HEROKUSTATUS|')) {
       flush();
-      const match=line.match(/^HEROKUSTATUS\|(STAG|BETA|PROD)\|(ok|unavailable|missing-cli|missing-remote)$/);
+      const match=line.match(/^HEROKUSTATUS\|(STAG|BETA|PROD)\|(ok|partial|unavailable|missing-cli|missing-remote)$/);
       if(match)herokuStatus[match[1]]=match[2];
       continue;
     }

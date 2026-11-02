@@ -1,9 +1,9 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-history-links-20261102-1';
-import { impactAnalysis } from './impact.js?v=git-history-links-20261102-1';
-import { buildStoryAnalysis } from './stories.js?v=git-history-links-20261102-1';
-import { buildEvidenceIndex } from './perspectives.js?v=git-history-links-20261102-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-history-links-20261102-1';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-heroku-ux-20261102-2';
+import { impactAnalysis } from './impact.js?v=git-heroku-ux-20261102-2';
+import { buildStoryAnalysis } from './stories.js?v=git-heroku-ux-20261102-2';
+import { buildEvidenceIndex } from './perspectives.js?v=git-heroku-ux-20261102-2';
+import { buildDeploymentIndex } from './deployments.js?v=git-heroku-ux-20261102-2';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;

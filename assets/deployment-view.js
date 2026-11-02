@@ -1,19 +1,32 @@
 /** UI fragments for the independent QA environments and production evidence. */
-import { DEPLOYMENT_ENVS } from './deployments.js?v=git-history-links-20261102-1';
-import { comparisonWindow } from './perspectives.js?v=git-history-links-20261102-1';
+import { DEPLOYMENT_ENVS } from './deployments.js?v=git-heroku-ux-20261102-2';
+import { comparisonWindow } from './perspectives.js?v=git-heroku-ux-20261102-2';
 const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const nf=new Intl.NumberFormat('en-GB');
 const f=v=>Number.isFinite(v)?nf.format(v):'—';
 const when=ms=>ms==null?'Unknown':new Date(ms).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
 const short=sha=>sha?sha.slice(0,9):'Unresolved';
-import { targetUrl } from './route-state.js?v=git-history-links-20261102-1';
+import { targetUrl } from './route-state.js?v=git-heroku-ux-20261102-2';
 const href=(index,changes)=>esc(targetUrl(index.navigation?.path||'./index.html',index.navigation?.ui||{},index.navigation?.groups||index.groups,index.navigation?.datasetId,changes));
 const LINK=(index,{id,text})=>`<a class="deployment-link" href="${href(index,{view:'deployments',event:id})}" data-action="deployment-open" data-deployment-id="${esc(id)}">${esc(text)} ↗</a>`;
 const panel=(eyebrow,title,body)=>`<section class="primary-panel deployment-panel"><div class="primary-card-heading"><span class="primary-eyebrow">${esc(eyebrow)}</span><h3>${esc(title)}</h3></div>${body}</section>`;
 const safe=index=>index?.deployments||{available:false,events:[],releaseLinks:[],people:[],envs:{},status:{}};
 const envName=env=>env==='PROD'?'Production':`${env} · QA`;
 const kindLabel=e=>({code:'Code change',baseline:'First observed snapshot',redeploy:'Same code redeployed',config:'Configuration','config-and-code':'Configuration + code','revision-rollback':'Earlier code revision','divergent-revision':'Divergent code revision',rollback:'Rollback',unsuccessful:'Not deployed',unknown:'Unknown code state','same-revision':'Same observed code'})[e.type]||e.type;
-const releaseEvent=(index,e)=>`<div class="deployment-event"><span class="deployment-env deployment-env-${esc(e.env.toLowerCase())}">${esc(e.env)}</span><span class="deployment-event-time">${esc(when(e.at))}</span><span class="deployment-event-kind">${esc(kindLabel(e))}</span><code>${esc(short(e.codeSha))}</code>${LINK(index,{id:e.id,text:e.version!=null?`v${e.version}`:'Inspect'})}</div>`;
+const linkedPerson=(index,id,text)=>{
+  const group=index.groups.find(g=>g.id===id);
+  return group?`<a href="${href(index,{view:'contributors',person:group.emails[0],tab:'delivery'})}" data-action="primary-open-person" data-person="${esc(id)}">${esc(text||group.displayName)} ↗</a>`:esc(text||'Unmatched actor');
+};
+const actorLabel=(index,event)=>event.actorEmail?
+  (event.actorGroupId!=null?linkedPerson(index,event.actorGroupId,event.actorName):`<span title="Heroku actor not yet reconciled with a contributor">${esc(event.actorEmail)} · review identities</span>`):
+  '<span>Actor not recorded</span>';
+const eventTag=(index,event)=>{
+  const introduced=event.introducedReleaseTags||[];
+  const tag=introduced.at(-1)||event.releaseTags?.at(-1);
+  const release=tag?index.releases.find(r=>r.tag===tag):null;
+  return release?`<a class="deployment-link" href="${href(index,{view:'observatory',release:release.hash})}" data-action="primary-open-release" data-hash="${esc(release.hash)}" title="${introduced.length?'Tag introduced by this revision transition':'Tag present in this observed Git ancestry'}">${introduced.length?'Introduced':'Contains'} ${esc(tag)} ↗</a>`:'<small>No linked tag</small>';
+};
+const releaseEvent=(index,e)=>`<div class="deployment-event"><span class="deployment-env deployment-env-${esc(e.env.toLowerCase())}">${esc(e.env)}</span><span class="deployment-event-time">${esc(when(e.at))}</span><span class="deployment-event-kind">${esc(kindLabel(e))}<small>${esc(e.description)}</small></span><span class="deployment-event-actor">${actorLabel(index,e)}</span><span class="deployment-event-related">${eventTag(index,e)}</span>${LINK(index,{id:e.id,text:e.version!=null?`Heroku v${e.version}`:'Inspect'})}</div>`;
 const stat=(number,label,note='')=>`<div class="deployment-stat"><strong>${esc(number)}</strong><span>${esc(label)}</span>${note?`<small>${esc(note)}</small>`:''}</div>`;
 const summary=index=>{
   const model=safe(index);
@@ -50,22 +63,47 @@ function historyLanes(index,from=null,to=null){
   return `<div class="deployment-lanes" role="img" aria-label="Time-aligned release and independent environment event counts. All lanes share the same time buckets.">${rows.map(row=>`<div class="deployment-lane"><span>${esc(row.name)}</span><div class="deployment-lane-bars">${make(row.items).map(v=>`<i class="deployment-lane-bar ${row.cls}" style="--height:${v?Math.max(12,v/max*100):0}%" title="${v} events in aligned time bucket"></i>`).join('')}</div><b>${f(row.items.length)}</b></div>`).join('')}</div><p class="deployment-note">Shared chronological buckets · ${esc(allDates.reduce((a,b)=>a<b?a:b))} to ${esc(allDates.reduce((a,b)=>a>b?a:b))}. Bar heights use one shared count scale; empty buckets are zero. QA lanes have no implied order.</p>`;
 }
 
+export function deploymentStatusGuide(){
+  return `<details class="deployment-status-guide"><summary>What do these statuses mean? · First observed, code change, config, rollback, unknown</summary>
+    <div class="deployment-status-items">
+      <div><strong>First observed snapshot</strong><span>The earliest imported Heroku revision. It proves the code was present by that date, not when it first arrived.</span></div>
+      <div><strong>Code change</strong><span>A different resolvable Git SHA. New contributors and commits are attributed only where both ancestries are complete.</span></div>
+      <div><strong>Config change</strong><span>Heroku explicitly recorded setting, unsetting or updating config vars. It is a release event, not new Git code; variable keys and values are not displayed.</span></div>
+      <div><strong>Same revision / redeploy</strong><span>A Heroku event without an observed change of Git SHA. It is not automatically a config update.</span></div>
+      <div><strong>Rollback / divergent code</strong><span>The revision moved backwards in known Git ancestry, or between branches; that does not prove a bad deployment.</span></div>
+      <div><strong>Unknown code state</strong><span>SHA missing, ambiguous or not imported. We preserve the event but do not guess which code or people it introduced.</span></div>
+    </div></details>`;
+}
+
 export function deploymentOverviewPanel(index){
   const model=safe(index);
   const missing=summary(index);
-  if(missing)return panel('ENVIRONMENT EVIDENCE','Published is not deployed.',missing);
+  if(missing)return panel('ENVIRONMENT EVIDENCE','Published ≠ deployed',missing);
   const rows=DEPLOYMENT_ENVS.map(env=>{
     const item=model.envs[env]||{};
-    return `<div class="deployment-env-card ${env==='PROD'?'production':''}"><span class="deployment-env-heading">${esc(envName(env))}</span><strong>${f(item.count)} <small>Heroku releases</small></strong><span>${f(item.codeEvents)} code transitions · ${f(item.configEvents)} config events</span><small>${item.lastDate?`Observed through ${esc(item.lastDate)}`:'No dated history'}</small>${item.possibleTruncation?'<small>First events may be missing (1,000-record request limit).</small>':''}</div>`;
+    return `<div class="deployment-env-card ${env==='PROD'?'production':''}"><span class="deployment-env-heading">${esc(envName(env))}</span><strong>${f(item.count)} <small>Heroku events</small></strong><span>${f(item.codeEvents)} code transitions · ${f(item.configEvents)} config events</span><small>${item.lastDate?`Observed through ${esc(item.lastDate)}`:'No dated history'}</small>${item.possibleTruncation?'<small>Earlier history may be missing (3,000-event window or partial capture).</small>':''}</div>`;
   });
+  const prod=model.events.filter(e=>e.env==='PROD');
+  const code=prod.filter(e=>['code','config-and-code','divergent-revision','revision-rollback'].includes(e.type));
+  const config=prod.filter(e=>e.type==='config'||e.type==='config-and-code');
   const links=model.releaseLinks.filter(r=>r.byEnv.PROD).length;
   const newCommits=model.people.reduce((n,p)=>n+p.commits,0);
-  const last=model.events.filter(e=>e.env==='PROD').slice(-5).reverse();
-  return panel('ACTUAL DEPLOYMENTS','Published versus production',`<p class="deployment-intro">Tagged releases describe published snapshots. Heroku records actual environment changes. STAG and BETA are independent QA destinations; PROD records are shown separately from configuration-only activity.</p>
+  const unresolved=prod.filter(e=>e.type==='unknown'||e.type==='unsuccessful').length;
+  const matchedReleases=model.releaseLinks.filter(r=>r.byEnv.PROD).slice().sort((a,b)=>b.byEnv.PROD.at-a.byEnv.PROD.at).slice(0,6);
+  return panel('PUBLICATION & DEPLOYMENT EVIDENCE','Published versus production',`
+    <div class="deployment-overview-hero"><div><h4>A GitHub release is not necessarily a production deployment.</h4><p>Tags identify published code snapshots. Heroku records what happened in each environment, including code changes and configuration-only events. We connect them by Git SHA ancestry—not by date or a matching version number.</p></div><aside><strong>How to explore</strong><div>Open a linked tag to see its release anatomy; open Heroku vN to inspect the deployment event, its actor and any attributable contributors. STAG and BETA are independent QA environments.</div></aside></div>
     <div class="deployment-env-grid">${rows.join('')}</div>
-    <div class="deployment-factline">${stat(f(links),'Tagged snapshots observed in PROD','Includes earlier snapshots')}${stat(f(newCommits),'First observed new PROD commits','Only verified code transitions')}${stat(f(model.events.filter(e=>e.env==='PROD'&&e.type==='unknown').length),'Unresolved PROD events','No invented SHA match')}</div>
-    ${historyLanes(index)}${qaDivergence(model)}<div class="deployment-recent"><strong>Recent production events</strong>${last.map(e=>releaseEvent(index,e)).join('')||'<p>No production events in the imported window.</p>'}</div>
-    <div class="primary-card-footer"><a class="button soft" href="${href(index,{view:'deployments'})}" data-action="primary-nav" data-to="deployments">Explore all deployments →</a></div>`);
+    <div class="deployment-factline">${stat(f(links),'Tagged revisions observed in PROD','Includes snapshots already present at first observation')}${stat(f(newCommits),'First-observed new PROD commits','Credited only after verifiable revision transitions')}${stat(f(config.length),'PROD configuration events','Explicit Heroku descriptions; no new-code credit')}${stat(f(unresolved),'Unresolved PROD events','No invented ancestry or author attribution')}</div>
+    <h4 class="deployment-visual-heading">How publication and deployments overlap in time</h4>
+    <p class="deployment-note">Each column represents the same period across lanes. Bars are event counts, not a mandatory promotion sequence. Use the linked events below to inspect specific versions and people.</p>
+    ${historyLanes(index)}
+    ${deploymentStatusGuide()}
+    <div class="deployment-insight-columns"><div class="deployment-insight"><h4>Recent production code events</h4><p>Resolved Git revisions; earliest snapshots aren't claimed as first deployments.</p><div class="deployment-recent">${(code.length?code:prod.filter(e=>e.type==='baseline')).slice(-5).reverse().map(e=>releaseEvent(index,e)).join('')||'<p>No recorded code transitions in PROD.</p>'}</div></div>
+      <div class="deployment-insight"><h4>Recent configuration events</h4><p>These Heroku releases matter even when the deployed code SHA does not change.</p><div class="deployment-recent">${config.slice(-5).reverse().map(e=>releaseEvent(index,e)).join('')||'<p>No explicitly described config changes in captured PROD history.</p>'}</div></div></div>
+    <div class="deployment-insight"><h4>From tagged release to observed PROD revision</h4><p>Each relationship is supported by Git ancestry. “Present by” doesn't establish the exact initial deployment date.</p>
+      <div class="deployment-release-links">${matchedReleases.map(entry=>{const release=index.releases.find(r=>r.hash===entry.releaseHash);const prodEvent=model.events.find(e=>e.id===entry.byEnv.PROD.eventId);return `<div class="deployment-release-match"><div><strong><a class="deployment-link" href="${href(index,{view:'observatory',release:entry.releaseHash})}" data-action="primary-open-release" data-hash="${esc(entry.releaseHash)}">${esc(entry.tag)} ↗</a></strong><small>${esc(release?.date||'Unknown publication date')} · ${esc(release?.driver?.groupName||release?.driver?.name||'Publisher not matched')}</small></div><span aria-hidden="true">→</span><div><strong>${prodEvent?LINK(index,{id:prodEvent.id,text:`PROD Heroku v${prodEvent.version??'?'}`}):'PROD event not available'}</strong><small>${esc(when(entry.byEnv.PROD.at))} · ${esc(entry.byEnv.PROD.certainty==='introduced'?'First introduced in a verifiable transition':'Present by an observed snapshot')}</small></div></div>`;}).join('')||'<p class="deployment-note">No tagged revision could be linked to the imported PROD Git history. Explore the unresolved events and SHA coverage below.</p>'}</div></div>
+    <details class="deployment-status-guide"><summary>Compare last-known QA and PROD revisions</summary>${qaDivergence(model)}</details>
+    <div class="primary-card-footer"><a class="button soft" href="${href(index,{view:'deployments'})}" data-action="primary-nav" data-to="deployments">Browse all deployment events, actors and releases →</a></div>`);
 }
 
 export function deploymentReleasePanel(index,release){
@@ -114,7 +152,7 @@ export function deploymentContributorPanel(index,personId,ui){
   return panel('INDIVIDUAL PRODUCTION EVIDENCE','Where did their changes reach production?',`<div class="deployment-factline">${stat(f(observed),'Commits in observed PROD transitions','Can include repeat code after rollback')}${stat(f(matching.length),'PROD code transitions involving this person')}${stat(f(firstObserved),'First-observed PROD commits','Deduplicated across imported history')}</div>
     <p class="deployment-note">These are authored commits introduced between resolvable production revisions; attribution uses the merged contributor identity. Missing earlier history, squashes and unknown deployment SHAs can reduce coverage. Repeated deployment is not a new contribution.</p>
     <div class="deployment-recent">${matching.slice(-8).reverse().map(e=>releaseEvent(index,e)).join('')||'<p>No attributable new production revision in the selected window. This does not establish that the person had no work deployed.</p>'}</div>
-    <div class="primary-card-footer"><button class="button outline" type="button" data-action="primary-nav" data-to="deployments">Open deployment evidence →</a></div>`);
+    <div class="primary-card-footer"><a class="button outline" href="${href(index,{view:'deployments'})}" data-action="primary-nav" data-to="deployments">Open deployment evidence →</a></div>`);
 }
 
 export function deploymentExplorer(index,ui){
@@ -137,14 +175,16 @@ export function deploymentExplorer(index,ui){
   return `<div class="primary-heading"><span class="primary-eyebrow">ENVIRONMENT HISTORY / ACTUAL HEROKU EVENTS</span><h2>What was deployed?</h2></div>
     <p class="primary-lede">STAG and BETA are independent QA environments. Production is a separate destination. Each row is an observed Heroku release, whether a code change, config update, rollback or unresolved event.</p>
     ${panel('DEPLOYMENT JOURNEY','Published versus deployed',`${historyLanes(index)}${qaDivergence(model)}<div class="deployment-env-grid">${DEPLOYMENT_ENVS.map(k=>{const v=model.envs[k];return `<div class="deployment-env-card ${k==='PROD'?'production':''}"><span class="deployment-env-heading">${esc(envName(k))}</span><strong>${f(v.count)} events</strong><span>${f(v.codeEvents)} code transitions · ${f(v.configEvents)} config events</span><small>History ${v.firstDate||'unknown'} to ${v.lastDate||'unknown'}</small>${v.possibleTruncation?'<small>Earlier history may be truncated</small>':''}</div>`;}).join('')}</div>`)}
+    ${deploymentStatusGuide()}
     ${historyCoverage}
     ${panel('EVENT BROWSER','Inspect actual deployments',`<div class="deployment-controls"><label>Environment <select id="deployment-env" class="primary-select"><option value="all" ${env==='all'?'selected':''}>All environments</option>${DEPLOYMENT_ENVS.map(k=>`<option value="${k}" ${env===k?'selected':''}>${esc(envName(k))}</option>`).join('')}</select></label><label>Year <select id="deployment-year" class="primary-select"><option value="all" ${selectedYear==='all'?'selected':''}>Every year</option>${years.map(y=>`<option value="${y}" ${selectedYear===y?'selected':''}>${y}</option>`).join('')}</select></label></div>
       <div class="deployment-events">${visible.map(e=>`<a href="${href(index,{view:'deployments',event:e.id})}" class="deployment-event-choice ${e.id===detail?.id?'chosen':''}" data-action="deployment-select" data-deployment-id="${esc(e.id)}" aria-pressed="${e.id===detail?.id}"><span class="deployment-env deployment-env-${e.env.toLowerCase()}">${e.env}</span><span>${esc(when(e.at))}</span><strong>${esc(kindLabel(e))}</strong><code>${esc(short(e.codeSha))}</code><small>${e.version==null?'Version unknown':`v${e.version}`}</small></a>`).join('')||'<p>No events match these filters.</p>'}</div><div class="primary-row between"><small>${f(events.length)} events · page ${page+1} of ${pages}</small><div class="primary-pager"><button data-action="deployment-page" data-page="${Math.max(0,page-1)}" ${page===0?'disabled':''}>← Newer</button><button data-action="deployment-page" data-page="${page+1}" ${page===pages-1?'disabled':''}>Older →</button></div></div>`)}
     ${detail?panel('DEPLOYMENT ANATOMY',`${detail.env} ${detail.version==null?'event':`v${detail.version}`} · ${kindLabel(detail)}`,`<div class="deployment-detail" id="deployment-inspector" tabindex="-1"><div class="deployment-factline">${stat(when(detail.at),'Observed timestamp')}${stat(short(detail.codeSha),'Resolved commit SHA')}${stat(detail.allNewCommits==null?'—':f(detail.allNewCommits),'New commits versus preceding known SHA')}${stat(detail.eligibleNewCommits==null?'—':f(detail.eligibleNewCommits),'Within selected merge/revert policy')}</div>
+      <div class="deployment-meta-row"><span>Heroku actor: ${actorLabel(index,detail)}</span><span>Related tagged snapshot: ${eventTag(index,detail)}</span></div>
       <p class="deployment-note">${esc(detail.description)} · Heroku status: ${esc(detail.outcome||'unreported')} · ${esc(detail.shaSource)} SHA provenance. ${detail.deltaReliable?'The introduced-commit difference uses complete, resolved ancestry from consecutive observed revisions.':'An exact introduced-commit difference is unavailable (first snapshot, unknown predecessor or incomplete imported ancestry).'}</p>
       ${detail.hashStatus?`<p class="primary-warning">SHA could not be matched: ${esc(detail.hashStatus)}. No contribution credit assigned.</p>`:''}
       <div class="primary-two-col"><div class="deployment-inset"><strong>Contributors in newly introduced code</strong>${detail.people.map(p=>`<div class="deployment-person"><a href="${href(index,{view:'contributors',person:index.groups.find(g=>g.id===p.id)?.emails?.[0],tab:'delivery'})}" data-action="primary-open-person" data-person="${esc(p.id)}">${esc(p.name)}</a><b>${f(p.commits)} commits</b></div>`).join('')||'<p>Insufficient data for an attributable delta.</p>'}</div><div class="deployment-inset"><strong>Codebase areas and released snapshots</strong>${detail.areas.map(([area,n])=>`<div class="deployment-person"><a href="${href(index,{view:'codebase',area})}" data-action="primary-open-area" data-area="${esc(area)}">${esc(area)}</a><b>${f(n)} touches</b></div>`).join('')||'<p>No new scoped file changes.</p>'}<div class="deployment-tag-list">${model.releaseLinks.filter(r=>detail.releaseTags.includes(r.tag)).slice(-12).map(r=>`<a class="deployment-link" href="${href(index,{view:'observatory',release:r.releaseHash})}" data-action="primary-open-release" data-hash="${esc(r.releaseHash)}">${esc(r.tag)} ↗</a>`).join('')}</div></div></div>
-      <p class="deployment-note">SHA matches show code-revision ancestry, not proof of testing, approval, application health or the person performing a deployment. No configuration variables are imported.</p></div>`):''}`;
+      <p class="deployment-note">SHA matches show code-revision ancestry, not proof of testing, approval, application health or the person performing a deployment. No configuration variable values are imported; config release descriptions are redacted.</p></div>`):''}`;
 }
 
 export function deploymentBriefing(index,from,to){

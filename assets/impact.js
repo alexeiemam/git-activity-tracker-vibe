@@ -7,7 +7,7 @@
  * No line-level survival, deploy date, customer value, or team productivity is
  * inferred from numstat; file revisitation is explicitly a proxy.
  */
-import { fileArea } from './domain.js?v=git-history-links-20261102-1';
+import { fileArea } from './domain.js?v=git-heroku-ux-20261102-2';
 
 export const IMPACT_METRICS = Object.freeze({
   commits: 'Commits', churn: 'Line churn', paths: 'Distinct paths', areas: 'Codebase areas', share: 'Commit share',
@@ -192,6 +192,11 @@ export function autoMatchGithubPublishers(githubReleases, groups, commits, overr
       // An explicit empty value means 'do not attribute' and overrides inference.
       return [login, {group:group || null, email:group ? explicit : null, source:group?'manual':'excluded'}];
     }
+    // Reconciled GitHub accounts are first-class group identities. Manual
+    // overrides still win; moving github:<login> changes attribution everywhere.
+    const providerGroup = groups.filter(group=>group.emails.includes(`github:${login}`));
+    if(providerGroup.length===1)return [login,{group:providerGroup[0],email:`github:${login}`,source:'reconciled-identity'}];
+    if(providerGroup.length>1)return [login,{group:null,email:null,source:'ambiguous'}];
     for (const kind of ['github-noreply','email-local','author-name']) {
       const found = candidates(login, kind);
       if (found.length === 1) return [login, {group:found[0].group,email:found[0].email,source:kind}];

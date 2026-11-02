@@ -990,3 +990,57 @@
 .primary-inline-link,.deployment-link{cursor:pointer;}
 .deployment-event-choice[href]{text-decoration:none;color:inherit;}
 @media(max-width:720px){.local-link-tools{align-items:stretch}.local-link-controls{width:100%;}.local-link-controls>.button{flex:1}.primary-link-actions{width:100%;margin-left:0}}
+
+
+/* State audit: link styling must not trump selected navigation colours.
+   Active elements remain legible even with browser link colour defaults. */
+.experience-switch a.experience-choice:not(.is-current){color:#486150;background:#fffefa}
+.experience-switch a.experience-choice.is-current,
+.experience-switch a.experience-choice[aria-current="page"]{color:#fff;background:#1d3b2e;border-color:#1d3b2e}
+.experience-switch a.experience-choice.is-current strong,
+.experience-switch a.experience-choice[aria-current="page"] strong{color:#fff}
+.experience-switch a.experience-choice.is-current small,
+.experience-switch a.experience-choice[aria-current="page"] small{color:#d4e7d9}
+.experience-switch a.experience-choice:not(.is-current):hover{background:#f3f8f3;color:#22563d}
+.primary-tabs button.active,.primary-tabs button[aria-pressed="true"],
+.primary-preset.active,.primary-preset[aria-pressed="true"]{background:#25583f;border-color:#25583f;color:#fff}
+.primary-tabs button.active:hover,.primary-preset.active:hover{background:#1a4732;color:#fff}
+@media(forced-colors:active){
+  .experience-choice.is-current,.primary-tabs button.active,.primary-preset.active{outline:2px solid Highlight;outline-offset:2px}
+}
+/* Publication -> Heroku relationship: explain scope and keep every link visible. */
+.deployment-overview-hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(210px,.8fr);gap:22px;align-items:center;background:#eff6ef;border:1px solid #d3e4d6;padding:19px;border-radius:12px;margin:0 0 18px}
+.deployment-overview-hero h4{font-size:18px;letter-spacing:-.035em;margin:0 0 7px;color:#224b35}
+.deployment-overview-hero p{font-size:12px;color:#486d55;margin:0;line-height:1.7}
+.deployment-overview-hero aside{font-size:11px;line-height:1.7;color:#476952;border-left:2px solid #a4c6ac;padding-left:16px}
+.deployment-status-guide{border:1px solid #d8e5dc;border-radius:10px;padding:13px 15px;background:#fcfdfb;margin:14px 0}
+.deployment-status-guide summary{cursor:pointer;color:#275e43;font-weight:700;font-size:12px}
+.deployment-status-guide .deployment-status-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 16px;margin-top:14px}
+.deployment-status-items div{display:grid;gap:3px}.deployment-status-items strong{font-size:11px;color:#25563d}.deployment-status-items span{font-size:11px;line-height:1.6;color:#61786b}
+.deployment-insight-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:14px 0}
+.deployment-insight{border:1px solid #dce5da;border-radius:10px;background:#fff;padding:16px;min-width:0}
+.deployment-insight h4{font-size:13px;margin:0 0 6px;color:#254c37}.deployment-insight p{font-size:11px;color:#6b7f70;margin:0 0 9px}
+.deployment-insight .deployment-recent{margin:8px 0 0}
+.deployment-release-links{display:grid;gap:6px;margin:12px 0}
+.deployment-release-match{display:grid;grid-template-columns:minmax(0,1.2fr) 20px minmax(0,1.3fr);gap:10px;align-items:center;padding:12px 13px;background:#fff;border:1px solid #e0e8df;border-radius:9px}
+.deployment-release-match>span{font-size:13px;color:#95ac99}
+.deployment-release-match>div{display:grid;gap:3px;min-width:0}
+.deployment-release-match strong{color:#2e6146;font-size:12px}
+.deployment-release-match small{color:#6b7d6e;font-size:10px;line-height:1.45}
+.deployment-event{grid-template-columns:62px 100px minmax(115px,1.2fr) minmax(70px,1fr) auto}
+.deployment-event-kind{display:grid;gap:4px}.deployment-event-kind small{font-weight:400;color:#678073;font-size:10px}
+.deployment-event-actor{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:#52725d}
+.deployment-event-actor a,.deployment-person a{color:#277d58;text-decoration:underline;text-underline-offset:3px}
+.deployment-event-actor a:hover,.deployment-person a:hover{color:#134b33}
+.deployment-meta-row{display:flex;gap:8px 15px;flex-wrap:wrap;align-items:center;margin:9px 0}
+.deployment-meta-row span{font-size:11px;color:#61776b}.deployment-meta-row a{font-size:11px;color:#277d58}
+.deployment-event-choice.chosen{background:#e0f2e5;color:#244b37;border-color:#387e57}
+.deployment-event-choice.chosen strong,.deployment-event-choice.chosen code{color:#204c35}
+@media(max-width:880px){.deployment-overview-hero{grid-template-columns:1fr}.deployment-overview-hero aside{border-left:0;border-top:2px solid #a4c6ac;padding:10px 0 0}.deployment-insight-columns{grid-template-columns:1fr}}
+@media(max-width:760px){.deployment-event{grid-template-columns:55px minmax(90px,1fr) minmax(70px,1fr)}.deployment-event-actor,.deployment-event-time{display:none}}
+@media(max-width:520px){.deployment-release-match{grid-template-columns:1fr;gap:5px}.deployment-release-match>span{transform:rotate(90deg)}.deployment-status-guide .deployment-status-items{grid-template-columns:1fr}}
+
+.dashboard-intro-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px}
+.deployment-event{grid-template-columns:62px 100px minmax(125px,1.4fr) minmax(105px,.95fr) minmax(100px,1fr) auto}
+@media(max-width:760px){.deployment-event{grid-template-columns:58px minmax(100px,1fr) minmax(90px,1fr) auto}}
+@media(max-width:520px){.deployment-event{grid-template-columns:55px minmax(90px,1fr) auto}.deployment-event-related{display:none}}

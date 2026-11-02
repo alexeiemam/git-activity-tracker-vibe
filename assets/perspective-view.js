@@ -1,9 +1,9 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, codebasePortrait, windowOf, briefingText } from './perspectives.js?v=git-history-links-20261102-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=git-history-links-20261102-1';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=git-history-links-20261102-1';
-import { targetUrl } from './route-state.js?v=git-history-links-20261102-1';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=git-history-links-20261102-1';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, codebasePortrait, windowOf, briefingText } from './perspectives.js?v=git-heroku-ux-20261102-2';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=git-heroku-ux-20261102-2';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=git-heroku-ux-20261102-2';
+import { targetUrl } from './route-state.js?v=git-heroku-ux-20261102-2';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=git-heroku-ux-20261102-2';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});

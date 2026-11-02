@@ -4,7 +4,7 @@ const TABS=new Set(['delivery','together','focus','behaviour','evolution','compa
 const DATE=/^\d{4}-\d{2}-\d{2}$/;
 const dateOk=value=>{if(!DATE.test(String(value)))return false;const ms=Date.parse(`${value}T00:00:00Z`);return Number.isFinite(ms)&&new Date(ms).toISOString().slice(0,10)===value;};
 const SHA=/^[a-f0-9]{7,64}$/i;
-const EMAIL=/^[^\s@]{1,160}@[^\s@]{1,160}$/;
+const EMAIL=/^(?:[^\s@]{1,160}@[^\s@]{1,160}|github:[a-z0-9-]{1,39}|heroku:[^\s@]{1,100}@[^\s@]{1,120})$/i;
 const DATA=/^[a-zA-Z0-9_-]{8,100}$/;
 const keys=['view','release','person','tab','partner','personB','personC','from','to','area','environment','event','dataset'];
 const emailFor=(id,groups)=>groups?.find(g=>String(g.id)===String(id))?.emails?.[0]||null;
