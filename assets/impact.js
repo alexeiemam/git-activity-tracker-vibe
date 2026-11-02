@@ -7,7 +7,7 @@
  * No line-level survival, deploy date, customer value, or team productivity is
  * inferred from numstat; file revisitation is explicitly a proxy.
  */
-import { fileArea } from './domain.js?v=git-gzip-session-20261102-1';
+import { fileArea } from './domain.js?v=git-identity-order-20261102-1';
 
 export const IMPACT_METRICS = Object.freeze({
   commits: 'Commits', churn: 'Line churn', paths: 'Distinct paths', areas: 'Codebase areas', share: 'Commit share',

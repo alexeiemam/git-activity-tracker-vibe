@@ -1044,3 +1044,29 @@
 .deployment-event{grid-template-columns:62px 100px minmax(125px,1.4fr) minmax(105px,.95fr) minmax(100px,1fr) auto}
 @media(max-width:760px){.deployment-event{grid-template-columns:58px minmax(100px,1fr) minmax(90px,1fr) auto}}
 @media(max-width:520px){.deployment-event{grid-template-columns:55px minmax(90px,1fr) auto}.deployment-event-related{display:none}}
+
+/* Identity order: lightweight, accessible controls instead of fragile drag-only
+   gestures. User ordering changes presentation, never attributed activity. */
+.merge-panel .identity-order-guidance{margin:-7px 0 17px;color:#63786c;font-size:11px;line-height:1.6}
+.merge-group-order-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px clamp(16px,2vw,23px);background:#f7faf7;border-bottom:1px solid #e5ece6}
+.merge-order-label{display:flex;align-items:center;gap:9px;font:10px var(--mono);color:#637b6b;letter-spacing:.02em}
+.merge-order-position{display:inline-flex;align-items:center;justify-content:center;background:#e4f0e7;color:#226747;border-radius:5px;padding:5px 7px;min-width:46px;font-weight:700;white-space:nowrap}
+.merge-order-buttons,.linked-order-actions{display:flex;align-items:center;gap:4px}
+.merge-panel .order-button{display:inline-grid;place-items:center;min-width:29px;height:28px;padding:0 5px;background:#fff;border:1px solid #d7e4da;border-radius:6px;color:#335744;font:600 17px/1 var(--font);transition:background .14s,border-color .14s,color .14s}
+.merge-panel .order-button:not([disabled]):hover{background:#e4f2e8;border-color:#78ad91;color:#125d40}
+.merge-panel .order-button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.merge-panel .order-button:disabled{opacity:.3;background:#f7f9f7}
+.merge-add .identity-arrange-toggle{color:#27694c;background:#f4f9f4;border:1px solid #d3e7d7;border-radius:6px;padding:8px 10px}
+.merge-add .identity-arrange-toggle[aria-expanded="true"]{background:#e2f1e6;border-color:#81b698;color:#174f36}
+.linked-order-panel{margin-top:12px;border:1px solid #d8e6db;border-radius:9px;background:#fbfdfa;overflow:hidden}
+.linked-order-note{margin:0;padding:10px 13px;border-bottom:1px solid #e6eee6;font:11px/1.55 var(--font);color:#637a68}
+.linked-order-list{list-style:none;margin:0;padding:0}
+.linked-order-row{display:flex;align-items:center;gap:11px;padding:10px 12px;min-width:0}
+.linked-order-row + .linked-order-row{border-top:1px solid #e7eee8}
+.linked-order-rank{min-width:22px;text-align:center;font:600 11px var(--mono);color:#679075}
+.linked-order-info{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.linked-order-info strong{font-size:11px;font-weight:600;color:#294c37;overflow-wrap:anywhere}
+.linked-order-info span{font:10px/1.5 var(--mono);color:#728278;overflow-wrap:anywhere}
+.linked-order-actions{flex:none}
+@media(max-width:560px){.merge-group-order-bar{padding:8px 12px}.merge-order-label{font-size:9px}.merge-panel .order-button{min-width:30px;height:31px}.linked-order-row{padding:9px;gap:7px}.linked-order-note{padding:9px 10px}}
+@media(forced-colors:active){.merge-panel .order-button:focus-visible,.merge-add .identity-arrange-toggle:focus-visible{outline:2px solid Highlight;outline-offset:2px}}

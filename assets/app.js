@@ -3,23 +3,24 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=git-gzip-session-20261102-1';
-import { generateDemoLog } from './demo-data.js?v=git-gzip-session-20261102-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-gzip-session-20261102-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-gzip-session-20261102-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-gzip-session-20261102-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-gzip-session-20261102-1';
-import { buildStoryAnalysis } from './stories.js?v=git-gzip-session-20261102-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-gzip-session-20261102-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-gzip-session-20261102-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-gzip-session-20261102-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-gzip-session-20261102-1';
-import { downloadFilename } from './download-names.js?v=git-gzip-session-20261102-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-gzip-session-20261102-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-gzip-session-20261102-1';
-import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-gzip-session-20261102-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-gzip-session-20261102-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-gzip-session-20261102-1';
+} from './domain.js?v=git-identity-order-20261102-1';
+import { generateDemoLog } from './demo-data.js?v=git-identity-order-20261102-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-identity-order-20261102-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-identity-order-20261102-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-identity-order-20261102-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-identity-order-20261102-1';
+import { buildStoryAnalysis } from './stories.js?v=git-identity-order-20261102-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-identity-order-20261102-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-identity-order-20261102-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-identity-order-20261102-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-identity-order-20261102-1';
+import { downloadFilename } from './download-names.js?v=git-identity-order-20261102-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-identity-order-20261102-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-identity-order-20261102-1';
+import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-identity-order-20261102-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-identity-order-20261102-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-identity-order-20261102-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-identity-order-20261102-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -35,7 +36,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-gzip-session-20261102-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-identity-order-20261102-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -155,7 +156,7 @@ const number = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 });
 const decimal = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
 const percent = n => `${Math.abs(n) > 0 && Math.abs(n) < .01 ? Number(n.toPrecision(2)) : decimal.format(n)}%`;
 const esc = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-const color = id => COLORS[Number(id) % COLORS.length];
+const color = id => COLORS[mergeGroups[Number(id)] ? contributorColourIndex(mergeGroups[Number(id)], COLORS.length) : (Number(id) || 0) % COLORS.length];
 const style = id => `--person:${color(id)}`;
 const empty = (msg) => `<div class="empty-state">${esc(msg)}</div>`;
 const formatDate = d => d ? new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric', timeZone:'UTC' }) : '—';
@@ -179,6 +180,7 @@ let mergeGroups = [];
 let identityMeta = new Map();
 let identityPicker = null; // { targetIndex, selected: Set, query } — staged until Apply
 let mergeUndo = null;
+const linkedOrderEditors = new Set();
 let analysis = null;
 let pendingImport = null;
 let rawHistoryEnrichment=[];
@@ -391,17 +393,45 @@ function renderIdentityPicker(index) {
     <div class="identity-picker-bottom"><div class="identity-picker-recap" id="identity-recap-${index}" role="status" aria-live="polite"></div><div class="identity-picker-buttons"><button type="button" class="button outline" data-action="cancel-identity-picker">Cancel</button><button type="button" class="button primary" id="identity-apply-${index}" data-action="apply-identity-picker" disabled>Move selected identities</button></div></div>
   </div>`;
 }
+function linkedOrderRows(group, index) {
+  return `<div class="linked-order-panel" role="group" aria-label="Linked identity order for ${esc(group.displayName)}">
+    <p class="linked-order-note">These are already the same contributor. Rearranging them does not change attribution or which releases they contributed to.</p>
+    <ol class="linked-order-list">${group.emails.map((email, position) => {
+      const meta = identityMeta.get(email);
+      return `<li class="linked-order-row" data-linked-email="${esc(email)}">
+        <span class="linked-order-rank">${position + 1}</span>
+        <div class="linked-order-info"><strong>${esc(meta?.name || group.displayName)}</strong><span>${esc(meta?.kind || 'Git author')} · ${esc(email)}</span></div>
+        <div class="linked-order-actions">
+          <button type="button" class="order-button" data-action="move-linked-identity" data-group="${index}" data-position="${position}" data-step="-1" ${position === 0 ? 'disabled' : ''} aria-label="Move ${esc(email)} earlier" title="Move earlier">↑</button>
+          <button type="button" class="order-button" data-action="move-linked-identity" data-group="${index}" data-position="${position}" data-step="1" ${position === group.emails.length - 1 ? 'disabled' : ''} aria-label="Move ${esc(email)} later" title="Move later">↓</button>
+        </div>
+      </li>`;
+    }).join('')}</ol>
+  </div>`;
+}
 function renderMergeUI() {
   $('merge-groups').innerHTML = mergeGroups.map((group, index) => {
     const open = identityPicker?.targetIndex === index;
     const available = mergeGroups.some((g, i) => i !== index && g.emails.length);
     const groupCommits = sum(group.emails.map(email => identityMeta.get(email)?.commits || 0));
-    return `<article class="merge-group ${open ? 'merge-group-open' : ''}">
+    const orderOpen = linkedOrderEditors.has(contributorKey(group));
+    const groupName = esc(group.displayName);
+    return `<article class="merge-group ${open ? 'merge-group-open' : ''}" data-merge-card="${index}">
+      <div class="merge-group-order-bar">
+        <span class="merge-order-label"><span class="merge-order-position">${index + 1} / ${mergeGroups.length}</span><span>Contributor order</span></span>
+        <div class="merge-order-buttons" role="group" aria-label="Reorder ${groupName}">
+          <button type="button" class="order-button" data-action="move-contributor" data-group="${index}" data-position="0" ${index === 0 ? 'disabled' : ''} aria-label="Move ${groupName} to first" title="Move to first">⇤</button>
+          <button type="button" class="order-button" data-action="move-contributor" data-group="${index}" data-position="${index - 1}" ${index === 0 ? 'disabled' : ''} aria-label="Move ${groupName} up" title="Move up">↑</button>
+          <button type="button" class="order-button" data-action="move-contributor" data-group="${index}" data-position="${index + 1}" ${index === mergeGroups.length - 1 ? 'disabled' : ''} aria-label="Move ${groupName} down" title="Move down">↓</button>
+          <button type="button" class="order-button" data-action="move-contributor" data-group="${index}" data-position="${mergeGroups.length - 1}" ${index === mergeGroups.length - 1 ? 'disabled' : ''} aria-label="Move ${groupName} to last" title="Move to last">⇥</button>
+        </div>
+      </div>
       <div class="merge-group-main">
-        <div class="merge-group-name"><label for="merge-name-${index}">CONTRIBUTOR NAME</label><input id="merge-name-${index}" data-merge-name="${index}" value="${esc(group.displayName)}" placeholder="Name this contributor" maxlength="160"><p class="merge-group-caption">${countWord(groupCommits, 'authored commit')} in imported history</p></div>
+        <div class="merge-group-name"><label for="merge-name-${index}">CONTRIBUTOR NAME</label><input id="merge-name-${index}" data-merge-name="${index}" value="${groupName}" placeholder="Name this contributor" maxlength="160"><p class="merge-group-caption">${countWord(groupCommits, 'authored commit')} in imported history</p></div>
         <div class="merge-group-identities"><div class="merge-identity-heading"><span>LINKED IDENTITIES</span><span class="merge-identity-total">${countWord(group.emails.length, 'identity', 'identities')}</span></div>
-          <div class="identity-chips">${group.emails.length ? group.emails.map(email => `<span class="chip"><span title="${esc(email)}">${esc(identityMeta.get(email)?.kind||'Git author')} · ${esc(identityMeta.get(email)?.name||email)}</span>${group.emails.length > 1 ? `<button type="button" data-action="split-email" data-group="${index}" data-email="${esc(email)}" aria-label="Separate ${esc(email)} from ${esc(group.displayName)}" title="Separate this identity">×</button>` : ''}</span>`).join('') : '<span class="merge-group-caption">No identities yet. Select author emails to build this contributor.</span>'}</div>
-          <div class="merge-add"><button type="button" class="merge-add-trigger" data-action="toggle-identity-picker" data-group="${index}" aria-expanded="${open}" ${open ? `aria-controls="identity-picker-${index}"` : ''} ${!available ? 'disabled title="No other identities available"' : ''}><span class="merge-plus" aria-hidden="true">${open ? '−' : '+'}</span>${open ? 'Close selector' : 'Add identities'}<span class="merge-plus-chevron" aria-hidden="true">${open ? '⌃' : '⌄'}</span></button>${group.emails.length > 1 ? `<button class="mini-button" type="button" data-action="split-group" data-group="${index}">Separate all</button>` : ''}</div>
+          <div class="identity-chips">${group.emails.length ? group.emails.map(email => `<span class="chip"><span title="${esc(email)}">${esc(identityMeta.get(email)?.kind||'Git author')} · ${esc(identityMeta.get(email)?.name||email)}</span>${group.emails.length > 1 ? `<button type="button" data-action="split-email" data-group="${index}" data-email="${esc(email)}" aria-label="Separate ${esc(email)} from ${groupName}" title="Separate this identity">×</button>` : ''}</span>`).join('') : '<span class="merge-group-caption">No identities yet. Select author emails to build this contributor.</span>'}</div>
+          <div class="merge-add"><button type="button" class="merge-add-trigger" data-action="toggle-identity-picker" data-group="${index}" aria-expanded="${open}" ${open ? `aria-controls="identity-picker-${index}"` : ''} ${!available ? 'disabled title="No other identities available"' : ''}><span class="merge-plus" aria-hidden="true">${open ? '−' : '+'}</span>${open ? 'Close selector' : 'Add identities'}<span class="merge-plus-chevron" aria-hidden="true">${open ? '⌃' : '⌄'}</span></button>${group.emails.length > 1 ? `<button type="button" class="mini-button identity-arrange-toggle" data-action="toggle-linked-order" data-group="${index}" aria-expanded="${orderOpen}" ${orderOpen ? `aria-controls="linked-order-${index}"` : ''}>${orderOpen ? 'Close ordering' : 'Arrange linked identities'}</button><button class="mini-button" type="button" data-action="split-group" data-group="${index}">Separate all</button>` : ''}</div>
+          ${orderOpen && group.emails.length > 1 ? `<div id="linked-order-${index}">${linkedOrderRows(group,index)}</div>` : ''}
         </div>
       </div>
       ${open ? renderIdentityPicker(index) : ''}
@@ -409,6 +439,57 @@ function renderMergeUI() {
   }).join('');
   if (identityPicker) updateIdentityPickerSummary();
 }
+
+/** Changing the cards' order also changes their numeric UI IDs. Rebase every
+ * focused/selected contributor by a stable linked identity, not by position. */
+function rebaseContributorViews(before, after) {
+  const rebase = id => rebaseContributorId(id, before, after);
+  state.selectedIds = new Set([...state.selectedIds].map(rebase).filter(id => id !== null));
+  for (const key of ['rhythmFocus','impactFocus','storyFocus','storyPairA','storyPairB']) state[key] = rebase(state[key]);
+  const keys = ['contributorFocus','compareB','compareC','coReleasePartner','periodSelectedId','periodFocusPerson'];
+  for (const key of keys) primary[key] = rebase(primary[key]);
+  for (const snapshot of primary.trail || []) for (const key of keys) if (Object.hasOwn(snapshot,key)) snapshot[key] = rebase(snapshot[key]);
+}
+function moveContributorCard(index, position) {
+  if (requireResolvedIdentitySelection()) return;
+  const before = mergeGroups;
+  const after = reorderContributors(before, index, position);
+  if (after === before) return;
+  forgetUndo();
+  identityPicker = null; // Its index would otherwise point to a different card.
+  rebaseContributorViews(before, after);
+  mergeGroups = after;
+  renderMergeUI();
+  const card = $('merge-groups').querySelector(`[data-merge-card="${position}"]`);
+  card?.querySelector('[data-action="move-contributor"]:not([disabled])')?.focus({preventScroll:true});
+  renderMergeFeedback(`${mergeGroups[position].displayName} moved to position ${position+1}. Use Build dashboard to apply the updated order.`);
+}
+function toggleLinkedOrder(index) {
+  if (requireResolvedIdentitySelection()) return;
+  const group = mergeGroups[index];
+  if (!group || group.emails.length < 2) return;
+  const key = contributorKey(group);
+  if (linkedOrderEditors.has(key)) linkedOrderEditors.delete(key);
+  else linkedOrderEditors.add(key);
+  renderMergeUI();
+  $('merge-groups').querySelector(`[data-action="toggle-linked-order"][data-group="${index}"]`)?.focus({preventScroll:true});
+}
+function moveLinkedIdentity(index, position, step) {
+  if (requireResolvedIdentitySelection()) return;
+  const before = mergeGroups;
+  const group = before[index];
+  const email = group?.emails[position];
+  const after = reorderLinkedIdentity(before,index,position,position+step);
+  if (after === before) return;
+  forgetUndo();
+  identityPicker = null; // Rebuilding this panel must not reset an open search.
+  mergeGroups = after;
+  renderMergeUI();
+  const row = [...$('merge-groups').querySelectorAll('[data-linked-email]')].find(el=>el.dataset.linkedEmail===email);
+  row?.querySelector('[data-action="move-linked-identity"]:not([disabled])')?.focus({preventScroll:true});
+  renderMergeFeedback(`Reordered linked identities for ${group.displayName}. Authorship and group membership are unchanged.`);
+}
+
 function requireResolvedIdentitySelection() {
   if (!identityPicker?.selected.size) return false;
   renderMergeFeedback('Apply or cancel the pending identity selection before another edit.');
@@ -531,6 +612,7 @@ async function analyse() {
   identityMeta = makeIdentityCatalogue(rawCommits,rawGithubReleases,rawHerokuReleases);
   identityPicker = null;
   mergeUndo = null;
+  linkedOrderEditors.clear();
   renderMergeFeedback();
   mergeGroups = makeMergeSuggestions();
   $('merge-step').hidden = false;
@@ -629,7 +711,9 @@ function buildDashboard() {
   identityPicker = null;
   mergeUndo = null;
   mergeGroups=mergeGroups.filter(g=>g.emails.length);
-  syncScopeAfterLoad();
+  // A reorder performed from Review identities must not reset the existing
+  // date scope, selected contributors, or release/contributor navigation.
+  if ($('dashboard').hidden || !analysis || pendingImport) syncScopeAfterLoad();
   $('merge-step').hidden=true;
   $('dashboard').hidden=false;
   $('export-btn').hidden=false;
@@ -1804,23 +1888,24 @@ async function renderDashboard() {
 function sessionPayload() {
   if(!rawCommits.length)return null;
   const selectedEmails=mergeGroups.flatMap((g,i)=>state.selectedIds.has(String(i))?g.emails:[]);
+  const emailForId = id => /^(0|[1-9]\d*)$/.test(String(id)) ? mergeGroups[Number(id)]?.emails[0]||null : null;
   const payload={version:3,exportedAt:new Date().toISOString(),rangeYears:Number($('range-select').value),rawLog:$('log-input').value,
     mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails]})),
     scope:{selectedEmails,period:state.period,start:state.start,end:state.end,metric:state.metric,mode:state.mode,denominator:state.denominator,
       includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode,
       rhythmDisplay:state.rhythmDisplay,rhythmTab:state.rhythmTab,seasonMode:state.seasonMode,seasonYears:state.seasonYears?[...state.seasonYears]:null,
-      rhythmFocusEmail:analysis?.byId.get(state.rhythmFocus)?.emails[0]||null,
+      rhythmFocusEmail:emailForId(state.rhythmFocus),
       impactTab:state.impactTab,impactMetric:state.impactMetric,impactAreaMode:state.impactAreaMode,
       impactReleaseHash:state.impactReleaseHash,impactShowAll:state.impactShowAll,
       impactMatrixMode:state.impactMatrixMode,impactMatrixPage:state.impactMatrixPage,
       impactMatrixYear:state.impactMatrixYear,impactMatrixSize:state.impactMatrixSize,
-      impactFocusEmail:analysis?.byId.get(state.impactFocus)?.emails[0]||null,
+      impactFocusEmail:emailForId(state.impactFocus),
       impactActorMap:state.impactActorMap,
       impactTimelineMode:state.impactTimelineMode,impactTimelineFrom:state.impactTimelineFrom,impactTimelineTo:state.impactTimelineTo,
       viewMode:state.viewMode,storyPerspective:state.storyPerspective,storyTopic:state.storyTopic,storyCategory:state.storyCategory,
-      storyShowAll:state.storyShowAll,storyFocusEmail:analysis?.byId.get(state.storyFocus)?.emails[0]||null,
-      storyPairAEmail:analysis?.byId.get(state.storyPairA)?.emails[0]||null,
-      storyPairBEmail:analysis?.byId.get(state.storyPairB)?.emails[0]||null,
+      storyShowAll:state.storyShowAll,storyFocusEmail:emailForId(state.storyFocus),
+      storyPairAEmail:emailForId(state.storyPairA),
+      storyPairBEmail:emailForId(state.storyPairB),
       storyMonth:state.storyMonth,storyDismissed:[...state.storyDismissed].slice(0,300),
       storyFindingId:state.storyFindingId,storyTrail:state.storyTrail.slice(-8),
       primary:primaryStateForExport(primary,mergeGroups)}};
@@ -1908,6 +1993,7 @@ async function restoreSessionPayload(payload,filename='imported session') {
   identityMeta = makeIdentityCatalogue(rawCommits,rawGithubReleases,rawHerokuReleases);
   identityPicker = null;
   mergeUndo = null;
+  linkedOrderEditors.clear();
   renderMergeFeedback();
   $('log-input').value=payload.rawLog;
   if(Number.isInteger(Number(payload.rangeYears)) && +payload.rangeYears>=1 && +payload.rangeYears<=5) $('range-select').value=String(payload.rangeYears);
@@ -2043,6 +2129,9 @@ const ACTIONS={
   'choose-import':()=> $('file-import-input').click(),
   'export':exportSession,'copy-command':copyCommand,'analyse':analyse,'load-demo':loadDemo,
   'add-merge-group':()=>{if(requireResolvedIdentitySelection())return;forgetUndo();mergeGroups.push({displayName:'New contributor',emails:[]});identityPicker=null;renderMergeUI();openIdentityPicker(mergeGroups.length-1);},
+  'move-contributor':(_e,t)=>moveContributorCard(Number(t.dataset.group), Number(t.dataset.position)),
+  'toggle-linked-order':(_e,t)=>toggleLinkedOrder(Number(t.dataset.group)),
+  'move-linked-identity':(_e,t)=>moveLinkedIdentity(Number(t.dataset.group),Number(t.dataset.position),Number(t.dataset.step)),
   'split-email':(_e,t)=>splitEmail(Number(t.dataset.group),t.dataset.email),
   'split-group':(_e,t)=>splitGroup(Number(t.dataset.group)),
   'toggle-identity-picker':(_e,t)=>openIdentityPicker(Number(t.dataset.group)),

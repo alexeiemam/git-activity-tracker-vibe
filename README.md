@@ -2,6 +2,21 @@
 
 A local, zero-build Git evidence explorer with three connected ways into a repository: **the releases, a chosen period, or its contributors**. Tagged snapshots keep their complete code ancestry; authored activity remains a separate observation clock. Imported logs are processed locally in the browser, not uploaded to a service.
 
+## Reordering reconciled identities
+
+In **Review identities**, use the controls on each contributor card to move it
+up, down, to the start or to the end of the list. For a contributor with
+multiple linked author/provider identities, choose **Arrange linked identities**
+to change their display order using accessible Up/Down controls. Both actions
+are non-destructive: they do not change the Git author mapping or any release
+attribution. Click **Build dashboard** to apply the new contributor order.
+
+The chosen order is preserved in both `.json.gz` and legacy JSON session
+exports, and restores on import. Contributor colours are derived from the
+reconciled identity set so moving a card or rearranging its linked identities
+does not change that person's colour. Existing contributor selections and
+focused views are reconciled by identity when the cards move.
+
 ## Run
 
 From this directory, serve the static app with:
