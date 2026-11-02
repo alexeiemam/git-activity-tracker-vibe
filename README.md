@@ -52,10 +52,18 @@ navigation to switch perspectives without reimporting data:
   traceable **Period Briefing** including scope, activity, released events,
   components, comparison and limitations.
 - **Contributors — start with a person.** Select any **reconciled** contributor
-  (all their merged author emails), then explore their **Delivery / Focus /
+  (all their merged author emails), then explore their **Delivery / Together / Focus /
   Behaviour / Evolution / Compare** views. The release portfolio distinguishes
   tagged releases they authored for, releases they drove, and both; rates use
-  the same release-event population across compared people. Focus shows where
+  the same release-event population across compared people. **Together** shows
+  which contributors authored changes in the same incremental tagged releases:
+  shared release counts, the proportion of each person's release portfolio
+  shared with the other, and symmetric Jaccard overlap (shared ÷ union).
+  Choose a partner to inspect the actual shared tags, authorship counts and
+  separately attributed release drivers; Compare also shows pairwise overlap
+  for the selected people. Initial baseline and incomplete-ancestry tags are
+  excluded from these overlap denominators, and co-participation does **not**
+  establish direct collaboration. Focus shows where
   their authored files changed. Behaviour shows author-local 7×24 rhythms,
   internal active-day gaps and sample counts. Evolution displays separate
   monthly lanes for authorship, participation and release driving, and annual
@@ -287,7 +295,14 @@ Within a given visualisation the scale is **shared across all displayed people, 
 
 ## Session import/export
 
-**Export session** saves the input Git log, merged identities and filters (including trend, monthly/daily pulse, weekly rhythm presentation, historical tab/mode/year selection, the focused contributor (by identity email), and the Impact Explorer tab, measure, release, timeline range, and footprint presentation) into a JSON file. **Import session** restores it in the browser. v1 exports remain accepted.
+**Export session** downloads `git-signals-session-YYYY-MM-DD_HH-mm-ss.json`.
+**Export all · CSV** for the People & Releases matrix downloads
+`git-signals-release-matrix-YYYY-MM-DD_HH-mm-ss.csv`. Timestamps use the
+browser's local clock; names are fixed and never include pasted Git content,
+release notes, contributor names or other unbounded data. Export contents and
+file formats are unchanged.
+
+**Export session** saves the input Git log, merged identities and filters (including trend, monthly/daily pulse, weekly rhythm presentation, historical tab/mode/year selection, the focused contributor (by identity email), and the Impact Explorer tab, measure, release, timeline range, and footprint presentation) into a JSON file. **Import session** restores it in the browser. v1 exports remain accepted. Co-release view, partner and sorting preferences are persisted using reconciled author identities.
 
 ## Source and tests
 
@@ -298,6 +313,8 @@ Within a given visualisation the scale is **shared across all displayed people, 
 - `assets/impact.js` — tag ancestry, release classification and evidence aggregation.
 - `assets/impact-view.js` — accessible impact timelines, matrices and detail views.
 - `assets/impact-window.js` — pure viewport, zoom, pan and release reveal logic.
+- `assets/co-release.js` — complete-release co-participation and evidence by pair.
+- `assets/download-names.js` — bounded descriptive export filenames with local timestamps.
 - `assets/demo-data.js` — deterministic demonstration dataset.
 - `tests/` — dependency-free Node checks and regression tests.
 

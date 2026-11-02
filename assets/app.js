@@ -3,17 +3,18 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=perspectives-20261102-2';
-import { generateDemoLog } from './demo-data.js?v=perspectives-20261102-2';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=perspectives-20261102-2';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=perspectives-20261102-2';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=perspectives-20261102-2';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=perspectives-20261102-2';
-import { buildStoryAnalysis } from './stories.js?v=perspectives-20261102-2';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=perspectives-20261102-2';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=perspectives-20261102-2';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=perspectives-20261102-2';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=perspectives-20261102-2';
+} from './domain.js?v=co-release-export-20261102-1';
+import { generateDemoLog } from './demo-data.js?v=co-release-export-20261102-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=co-release-export-20261102-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=co-release-export-20261102-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=co-release-export-20261102-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=co-release-export-20261102-1';
+import { buildStoryAnalysis } from './stories.js?v=co-release-export-20261102-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=co-release-export-20261102-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=co-release-export-20261102-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=co-release-export-20261102-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=co-release-export-20261102-1';
+import { downloadFilename } from './download-names.js?v=co-release-export-20261102-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -28,7 +29,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=perspectives-20261102-2', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=co-release-export-20261102-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -197,6 +198,7 @@ function initialisePrimary(){
   if(!groups.some(g=>g.id===primary.contributorFocus))primary.contributorFocus=groups[0]?.id??null;
   if(primary.compareB && !groups.some(g=>g.id===primary.compareB))primary.compareB=null;
   if(primary.compareC && !groups.some(g=>g.id===primary.compareC))primary.compareC=null;
+  if(primary.coReleasePartner && (!groups.some(g=>g.id===primary.coReleasePartner)||primary.coReleasePartner===primary.contributorFocus))primary.coReleasePartner=null;
   if(!perspectiveIndex.releases.some(r=>r.hash===primary.releaseHash))
     primary.releaseHash=perspectiveIndex.releases.at(-1)?.hash||null;
 }
@@ -1480,7 +1482,7 @@ function exportImpactMatrix() {
   const blob=new Blob(['\ufeff',impactReleaseMatrixCsv(impactModel)],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const link=document.createElement('a');link.href=url;
-  link.download=`git-signals-release-matrix-${new Date().toISOString().slice(0,10)}.csv`;
+  link.download=downloadFilename('release-matrix');
   link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function renderImpact(view) {
@@ -1736,7 +1738,7 @@ function exportSession() {
       primary:primaryStateForExport(primary,mergeGroups)}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const uri=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=uri;a.download=`git-signals-${new Date().toISOString().slice(0,10)}.json`;a.click();
+  const a=document.createElement('a');a.href=uri;a.download=downloadFilename('session');a.click();
   setTimeout(()=>URL.revokeObjectURL(uri),1000);
 }
 async function importSession(event) {
@@ -1819,6 +1821,8 @@ const ACTIONS={
   'primary-period-reset':()=>{primary.periodBucket=null;renderPrimary();},
   'primary-period-cell':(_e,t)=>{primary.periodFocusPerson=t.dataset.person;primary.periodFocusArea=t.dataset.area;renderPrimary();$('primary-copy-status')?.closest('.primary-panel')?.previousElementSibling?.scrollIntoView({behavior:'smooth',block:'nearest'});},
   'primary-contributor-tab':(_e,t)=>{primary.contributorTab=t.dataset.tab;if(primary.contributorTab==='compare'&&!primary.compareB)primary.compareB=perspectiveIndex.groups.find(g=>g.id!==primary.contributorFocus)?.id||null;renderPrimary();},
+  'primary-co-release-partner':(_e,t)=>{primary.coReleasePartner=t.dataset.person;primary.contributorTab='together';renderPrimary();$('primary-co-release-detail')?.scrollIntoView({behavior:'smooth',block:'nearest'});},
+  'primary-open-co-release-pair':(_e,t)=>{goPrimary('contributors',{contributorFocus:t.dataset.first,coReleasePartner:t.dataset.second,contributorTab:'together'},{scroll:false});$('primary-co-release-detail')?.scrollIntoView({behavior:'smooth',block:'nearest'});},
   'primary-open-month':(_e,t)=>{
     const [y,m]=t.dataset.month.split('-').map(Number),to=new Date(Date.UTC(y,m,0)).toISOString().slice(0,10);
     goPrimary('periods',{periodFrom:`${y}-${String(m).padStart(2,'0')}-01`,periodTo:to,periodPreset:'custom'});
@@ -2002,6 +2006,7 @@ function handleDocumentChange(event) {
     'primary-contributor-focus':'contributorFocus','primary-contributor-range':'contributorRange',
     'primary-period-person':'periodSelectedId','primary-codebase-range':'codebaseRange',
     'primary-compare-a':'contributorFocus','primary-compare-b':'compareB','primary-compare-c':'compareC',
+    'primary-together-partner':'coReleasePartner','primary-together-sort':'coReleaseSort',
   };
   if(primaryFields[t.id]){
     const key=primaryFields[t.id];
@@ -2010,7 +2015,10 @@ function handleDocumentChange(event) {
     if(t.id==='primary-period-person'){primary.periodBucket=null;primary.periodFocusPerson=null;primary.periodFocusArea=null;}
     if(t.id==='primary-release-type'||t.id==='primary-release-year')primary.releasePage=0;
     if(t.id==='primary-contributor-focus'&&primary.compareB===primary.contributorFocus)primary.compareB=null;
-    renderPrimary();return;
+    if(t.id==='primary-contributor-focus'&&primary.coReleasePartner===primary.contributorFocus)primary.coReleasePartner=null;
+    renderPrimary();
+    if(t.id==='primary-together-partner'||t.id==='primary-together-sort')$(t.id)?.focus({preventScroll:true});
+    return;
   }
   switch(t.id){
     case 'story-focus':state.storyFocus=t.value;state.storyFindingId=null;state.storyMonth=null;renderStories();$('story-focus')?.focus({preventScroll:true});break;

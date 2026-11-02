@@ -4,14 +4,16 @@ export const primaryDefaults=()=>({
   periodPreset:'14',periodFrom:null,periodTo:null,periodComparison:'previous',compareFrom:null,compareTo:null,
   periodBucket:null,periodSelectedId:null,periodFocusPerson:null,periodFocusArea:null,
   contributorFocus:null,contributorTab:'delivery',contributorRange:'all',compareB:null,compareC:null,
+  coReleasePartner:null,coReleaseSort:'shared',
   codeArea:null,codebaseRange:'all',trail:[],
 });
-const keys=['contributorFocus','compareB','compareC','periodSelectedId','periodFocusPerson'];
+const keys=['contributorFocus','compareB','compareC','coReleasePartner','periodSelectedId','periodFocusPerson'];
 const accepted={
   mode:['observatory','periods','contributors','codebase'],cohortBy:['type','driver','year'],
   releaseType:['all','major','minor','patch','prerelease','unclassified','divergent','baseline','same-version'],
   periodComparison:['none','previous','year','custom'],
-  contributorTab:['delivery','focus','behaviour','evolution','compare'],
+  contributorTab:['delivery','together','focus','behaviour','evolution','compare'],
+  coReleaseSort:['shared','overlap'],
   contributorRange:['all','year','period'],codebaseRange:['all','period'],
 };
 const safeValue=(name,val)=>name==='releasePage'

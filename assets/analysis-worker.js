@@ -1,8 +1,8 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=perspectives-20261102-2';
-import { impactAnalysis } from './impact.js?v=perspectives-20261102-2';
-import { buildStoryAnalysis } from './stories.js?v=perspectives-20261102-2';
-import { buildEvidenceIndex } from './perspectives.js?v=perspectives-20261102-2';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=co-release-export-20261102-1';
+import { impactAnalysis } from './impact.js?v=co-release-export-20261102-1';
+import { buildStoryAnalysis } from './stories.js?v=co-release-export-20261102-1';
+import { buildEvidenceIndex } from './perspectives.js?v=co-release-export-20261102-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;

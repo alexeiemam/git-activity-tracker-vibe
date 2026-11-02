@@ -208,3 +208,26 @@ test('release list and anatomy stay coherent when applying a historical year fil
  assert.doesNotMatch(html,/<h3>v2\.0\.0<\/h3>/);
  assert.match(html,/v1\.1\.1/);
 });
+
+
+test('Contributors Together displays shared released commits and traceable tag evidence',()=>{
+  const page=renderPrimaryExplorer(index,ui({mode:'contributors',contributorTab:'together',coReleasePartner:'1'}));
+  assert.match(page,/People who appear in the same tagged releases/);
+  assert.match(page,/Jaccard overlap/);
+  assert.match(page,/v1\.1\.0/);
+  assert.match(page,/primary-co-release-detail/);
+  assert.match(page,/data-action="primary-open-release"/);
+  assert.match(page,/drivers are shown separately/i);
+  const compared=renderPrimaryExplorer(index,ui({mode:'contributors',contributorTab:'compare',compareB:'1'}));
+  assert.match(compared,/Who appears in releases together/);
+  assert.match(compared,/primary-open-co-release-pair/);
+});
+
+
+test('Together escapes untrusted contributor labels and limits initial rendered release evidence',()=>{
+ const hostile={...index,groups:index.groups.map((g,i)=>i===1?{...g,displayName:'<img src=x onerror=alert(1)>'}:g)};
+ const html=renderPrimaryExplorer(hostile,ui({mode:'contributors',contributorTab:'together',coReleasePartner:'1'}));
+ assert.doesNotMatch(html,/<img src=x/);
+ assert.match(html,/&lt;img src=x/);
+ assert.match(html,/No shared release contributions|Shared releases/);
+});

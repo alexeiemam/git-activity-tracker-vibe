@@ -48,3 +48,15 @@ test('cohort selection and investigation trail survive session restoration',()=>
  assert.equal(loaded.releaseHash,'abcdef');
  assert.equal(loaded.trail[0].periodTo,'2025-02-14');
 });
+
+
+test('co-release sorting, selected partner, and reconciled identity survive session restore',()=>{
+  const source={...primaryDefaults(),contributorFocus:'0',coReleasePartner:'1',contributorTab:'together',coReleaseSort:'overlap'};
+  const exported=primaryStateForExport(source,groups);
+  const restored=restorePrimaryState({primary:exported},[groups[1],groups[2],groups[0]]);
+  assert.equal(restored.contributorFocus,'2');
+  assert.equal(restored.coReleasePartner,'0');
+  assert.equal(restored.contributorTab,'together');
+  assert.equal(restored.coReleaseSort,'overlap');
+  assert.equal(restorePrimaryState({primary:{coReleaseSort:'random',contributorTab:'evil'}},groups).coReleaseSort,'shared');
+});

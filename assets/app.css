@@ -882,3 +882,22 @@
 @media(prefers-reduced-motion:reduce){.primary-explorer{animation:none}.primary-cohort{transition:none}}
 
 .primary-briefing-fallback{display:block;width:100%;min-height:135px;resize:vertical;margin-top:12px;padding:12px;border:1px solid #a8c5b1;border-radius:8px;background:#fff;color:#284a35;font:11px/1.65 var(--mono);white-space:pre-wrap}
+
+/* Co-release patterns: legible, inspectable associations rather than a social graph. */
+.primary-co-release-list{display:grid;gap:7px;margin:18px 0}
+.primary-co-release-row{display:grid;grid-template-columns:minmax(130px,1.55fr) minmax(60px,1fr) 52px 44px;gap:12px;align-items:center;text-align:left;width:100%;min-height:58px;padding:10px 14px;border:1px solid #e1e9df;border-radius:10px;background:#fbfcf9;color:#274632;transition:background .13s,border-color .13s}
+.primary-co-release-row:hover{background:#f0f8f0;border-color:#a4c6ad}
+.primary-co-release-row.active{background:#ebf5ec;border-color:#569575;box-shadow:inset 3px 0 #397a57}
+.primary-co-release-row>span:first-child{display:grid;gap:4px;min-width:0}
+.primary-co-release-row strong{font:650 13px var(--font);overflow-wrap:anywhere}
+.primary-co-release-row>strong{font:700 16px var(--mono);text-align:right;color:#296f4b}
+.primary-co-release-row small{font:11px/1.4 var(--font);color:#677a6b}
+.primary-co-release-row>small{text-align:right}
+.primary-co-release-detail{border:1px solid #d2e4d5;border-radius:12px;padding:clamp(13px,2vw,22px);margin:19px 0;background:linear-gradient(160deg,#f3faf3,#ffffff)}
+.primary-co-release-detail-heading{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;gap:10px}
+.primary-co-release-detail-heading h4{font-size:clamp(16px,2vw,23px);line-height:1.3;letter-spacing:-.03em;margin:5px 0}
+.primary-co-release-symbol{color:#78a786;padding:0 4px}
+.primary-co-release-tags{min-width:570px}
+.primary-co-release-tags td,.primary-co-release-tags th{font-variant-numeric:tabular-nums}
+@media(max-width:600px){.primary-co-release-row{grid-template-columns:minmax(115px,1.5fr) minmax(42px,.8fr) 45px;gap:8px;padding:9px 10px}.primary-co-release-row>small{display:none}.primary-co-release-row small{font-size:10px}.primary-co-release-detail{padding:12px}}
+@media(prefers-reduced-motion:reduce){.primary-co-release-row{transition:none}}
