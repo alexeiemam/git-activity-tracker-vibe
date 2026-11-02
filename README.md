@@ -73,7 +73,7 @@ navigation to switch perspectives without reimporting data:
 
 **Follow the contribution.** A release, contributor, area or period is
 selectable from the relevant views. The application preserves an investigation
-trail with a Back control and keeps the selected period as context when
+trail in native browser Back/Forward history, with compact per-view URLs and keeps the selected period as context when
 following a contributor or code area. **Codebase** is a contextual fourth
 view, showing released areas, the contributors who touched them and related
 release snapshots. The existing deep **Detailed analytical workbench** remains
@@ -334,3 +334,66 @@ The primary Observatory shows aligned published-versus-deployed lanes and PROD e
 `Deploy <sha>` records or explicit SHA fields are resolved against imported Git hashes. A configuration-described Heroku release can inherit its last observed code SHA *as an inference*. A same-SHA event isn't called a config update without a description. Rollbacks using a historical Heroku version are resolved only when that version and its SHA were observed. A missing or ambiguous SHA remains unresolved; no change delta or attribution is fabricated. First imported code snapshots establish **presence by** a date, never the exact first production date; subsequently introduced code requires complete, comparable SHA ancestry. Config events never count as new code. First-observed production commits are deduplicated across deployments. Large or truncated Heroku histories are explicitly labelled.
 
 An import created before Heroku support remains valid. Run the updated capture command to enrich it, then review identities; session exports already carry the raw capture records and retain the chosen deployment view.
+
+## Deployment ancestry outside HEAD and tags
+
+Heroku may point to a commit on an earlier QA branch, a rolled-back branch,
+ or an untagged deployment that is not reachable from `HEAD --tags`. The copyable
+capture command now inspects *only targeted deployment SHAs*, rather than doing
+`git log --all` or fetching every remote branch:
+
+- Heroku events are retrieved exactly as before. The latest **eight distinct
+  candidate SHAs per environment** are considered, preferring PROD, and **18
+  distinct SHAs total** are inspected. Only candidates in the release data
+  are considered, never arbitrary hashes in free-form text.
+- For SHA objects already available locally, it captures up to **175 commits
+  per target** not reachable from HEAD or a local tag. Git deduplicates imported
+  records when the same commit is reachable from multiple targets. Fetching
+  all remote branches is unnecessary.
+- To additionally try up to **four direct-SHA network fetches**, opt in before
+  running the copy command:
+
+  ```sh
+  export GIT_SIGNALS_FETCH_DEPLOYMENT_SHAS=1
+  ```
+
+  Fetches use `git fetch --no-tags --depth=80 --filter=blob:none origin SHA`.
+  GitHub may refuse a SHA that is not fetchable through its advertised refs;
+  network fetches may also alter local shallow-repository metadata. They do
+  **not** switch branches or touch the working tree. Clear the variable with
+  `unset GIT_SIGNALS_FETCH_DEPLOYMENT_SHAS` afterward.
+- The import records whether the side-history was available or hit its bound.
+  Actual shallow Git boundaries are marked, so truncated parents cannot
+  masquerade as complete ancestry. The Deployment Explorer shows coverage;
+  unresolved or incomplete graphs do **not** acquire made-up authorship or
+  first-production credit. If an event is older than the captured set of
+  release records, it may still be unresolved.
+
+## Browser navigation, permalinks and multiple tabs
+
+Observatory, Periods, Contributors, Codebase and Deployments now use compact
+URLs, and cross-entity navigation is made from **real links**. Browser
+**Back/Forward**, Cmd/Ctrl-click, middle-click, context-menu Open in New Tab,
+and Copy Link are supported. View state is pushed into native browser history
+on navigation, without rerunning Git ancestry analysis. Presentation-only
+controls update the current URL without filling the Back stack on every edit.
+
+URLs encode view and selection (e.g. release SHA, selected author's canonical
+email, date range, codebase area or deployment event) **but never the Git log,
+GitHub release notes, Heroku records, or config values**. Be aware that
+contributor email identifiers may appear in your browser history and copied
+links; avoid sharing those links where the identities are confidential.
+
+Because git:signals has no backend, a link **cannot by itself carry the
+repository evidence**. For a new tab or a bookmarked link to reopen the exact
+analysis, click **Enable multi-tab links**. This explicitly saves the current
+session to this browser's IndexedDB; the URL receives a short random dataset
+key. A different tab on the same origin can restore the session locally and
+resolve the selected release/person/date. Links cannot reconstruct the dataset
+on another device: import the corresponding exported session there. Saving is
+optional; the current tab's browser Back/Forward works without it. Use
+**Update saved history** after changing contributor identity merges or
+important saved settings. **Forget local copy** removes the stored session.
+Saved links expire 30 days after they are saved; expired entries are
+removed when opened. Browser storage can be unavailable or quota-limited,
+which is reported rather than silently implying the link can be reopened.

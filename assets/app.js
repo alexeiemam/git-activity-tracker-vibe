@@ -3,19 +3,21 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=heroku-deployments-20261102-1';
-import { generateDemoLog } from './demo-data.js?v=heroku-deployments-20261102-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=heroku-deployments-20261102-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=heroku-deployments-20261102-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=heroku-deployments-20261102-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=heroku-deployments-20261102-1';
-import { buildStoryAnalysis } from './stories.js?v=heroku-deployments-20261102-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=heroku-deployments-20261102-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=heroku-deployments-20261102-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=heroku-deployments-20261102-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=heroku-deployments-20261102-1';
-import { downloadFilename } from './download-names.js?v=heroku-deployments-20261102-1';
-import { buildDeploymentIndex } from './deployments.js?v=heroku-deployments-20261102-1';
+} from './domain.js?v=git-history-links-20261102-1';
+import { generateDemoLog } from './demo-data.js?v=git-history-links-20261102-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-history-links-20261102-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-history-links-20261102-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-history-links-20261102-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-history-links-20261102-1';
+import { buildStoryAnalysis } from './stories.js?v=git-history-links-20261102-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-history-links-20261102-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-history-links-20261102-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-history-links-20261102-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-history-links-20261102-1';
+import { downloadFilename } from './download-names.js?v=git-history-links-20261102-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-history-links-20261102-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-history-links-20261102-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-history-links-20261102-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -30,7 +32,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=heroku-deployments-20261102-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-history-links-20261102-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -137,6 +139,7 @@ async function computeViewAndImpact(groups,scope,impactOptions,generation) {
     });
     const primaryIndex=buildEvidenceIndex(fullView,fullImpact,bounds);
     primaryIndex.deployments=buildDeploymentIndex(rawHerokuReleases,rawCommits,primaryIndex,herokuStatus);
+    primaryIndex.historyEnrichment=rawHistoryEnrichment;
     result={view,impact,stories,primaryIndex};
   }
   withWeekAggregation(result.view);
@@ -175,6 +178,7 @@ let identityPicker = null; // { targetIndex, selected: Set, query } — staged u
 let mergeUndo = null;
 let analysis = null;
 let pendingImport = null;
+let rawHistoryEnrichment=[];
 let tableRows = [];
 const state = {
   selectedIds: new Set(), search: '',
@@ -192,6 +196,63 @@ const state = {
 };
 
 let primary=primaryDefaults();
+let localDatasetId=null, routePushPending=false, routeRestoring=false;
+const routePath=()=>window.location.pathname||'./index.html';
+function currentRouteHref(){
+  const mode=state.viewMode==='evidence'?'evidence':primary.mode;
+  return routeUrl(routePath(),routeFromState({...primary,mode},mergeGroups.map((g,i)=>({...g,id:String(i)})),localDatasetId));
+}
+function syncBrowserRoute(){
+  if(!perspectiveIndex||routeRestoring)return;
+  const href=currentRouteHref();
+  if(href!==window.location.pathname+window.location.search){
+    const method=routePushPending?'pushState':'replaceState';
+    window.history[method]({gitSignals:true},'',href);
+  }
+  routePushPending=false;
+}
+function applyBrowserRoute(){
+  if(!perspectiveIndex)return;
+  const query=readRoute(new URL(window.location.href));routePushPending=false;
+  const groups=mergeGroups.map((g,i)=>({...g,id:String(i)}));
+  primary=applyRoute(primary,query,groups);
+  state.viewMode=primary.mode;
+  routeRestoring=true;
+  setExperienceVisibility();renderPrimary();
+  routeRestoring=false;
+}
+function historyNotice(message){
+  const root=$('local-link-status');if(root)root.textContent=message;
+  if($('dashboard')?.hidden&&$('parse-error'))$('parse-error').textContent=message;
+}
+async function enableLocalLinks(){
+  if(!rawCommits.length){historyNotice('Import history and build the dashboard first.');return;}
+  const key=localDatasetId||crypto.randomUUID();
+  try {
+    await saveLocalHistory(key,sessionPayload());localDatasetId=key;
+    syncBrowserRoute();renderPrimary();setExperienceVisibility();
+    historyNotice('Saved only in this browser for 30 days. Links can now reopen in other tabs.');
+  }catch(error){historyNotice(`Local saving failed: ${error.message}. Current-tab history still works.`);}
+}
+async function forgetLocalLinks(){
+  if(localDatasetId)await deleteLocalHistory(localDatasetId).catch(()=>{});
+  localDatasetId=null;syncBrowserRoute();renderPrimary();setExperienceVisibility();
+  historyNotice('Browser-local copy cleared. Saved links will require an imported session.');
+}
+async function restoreFromLocalLink(){
+  const id=readRoute(new URL(window.location.href)).dataset;
+  if(!id)return;
+  try{
+    const payload=await readLocalHistory(id);
+    if(!payload){
+      $('dashboard').hidden=true;$('source-details').open=true;
+      historyNotice('This link needs its original imported session, which is not available locally. Import the matching session JSON.');return;
+    }
+    localDatasetId=id;
+    await restoreSessionPayload(payload,'saved browser history');
+    historyNotice('Reopened your locally saved history. Nothing was fetched from a server.');
+  }catch(error){historyNotice(`Could not reopen saved history: ${error.message}. Import a session file instead.`);}
+}
 function restorePrimary(scope){ primary=restorePrimaryState(scope,mergeGroups); }
 
 function initialisePrimary(){
@@ -211,7 +272,9 @@ function renderPrimary(){
   if(!perspectiveIndex)return;
   initialisePrimary();
   primary.mode=state.viewMode==='evidence'?primary.mode:state.viewMode;
+  perspectiveIndex.navigation={ui:primary,groups:mergeGroups.map((g,i)=>({...g,id:String(i)})),datasetId:localDatasetId,path:routePath()};
   $('stories-view').innerHTML=renderPrimaryExplorer(perspectiveIndex,primary);
+  syncBrowserRoute();
 }
 function primarySnapshot(){
   const {trail,...snapshot}=primary;
@@ -222,12 +285,18 @@ function goPrimary(mode,change={}, {remember=true,scroll=true}={}){
   if(!['observatory','periods','contributors','codebase','deployments'].includes(mode))return;
   if(remember && (mode!==primary.mode||Object.keys(change).length))primary.trail=[...primary.trail,primarySnapshot()].slice(-8);
   Object.assign(primary,change,{mode});state.viewMode=mode;
-  setExperienceVisibility();renderPrimary();
+  routePushPending=true;setExperienceVisibility();renderPrimary();
   if(scroll)$('stories-view').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function resetPrimaryOnLoad(){
   restorePrimary(pendingImport?.scope);
   if(pendingImport?.scope?.primary && state.viewMode!=='evidence')state.viewMode=primary.mode;
+  // A permalink takes precedence over the imported session's last-view preference.
+  if(new URL(window.location.href).searchParams.has('view')){
+    const groups=mergeGroups.map((g,i)=>({...g,id:String(i)}));
+    primary=applyRoute(primary,readRoute(new URL(window.location.href)),groups);
+    state.viewMode=primary.mode;
+  }
 }
 
 function setText(id, content) { $(id).textContent = content; }
@@ -449,10 +518,10 @@ async function analyse() {
   catch(error) {finishProgress(generation,error);return setText('parse-error',error.message);}
   if (generation!==progressGeneration) return;
   ({commits:rawCommits,tags:rawTags,githubReleases:rawGithubReleases,
-    githubStatus,herokuReleases:rawHerokuReleases,herokuStatus,captureWarnings:githubWarnings}=history);
+    githubStatus,herokuReleases:rawHerokuReleases,herokuStatus,historyEnrichment:rawHistoryEnrichment,captureWarnings:githubWarnings}=history);
   importRevision++;computedKey=null;computedResult=null;
   finishProgress(generation,null,'History ready','Review the proposed contributor identities, then build your dashboard.');
-  pendingImport = null;
+  pendingImport = null;localDatasetId=null;
   identityMeta = makeIdentityCatalogue(rawCommits);
   identityPicker = null;
   mergeUndo = null;
@@ -1585,8 +1654,14 @@ function setExperienceVisibility() {
   for(const button of document.querySelectorAll('[data-experience]')){
     const active=button.dataset.experience===state.viewMode;
     button.classList.toggle('is-current',active);
-    button.setAttribute('aria-pressed',String(active));
+    if(button.tagName==='A'){
+      button.setAttribute('aria-current',active?'page':'false');
+      button.href=targetUrl(routePath(),{...primary,mode:state.viewMode},mergeGroups.map((g,i)=>({...g,id:String(i)})),localDatasetId,{view:button.dataset.experience});
+    }else button.setAttribute('aria-pressed',String(active));
   }
+  const saved=$('local-link-toggle');
+  if(saved)saved.textContent=localDatasetId?'Update saved history for other tabs':'Enable multi-tab links';
+  const forget=$('local-link-clear');if(forget)forget.hidden=!localDatasetId;
 }
 function renderStories() {
   if(!storyModel)return;
@@ -1660,6 +1735,7 @@ async function switchExperience(next,{target=null}={}) {
   state.viewMode=next;
   if(next!=='evidence')primary.mode=next;
   setExperienceVisibility();
+  if(!routeRestoring)routePushPending=true;
   if(next!=='evidence')renderPrimary();
   else if(evidenceRenderedRun!==renderGeneration && analysis){
     const generation=++progressGeneration;
@@ -1667,6 +1743,7 @@ async function switchExperience(next,{target=null}={}) {
     try{await ensureEvidenceRendered(renderGeneration,generation);finishProgress(generation);}
     catch(error){finishProgress(generation,error);$('scope-error').textContent=`Evidence rendering failed: ${error.message}`;}
   }
+  if(next==='evidence')syncBrowserRoute();
   if(target){
     const node=$(target);
     if(node && !node.closest('[hidden]'))node.scrollIntoView({behavior:'smooth',block:'start'});
@@ -1718,8 +1795,8 @@ async function renderDashboard() {
   }
 }
 
-function exportSession() {
-  if(!rawCommits.length) return;
+function sessionPayload() {
+  if(!rawCommits.length)return null;
   const selectedEmails=mergeGroups.flatMap((g,i)=>state.selectedIds.has(String(i))?g.emails:[]);
   const payload={version:3,exportedAt:new Date().toISOString(),rangeYears:Number($('range-select').value),rawLog:$('log-input').value,
     mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails]})),
@@ -1741,6 +1818,10 @@ function exportSession() {
       storyMonth:state.storyMonth,storyDismissed:[...state.storyDismissed].slice(0,300),
       storyFindingId:state.storyFindingId,storyTrail:state.storyTrail.slice(-8),
       primary:primaryStateForExport(primary,mergeGroups)}};
+  return payload;
+}
+function exportSession() {
+  const payload=sessionPayload();if(!payload)return;
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const uri=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=uri;a.download=downloadFilename('session');a.click();
@@ -1752,6 +1833,9 @@ async function importSession(event) {
   let payload;
   try {payload=JSON.parse(await file.text());}
   catch {return setText('parse-error','Could not parse JSON export.');}
+  localDatasetId=null;return restoreSessionPayload(payload,file.name);
+}
+async function restoreSessionPayload(payload,filename='imported session') {
   if(typeof payload?.rawLog!=='string' || !Array.isArray(payload.mergeGroups)) return setText('parse-error','Invalid session: rawLog and mergeGroups required.');
   renderGeneration++; // Prevent an earlier session build from rendering over this one.
   const generation=++progressGeneration;
@@ -1760,6 +1844,7 @@ async function importSession(event) {
   try {history=await processImportedHistory(payload.rawLog,generation);}
   catch(err){finishProgress(generation,err);return setText('parse-error',err.message);}
   if (generation!==progressGeneration)return;
+  rawHistoryEnrichment=history.historyEnrichment||[];
   rawCommits=history.commits;rawTags=history.tags;
   rawGithubReleases=history.githubReleases;githubStatus=history.githubStatus;rawHerokuReleases=history.herokuReleases;herokuStatus=history.herokuStatus;githubWarnings=history.captureWarnings;
   importRevision++;computedKey=null;computedResult=null;
@@ -1781,7 +1866,7 @@ async function importSession(event) {
   for(const c of rawCommits){if(used.has(c.email))continue;mergeGroups.push({displayName:c.name||c.email,emails:[c.email]});used.add(c.email);}
   pendingImport=payload;
   buildDashboard();
-  setText('source-status',`${number.format(rawCommits.length)} commits · ${number.format(rawTags.length)} tags · ${number.format(rawHerokuReleases.length)} Heroku events restored from ${file.name}`);
+  setText('source-status',`${number.format(rawCommits.length)} commits · ${number.format(rawTags.length)} tags · ${number.format(rawHerokuReleases.length)} Heroku events restored from ${filename}`);
   setText('parse-error','');
 }
 
@@ -1795,23 +1880,24 @@ const ACTIONS={
     await switchExperience('evidence',{target:'scope-heading'});
   },
   'primary-nav':(_e,t)=>goPrimary(t.dataset.to),
+  'local-link-enable':()=>enableLocalLinks(),
+  'local-link-clear':()=>forgetLocalLinks(),
+  'local-copy-url':()=>{
+    const value=window.location.href;
+    if(navigator.clipboard?.writeText)navigator.clipboard.writeText(value).then(()=>historyNotice(localDatasetId?'Link copied. It opens here and in other tabs on this browser.':'Link copied. Another tab requires a session import unless you enable multi-tab links.')).catch(()=>historyNotice('Select and copy the address from your browser.'));
+    else historyNotice('Select and copy the address from your browser.');
+  },
   'deployment-open':(_e,t)=>{const entry=perspectiveIndex?.deployments?.events.find(e=>e.id===t.dataset.deploymentId);if(!entry)return;
     goPrimary('deployments',{deploymentFocus:entry.id,deploymentEnv:'all',deploymentYear:'all',deploymentPage:0},{scroll:false});
     $('deployment-inspector')?.scrollIntoView({behavior:'smooth',block:'start'});},
-  'deployment-select':(_e,t)=>{primary.deploymentFocus=t.dataset.deploymentId;renderPrimary();$('deployment-inspector')?.scrollIntoView({behavior:'smooth',block:'nearest'});},
+  'deployment-select':(_e,t)=>{primary.deploymentFocus=t.dataset.deploymentId;routePushPending=true;renderPrimary();$('deployment-inspector')?.scrollIntoView({behavior:'smooth',block:'nearest'});},
   'deployment-page':(_e,t)=>{primary.deploymentPage=Math.max(0,Number(t.dataset.page)||0);primary.deploymentFocus=null;renderPrimary();},
-  'primary-back':()=>{
-    const previous=primary.trail.pop();if(!previous)return;
-    const trail=primary.trail;
-    Object.assign(primary,previous,{trail});state.viewMode=primary.mode;
-    setExperienceVisibility();renderPrimary();
-    $('stories-view').scrollIntoView({behavior:'smooth',block:'start'});
-  },
+  'primary-back':()=>window.history.back(),
   'primary-open-release':(_e,t)=>{goPrimary('observatory',{releaseHash:t.dataset.hash,releaseType:'all',releaseYear:'all',releaseBin:null,releaseQuery:'',releasePage:0},{scroll:false});$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
-  'primary-select-release':(_e,t)=>{primary.releaseHash=t.dataset.hash;renderPrimary();$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
+  'primary-select-release':(_e,t)=>{primary.releaseHash=t.dataset.hash;routePushPending=true;renderPrimary();$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-open-person':(_e,t)=>goPrimary('contributors',{contributorFocus:t.dataset.person,contributorTab:'delivery',contributorRange:primary.mode==='periods'?'period':'all'}),
   'primary-open-area':(_e,t)=>goPrimary('codebase',{codeArea:t.dataset.area,codebaseRange:primary.mode==='periods'?'period':'all'}),
-  'primary-select-area':(_e,t)=>{primary.codeArea=t.dataset.area;renderPrimary();},
+  'primary-select-area':(_e,t)=>{primary.codeArea=t.dataset.area;routePushPending=true;renderPrimary();},
   'primary-release-page':(_e,t)=>{primary.releasePage=Math.max(0,Number(t.dataset.page)||0);renderPrimary();},
   'primary-reset-release-search':()=>{Object.assign(primary,{releaseBin:null,releaseYear:'all',releaseType:'all',releaseQuery:'',releasePage:0});renderPrimary();},
   'primary-reset-release-bin':()=>{primary.releaseBin=null;renderPrimary();},
@@ -1976,7 +2062,15 @@ const ACTIONS={
 };
 function handleDocumentClick(event) {
   const trigger=event.target.closest('[data-action]');
-  if(trigger){const fn=ACTIONS[trigger.dataset.action];if(fn)fn(event,trigger);}
+  if(trigger){
+    // Real anchors retain browser-native Cmd/Ctrl-click, middle-click, context
+    // menus, drag-to-tab, and copy-link behaviour. Intercept only plain same-tab clicks.
+    if(trigger.tagName==='A'){
+      if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||trigger.target==='_blank')return;
+      event.preventDefault();
+    }
+    const fn=ACTIONS[trigger.dataset.action];if(fn)fn(event,trigger);
+  }
   else if(pulsePopoverPinned && !$('pulse-popover').contains(event.target))hidePulsePopover();
 }
 function handleDocumentChange(event) {
@@ -2024,6 +2118,7 @@ function handleDocumentChange(event) {
     if(t.id==='primary-period-from'||t.id==='primary-period-to'){primary.periodPreset='custom';primary.periodBucket=null;primary.periodFocusPerson=null;primary.periodFocusArea=null;}
     if(t.id==='primary-period-person'){primary.periodBucket=null;primary.periodFocusPerson=null;primary.periodFocusArea=null;}
     if(t.id==='primary-release-type'||t.id==='primary-release-year')primary.releasePage=0;
+    if(['primary-contributor-focus','primary-period-from','primary-period-to'].includes(t.id))routePushPending=true;
     if(t.id==='primary-contributor-focus'&&primary.compareB===primary.contributorFocus)primary.compareB=null;
     if(t.id==='primary-contributor-focus'&&primary.coReleasePartner===primary.contributorFocus)primary.coReleasePartner=null;
     renderPrimary();
@@ -2084,6 +2179,14 @@ function handleDocumentInput(event) {
 }
 function init() {
   document.addEventListener('click',handleDocumentClick);
+  window.addEventListener('popstate',async()=>{
+    const route=readRoute(new URL(window.location.href));
+    if(route.dataset&&route.dataset!==localDatasetId){await restoreFromLocalLink();return;}
+    if(!perspectiveIndex)return;
+    const view=route.view;
+    if(view==='evidence'){routeRestoring=true;routePushPending=false;switchExperience('evidence').finally(()=>{routeRestoring=false;routePushPending=false;});}
+    else applyBrowserRoute();
+  });
   document.addEventListener('change',handleDocumentChange);
   document.addEventListener('input',handleDocumentInput);
   $('rhythm-explorer').addEventListener('pointerover',event=>{
@@ -2169,3 +2272,4 @@ function init() {
   });
 }
 init();
+restoreFromLocalLink();

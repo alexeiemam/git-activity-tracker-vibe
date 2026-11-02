@@ -1,9 +1,9 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=heroku-deployments-20261102-1';
-import { impactAnalysis } from './impact.js?v=heroku-deployments-20261102-1';
-import { buildStoryAnalysis } from './stories.js?v=heroku-deployments-20261102-1';
-import { buildEvidenceIndex } from './perspectives.js?v=heroku-deployments-20261102-1';
-import { buildDeploymentIndex } from './deployments.js?v=heroku-deployments-20261102-1';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-history-links-20261102-1';
+import { impactAnalysis } from './impact.js?v=git-history-links-20261102-1';
+import { buildStoryAnalysis } from './stories.js?v=git-history-links-20261102-1';
+import { buildEvidenceIndex } from './perspectives.js?v=git-history-links-20261102-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-history-links-20261102-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;
@@ -52,6 +52,7 @@ self.onmessage = ({data}) => {
         cachedPrimary=buildEvidenceIndex(fullView,fullImpact,bounds);
         progress(id,'Connecting deployments',97,'Matching independent STAG/BETA histories and production revisions');
         cachedPrimary.deployments=buildDeploymentIndex(history.herokuReleases,history.commits,cachedPrimary,history.herokuStatus);
+        cachedPrimary.historyEnrichment=history.historyEnrichment||[];
         cachedPrimaryKey=key;
       }
       progress(id,'Preparing visualisations',98,'Transferring releases, people and period evidence to the dashboard');
