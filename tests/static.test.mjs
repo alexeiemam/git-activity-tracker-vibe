@@ -17,6 +17,22 @@ test('HTML loads external CSS and module JavaScript', () => {
   assert.match(html, /type="module" src="\.\/assets\/app\.js\?v=[^"]+"/);
 });
 
+test('release-gap entrypoint imports match the named exports of its real module', async () => {
+  const statement = app.match(/import\s*\{([^}]+)\}\s*from\s*['"]\.\/release-gap\.js\?v=[^'"]+['"]/);
+  assert.ok(statement, 'app.js should import the release-gap module');
+  const releaseGap = await import('../assets/release-gap.js');
+  for (const imported of statement[1].split(',')) {
+    const name = imported.trim().split(/\s+as\s+/)[0];
+    assert.ok(Object.hasOwn(releaseGap, name), `release-gap.js must export ${name}`);
+  }
+});
+
+test('favicon is linked to a packaged SVG asset', async () => {
+  assert.match(html, /<link rel="icon" href="\.\/assets\/favicon\.svg" type="image\/svg\+xml">/);
+  const svg = await readFile(new URL('assets/favicon.svg', root), 'utf8');
+  assert.match(svg, /<svg\b/);
+});
+
 test('UI actions are dispatched centrally rather than through global functions', () => {
   assert.match(app, /const ACTIONS\s*=\s*\{/);
   assert.match(app, /document\.addEventListener\('click',\s*handleDocumentClick\)/);

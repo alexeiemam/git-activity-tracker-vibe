@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="git signals">
+  <rect width="64" height="64" rx="13" fill="#17262e"/>
+  <text x="9" y="46" font-family="sans-serif" font-size="42" font-weight="700" fill="#f6f5f0">g</text>
+  <circle cx="51" cy="43" r="5" fill="#63d5bd"/>
+</svg>
