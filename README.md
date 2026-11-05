@@ -271,6 +271,73 @@ Within the **Detailed analytical workbench**, each chart is rendered from one sh
 
 The **ranking, trend and comparison table** use the chosen metric and mode. The **activity pulse** can show that metric as monthly totals or as a daily calendar, always using absolute values and one shared intensity scale across selected people. Daily hovers show the day’s complete filtered commit list, change metrics and share of the selected reference group; click/tap pins a scrollable detail panel. **Working rhythm** includes an individual-focused explorer with a seven-column weekday chart and switchable **7×24 heatmap (default), seven-ring circular clock, and 168-hour continuous bar chart**. All three encodings use identical authored-local **timed commit counts**, not the global change-volume metric, and clearly mark missing authored-hour coverage; changes to global people, dates and merge/revert policy apply to all three. Focus switches only among globally selected contributors (or their combined group), without silently changing other charts. **Change-size footprint** remains a purpose-specific distribution of *the same filtered commits* with a labelled within-person percentage scale; neither view silently changes global filters. **File hotspots** always count file touches in the same selected commits against the chosen reference. **Recent commits** contains only filtered records. Searching a name in the picker only narrows that picker, not the underlying selection.
 
+### Release gap × authored activity (Pulse)
+
+The **activity pulse** has a separate **Release gap × activity** lens, with
+individual **Daily / Monthly** cells and a fixed warm 0–100 scale. The original
+authored-activity lens remains the default and is unchanged.
+
+The release-gap factor is no longer a binary "last release resets everything"
+clock: **the contributor's absolute authored text-line changes in each
+incremental tagged release provide a partial or full reset.** Count additions
+**plus** deletions for that contributor in the newly introduced ancestry of
+the tag; do not use their percentage of a release's total changes. For the
+credit calculation, `VERSION` marker files are excluded. Docs, tests, code and
+other text-file changes count, subject to the usual merge/revert policy.
+Binary changes and missing numstat counts cannot provide measurable credit.
+
+Default reference points (all adjustable):
+
+```
+full release credit threshold = 200 changed text lines (choose 50/100/200/500)
+full release-gap horizon     = 60 calendar days (choose 30/60/90)
+busy authored day            = 4 commits (choose 2/4/6)
+
+release credit     = min(contributor's changed release lines / 200, 1)
+aged gap           = min(1, gap after last release + days elapsed / 60)
+gap on release day = aged gap * (1 - release credit)
+quiet-day factor   = max(1 - that day's authored commits / 4, 0)
+combined signal    = 100 * current weighted gap * quiet-day factor
+```
+
+Thus 20 changed lines soften an accumulated gap by 10%, 100 by 50%, and 200+
+fully reset it. Two small releases can compound their reductions. Critically,
+**age is capped before applying credit**, so even a tiny release after a very
+long gap always makes an immediate, visible difference. Between releases the
+remaining gap increases by one horizon-day per calendar day, up to 100%.
+The quiet-day factor still neutralises the signal when authored activity is
+high, independently of all release weights.
+
+No score is shown before a contributor's **first measurable authored release
+contribution**. When the first such release occurs, any earlier unknown gap is
+conservatively treated as fully elapsed *before its credit is applied*; a small
+first contribution therefore yields a nonzero gap, while a substantial one
+starts at zero. This is an observational convention, **not** an inferred
+historical absence of work. Publishing/tagging alone, a baseline tag, a
+VERSION-only change, or a release with no measurable text-line changes
+does not establish credit or reset the gap. Incomplete tag ancestry and
+unavailable line statistics limit confidence.
+
+Daily cells expose the actual calendar days since the latest credited tag,
+its absolute authored additions/deletions, reset-credit percentage, **effective
+weighted gap days** (which need not equal literal days since the last tag),
+daily commits and combined signal. The individual summary reports the latest
+credited release and line count, literal and effective gaps, mean score and
+number of weekdays at **50+**. Monthly cells contain the arithmetic mean of
+**eligible weekday daily scores**, not a snapshot of month-end gap. Days
+outside imported history, weekends and days without a prior measurable
+release contribution are unscored (hatched), not zero. Filtering the visible
+authored dates does not erase release credits: releases always come from the
+full imported, policy-filtered release index. The three reference-point
+settings, lens and granularity persist across session export/import; older
+sessions restore the new line threshold to its default.
+
+This is **not a measure of productivity, performance or delivery value**.
+Large generated-file diffs can inflate raw churn; reviews, pairing, planning,
+binary file work, squash attribution, leave and untracked contributions are
+not represented. A high signal is an invitation to inspect evidence, never a
+ranking or conclusion about an individual.
+
 In the **Rhythm explorer**, select a contributor chip or click **Explore** in the compact comparison. The **Which days?** column chart stays visible while the week view switches between **Grid / Circle / Bars**; these are alternate, not cumulative, representations of exactly the same 168 hour-of-week bins. Hover or keyboard-focus a weekday or hourly cell for counts, within-focus share, unique authored dates, file touches, line additions/deletions, reference share (when the benchmark differs), and a few recent matching commits. Click/tap pins the details; Escape or **Unpin** releases them. Arrow keys move between hour cells, and the weekly bars/grid scroll horizontally on narrow screens. The circular chart is a radial heatmap (Mon innermost ring → Sun outermost, midnight at top), not a misleading 168-wedge pie chart. All weekday/hours counts are restricted to commits with a parsable authored local hour; date-only Git records remain in every other dashboard metric but never get assigned to guessed hour bins. Differences in contributors' authored UTC offsets are not normalised, and these visuals are not measures of hours worked.
 
 ### Comparing years and seasonality
@@ -293,7 +360,7 @@ Trend views offer trailing four-week windows (default), raw calendar weeks and c
 
 ### Reading numeric colour intensity
 
-Every value-encoded heatmap now uses the same **zero-aware sequential palette**, independently of the measure being plotted. **Observed zero** is light neutral grey; **any measured positive value** is unmistakably green; increasingly large positive values progress from light green to dark green. Positive shades have a **high-contrast, perceptually spaced light-to-dark range** (OKLab interpolation). They track the **logarithm of the actual ratio** between the smallest and largest positive values in that view's shared comparison group; a 10× change occupies a consistent visual distance regardless of whether it is 1 → 10 or 100 → 1,000. The full contrast range is used only when observed positives vary at least **4×**. When positives differ only slightly (e.g. 10 vs 11), the range is correspondingly compressed rather than making those values falsely look very different. One isolated positive is coloured at the low-positive end, not at the darkest extreme.
+Every value-encoded activity heatmap uses the same **zero-aware sequential palette**, independently of the measure being plotted. The dedicated **release gap × activity** overlay is the documented exception: it has a fixed 0–100 warm scale, because a high combined attention signal must not be confused with high activity. **Observed zero** is light neutral grey; **any measured positive value** is unmistakably green; increasingly large positive values progress from light green to dark green. Positive shades have a **high-contrast, perceptually spaced light-to-dark range** (OKLab interpolation). They track the **logarithm of the actual ratio** between the smallest and largest positive values in that view's shared comparison group; a 10× change occupies a consistent visual distance regardless of whether it is 1 → 10 or 100 → 1,000. The full contrast range is used only when observed positives vary at least **4×**. When positives differ only slightly (e.g. 10 vs 11), the range is correspondingly compressed rather than making those values falsely look very different. One isolated positive is coloured at the low-positive end, not at the darkest extreme.
 
 Legends explicitly identify zero, the **actual positive minimum and maximum** (with units), and the log-by-value mapping; smaller positives that would round to 0 in a compact label are shown with extra precision. The seven legend swatches are **illustrative points on a continuous scale**, not quantiles, ranks or seven rigid data categories. Heatmap colours are not linear counts, measures of importance, or an implied productivity score.
 
@@ -342,6 +409,7 @@ release notes, identities or other user content.
 - `assets/domain.js` — pure parser, filtering, aggregation, scope and date logic.
 - `assets/impact.js` — tag ancestry, release classification and evidence aggregation.
 - `assets/impact-view.js` — accessible impact timelines, matrices and detail views.
+- `assets/release-gap.js` — pure individual absolute-line-weighted release credit × authored-day metric, monthly aggregation and coverage rules.
 - `assets/impact-window.js` — pure viewport, zoom, pan and release reveal logic.
 - `assets/co-release.js` — complete-release co-participation and evidence by pair.
 - `assets/download-names.js` — bounded descriptive export filenames with local timestamps.

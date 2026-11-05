@@ -4,8 +4,8 @@
  * complete introduced Git ancestry (subject only to the explicitly declared
  * merge/revert policy); an authored period is a different observation clock.
  */
-import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=git-identity-order-20261102-1';
-import { changeCategory, fileKind } from './impact.js?v=git-identity-order-20261102-1';
+import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=git-release-credit-20261105-1';
+import { changeCategory, fileKind } from './impact.js?v=git-release-credit-20261105-1';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);
@@ -34,6 +34,19 @@ export function comparisonWindow(window,comparison='previous',custom=null) {
   }
   return period(dateAtDay(dayNumber(window.from)-length),dateAtDay(dayNumber(window.from)-1));
 }
+
+// Absolute authored text-line changes in a release, excluding release-marker
+// VERSION files. Binary files have no measurable numstat lines and therefore
+// cannot inflate this credit. Other measured docs/config/test changes do count.
+const releaseTextChanges = commits => {
+  let added = 0, deleted = 0;
+  for (const commit of commits) for (const file of commit.files || []) {
+    if (/(^|\/)VERSION$/.test(file.path)) continue;
+    added += file.added || 0;
+    deleted += file.deleted || 0;
+  }
+  return {releaseLinesAdded:added, releaseLinesDeleted:deleted, releaseLineChurn:added+deleted};
+};
 
 const compactCommit = c=>({
   hash:c.hash,groupId:c.groupId,date:c.date,hour:c.hour,subject:c.subject,
@@ -64,6 +77,7 @@ export function buildEvidenceIndex(fullView, fullImpact, bounds) {
       id:c.id,name:c.name,drove:c.drove,commits:c.footprint.commits,
       share:c.share,paths:c.footprint.pathsCount,areas:c.footprint.areasCount,
       fileTouches:c.footprint.fileTouches,churn:c.footprint.churn,
+      ...releaseTextChanges(c.commits),
       areaTouches:[...c.footprint.areaTouches],
     })),
   }));

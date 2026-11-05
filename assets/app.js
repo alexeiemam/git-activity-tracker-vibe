@@ -3,24 +3,25 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=git-identity-order-20261102-1';
-import { generateDemoLog } from './demo-data.js?v=git-identity-order-20261102-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-identity-order-20261102-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-identity-order-20261102-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-identity-order-20261102-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-identity-order-20261102-1';
-import { buildStoryAnalysis } from './stories.js?v=git-identity-order-20261102-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-identity-order-20261102-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-identity-order-20261102-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-identity-order-20261102-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-identity-order-20261102-1';
-import { downloadFilename } from './download-names.js?v=git-identity-order-20261102-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-identity-order-20261102-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-identity-order-20261102-1';
-import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-identity-order-20261102-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-identity-order-20261102-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-identity-order-20261102-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-identity-order-20261102-1';
+} from './domain.js?v=git-release-credit-20261105-1';
+import { generateDemoLog } from './demo-data.js?v=git-release-credit-20261105-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-release-credit-20261105-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, ATTENTION_THRESHOLD } from './release-gap.js?v=git-release-credit-20261105-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-release-credit-20261105-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-release-credit-20261105-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-release-credit-20261105-1';
+import { buildStoryAnalysis } from './stories.js?v=git-release-credit-20261105-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-release-credit-20261105-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-release-credit-20261105-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-release-credit-20261105-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-release-credit-20261105-1';
+import { downloadFilename } from './download-names.js?v=git-release-credit-20261105-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-release-credit-20261105-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-release-credit-20261105-1';
+import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-release-credit-20261105-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-release-credit-20261105-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-release-credit-20261105-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-release-credit-20261105-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -36,7 +37,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-identity-order-20261102-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-release-credit-20261105-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -190,7 +191,7 @@ const state = {
   period: 'all', start: null, end: null,
   includeMerges: false, includeReverts: true,
   metric: 'commits', mode: 'total', denominator: 'repository',
-  trend: 'rolling', pulseMode: 'monthly', rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
+  trend: 'rolling', pulseMode: 'monthly', pulseLens:'activity', pulseGapHorizon:DEFAULT_GAP_HORIZON, pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES, rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
   rhythmTab: 'weekly', seasonMode: 'rate', seasonYears: null, sortKey: 'lens', sortDesc: true,
   impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
   impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,
@@ -636,7 +637,7 @@ function syncScopeAfterLoad() {
   const desiredStart = dateAtDay(dayNumber(anniversary)+1);
   const initialStart = min > desiredStart ? min : desiredStart;
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
-    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
+    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{},
     viewMode:'observatory',storyPerspective:'team',storyFocus:'selection',storyTopic:'all',storyCategory:'noteworthy',storyShowAll:false,
     storyFindingId:null,storyMonth:null,storyPairA:null,storyPairB:null,storyTrail:[],storyDismissed:new Set() });
@@ -652,6 +653,10 @@ function syncScopeAfterLoad() {
     if (typeof s.period==='string') state.period=s.period;
     if (['rolling','weekly','cumulative'].includes(s.trend)) state.trend=s.trend;
     if (['monthly','daily'].includes(s.pulseMode)) state.pulseMode=s.pulseMode;
+    if (['activity','release-gap'].includes(s.pulseLens)) state.pulseLens=s.pulseLens;
+    if (GAP_HORIZONS.includes(s.pulseGapHorizon)) state.pulseGapHorizon=s.pulseGapHorizon;
+    if (BUSY_DAY_THRESHOLDS.includes(s.pulseBusyDay)) state.pulseBusyDay=s.pulseBusyDay;
+    if (RELEASE_LINE_THRESHOLDS.includes(s.pulseReleaseLines)) state.pulseReleaseLines=s.pulseReleaseLines;
     if (['heatmap','clock','bars'].includes(s.rhythmDisplay)) state.rhythmDisplay=s.rhythmDisplay;
     if (['weekly','years','seasonal'].includes(s.rhythmTab)) state.rhythmTab=s.rhythmTab;
     if (['rate','shape','index'].includes(s.seasonMode)) state.seasonMode=s.seasonMode;
@@ -752,7 +757,7 @@ function changeDate() {
 }
 function resetFilters() {
   Object.assign(state,{ period:'all',start:sourceDateBounds().min,end:sourceDateBounds().max,
-    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
+    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
@@ -788,6 +793,7 @@ function updateControls() {
   $('metric-explanation').textContent=`${METRICS[state.metric].note}. ${state.mode==='share' ? 'Share uses the reference selected below.' : 'Reference is used for percent context and hotspots.'}`;
   document.querySelectorAll('[data-trend]').forEach(btn=>{const yes=btn.dataset.trend===state.trend;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
   document.querySelectorAll('[data-pulse-mode]').forEach(btn=>{const yes=btn.dataset.pulseMode===state.pulseMode;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
+  document.querySelectorAll('[data-pulse-lens]').forEach(btn=>{const yes=btn.dataset.pulseLens===state.pulseLens;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
 }
 function renderScope(view) {
   const policy=`${view.includeMerges?'merges included':'merges excluded'} · ${view.includeReverts?'reverts included':'reverts excluded'}`;
@@ -995,18 +1001,54 @@ function hidePulsePopover() {
   pulsePopoverPinned = false;
 }
 
+let pulseReleaseGap = null;
+const pulseScore = value => value === null || value === undefined ? '—' : decimal.format(value);
+const pulseCredit = event => event ? `${decimal.format(event.credit * 100)}%` : '—';
+
+/** Distinct warm scale for an attention signal; activity retains the green palette. */
+function pulseGapCellStyle(score) {
+  if (score === null || !Number.isFinite(score)) return 'background:repeating-linear-gradient(135deg,#f7f8f5 0px,#f7f8f5 5px,#e2e8e0 5px,#e2e8e0 10px);border-color:#dae1d8';
+  if (score === 0) return 'background:#edf1ec;border-color:#d5ded4';
+  const t = Math.min(1, Math.max(0,score/100));
+  const blend=(a,b)=>Math.round(a+(b-a)*t);
+  const fill=`rgb(${blend(251,146)} ${blend(225,42)} ${blend(186,37)})`;
+  return `background:${fill};border-color:${fill};color:${t>.59?'#fff':'#493024'}`;
+}
+function pulseGapLegend() {
+  return `<div class="pulse-gap-legend" role="group" aria-label="Combined signal from zero to one hundred, fixed across contributors and date ranges. Unavailable and weekend values are hatched."><span>0 · neutral</span><span class="pulse-gap-swatches">${[0,25,50,75,100].map(score=>`<i style="${pulseGapCellStyle(score)}" title="${score} of 100" aria-hidden="true"></i>`).join('')}</span><span>100 · high signal</span><span class="pulse-gap-missing">▨ · not scored</span></div>`;
+}
+function pulseGapDailyLabel(person,cell) {
+  const base=`${person}, ${formatDate(cell.date)}: ${number.format(cell.commits)} authored commits`;
+  if (cell.reason==='outside-history') return `${base}; outside imported history, no signal`;
+  if (cell.reason==='weekend') return `${base}; weekend, not scored`;
+  if (cell.reason==='no-prior-contribution') return `${base}; no measurable non-VERSION line changes in an earlier incremental tagged release, score unavailable`;
+  const release=cell.lastRelease;
+  return `${base}; ${cell.daysSinceRelease} calendar days since ${release.tag}, ${number.format(release.linesChanged)} authored changed lines (${pulseCredit(release)} reset credit); effective gap ${pulseScore(cell.effectiveGapDays)} days; combined signal ${pulseScore(cell.score)} of 100`;
+}
+function pulseGapSummary(model) {
+  const latest=row=>row.latestRelease ? `${esc(row.latestRelease.tag)} · ${formatDate(row.latestRelease.date)}` : 'Not observed';
+  const credit=row=>row.latestRelease ? `${number.format(row.latestRelease.linesChanged)} lines · ${pulseCredit(row.latestRelease)}` : '—';
+  return `${!model.rows.some(row=>row.scoredDays)?'<p class="pulse-gap-unavailable">No eligible weekdays have a measurable authored contribution to an incremental tagged release in this date range. Hatched cells are unknown, not zero.</p>':''}<div class="pulse-gap-summary-head"><strong>Individual release-gap context</strong><span>Absolute contribution credit, not a measure of performance or a contributor ranking.</span></div>
+    <div class="table-scroll"><table class="pulse-gap-table"><thead><tr><th>Contributor</th><th>Latest credited release</th><th>Author's lines / credit</th><th>Calendar gap</th><th>Weighted gap</th><th>Mean daily signal</th><th>Days ≥ ${ATTENTION_THRESHOLD}</th><th>Weekdays scored</th></tr></thead><tbody>
+    ${model.rows.map(row=>`<tr><th>${esc(row.name)}</th><td>${latest(row)}</td><td>${credit(row)}</td><td>${row.latestGap===null?'—':`${row.latestGap} days`}</td><td>${row.latestEffectiveGap===null?'—':`${pulseScore(row.latestEffectiveGap)} / ${model.horizon} days`}</td><td>${pulseScore(row.averageScore)}${row.averageScore===null?'':' / 100'}</td><td>${number.format(row.attentionDays)}</td><td>${number.format(row.scoredDays)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="pulse-gap-caution">A release reduces the accumulated gap by min(your recorded changed text lines / ${model.fullCreditLines}, 100%). Additions and deletions count; VERSION-only, zero-line and driver-only events earn no reset credit. Release ancestry is computed before the selected date window; line counts can be inflated by generated files or miss binary and unrecorded work. The first observed measurable release starts from an unknown earlier history, conservatively treated as a full gap before credit. A missing or quiet Git day is <em>not</em> evidence of inactivity, delivery responsibility, availability, or quality.</p>`;
+}
+
 function renderMonthlyPulse(view) {
+  const gapMode=!!pulseReleaseGap;
   const startMonth=monthIndex(view.start),endMonth=monthIndex(view.end);
   const months=Array.from({length:endMonth-startMonth+1},(_,i)=>startMonth+i);
   const byPerson=view.contributors.map(c=>{
     const map=new Map();
-    for(const [d,val] of Object.entries(c.daily[view.metric])) {
+    if (gapMode) {
+      for (const month of pulseReleaseGap.byId.get(c.id)?.months.values() || [])map.set(monthIndex(month.month),month);
+    } else for(const [d,val] of Object.entries(c.daily[view.metric])) {
       const mo=monthIndex(d);
       map.set(mo,(map.get(mo)||0)+val);
     }
     return {c,map};
   });
-  const scale=makeIntensityScale(byPerson.flatMap(({map})=>months.map(m=>map.get(m)||0)));
+  const scale=gapMode?null:makeIntensityScale(byPerson.flatMap(({map})=>months.map(m=>map.get(m)||0)));
   const columns=`minmax(128px,160px) repeat(${months.length}, minmax(22px, 1fr))`;
   const yearHead=[];
   let i=0;
@@ -1019,9 +1061,11 @@ function renderMonthlyPulse(view) {
   }
   const monthLabels=months.map(m=>`<span class="pulse-month">${new Date(Date.UTC(Math.floor(m/12),m%12,1)).toLocaleDateString('en-GB',{month:'short',timeZone:'UTC'}).slice(0,1)}</span>`).join('');
   const cells=byPerson.map(({c,map})=>`<div class="pulse-label" title="${esc(c.displayName)}">${esc(c.displayName)}</div>${months.map(m=>{
-    const v=map.get(m)||0;
+    const bucket=map.get(m);
+    const v=gapMode?(bucket?.score??null):(bucket||0);
     const ym=`${Math.floor(m/12)}-${String(m%12+1).padStart(2,'0')}`;
-    return `<div class="pulse-cell" style="${intensityStyle(v,scale)}" title="${esc(c.displayName)} · ${ym}: ${number.format(v)} ${esc(METRICS[view.metric].unit)}" role="img" aria-label="${esc(c.displayName)}, ${ym}: ${number.format(v)} ${esc(METRICS[view.metric].unit)}"></div>`;
+    const label=gapMode ? bucket ? `${c.displayName}, ${ym}: mean weighted signal ${pulseScore(v)} of 100 over ${bucket.days} eligible weekdays; ${bucket.attentionDays} days scored at least ${ATTENTION_THRESHOLD}. Latest credited release ${bucket.lastRelease?.tag||'unknown'} (${bucket.lastRelease?.linesChanged??'—'} changed lines, ${pulseCredit(bucket.lastRelease)} reset credit); effective gap ${pulseScore(bucket.lastEffectiveGap)} days at last scored date.` : `${c.displayName}, ${ym}: no eligible weekdays with a prior credited release contribution.` : `${c.displayName} · ${ym}: ${number.format(v)} ${METRICS[view.metric].unit}`;
+    return `<div class="pulse-cell ${gapMode?'pulse-gap-month':''}" style="${gapMode?pulseGapCellStyle(v):intensityStyle(v,scale)}" title="${esc(label)}" role="img" aria-label="${esc(label)}"></div>`;
   }).join('')}`).join('');
   $('pulse').innerHTML=`<div class="pulse-grid" style="grid-template-columns:${columns}"><span></span>${yearHead.join('')}<span></span>${monthLabels}${cells}</div>`;
   return scale;
@@ -1045,17 +1089,20 @@ function dailyPulseMonths(view) {
 
 function renderDailyPulse(view) {
   const weeks=view.weeks;
-  const scale=makeIntensityScale(view.contributors.flatMap(c=>Object.values(c.daily[view.metric])));
+  const gapMode=!!pulseReleaseGap;
+  const scale=gapMode?null:makeIntensityScale(view.contributors.flatMap(c=>Object.values(c.daily[view.metric])));
   const weekColumns=`repeat(${weeks.length}, var(--pulse-week-size))`;
   const months=dailyPulseMonths(view).map(m=>`<span class="pulse-daily-month" style="grid-column:${m.index+1}">${esc(m.label)}</span>`).join('');
   const weekdays=DAY_NAMES.map((day,i)=>`<span aria-hidden="true">${i%2===0?esc(day):''}</span>`).join('');
   const rows=view.contributors.map(c=>{
+    const record=gapMode?pulseReleaseGap.byId.get(c.id):null;
     const cells=weeks.flatMap(week=>Array.from({length:7},(_,i)=>{
       const day=dateAtDay(dayNumber(week)+i);
       if(day<view.start||day>view.end) return '<span class="pulse-daily-outside" aria-hidden="true"></span>';
-      const value=c.daily[view.metric][day]||0;
-      const label=`${c.displayName}, ${formatDate(day)}: ${number.format(value)} ${METRICS[view.metric].unit}. View day activity.`;
-      return `<button type="button" class="pulse-cell pulse-daily-cell" style="${intensityStyle(value,scale)}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" aria-label="${esc(label)}" aria-haspopup="dialog" aria-controls="pulse-popover"></button>`;
+      const cell=record?.daily.get(day);
+      const value=gapMode?(cell?.score??null):(c.daily[view.metric][day]||0);
+      const label=gapMode ? pulseGapDailyLabel(c.displayName,cell) : `${c.displayName}, ${formatDate(day)}: ${number.format(value)} ${METRICS[view.metric].unit}. View day activity.`;
+      return `<button type="button" class="pulse-cell pulse-daily-cell ${gapMode&&cell?.reason==='weekend'?'pulse-gap-weekend':''}" style="${gapMode?pulseGapCellStyle(value):intensityStyle(value,scale)}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(label)}" aria-label="${esc(label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover"></button>`;
     })).join('');
     return `<div class="pulse-daily-contributor"><div class="pulse-daily-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div><div class="pulse-weekdays">${weekdays}</div><div class="pulse-day-cells" style="grid-template-columns:${weekColumns}">${cells}</div></div>`;
   }).join('');
@@ -1066,21 +1113,33 @@ function renderDailyPulse(view) {
 function renderPulse(view) {
   hidePulsePopover();
   const daily=state.pulseMode==='daily';
+  const gapMode=state.pulseLens==='release-gap';
   const container=$('pulse');
   const oldScroll=container.scrollLeft;
   const range=`${view.start}|${view.end}`;
   const scrollToLatest=daily&&(pulsePreviousMode!=='daily'||pulsePreviousRange!==range);
-  setText('pulse-hint', daily
+  pulseReleaseGap=gapMode?releaseGapMatrix(perspectiveIndex,view.contributors,{from:view.start,to:view.end},
+    {horizon:state.pulseGapHorizon,busyDay:state.pulseBusyDay,fullCreditLines:state.pulseReleaseLines}):null;
+  $('pulse-gap-settings').hidden=!gapMode;
+  $('pulse-gap-horizon').value=String(state.pulseGapHorizon);
+  $('pulse-busy-day').value=String(state.pulseBusyDay);
+  $('pulse-release-lines').value=String(state.pulseReleaseLines);
+  document.querySelectorAll('[data-pulse-lens]').forEach(btn=>{const selected=btn.dataset.pulseLens===state.pulseLens;btn.classList.toggle('active',selected);btn.setAttribute('aria-pressed',String(selected));});
+  $('pulse-gap-summary').hidden=!gapMode || !view.contributors.length;
+  $('pulse-gap-summary').innerHTML=gapMode && view.contributors.length ? pulseGapSummary(pulseReleaseGap):'';
+  setText('pulse-hint',gapMode
+    ? `Signal (0–100) = 100 × weighted release gap × max(1 − daily authored commits / ${state.pulseBusyDay}, 0). The gap grows to 100% over ${state.pulseGapHorizon} days without release credit; each incremental tagged release reduces it by min(your changed lines / ${state.pulseReleaseLines}, 1). Tiny changes soften the gap, ${state.pulseReleaseLines}+ changed lines fully reset it. ${daily?'Each square is one date; hover, focus or click to see the contribution and calculation.':'Each monthly square averages eligible weekday signals.'} Weekends, unobserved dates and dates before the first measurable release contribution are not scored.`
+    :daily
     ? 'Each square is one authored day (Mon–Sun, top to bottom). Hover or focus for detailed activity; click/tap to keep it open. Scroll sideways for older weeks.'
     : 'One square per person and calendar month. Intensity shows absolute totals, even when the comparison lens above shows a rate or percentage.');
   if(!view.contributors.length || !view.spanDays){
-    setText('pulse-context',`${METRICS[view.metric].label.toUpperCase()} / ${daily?'DAILY':'MONTHLY'} TOTALS · SHARED SCALE`);
+    setText('pulse-context',gapMode?`RELEASE GAP × ACTIVITY / ${daily?'DAILY':'MONTHLY'} · 0–100`:`${METRICS[view.metric].label.toUpperCase()} / ${daily?'DAILY':'MONTHLY'} TOTALS · SHARED SCALE`);
     container.innerHTML=empty('Select contributors and a valid time window.');
-    $('pulse-key').innerHTML=intensityLegend(makeIntensityScale([]));
+    $('pulse-key').innerHTML=gapMode?pulseGapLegend():intensityLegend(makeIntensityScale([]));
   } else {
     const scale=daily?renderDailyPulse(view):renderMonthlyPulse(view);
-    $('pulse-key').innerHTML=intensityLegend(scale,n=>number.format(n));
-    setText('pulse-context',`${METRICS[view.metric].label.toUpperCase()} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(scale.max)} SCALE`);
+    $('pulse-key').innerHTML=gapMode?pulseGapLegend():intensityLegend(scale,n=>number.format(n));
+    setText('pulse-context',gapMode?`RELEASE GAP × ACTIVITY / ${daily?'DAILY':'MONTHLY'} · FIXED 0–100 SCALE`:`${METRICS[view.metric].label.toUpperCase()} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(scale.max)} SCALE`);
     container.scrollLeft=scrollToLatest?container.scrollWidth:oldScroll;
   }
   pulsePreviousMode=state.pulseMode;
@@ -1093,7 +1152,16 @@ function pulseTime(c) {
 function pulseFact(label,value,extraClass='') {
   return `<div class="pulse-fact ${extraClass}"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
 }
-function pulseDayMarkup(d) {
+function pulseGapDayDetails(item) {
+  if (!item) return '';
+  const message={weekend:'Weekend · not scored', 'outside-history':'Outside imported history · not scored',
+    'no-prior-contribution':'No measurable earlier incremental release contribution · not scored'};
+  const release=item.lastRelease;
+  const last=release?`${esc(release.tag)} · ${formatDate(release.date)}${release.lineageComplete?'':' · partial ancestry'}`:'Not observed';
+  return `<div class="pulse-gap-detail"><span class="eyebrow">RELEASE CREDIT × RECENCY × DAY ACTIVITY</span><div class="pulse-gap-detail-top"><strong>${item.score===null?'—':`${pulseScore(item.score)} / 100`}</strong><span>${esc(message[item.reason]||'Descriptive combined signal')}</span></div><div class="pulse-gap-detail-facts"><span>Calendar days since release <b>${item.daysSinceRelease===null?'—':number.format(item.daysSinceRelease)}</b></span><span>Effective weighted release gap <b>${pulseScore(item.effectiveGapDays)} days</b></span><span>Lines in last release, authored by this person <b>${release?`+${number.format(release.linesAdded)} / −${number.format(release.linesDeleted)} (${number.format(release.linesChanged)} changed)`:'—'}</b></span><span>Credit earned by this release <b>${pulseCredit(release)} gap reduction</b></span><span>Authored commits on this date <b>${number.format(item.commits)}</b></span><span>Last credited release <b>${last}</b></span></div><small>A small release contribution reduces, but does not entirely reset, the accumulated gap. High activity on this date can still neutralise it. This is not a performance judgement; line counts do not reflect all work.</small></div>`;
+}
+
+function pulseDayMarkup(d,gapItem=null) {
   const measure=METRICS[d.metric];
   const signed=n=>`${n>0?'+':n<0?'−':''}${number.format(Math.abs(n))}`;
   const share=d.share===null?'— (no reference activity)':`${percent(d.share)} of ${d.reference==='repository'?'repository':'selected cohort'} for this day`;
@@ -1106,6 +1174,7 @@ function pulseDayMarkup(d) {
     return `<li class="pulse-commit"><span class="pulse-commit-line"><span>${esc(pulseTime(c))} · <code>${esc(c.hash?.slice(0,8)||'—')}</code></span><span><span class="number-add">+${number.format(plus)}</span> / <span class="number-del">−${number.format(minus)}</span> · ${c.files.length} files</span></span><span class="pulse-commit-subject">${esc(c.subject||'(No subject)')}${c.isMerge?'<span class="flag merge">merge</span>':''}${c.isRevert?'<span class="flag revert">revert</span>':''}${c.touchesVersion?'<span class="flag version">VERSION</span>':''}</span></li>`;
   }).join('');
   return `<div class="pulse-tip-heading"><div><span class="eyebrow">DAILY ACTIVITY · AUTHOR DATE</span><strong>${esc(new Date(`${d.date}T12:00:00Z`).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}))}</strong><span>${esc(d.contributorName)}</span></div><button type="button" class="pulse-tip-close" data-action="close-pulse" aria-label="Close activity details">×</button></div>
+    ${pulseGapDayDetails(gapItem)}
     <div class="pulse-tip-focus"><strong>${number.format(d.metricValue)}</strong><div><span>${esc(measure.label)} · day total</span><small>${esc(share)} · reference: ${number.format(d.referenceValue)} ${esc(measure.unit)}</small></div></div>
     <div class="pulse-tip-facts">${pulseFact('COMMITS',number.format(d.commitsCount))}${pulseFact('LINES ADDED',`+${number.format(d.added)}`)}${pulseFact('LINES REMOVED',`−${number.format(d.deleted)}`)}${pulseFact('TOTAL CHURN',number.format(d.churn))}${pulseFact('FILE TOUCHES',number.format(d.fileTouches))}${pulseFact('DISTINCT FILES',number.format(d.uniqueFiles))}</div>
     <div class="pulse-tip-extra"><span><strong>Net line change</strong> ${signed(d.net)}</span><span><strong>Binary file touches</strong> ${number.format(d.binaryTouches)}</span><span><strong>Author-local hours</strong> ${esc(when)}</span><span><strong>Commit types</strong> ${esc(flags)}</span><span><strong>Reference commits</strong> ${number.format(d.referenceCommits)} on this day</span></div>
@@ -1131,7 +1200,8 @@ function showPulsePopover(cell,{pin=false}={}) {
   if(!details)return;
   const popup=$('pulse-popover');
   const same=pulsePopoverOrigin===cell;
-  popup.innerHTML=pulseDayMarkup(details);
+  const gapItem=pulseReleaseGap?.byId.get(cell.dataset.personId)?.daily.get(cell.dataset.pulseDay)||null;
+  popup.innerHTML=pulseDayMarkup(details,gapItem);
   popup.hidden=false;
   popup.classList.toggle('is-pinned',pin);
   popup.setAttribute('role',pin?'dialog':'tooltip');
@@ -1893,6 +1963,7 @@ function sessionPayload() {
     mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails]})),
     scope:{selectedEmails,period:state.period,start:state.start,end:state.end,metric:state.metric,mode:state.mode,denominator:state.denominator,
       includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode,
+      pulseLens:state.pulseLens,pulseGapHorizon:state.pulseGapHorizon,pulseBusyDay:state.pulseBusyDay,pulseReleaseLines:state.pulseReleaseLines,
       rhythmDisplay:state.rhythmDisplay,rhythmTab:state.rhythmTab,seasonMode:state.seasonMode,seasonYears:state.seasonYears?[...state.seasonYears]:null,
       rhythmFocusEmail:emailForId(state.rhythmFocus),
       impactTab:state.impactTab,impactMetric:state.impactMetric,impactAreaMode:state.impactAreaMode,
@@ -2147,6 +2218,7 @@ const ACTIONS={
   'reset-filters':resetFilters,
   'trend-mode':(_e,t)=>{state.trend=t.dataset.trend;if(analysis)renderTrend(analysis);},
   'pulse-mode':(_e,t)=>{state.pulseMode=t.dataset.pulseMode;if(analysis)renderPulse(analysis);},
+  'pulse-lens':(_e,t)=>{state.pulseLens=t.dataset.pulseLens;updateControls();if(analysis)renderPulse(analysis);},
   'rhythm-tab':(_e,t)=>{state.rhythmTab=t.dataset.rhythmTab;seasonHover=null;seasonPinned=null;renderRhythmExplorer(analysis);},
   'season-mode':(_e,t)=>{state.seasonMode=t.dataset.seasonMode;seasonHover=null;seasonPinned=null;renderSeasonality(analysis);},
   'season-all-years':()=>{state.seasonYears=null;seasonHover=null;seasonPinned=null;renderSeasonality(analysis);},
@@ -2294,6 +2366,9 @@ function handleDocumentChange(event) {
     case 'filter-merges':state.includeMerges=t.checked;renderDashboard();break;
     case 'filter-reverts':state.includeReverts=t.checked;renderDashboard();break;
     case 'metric-select':state.metric=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;
+    case 'pulse-gap-horizon':state.pulseGapHorizon=GAP_HORIZONS.includes(Number(t.value))?Number(t.value):DEFAULT_GAP_HORIZON;renderPulse(analysis);break;
+    case 'pulse-busy-day':state.pulseBusyDay=BUSY_DAY_THRESHOLDS.includes(Number(t.value))?Number(t.value):DEFAULT_BUSY_DAY;renderPulse(analysis);break;
+    case 'pulse-release-lines':state.pulseReleaseLines=RELEASE_LINE_THRESHOLDS.includes(Number(t.value))?Number(t.value):DEFAULT_RELEASE_LINES;renderPulse(analysis);break;
     case 'deployment-env':primary.deploymentEnv=t.value;primary.deploymentFocus=null;primary.deploymentPage=0;renderPrimary();break;
     case 'deployment-year':primary.deploymentYear=t.value;primary.deploymentFocus=null;primary.deploymentPage=0;renderPrimary();break;
     case 'impact-metric-select':state.impactMetric=t.value;renderDashboard();break;
