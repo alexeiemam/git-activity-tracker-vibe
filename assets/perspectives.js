@@ -4,8 +4,8 @@
  * complete introduced Git ancestry (subject only to the explicitly declared
  * merge/revert policy); an authored period is a different observation clock.
  */
-import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=git-contribution-momentum-20261106-1';
-import { changeCategory, fileKind } from './impact.js?v=git-contribution-momentum-20261106-1';
+import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=git-temporal-contribution-20261106-1';
+import { changeCategory, fileKind } from './impact.js?v=git-temporal-contribution-20261106-1';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);
@@ -49,7 +49,7 @@ const releaseTextChanges = commits => {
 };
 
 const compactCommit = c=>({
-  hash:c.hash,groupId:c.groupId,date:c.date,hour:c.hour,subject:c.subject,
+  hash:c.hash,groupId:c.groupId,date:c.date,hour:c.hour,minute:c.minute,offsetMinutes:c.offsetMinutes,subject:c.subject,
   kind:changeCategory(c),merges:c.isMerge,reverts:c.isRevert,
   additions:c.files.reduce((v,f)=>v+(f.added||0),0),
   deletions:c.files.reduce((v,f)=>v+(f.deleted||0),0),

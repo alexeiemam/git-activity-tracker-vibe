@@ -294,14 +294,19 @@ Default reference points (all adjustable):
 full release credit threshold = 200 changed text lines (choose 50/100/200/500)
 full release-gap horizon     = 60 calendar days (choose 30/60/90)
 busy authored day            = 4 commits (choose 2/4/6)
-busy authored line churn      = 200 changed lines/day (choose 50/100/200/500)
+busy authored line churn     = 200 changed lines/day (choose 50/100/200/500)
+active clock period          = 90 minutes (choose 60/90/120)
+full per-period churn credit = 50 changed lines (choose 25/50/100)
+meaningful workday threshold = 20 changed lines (choose 10/20/50)
 
 release credit     = min(contributor's changed release lines / 200, 1)
 aged gap           = min(1, gap after last release + days elapsed / 60)
 gap on release day = aged gap * (1 - release credit)
 quiet commits      = max(1 - that day's authored commits / 4, 0)
 quiet churn        = max(1 - non-VERSION line changes authored today / 200, 0)
+distributed credit = authored-clock span factor * capped churn in periods beyond the largest
 combined signal    = 100 * current weighted gap * quiet commits * quiet churn
+                   * (1 - 0.15 * distributed credit)
 ```
 
 Thus 20 changed lines soften an accumulated gap by 10%, 100 by 50%, and 200+
@@ -315,7 +320,10 @@ its quiet-day factor, even if the weighted release gap is long. This daily
 churn is distinct from the **release-included** churn that earns clock credit;
 commits not yet shipped can still demonstrate active work. VERSION markers
 never earn daily churn relief, but their commits remain in the authored-commit
-count (the same policy used by the original Pulse).
+count (the same policy used by the original Pulse). Churn-weighted **time
+distribution** may reduce the remaining score by **at most 15%** and never
+resets release credit. Missing or non-comparable timestamps earn no additional
+relief; they cannot erase the day's regular commit/churn evidence.
 
 No score is shown before a contributor's **first measurable authored release
 contribution**. When the first such release occurs, any earlier unknown gap is
@@ -332,32 +340,100 @@ its absolute authored additions/deletions, reset-credit percentage, **effective
 weighted gap days** (which need not equal literal days since the last tag),
 daily commits, non-VERSION churn and combined signal. The individual summary reports the latest
 credited release and line count, literal and effective gaps, mean score and
-number of weekdays at **50+**. Monthly cells contain the arithmetic mean of
+number of weekdays at **50+**. Hover details also show the authored-clock
+span, active time periods, churn-weighted distribution and incremental relief.
+Monthly cells contain the arithmetic mean of
 **eligible weekday daily scores**, not a snapshot of month-end gap. Days
 outside imported history, weekends and days without a prior measurable
 release contribution are unscored (hatched), not zero. Filtering the visible
 authored dates does not erase release credits: releases always come from the
-full imported, policy-filtered release index. The three reference-point
-settings, lens and granularity persist across session export/import; older
-sessions restore the new daily-churn threshold to its default.
+full imported, policy-filtered release index. The release and shared temporal settings, lens and granularity persist across
+session export/import; older sessions restore missing settings to their
+documented defaults.
+
+### Activity spread, churn-weighted windows and consistency (all Pulse lenses)
+
+**Activity Spread** records the time between a contributor's earliest and
+latest timestamped commit *on the same authored-local date*, and how many
+distinct active time periods have commits. It is **clock range, not hours
+worked**. One timed commit cannot establish a span and is displayed as
+**unmeasurable**; missing hours or minutes are explicitly identified. If Git
+records different timezone offsets on the same authored date, the span and
+distribution credit are suppressed as non-comparable, while commit counts and
+churn remain available.
+
+**Churn-weighted active periods** refine spread. Divide each day into fixed
+90-minute intervals (adjustable to 60 or 120). For each period, cap credited
+non-VERSION text churn at 50 changed lines (adjustable 25/50/100). Rather than
+just multiplying raw `span × churn` or `commits × churn`, distribute credit:
+
+```
+span factor        = min(author-local first-to-last minutes / 360, 1)
+period count factor= min(max(distinct timed periods - 1, 0) / 3, 1)
+raw spread         = span factor * period count factor
+period credit[b]   = min(changed non-VERSION lines in period b / 50, 1)
+extra credit       = sum(period credit) - largest period credit
+distribution       = raw spread * min(extra credit / 3, 1)
+```
+
+`distribution` is in 0–1 where measurable. It only becomes large when **multiple
+separated time periods** contain substantial recorded changes. One huge commit
+followed by one token change earns almost no distribution bonus; two tiny
+commits many hours apart do not imply a sustained workday. Unknown clocks
+mean **unmeasurable distribution**, not zero activity. The Activity Pulse now
+shows a small time-window ribbon, its period-by-period churn intensity, raw
+clock span, active periods, capped churn-period units and time coverage in
+daily details. A separate summary reports measured multi-commit-day spans,
+meaningful-day consistency and distributed-day incidence, using only covered
+weekdays. Monthly Activity cells retain their original absolute-count colours;
+the summary and month hover provide the temporal context instead of silently
+changing the established metric.
+
+**Activity Consistency** is the share of covered workdays with at least 20
+non-VERSION changed lines (adjustable 10/20/50), irrespective of timestamp
+availability. A *distributed day* additionally has measurable distribution of
+at least 0.04 using the above rule. Both appear in the summaries and the two
+rolling Momentum windows. The 0.04 cut-off is a conservative descriptive
+classification, **not** a cut-off for acceptable work. Holidays, leave and
+unobserved non-Git work are not accounted for; no ranking or individual
+performance inference is intended.
+
+The expandable **Temporal evidence** control applies the same period length,
+per-period line cap and meaningful-day definition to all three lenses. The
+controls persist in session archives and default safely for older sessions.
+Recalculation uses the complete scoped, policy-filtered evidence and caches
+per-contributor day fingerprints rather than reparsing Git history on every
+selection.
 
 ### Contribution momentum (Pulse)
 
 **Contribution momentum** describes the *direction of observable contribution*,
 not the amount, the release gap, or a contributor ranking. Its fixed, bounded
-workday evidence mix is designed to prevent a massive generated-file change or
-an unusually high number of tiny commits from overwhelming other signals:
+workday evidence mix balances quantity, distribution and delivery without
+multiplying raw commit count by elapsed clock time:
 
 ```
-daily units = 0.45 * min(authored commits / 4, 1)
-            + 0.35 * min(non-VERSION authored lines changed / 200, 1)
-            + 0.20 * min(authored changed lines included in tagged releases / 200, 1)
+daily units = 0.25 * min(authored commits / 4, 1)
+            + 0.45 * min(non-VERSION authored changed lines / 200, 1)
+            + 0.15 * churn-weighted time distribution
+            + 0.15 * min(authored changes in tagged releases / 200, 1)
 
-recent   = mean daily units in the most recent N workdays (including this day)
-previous = mean daily units in the N workdays immediately before that
+consistency = workdays with >=20 non-VERSION changed lines / N workdays
+pace        = 0.75 * mean daily units + 0.25 * consistency
 
-momentum = 100 * (recent - previous) / (recent + previous + 0.1)
+recent pace   = pace over the most recent N workdays (including this day)
+previous pace = pace over the immediately preceding N workdays
+momentum      = 100 * (recent pace - previous pace) /
+                      (recent pace + previous pace + 0.1)
 ```
+
+Meaningful-day **consistency contributes 25%** of the window comparison,
+stronger than the 15% *daily* distribution component. This means someone
+maintaining substantive activity on many separate workdays can develop
+momentum even if each day has only one commit. Churn and release lines count
+independently of recorded timestamps; a single large commit is **not**
+misclassified as a zero-output day. Substantive activity is a Git-recorded
+threshold, not an assertion about work on days below it.
 
 The default compares **10 vs 10 workdays**; choose **5 / 10 / 20** for each
 window. The **0.1 smoothing term** prevents tiny changes around zero from
@@ -390,7 +466,7 @@ Neither metric is a performance appraisal. Rework, pairing, reviews, non-Git
 work, vacations, squashes, binary files and generated-file churn affect what
 these numbers can and cannot reveal. Momentum, window size, and daily churn
 settings persist in exported sessions; old sessions default to Authored activity
-and the new threshold values.
+and the new thresholds.
 
 This is **not a measure of productivity, performance or delivery value**.
 Large generated-file diffs can inflate raw churn; reviews, pairing, planning,
@@ -414,7 +490,7 @@ Under **The Working Rhythm**, switch between **Weekly patterns**, **Across years
 
 Annual **year-on-year changes** compare only the calendar-day intersection in adjacent years (e.g. January–October against January–October), with rates computed from their real exposure. An established multi-year mean is shown only where **at least three fully observed years** support it; fewer years are explicitly described as exploratory patterns, not proven seasonality. All coverage is bounded by the earliest/latest *imported author dates*. There is no reliable inference about earlier employment, unimported Git branches or actual working hours. Author-local hour analysis retains the UTC offset recorded on each commit; contributors in different zones are not adjusted to one clock.
 
-The daily pulse uses columns for calendar weeks and rows for Monday–Sunday; its horizontal scroll includes every day in the global date range, including days without commits. Activity details use the selected people, date window, merge/revert policy and reference cohort with no additional filters. Daily metrics include commits, adds/removals, churn, net line change, file touches, distinct paths, binary changes, VERSION touches, merge/revert counts, authored clock range, top-level areas, all changed file paths (expandable), and every matching commit (scroll within the detail card for long days). Zero reference metrics have undefined shares, not 0%. A cell is keyboard focusable; click/tap pins the detail and Escape dismisses it.
+The daily pulse uses columns for calendar weeks and rows for Monday–Sunday; its horizontal scroll includes every day in the global date range, including days without commits. Activity details use the selected people, date window, merge/revert policy and reference cohort with no additional filters. Daily metrics include commits, adds/removals, churn, net line change, file touches, distinct paths, binary changes, VERSION touches, merge/revert counts, authored clock range, temporal spread and churn-weighted periods, top-level areas, all changed file paths (expandable), and every matching commit (scroll within the detail card for long days). Zero reference metrics have undefined shares, not 0%. A cell is keyboard focusable; click/tap pins the detail and Escape dismisses it.
 
 Trend views offer trailing four-week windows (default), raw calendar weeks and cumulative values. Rates and shares in rolling/cumulative views are computed from the **sums of their numerators and denominators**, never from averages of percentages; tooltips show the plotted values. Week boundaries are clipped to the selected date window. Shares or per-active-day rates with no valid denominator show **—** or gaps rather than misleading zeros.
 
@@ -469,7 +545,9 @@ release notes, identities or other user content.
 - `assets/domain.js` — pure parser, filtering, aggregation, scope and date logic.
 - `assets/impact.js` — tag ancestry, release classification and evidence aggregation.
 - `assets/impact-view.js` — accessible impact timelines, matrices and detail views.
-- `assets/release-gap.js` — pure individual absolute-line-weighted release credit × authored-day metric, monthly aggregation and coverage rules.
+- `assets/release-gap.js` — pure individual absolute-line-weighted release credit × authored-day metric, bounded temporal relief, monthly aggregation and coverage rules.
+- `assets/temporal-activity.js` — shared, cached pure authored-clock spread, distinct windows, churn-weighted distribution and consistency summaries.
+- `assets/momentum.js` — bounded, self-relative contribution direction with rolling meaningful-day consistency.
 - `assets/impact-window.js` — pure viewport, zoom, pan and release reveal logic.
 - `assets/co-release.js` — complete-release co-participation and evidence by pair.
 - `assets/download-names.js` — bounded descriptive export filenames with local timestamps.

@@ -11,7 +11,9 @@
  * This is NOT a rating of people or performance. Line counts miss pairing,
  * reviews, binary work, and many other kinds of contribution.
  */
-import { dayNumber, dateAtDay, validDate } from './domain.js?v=git-contribution-momentum-20261106-1';
+import { dayNumber, dateAtDay, validDate } from './domain.js?v=git-temporal-contribution-20261106-1';
+import { nonVersionChurn, temporalActivityByPerson, emptyTemporalDay, MAX_GAP_DISTRIBUTION_RELIEF, temporalOptions } from './temporal-activity.js?v=git-temporal-contribution-20261106-1';
+export { nonVersionChurn } from './temporal-activity.js?v=git-temporal-contribution-20261106-1';
 
 export const GAP_HORIZONS = Object.freeze([30, 60, 90]);
 export const BUSY_DAY_THRESHOLDS = Object.freeze([2, 4, 6]);
@@ -24,13 +26,6 @@ export const DEFAULT_RELEASE_LINES = 200;
 export const DEFAULT_DAILY_CHURN = 200;
 
 const rounded = value => Math.round(value * 10) / 10;
-
-/** Text churn from imported, policy-filtered commits, excluding VERSION markers. */
-export function nonVersionChurn(commit) {
-  return (commit?.files || []).reduce((total,file) =>
-    total + (/(^|\/)VERSION$/.test(file.path || '') ? 0 :
-      Math.max(0,Number(file.added) || 0) + Math.max(0,Number(file.deleted) || 0)),0);
-}
 
 /** Complete-history authored churn, shared with the trend lens. */
 const textChurnCache = new WeakMap();
@@ -62,10 +57,12 @@ export function releaseGapScore(effectiveGapDays, authoredCommits, {
   busyDay = DEFAULT_BUSY_DAY,
   churn = 0,
   busyChurn = DEFAULT_DAILY_CHURN,
+  distribution = null,
 } = {}) {
   if (!Number.isFinite(effectiveGapDays) || effectiveGapDays < 0 ||
       !Number.isFinite(authoredCommits) || authoredCommits < 0 ||
       !Number.isFinite(churn) || churn < 0 ||
+      (distribution!==null && (!Number.isFinite(distribution) || distribution<0 || distribution>1)) ||
       !(Number.isFinite(horizon) && horizon > 0) ||
       !(Number.isFinite(busyDay) && busyDay > 0) ||
       !(Number.isFinite(busyChurn) && busyChurn > 0)) return null;
@@ -74,7 +71,8 @@ export function releaseGapScore(effectiveGapDays, authoredCommits, {
   // neutralise the concern signal. Do not count VERSION marker churn as relief.
   const quietCommits = Math.max(0, 1 - authoredCommits / busyDay);
   const quietLines = Math.max(0, 1 - churn / busyChurn);
-  return rounded(100 * recency * quietCommits * quietLines);
+  const quietDistribution = 1 - MAX_GAP_DISTRIBUTION_RELIEF * (distribution ?? 0);
+  return rounded(100 * recency * quietCommits * quietLines * quietDistribution);
 }
 
 /**
@@ -90,6 +88,8 @@ export function releaseGapMatrix(index, contributors, window, options = {}) {
   const busyChurn = DAILY_CHURN_THRESHOLDS.includes(Number(options.busyChurn))
     ? Number(options.busyChurn) : DEFAULT_DAILY_CHURN;
   const fullDayChurn = dailyTextChurn(index);
+  const timeSettings=temporalOptions(options.temporal);
+  const distributedDays=temporalActivityByPerson(index,timeSettings);
   const start = window?.from, end = window?.to;
   const valid = validDate(start) && validDate(end) && start <= end;
   const releasesById = new Map();
@@ -119,6 +119,7 @@ export function releaseGapMatrix(index, contributors, window, options = {}) {
     const daily = new Map(), months = new Map();
     const authored = person.daily?.commits || {};
     const dailyChurn = fullDayChurn?.get(String(person.id));
+    const timedDays=distributedDays.get(String(person.id));
     let cursor = 0, lastRelease = null, lastEventDay = null, gapAtEvent = null;
     let scoredDays = 0, attentionDays = 0, scoreSum = 0, finalEffectiveGap = null;
     for (let d = dayNumber(start), last = dayNumber(end); d <= last; d++) {
@@ -137,6 +138,7 @@ export function releaseGapMatrix(index, contributors, window, options = {}) {
       }
       const commits = Number(authored[date] || 0);
       const churn = fullDayChurn ? (dailyChurn?.get(date) || 0) : Number(person.daily?.churn?.[date] || 0);
+      const temporal=timedDays?.get(date)||emptyTemporalDay(timeSettings);
       const weekday = new Date(`${date}T12:00:00Z`).getUTCDay();
       const inCoverage = (!index?.bounds?.min || date >= index.bounds.min) &&
         (!index?.bounds?.max || date <= index.bounds.max);
@@ -147,16 +149,16 @@ export function releaseGapMatrix(index, contributors, window, options = {}) {
       // release after years without an event would produce no visible relief.
       const gapFactor = lastRelease ? Math.min(1, gapAtEvent + Math.max(0, d - lastEventDay) / horizon) : null;
       const effectiveGapDays = gapFactor === null ? null : rounded(horizon * gapFactor);
-      const score = reason === 'scored' ? releaseGapScore(horizon * gapFactor, commits, {horizon,busyDay,churn,busyChurn}) : null;
-      const item = {date,commits,churn,daysSinceRelease,effectiveGapDays,score,reason,lastRelease};
+      const score = reason === 'scored' ? releaseGapScore(horizon * gapFactor, commits, {horizon,busyDay,churn,busyChurn,distribution:temporal.distribution}) : null;
+      const item = {date,commits,churn,temporal,daysSinceRelease,effectiveGapDays,score,reason,lastRelease};
       daily.set(date,item);
       if (score !== null) {
         scoredDays++;scoreSum+=score;
         if (score >= ATTENTION_THRESHOLD) attentionDays++;
         const month=date.slice(0,7);
-        if (!months.has(month)) months.set(month,{month,score:0,total:0,days:0,attentionDays:0,lastRelease:null,lastGap:null,lastEffectiveGap:null});
+        if (!months.has(month)) months.set(month,{month,score:0,total:0,days:0,attentionDays:0,distributedDays:0,lastRelease:null,lastGap:null,lastEffectiveGap:null});
         const bucket=months.get(month);
-        bucket.total+=score;bucket.days++;
+        bucket.total+=score;bucket.days++;bucket.distributedDays+=Number(temporal.distributed);
         if (score >= ATTENTION_THRESHOLD)bucket.attentionDays++;
         bucket.lastRelease=lastRelease;bucket.lastGap=daysSinceRelease;bucket.lastEffectiveGap=effectiveGapDays;
       }
@@ -169,5 +171,5 @@ export function releaseGapMatrix(index, contributors, window, options = {}) {
       scoredDays,attentionDays,averageScore:scoredDays?rounded(scoreSum/scoredDays):null};
     rows.push(row);byId.set(row.id,row);
   }
-  return {rows,byId,horizon,busyDay,busyChurn,fullCreditLines,from:start,to:end,available:!!releasesById.size};
+  return {rows,byId,horizon,busyDay,busyChurn,fullCreditLines,temporal:timeSettings,from:start,to:end,available:!!releasesById.size};
 }

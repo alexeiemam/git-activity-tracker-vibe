@@ -4,7 +4,7 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=git-contribution-momentum-20261106-1';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=git-temporal-contribution-20261106-1';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },
@@ -171,6 +171,10 @@ export function parseGitHistory(raw) {
       const timeMatch = authored.match(/^\d{4}-\d\d-\d\dT(\d\d):(\d\d):\d\d(?:Z|[+-]\d\d:\d\d)$/);
       const hour = timeMatch ? Number(timeMatch[1]) : null;
       const minute = timeMatch ? Number(timeMatch[2]) : null;
+      const zoneMatch = authored.match(/(Z|[+-]\d\d:\d\d)$/);
+      const zone = zoneMatch?.[1];
+      const offsetMinutes = zone === 'Z' ? 0 : zone ?
+        (zone[0] === '-' ? -1 : 1) * (Number(zone.slice(1,3))*60+Number(zone.slice(4,6))) : null;
       const subject = parts.slice(subjectStart, hasParents ? -1 : undefined).join('|').trim();
       current = {
         hash: (parts[1] || '').trim(),
@@ -181,6 +185,7 @@ export function parseGitHistory(raw) {
         committedAt: Number.isFinite(Date.parse(committed)) ? Date.parse(committed) : null,
         hour: Number.isInteger(hour) && hour >= 0 && hour < 24 ? hour : null,
         minute: Number.isInteger(minute) && minute >= 0 && minute < 60 ? minute : null,
+        offsetMinutes: Number.isFinite(offsetMinutes) ? offsetMinutes : null,
         parents, parentsKnown: hasParents,
         subject,
         isMerge: hasParents ? parents.length > 1 : /^merge(?:d)?\s+(?:branch|pull request|remote|tag|commit|#)/i.test(subject),

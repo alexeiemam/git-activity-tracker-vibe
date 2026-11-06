@@ -24,10 +24,11 @@ const withHistory=(activity, releases=[],bounds={min:'2026-01-05',max:'2026-03-3
 const get=(matrix,date,id='0')=>matrix.byId.get(id).daily.get(date);
 
 test('normalised day units are bounded; signed change has a quiet-period stabiliser',()=>{
-  assert.equal(contributionUnits({commits:4,churn:200,releaseLines:200}),1);
-  assert.equal(contributionUnits({commits:40,churn:10000,releaseLines:50000}),1);
+  assert.equal(contributionUnits({commits:4,churn:200,releaseLines:200,distribution:1}),1);
+  assert.equal(contributionUnits({commits:4,churn:200,releaseLines:200}),.85);
+  assert.equal(contributionUnits({commits:40,churn:10000,releaseLines:50000,distribution:1}),1);
   assert.equal(contributionUnits({commits:0,churn:0,releaseLines:0}),0);
-  assert.ok(Math.abs(contributionUnits({commits:1,churn:50,releaseLines:20}) - (0.45/4+0.35/4+0.20/10))<1e-10);
+  assert.ok(Math.abs(contributionUnits({commits:1,churn:50,releaseLines:20}) - (0.25/4+0.45/4+0.15/10))<1e-10);
   assert.equal(contributionUnits({commits:-1}),null);
   assert.equal(momentumScore(0,0),0);
   assert.equal(momentumScore(0.5,0.5),0);
@@ -52,7 +53,8 @@ test('momentum compares complete adjacent weekday windows, remains neutral if bo
   assert.equal(get(full,days[19]).recent.commits,10);
   assert.equal(get(full,days[19]).previous.commits,10);
   assert.ok(get(full,days[22]).score<0,'a quieting period produces negative momentum');
-  assert.equal(get(full,days[22]).direction,'steady','small shifts near zero should not become categorical judgements');
+  assert.equal(get(full,days[22]).direction,'cooling','a drop in meaningful-day consistency should register separately from daily volume');
+  assert.equal(momentumDirection(momentumScore(.5,.49)),'steady','small relative shifts remain neutral');
   const narrow=momentumMatrix(history,[contributor()],{from:days[22],to:days.at(-1)});
   assert.equal(get(narrow,days[22]).score,get(full,days[22]).score);
   assert.equal(narrow.byId.get('0').scoredDays,2);
@@ -63,11 +65,11 @@ test('build-up, decline, stability and no activity are different, without requir
   const days=workdays('2026-01-05',30);
   const build=withHistory(days.slice(10,20).map(d=>change('0',d,200)),[],{min:days[0],max:days.at(-1)});
   const up=momentumMatrix(build,[contributor()],{from:days[19],to:days[19]});
-  assert.equal(get(up,days[19]).score,82.2,'maximum activity against silence is bounded by smoothing');
+  assert.equal(get(up,days[19]).score,86.4,'activity and consistency combine with bounded smoothing');
   assert.equal(get(up,days[19]).direction,'building');
   const cooling=withHistory(days.slice(0,10).map(d=>change('0',d,200)),[],{min:days[0],max:days.at(-1)});
   const down=momentumMatrix(cooling,[contributor()],{from:days[19],to:days[19]});
-  assert.equal(get(down,days[19]).score,-82.2);
+  assert.equal(get(down,days[19]).score,-86.4);
   assert.equal(get(down,days[19]).direction,'cooling');
   const none=momentumMatrix(withHistory([],[],{min:days[0],max:days.at(-1)}),[contributor()],{from:days[19],to:days[19]});
   assert.equal(get(none,days[19]).score,0);
@@ -166,6 +168,6 @@ test('three Pulse lenses, settings, explanatory notes and export roundtrip are w
   assert.match(app,/MOMENTUM_WINDOWS\.includes\(s\.pulseMomentumWorkdays\)/);
   assert.match(app,/DAILY_CHURN_THRESHOLDS\.includes\(s\.pulseDailyChurn\)/);
   assert.match(app,/\['activity','release-gap','momentum'\]\.includes\(s\.pulseLens\)/);
-  assert.match(app,/pulseDayMarkup\(details,gapItem,momentumItem\)/);
+  assert.match(app,/pulseDayMarkup\(details,gapItem,momentumItem,temporalItem\)/);
   assert.ok(MOMENTUM_DIRECTION_THRESHOLD>0);
 });
