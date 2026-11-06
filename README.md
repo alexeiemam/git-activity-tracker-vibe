@@ -273,10 +273,12 @@ The **ranking, trend and comparison table** use the chosen metric and mode. The 
 
 ### Release gap × authored activity (Pulse)
 
-The **activity pulse** offers three complementary lenses: **Authored activity**
+The **activity pulse** offers four complementary lenses: **Authored activity**
 (the existing raw totals, still the default), **Release gap × activity** (a warm,
 0–100 attention signal), and **Contribution momentum** (a diverging, signed
-trend against the same contributor's recent history). Each supports individual
+trend against the same contributor's recent history), plus **Contribution
+level** (an uncapped, log-scaled index that exposes sustained differences
+between selected contributors). Each supports individual
 **Daily / Monthly** cells without changing the globally filtered commit policy.
 
 The release-gap factor is no longer a binary "last release resets everything"
@@ -351,6 +353,79 @@ full imported, policy-filtered release index. The release and shared temporal se
 session export/import; older sessions restore missing settings to their
 documented defaults.
 
+### Contribution level: sustained contribution versus momentum (Pulse)
+
+**Contribution level** answers the question that the existing direction-only
+Momentum lens cannot: *what if somebody consistently contributes much more
+than everyone else, so their momentum looks flat?* Momentum is unchanged and
+continues to measure the **difference from their own earlier pace**. The
+fourth Pulse lens measures **recorded contribution level** on a shared scale,
+without hard-capping all substantial days at the same score.
+
+For every covered day, using the same import-wide author identities, selected
+merge/revert policy, Git evidence and incremental tag ancestry as Momentum:
+
+```
+L(d) = 0.25 * log(1 + authored_commits) / log(1 + 4)
+     + 0.45 * log(1 + non_VERSION_changed_lines) / log(1 + 200)
+     + 0.20 * log(1 + authored_tagged_release_lines) / log(1 + 200)
+     + 0.10 * churn_weighted_distribution
+
+recent_level(N) = 0.80 * average L(d) over N complete recorded workdays
+                + 0.20 * meaningful_day_consistency over those days
+```
+
+The baselines 4 commits, 200 changed lines and 200 shipped lines each
+produce one normalised unit *within their component*, but **values above the
+baseline continue to count** with diminishing logarithmic returns. This is
+a descriptive index, not a productivity score; changed-line figures include
+rework, code generation and other work with different characteristics.
+
+The level lens offers:
+
+- **Daily cells:** one cell per authored calendar date, with a **shared
+  green logarithmic colour scale** for everyone. Weekends are displayed, not
+  treated as unobserved; each cell shows that date's raw composite index.
+  One large commit retains its substantive changed-line credit even when
+  temporal spread cannot be measured.
+- **Monthly cells:** the arithmetic mean of daily index scores over the
+  covered calendar days in each visible month. A partial month is not
+  represented as a full-month total. Missing historical dates are hatched,
+  distinct from a genuinely quiet imported day.
+- **Recent sustained level:** 5, 10 (default) or 20 *covered working days*,
+  using the entire available history through the selected end date even if
+  the display starts later. This is separate from Momentum's two-window
+  directional comparison.
+- **Peer reference:** the *median composite index of the other selected
+  contributors* over that same recent window. A displayed `2.5×` means
+  **2.5 times the median composite index**, not 2.5 times the effort or
+  delivered value. When nobody else is selected, no peer ratio is shown;
+  zero-valued peer references are not divided by or represented as infinity.
+- **Broad observed lead:** an explanation of which *distinct evidence
+  dimensions* a contributor uniquely leads in the selected scope (commits,
+  non-VERSION churn, authored shipped lines, meaningful-day consistency,
+  distributed-day consistency). This is not a performance ranking; lead
+  indicators are tied to the currently selected cohort and evidence.
+- **Cross-lens context:** the Momentum summary now displays each person's
+  recent level and peer comparison alongside the signed direction. Small
+  amber cell markers identify clearly leading recorded daily/monthly levels
+  among the selected contributors (not a change in momentum).
+
+Both daily and monthly level heatmaps use **one common observed value scale**
+for all selected contributors, not separate per-person palettes or percentile
+ranks. Raw commits, changed lines and release-included lines remain visible
+in summaries and daily evidence, so observers can question a synthetic index.
+When a contributor is alone or imported history is too short, comparison or
+recent-window indicators are explicitly unavailable. The lens and lookback
+option persist in session export/import, with safe defaults for older archives.
+
+**Interpretation warning:** these are *records of Git activity*. Different
+roles, pairing, review work, squash/merge policies, machine-generated
+changes, holidays and work outside Git prevent interpreting a high index as
+better individual performance. The reference group changes when contributor
+selection changes; numerical ratios should not be compared across different
+cohorts without acknowledging that change.
+
 ### Activity spread, churn-weighted windows and consistency (all Pulse lenses)
 
 **Activity Spread** records the time between a contributor's earliest and
@@ -399,7 +474,7 @@ unobserved non-Git work are not accounted for; no ranking or individual
 performance inference is intended.
 
 The expandable **Temporal evidence** control applies the same period length,
-per-period line cap and meaningful-day definition to all three lenses. The
+per-period line cap and meaningful-day definition to all four lenses. The
 controls persist in session archives and default safely for older sessions.
 Recalculation uses the complete scoped, policy-filtered evidence and caches
 per-contributor day fingerprints rather than reparsing Git history on every
@@ -408,7 +483,10 @@ selection.
 ### Contribution momentum (Pulse)
 
 **Contribution momentum** describes the *direction of observable contribution*,
-not the amount, the release gap, or a contributor ranking. Its fixed, bounded
+not the amount, the release gap, or a contributor ranking. The Momentum summary
+now also provides **recent Contribution Level and peer reference** so a
+persistently high contributor does not disappear behind a steady directional
+score. Its fixed, bounded
 workday evidence mix balances quantity, distribution and delivery without
 multiplying raw commit count by elapsed clock time:
 
