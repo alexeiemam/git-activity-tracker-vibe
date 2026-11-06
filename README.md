@@ -273,9 +273,11 @@ The **ranking, trend and comparison table** use the chosen metric and mode. The 
 
 ### Release gap × authored activity (Pulse)
 
-The **activity pulse** has a separate **Release gap × activity** lens, with
-individual **Daily / Monthly** cells and a fixed warm 0–100 scale. The original
-authored-activity lens remains the default and is unchanged.
+The **activity pulse** offers three complementary lenses: **Authored activity**
+(the existing raw totals, still the default), **Release gap × activity** (a warm,
+0–100 attention signal), and **Contribution momentum** (a diverging, signed
+trend against the same contributor's recent history). Each supports individual
+**Daily / Monthly** cells without changing the globally filtered commit policy.
 
 The release-gap factor is no longer a binary "last release resets everything"
 clock: **the contributor's absolute authored text-line changes in each
@@ -292,12 +294,14 @@ Default reference points (all adjustable):
 full release credit threshold = 200 changed text lines (choose 50/100/200/500)
 full release-gap horizon     = 60 calendar days (choose 30/60/90)
 busy authored day            = 4 commits (choose 2/4/6)
+busy authored line churn      = 200 changed lines/day (choose 50/100/200/500)
 
 release credit     = min(contributor's changed release lines / 200, 1)
 aged gap           = min(1, gap after last release + days elapsed / 60)
 gap on release day = aged gap * (1 - release credit)
-quiet-day factor   = max(1 - that day's authored commits / 4, 0)
-combined signal    = 100 * current weighted gap * quiet-day factor
+quiet commits      = max(1 - that day's authored commits / 4, 0)
+quiet churn        = max(1 - non-VERSION line changes authored today / 200, 0)
+combined signal    = 100 * current weighted gap * quiet commits * quiet churn
 ```
 
 Thus 20 changed lines soften an accumulated gap by 10%, 100 by 50%, and 200+
@@ -305,8 +309,13 @@ fully reset it. Two small releases can compound their reductions. Critically,
 **age is capped before applying credit**, so even a tiny release after a very
 long gap always makes an immediate, visible difference. Between releases the
 remaining gap increases by one horizon-day per calendar day, up to 100%.
-The quiet-day factor still neutralises the signal when authored activity is
-high, independently of all release weights.
+Daily authored commit activity **and** non-VERSION text churn independently
+soften the score. Four commits or 200 changed lines in a day fully neutralise
+its quiet-day factor, even if the weighted release gap is long. This daily
+churn is distinct from the **release-included** churn that earns clock credit;
+commits not yet shipped can still demonstrate active work. VERSION markers
+never earn daily churn relief, but their commits remain in the authored-commit
+count (the same policy used by the original Pulse).
 
 No score is shown before a contributor's **first measurable authored release
 contribution**. When the first such release occurs, any earlier unknown gap is
@@ -321,7 +330,7 @@ unavailable line statistics limit confidence.
 Daily cells expose the actual calendar days since the latest credited tag,
 its absolute authored additions/deletions, reset-credit percentage, **effective
 weighted gap days** (which need not equal literal days since the last tag),
-daily commits and combined signal. The individual summary reports the latest
+daily commits, non-VERSION churn and combined signal. The individual summary reports the latest
 credited release and line count, literal and effective gaps, mean score and
 number of weekdays at **50+**. Monthly cells contain the arithmetic mean of
 **eligible weekday daily scores**, not a snapshot of month-end gap. Days
@@ -330,7 +339,58 @@ release contribution are unscored (hatched), not zero. Filtering the visible
 authored dates does not erase release credits: releases always come from the
 full imported, policy-filtered release index. The three reference-point
 settings, lens and granularity persist across session export/import; older
-sessions restore the new line threshold to its default.
+sessions restore the new daily-churn threshold to its default.
+
+### Contribution momentum (Pulse)
+
+**Contribution momentum** describes the *direction of observable contribution*,
+not the amount, the release gap, or a contributor ranking. Its fixed, bounded
+workday evidence mix is designed to prevent a massive generated-file change or
+an unusually high number of tiny commits from overwhelming other signals:
+
+```
+daily units = 0.45 * min(authored commits / 4, 1)
+            + 0.35 * min(non-VERSION authored lines changed / 200, 1)
+            + 0.20 * min(authored changed lines included in tagged releases / 200, 1)
+
+recent   = mean daily units in the most recent N workdays (including this day)
+previous = mean daily units in the N workdays immediately before that
+
+momentum = 100 * (recent - previous) / (recent + previous + 0.1)
+```
+
+The default compares **10 vs 10 workdays**; choose **5 / 10 / 20** for each
+window. The **0.1 smoothing term** prevents tiny changes around zero from
+producing an exaggerated score. Scores run from −100 to +100; **positive**
+means more recorded throughput than the preceding period (building), **negative**
+means less (cooling), and near zero means little change. The descriptive labels
+use a ±15-point threshold. Zero may also mean *no observed contribution in
+either window*, which is explicitly called out rather than presented as a
+positive judgement.
+
+Tagged-release credit uses incremental ancestry and the contributor's own
+additions plus deletions, excluding baselines, driver-only events and VERSION
+markers. A weekend tag is credited on the following workday for this lens;
+weekday authored activity is unchanged. **No release tag is necessary** to
+observe activity momentum: commits and lines still count. These weighting
+constants are fixed across contributors; the adjustable gap/churn thresholds in
+the *other* lens do not silently change this one.
+
+A day is scored only with **2N complete, in-coverage weekdays** in the full
+imported history. Narrowing the displayed date filter does not erase either
+comparison period. Weekends, outside-history days and incomplete warm-up
+periods are hatched as *unscored*. Monthly cells average the **signed daily
+scores**, so a month with building and cooling phases may average near zero;
+hover text reports both counts. Daily hover/focus/click evidence includes both
+windows' commits, churn, shipped lines, normalised units and that day's Git
+activity. The per-person summary shows the latest directional reading, average,
+building/cooling day counts, and the number of comparable weekdays.
+
+Neither metric is a performance appraisal. Rework, pairing, reviews, non-Git
+work, vacations, squashes, binary files and generated-file churn affect what
+these numbers can and cannot reveal. Momentum, window size, and daily churn
+settings persist in exported sessions; old sessions default to Authored activity
+and the new threshold values.
 
 This is **not a measure of productivity, performance or delivery value**.
 Large generated-file diffs can inflate raw churn; reviews, pairing, planning,

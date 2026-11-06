@@ -207,3 +207,25 @@ test('Pulse lens and knobs have a complete UI and session round-trip',()=>{
   assert.match(app,/fullCreditLines:state\.pulseReleaseLines/);
   assert.match(app,/RELEASE_LINE_THRESHOLDS\.includes\(s\.pulseReleaseLines\)/);
 });
+
+test('ordinary-day churn independently softens release-gap concern without changing release credit',()=>{
+  assert.equal(releaseGapScore(60,0,{churn:0}),100);
+  assert.equal(releaseGapScore(60,0,{churn:50}),75);
+  assert.equal(releaseGapScore(60,1,{churn:50}),56.3);
+  assert.equal(releaseGapScore(60,0,{churn:200}),0);
+  assert.equal(releaseGapScore(60,4,{churn:0}),0);
+  assert.equal(releaseGapScore(60,1,{churn:-1}),null);
+  assert.equal(releaseGapScore(60,1,{churn:20,busyChurn:0}),null);
+  const history={...index,activity:[
+    {groupId:'0',date:'2026-02-04',files:[{path:'VERSION',added:9999,deleted:0}]},
+    {groupId:'0',date:'2026-02-05',files:[{path:'app/feature.rb',added:40,deleted:10}]},
+  ]};
+  const model=releaseGapMatrix(history,[person('0','Ada')],{from:'2026-02-04',to:'2026-02-05'});
+  assert.equal(date(model,'0','2026-02-04').churn,0);
+  assert.equal(date(model,'0','2026-02-05').churn,50);
+  assert.equal(date(model,'0','2026-02-04').score,47.5);
+  assert.equal(date(model,'0','2026-02-05').score,36.9);
+  const stricter=releaseGapMatrix(history,[person('0','Ada')],{from:'2026-02-05',to:'2026-02-05'},{busyChurn:50});
+  assert.equal(date(stricter,'0','2026-02-05').score,0);
+  assert.equal(model.busyChurn,200);
+});

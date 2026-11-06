@@ -4,7 +4,7 @@
  * Findings are descriptive, deterministic and sample-gated. No inferred
  * employment, effort, productivity, deployment or missing-branch outcomes.
  */
-import { dateAtDay, dayNumber, dayOfWeek, fileArea, validDate } from './domain.js?v=git-release-credit-20261105-1';
+import { dateAtDay, dayNumber, dayOfWeek, fileArea, validDate } from './domain.js?v=git-contribution-momentum-20261106-1';
 
 const DAY_MS = 86_400_000;
 const min = (a,b) => a < b ? a : b;

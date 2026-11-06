@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import test from 'node:test';
 
 const root = new URL('../', import.meta.url);
@@ -17,13 +17,16 @@ test('HTML loads external CSS and module JavaScript', () => {
   assert.match(html, /type="module" src="\.\/assets\/app\.js\?v=[^"]+"/);
 });
 
-test('release-gap entrypoint imports match the named exports of its real module', async () => {
-  const statement = app.match(/import\s*\{([^}]+)\}\s*from\s*['"]\.\/release-gap\.js\?v=[^'"]+['"]/);
-  assert.ok(statement, 'app.js should import the release-gap module');
-  const releaseGap = await import('../assets/release-gap.js');
-  for (const imported of statement[1].split(',')) {
-    const name = imported.trim().split(/\s+as\s+/)[0];
-    assert.ok(Object.hasOwn(releaseGap, name), `release-gap.js must export ${name}`);
+test('both Pulse signal modules expose every named export requested by the entrypoint', async () => {
+  for(const file of ['release-gap.js','momentum.js']) {
+    const escaped=file.replace('.', '\\.');
+    const statement=app.match(new RegExp(`import\\s*\\{([^}]+)\\}\\s*from\\s*['"]\\./${escaped}\\?v=[^'"]+['"]`));
+    assert.ok(statement, `app.js must import ${file}`);
+    const module=await import(`../assets/${file}`);
+    for(const imported of statement[1].split(',')) {
+      const name=imported.trim().split(/\s+as\s+/)[0];
+      assert.ok(Object.hasOwn(module,name), `${file} must export ${name}`);
+    }
   }
 });
 
@@ -59,10 +62,11 @@ test('all versioned assets use the same revision, including ES module dependenci
   const cssVersion = html.match(/assets\/app\.css\?v=([^"\s]+)/)?.[1];
   assert.ok(entryVersion);
   assert.equal(cssVersion, entryVersion);
-  for (const file of ['assets/app.js', 'assets/impact.js', 'assets/impact-view.js']) {
+  for (const filename of await readdir(new URL('assets/',root))) {
+    if (!filename.endsWith('.js')) continue;
+    const file=`assets/${filename}`;
     const source = await readFile(new URL(file, root), 'utf8');
     const imports = [...source.matchAll(/from ['"]\.\/[^'"?]+\.js\?v=([^'"]+)['"]/g)];
-    assert.ok(imports.length, `expected versioned local imports in ${file}`);
     for (const match of imports) assert.equal(match[1], entryVersion);
   }
 });

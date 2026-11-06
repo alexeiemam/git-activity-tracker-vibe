@@ -1108,3 +1108,16 @@
 @media(max-width:720px){.pulse-lens-bar{align-items:flex-start}.pulse-gap-legend{gap:6px}.pulse-gap-swatches i{width:16px}.pulse-gap-detail{margin:10px 13px 0}.pulse-gap-detail-facts span{flex-wrap:wrap}}
 @media(forced-colors:active){.pulse-gap-swatches i,.pulse-gap-month,.pulse-daily-cell{border:1px solid CanvasText}.pulse-gap-weekend{opacity:1;border-style:dashed}}
 .pulse-gap-unavailable{font:11px/1.6 var(--mono);color:#925a32;background:#fff9ef;border:1px solid #f0dfc6;border-radius:6px;padding:10px 12px;margin:0 0 15px}
+
+/* Signed, self-relative contribution momentum complements absolute and gap lenses. */
+.pulse-lens-bar .segmented{flex-wrap:wrap;row-gap:4px}
+#pulse-momentum-settings select{max-width:180px}
+.pulse-momentum-detail{margin:13px 18px 0;border:1px solid #b8d8d3;border-radius:8px;padding:12px 13px;background:#f1f9f7}
+.pulse-momentum-detail .eyebrow{font-size:9px;color:#286a61}
+.pulse-momentum-detail .pulse-gap-detail-top strong{color:#216b62}
+.pulse-momentum-detail .pulse-gap-detail-top span{color:#42695f}
+.pulse-momentum-detail .pulse-gap-detail-facts{color:#47665f}
+.pulse-momentum-detail .pulse-gap-detail-facts b{color:#214b42}
+.pulse-momentum-detail small{display:block;margin-top:9px;font:10px/1.5 var(--mono);color:#54756b}
+@media(max-width:720px){.pulse-lens-bar .segmented{width:100%}.pulse-lens-bar .segmented .segment{flex:1 1 auto}.pulse-momentum-detail{margin:10px 13px 0}.pulse-momentum-detail .pulse-gap-detail-facts span{flex-wrap:wrap}}
+@media(forced-colors:active){.pulse-momentum-detail{border:1px solid CanvasText}}
