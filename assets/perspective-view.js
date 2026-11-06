@@ -1,9 +1,9 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, codebasePortrait, windowOf, briefingText } from './perspectives.js?v=git-peer-distribution-20261106-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=git-peer-distribution-20261106-1';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=git-peer-distribution-20261106-1';
-import { targetUrl } from './route-state.js?v=git-peer-distribution-20261106-1';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=git-peer-distribution-20261106-1';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, codebasePortrait, windowOf, briefingText } from './perspectives.js?v=git-absolute-velocity-20261106-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=git-absolute-velocity-20261106-1';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=git-absolute-velocity-20261106-1';
+import { targetUrl } from './route-state.js?v=git-absolute-velocity-20261106-1';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=git-absolute-velocity-20261106-1';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});

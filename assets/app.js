@@ -3,28 +3,30 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=git-peer-distribution-20261106-1';
-import { generateDemoLog } from './demo-data.js?v=git-peer-distribution-20261106-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-peer-distribution-20261106-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-peer-distribution-20261106-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-peer-distribution-20261106-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-peer-distribution-20261106-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-peer-distribution-20261106-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-peer-distribution-20261106-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-peer-distribution-20261106-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-peer-distribution-20261106-1';
-import { buildStoryAnalysis } from './stories.js?v=git-peer-distribution-20261106-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-peer-distribution-20261106-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-peer-distribution-20261106-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-peer-distribution-20261106-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-peer-distribution-20261106-1';
-import { downloadFilename } from './download-names.js?v=git-peer-distribution-20261106-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-peer-distribution-20261106-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-peer-distribution-20261106-1';
-import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-peer-distribution-20261106-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-peer-distribution-20261106-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-peer-distribution-20261106-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-peer-distribution-20261106-1';
+} from './domain.js?v=git-absolute-velocity-20261106-1';
+import { generateDemoLog } from './demo-data.js?v=git-absolute-velocity-20261106-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-absolute-velocity-20261106-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-absolute-velocity-20261106-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-absolute-velocity-20261106-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-absolute-velocity-20261106-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=git-absolute-velocity-20261106-1';
+import { releaseScorecard } from './release-scorecard.js?v=git-absolute-velocity-20261106-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-absolute-velocity-20261106-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-absolute-velocity-20261106-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-absolute-velocity-20261106-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-absolute-velocity-20261106-1';
+import { buildStoryAnalysis } from './stories.js?v=git-absolute-velocity-20261106-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-absolute-velocity-20261106-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-absolute-velocity-20261106-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-absolute-velocity-20261106-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-absolute-velocity-20261106-1';
+import { downloadFilename } from './download-names.js?v=git-absolute-velocity-20261106-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-absolute-velocity-20261106-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-absolute-velocity-20261106-1';
+import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-absolute-velocity-20261106-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-absolute-velocity-20261106-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-absolute-velocity-20261106-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-absolute-velocity-20261106-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -40,7 +42,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-peer-distribution-20261106-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-absolute-velocity-20261106-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -937,18 +939,25 @@ function renderTrend(view) {
   chart.addEventListener('pointerleave',()=>{tip.hidden=true;cursor.setAttribute('visibility','hidden');});
 }
 
-function sortedContributors(view) {
+function sortedContributors(view,releaseEvidence) {
   const getters={
     lens: c=>lensFor(c,view),share:c=>view.referenceTotal?metricValue(c,view.metric)/view.referenceTotal*100:0,
     commits:c=>c.totals.commits,active_days:c=>c.totals.active_days,pace:c=>c.totals.active_days?c.totals.commits/c.totals.active_days:0,
     churn:c=>c.totals.churn,files:c=>c.totals.files,reverts:c=>c.totals.commits?c.totals.reverts/c.totals.commits*100:0,
-    releases:c=>c.totals.releases,weekend:c=>c.totals.commits?c.weekendCommits/c.totals.commits*100:0,
+    releases:c=>releaseEvidence?.available?(releaseEvidence.byId.get(String(c.id))?.releases??0):-1,
+    released_commits:c=>releaseEvidence?.available?(releaseEvidence.byId.get(String(c.id))?.commits??0):-1,
+    released_lines:c=>releaseEvidence?.available?(releaseEvidence.byId.get(String(c.id))?.lines??-1):-1,
+    actor_events:c=>releaseEvidence?.available?(releaseEvidence.byId.get(String(c.id))?.actorEvents??0):-1,
+    version:c=>c.totals.releases,weekend:c=>c.totals.commits?c.weekendCommits/c.totals.commits*100:0,
   };
   const get=getters[state.sortKey]||getters.lens;
   return [...view.contributors].sort((a,b)=>(get(a)-get(b))*(state.sortDesc?-1:1) || a.displayName.localeCompare(b.displayName));
 }
 function makeTableData(view) {
   const reference=view.referenceTotal;
+  const releaseEvidence=releaseScorecard(perspectiveIndex,{from:view.start,to:view.end},view.contributors);
+  const releaseValue=(c,key)=>releaseEvidence.available?releaseEvidence.byId.get(String(c.id))?.[key]??null:null;
+  const releaseFormat=value=>value===null?'—':number.format(value);
   const columns=[
     {key:'name',label:'Contributor',value:c=>c.displayName,show:c=>`<span style="${style(c.id)}"><i class="person-dot"></i>${esc(c.displayName)}</span>`},
     {key:'lens',label:`${METRICS[view.metric].label} · ${displayModeLabel(state.mode)}`,value:c=>(state.mode==='share'&&!reference)||(state.mode==='per_active_day'&&!c.totals.active_days)?null:lensFor(c,view),format:v=>formatLens(v)},
@@ -959,18 +968,22 @@ function makeTableData(view) {
     {key:'churn',label:'Line churn',value:c=>c.totals.churn},
     {key:'files',label:'File touches',value:c=>c.totals.files},
     {key:'reverts',label:'Revert %',value:c=>c.totals.commits?c.totals.reverts/c.totals.commits*100:null,format:v=>v==null?'—':percent(v)},
-    {key:'releases',label:'VERSION touches',value:c=>c.totals.releases},
+    {key:'releases',label:'Tagged releases',value:c=>releaseValue(c,'releases'),format:releaseFormat},
+    {key:'released_commits',label:'Commits in releases',value:c=>releaseValue(c,'commits'),format:releaseFormat},
+    {key:'released_lines',label:'Released changed lines',value:c=>releaseValue(c,'lines'),format:releaseFormat},
+    {key:'actor_events',label:'Tag/publish actor events',value:c=>releaseValue(c,'actorEvents'),format:releaseFormat},
+    {key:'version',label:'VERSION touches · proxy',value:c=>c.totals.releases},
     {key:'weekend',label:'Weekend %',value:c=>c.totals.commits?c.weekendCommits/c.totals.commits*100:null,format:v=>v==null?'—':percent(v)},
   ];
   const format=(col,raw)=>col.format?col.format(raw):number.format(raw);
-  return {columns, rows:sortedContributors(view).map(c=>({ c, vals:columns.map(col=>col.value(c)) })), format};
+  return {columns, rows:sortedContributors(view,releaseEvidence).map(c=>({ c, vals:columns.map(col=>col.value(c)) })), format,releaseEvidence};
 }
 function renderTable(view) {
   if(!view.contributors.length){ $('scorecard-wrap').innerHTML=empty('No selected contributors.');tableRows=[];return; }
   const data=makeTableData(view);
   tableRows=data.rows;
   $('scorecard-wrap').innerHTML=`<table class="data-table"><thead><tr>${data.columns.map((col,i)=>`<th class="${i?'right':''}" scope="col" ${col.key===state.sortKey?`aria-sort="${state.sortDesc?'descending':'ascending'}"`:''}>${col.key==='name'?esc(col.label):`<button type="button" class="sort-button" data-action="sort-table" data-sort="${col.key}">${esc(col.label)}${state.sortKey===col.key?(state.sortDesc?' ↓':' ↑'):''}</button>`}</th>`).join('')}</tr></thead><tbody>${data.rows.map(({c,vals})=>`<tr>${vals.map((val,i)=>`<td class="${i?'right':'name-cell'}">${i ? esc(data.format(data.columns[i],val)) : data.columns[i].show(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-  setText('table-note',`Active days are distinct per person; their sum is contributor-days, not distinct team calendar dates. Weekend % is Saturday + Sunday. Share denominator: ${view.denominator==='repository'?'all imported contributors':'selected contributors'}.`);
+  setText('table-note',`Authored activity and VERSION touches use commit-author dates. Tagged releases, their included commits and released changed lines use release-event dates (${view.start}–${view.end}) and full introduced Git ancestry under the selected merge/revert policy; baseline tags are excluded. Released changed lines exclude VERSION files and binary changes. Tag/publish actor events are metadata, not proof of deployment or authored contribution. ${data.releaseEvidence.available?`${data.releaseEvidence.inRange} incremental tagged release events observed; ${data.releaseEvidence.partialReleases} have partial ancestry.`:'No imported tagged-release evidence — release columns are unavailable, not zero.'} Distinct tags on divergent histories can include overlapping changes. Active days are contributor-days, not distinct team dates. Share denominator: ${view.denominator==='repository'?'repository':'selected cohort'}.`);
 }
 function copyCsv() {
   if (!analysis) return;
@@ -1075,61 +1088,25 @@ function levelPeerText(peer,{short=false}={}) {
   if(peer.reference===0)return 'Peer median 0 · ratio unavailable';
   return peer.ratio===null?'Not comparable':`${decimal.format(peer.ratio)}× ${short?'peer median':'other-contributor median'} (${levelText(peer.reference)})`;
 }
-function pulseLevelLegend(scale) {
-  return intensityLegend(scale,n=>levelText(n),{missing:true});
-}
-const evidenceValue=(key,value)=>value===null||!Number.isFinite(value)?'—':
-  ['consistency','distributedConsistency'].includes(key)?ratioLabel(value):number.format(value);
-
-/** Linear lengths encode the actual *composite-index* ratios, not a rank or an award. */
-function pulseLevelDistribution(model) {
-  const {rows,median:cohortMedian,max}=model.distribution;
-  if(!rows.length)return '<div class="pulse-peer-panel"><p class="pulse-peer-empty">No covered dates available for a peer contribution comparison. Missing evidence is not zero.</p></div>';
-  const medianPosition=max>0&&cohortMedian!==null?Math.min(100,100*cohortMedian/max):0;
-  const bars=rows.map(row=>{
-    const value=row.averageLevel,ref=row.periodPeer;
-    const width=max>0?Math.max(0,Math.min(100,value/max*100)):0;
-    const peerText=levelPeerText(ref);
-    const name=esc(row.name);
-    return `<div class="pulse-peer-row" role="listitem"><span class="pulse-peer-name" title="${name}">${name}</span>
-      <div class="pulse-peer-track" role="img" aria-label="${esc(`${row.name}: mean daily contribution level ${levelText(value)}; ${peerText}; across ${row.coveredDays} covered dates.`)}">
-        <span class="pulse-peer-bar" style="width:${width}%"></span>
-        ${model.distribution.comparable&&cohortMedian!==null?`<span class="pulse-peer-median" style="left:${medianPosition}%" aria-hidden="true"></span>`:''}
-      </div><span class="pulse-peer-values"><strong>${levelText(value)}</strong><small>${esc(peerText)}</small></span></div>`;
-  }).join('');
-  const evidenceRows=rows.map(row=>`<tr><th scope="row">${esc(row.name)}<small>${row.coveredDays} covered dates · ${row.coveredWorkdays} working days</small></th>${model.metricLabels.map(({key})=>{
-    const reference=row.evidencePeers?.[key]?.reference;
-    return `<td><strong>${evidenceValue(key,row[key])}</strong><small>Other median: ${evidenceValue(key,reference)}</small></td>`;
-  }).join('')}</tr>`).join('');
-  return `<section class="pulse-peer-panel" aria-labelledby="pulse-peer-heading">
-    <div class="pulse-peer-heading"><div><span class="eyebrow">SELECTED-PERIOD COMPARISON</span><h4 id="pulse-peer-heading">Recorded contribution distribution</h4><p>Mean composite index per covered calendar day · ${esc(formatDate(model.from))}–${esc(formatDate(model.to))} · ${rows.length} contributor${rows.length===1?'':'s'}</p></div><div class="pulse-peer-metric"><span>Selected-cohort median</span><strong>${levelText(cohortMedian)}</strong></div></div>
-    <div class="pulse-peer-axis"><span>0</span><span>${max>0?levelText(max/2):'0'}</span><span>${levelText(max)} index</span></div>
-    <div class="pulse-peer-rows" role="list" aria-label="Selected contributor levels, linear bar lengths relative to the highest observed index">${bars}</div>
-    <div class="pulse-peer-footnote">${model.distribution.comparable?'<span class="pulse-peer-median-key" aria-hidden="true"></span> Dashed marker = all selected contributors’ median. Individual ratios instead use the median of <em>other</em> selected contributors.':'Select at least two contributors for peer comparisons.'} Bar length is linear in the composite index; the index itself uses diminishing-return log-scaled activity inputs. This measures recorded Git signals, not individual performance.</div>
-    <details class="pulse-peer-evidence"><summary><span>Compare the underlying recorded evidence</span><small>Own value vs other contributors’ median · scroll table horizontally</small></summary>
-      <div class="table-scroll"><table class="pulse-gap-table pulse-peer-table"><thead><tr><th>Contributor</th>${model.metricLabels.map(({label})=>`<th>${esc(label)}</th>`).join('')}</tr></thead><tbody>${evidenceRows}</tbody></table></div>
-      <p>Counts use the selected date range; meaningful and distributed consistency use covered working days. Peer references exclude the contributor being compared. Zero medians cannot produce a meaningful multiplier. Commits, line churn, and inclusion in tagged releases are observable Git signals—not effort, quality or productivity.</p>
-    </details></section>`;
-}
 function pulseLevelSummary(model) {
   return `${!model.available?'<p class="pulse-gap-unavailable">No covered dates in this view; missing history cannot be interpreted as zero.</p>':''}
-    <div class="pulse-gap-summary-head"><strong>Recent contribution level</strong><span>Latest ${model.workdays} complete working days, including history before the displayed start if available. The distribution chart above uses the selected dates instead.</span></div>
-    <div class="table-scroll"><table class="pulse-gap-table pulse-level-table"><thead><tr><th>Contributor</th><th>Recent index / day</th><th>Other contributors’ median</th><th>Authored commits</th><th>Non-VERSION lines</th><th>Authored shipped lines</th><th>Meaningful workdays</th><th>Distributed workdays</th></tr></thead><tbody>
-    ${[...model.rows].sort((a,b)=>(b.recentLevel??-1)-(a.recentLevel??-1)).map(row=>`<tr><th>${esc(row.name)}</th><td><strong>${levelText(row.recentLevel)}</strong><small>${row.recent?`as of ${formatDate(row.recent.asOf)}`:'Prior history insufficient'}</small></td><td>${esc(levelPeerText(row.peer))}</td><td>${number.format(row.commits)}</td><td>${number.format(row.churn)}</td><td>${number.format(row.releaseLines)}</td><td>${row.consistency===null?'—':`${ratioLabel(row.consistency)}<small>${row.meaningfulDays} / ${row.coveredWorkdays}</small>`}</td><td>${row.distributedConsistency===null?'—':`${ratioLabel(row.distributedConsistency)}<small>${row.distributedDays} / ${row.coveredWorkdays}</small>`}</td></tr>`).join('')}</tbody></table></div>
-    <p class="pulse-gap-caution">Daily index = 25% log-scaled authored commits (4 = 1 unit) + 45% log-scaled non-VERSION changed lines (200 = 1 unit) + 20% log-scaled authored lines in tagged releases (200 = 1 unit) + 10% churn-weighted distribution. Above-baseline activity is not capped. Recent level = 80% average daily index + 20% meaningful-day consistency across ${model.workdays} complete working days. The table’s raw totals and consistency percentages use the selected dates, while the recent index and its peer median use the trailing working-day window. Peer ratios compare composite Git indices, not delivered value. A single selected person has no peer reference.</p>`;
+    <div class="pulse-gap-summary-head"><strong>Absolute recorded velocity</strong><span>Fixed-scale daily index; these recent values summarise the latest ${model.workdays} covered working days through the chosen end date. The coloured cells show the selected dates without peer normalisation.</span></div>
+    <div class="table-scroll"><table class="pulse-gap-table pulse-level-table"><thead><tr><th>Contributor</th><th>Selected mean / calendar day</th><th>Recent velocity / workday</th><th>Authored commits</th><th>Non-VERSION lines</th><th>Lines introduced in releases</th><th>Meaningful workdays</th><th>Distributed workdays</th></tr></thead><tbody>
+    ${[...model.rows].sort((a,b)=>(b.averageLevel??-1)-(a.averageLevel??-1)).map(row=>`<tr><th>${esc(row.name)}</th><td><strong>${levelText(row.averageLevel)}</strong><small>${row.coveredDays} covered dates</small></td><td><strong>${levelText(row.recentLevel)}</strong><small>${row.recent?`as of ${formatDate(row.recent.asOf)}`:'Prior history insufficient'}</small></td><td>${number.format(row.commits)}</td><td>${number.format(row.churn)}</td><td>${number.format(row.releaseLines)}</td><td>${row.consistency===null?'—':`${ratioLabel(row.consistency)}<small>${row.meaningfulDays} / ${row.coveredWorkdays}</small>`}</td><td>${row.distributedConsistency===null?'—':`${ratioLabel(row.distributedConsistency)}<small>${row.distributedDays} / ${row.coveredWorkdays}</small>`}</td></tr>`).join('')}</tbody></table></div>
+    <p class="pulse-gap-caution">Daily index = 25% log-scaled authored commits (4 = 1 reference unit) + 45% log-scaled non-VERSION changed lines (200 = 1 reference unit) + 20% log-scaled authored lines introduced in incremental tagged releases (200 = 1 reference unit) + 10% churn-weighted temporal distribution. The combined reference mix gives 1.0 index unit; this is a mathematical scale, <em>not</em> a work quota. The value has no upper cap. Each monthly cell averages the day-level index over covered calendar days, including quiet days; each daily cell uses that date's index. The <strong>fixed colour legend</strong> does not depend on selected contributors, time windows or their maximum value. Recent workday velocity separately combines 80% daily index and 20% meaningful-day consistency. These are recorded change proxies, not working hours or quality.</p>`;
 }
 function pulseLevelDailyLabel(person,item) {
   if(!item)return `${person}: no recorded date evidence`;
   if(item.reason!=='scored')return `${person}, ${formatDate(item.date)}: outside imported history; index not available`;
-  return `${person}, ${formatDate(item.date)}: recorded daily contribution level ${levelText(item.level)}; ${levelPeerText(item.peer)}; ${item.commits} commits, ${number.format(item.churn)} non-VERSION changed lines, ${number.format(item.releaseLines)} authored shipped lines; ${pulseTemporalDailyLabel(item.temporal)}.`;
+  return `${person}, ${formatDate(item.date)}: absolute recorded velocity ${levelText(item.level)} index; ${item.commits} authored commits, ${number.format(item.churn)} non-VERSION changed lines, ${number.format(item.releaseLines)} authored changed lines included in tagged releases; ${pulseTemporalDailyLabel(item.temporal)}.`;
 }
 function pulseLevelDayDetails(item) {
   if(!item)return '';
-  return `<div class="pulse-level-detail"><span class="eyebrow">RECORDED CONTRIBUTION LEVEL · SHARED COHORT SCALE</span><div class="pulse-gap-detail-top"><strong>${levelText(item.level)}${item.level!==null?' index':''}</strong><span>${item.reason==='scored'?'Log-scaled recorded contribution index':'Outside imported history · unscored'}</span></div><div class="pulse-gap-detail-facts"><span>Other selected contributors’ median <b>${levelText(item.peer?.reference??null)}</b></span><span>Index relative to peers <b>${esc(levelPeerText(item.peer))}</b></span><span>Authored commits <b>${number.format(item.commits)}</b></span><span>Non-VERSION changed lines <b>${number.format(item.churn)}</b></span><span>Authored lines in tagged releases <b>${number.format(item.releaseLines)}</b></span><span>Churn-weighted distribution <b>${item.temporal?.distribution===null?'Unknown':ratioLabel(item.temporal.distribution)}</b></span><span>Meaningful authored day <b>${item.temporal?.meaningful?'Yes':'No'}</b></span></div><small>All selected contributors use one colour scale. The relative reference excludes this contributor and uses the same date. This index does not measure effort, hours, or quality; release tags on weekends are credited the next workday.</small></div>`;
+  return `<div class="pulse-level-detail"><span class="eyebrow">ABSOLUTE VELOCITY · FIXED SCALE</span><div class="pulse-gap-detail-top"><strong>${levelText(item.level)}${item.level!==null?' index':''}</strong><span>${item.reason==='scored'?'Daily recorded contribution index':'Outside imported history · unscored'}</span></div><div class="pulse-gap-detail-facts"><span>Authored commits <b>${number.format(item.commits)}</b></span><span>Non-VERSION changed lines <b>${number.format(item.churn)}</b></span><span>Authored lines in tagged releases <b>${number.format(item.releaseLines)}</b></span><span>Churn-weighted distribution <b>${item.temporal?.distribution===null?'Unknown':ratioLabel(item.temporal.distribution)}</b></span><span>Meaningful authored day <b>${item.temporal?.meaningful?'Yes':'No'}</b></span></div><small>The same numeric index always has the same colour regardless of who is selected. This index is not a measurement of effort, hours or work quality; weekend release tags are credited on the next workday.</small></div>`;
 }
 function pulseLevelMonthLabel(person,month,bucket) {
   if(!bucket)return `${person}, ${month}: no imported evidence`;
-  return `${person}, ${month}: mean daily contribution index ${levelText(bucket.score)} over ${bucket.days} covered calendar days; ${levelPeerText(bucket.peer)}; ${bucket.commits} commits, ${number.format(bucket.churn)} non-VERSION changed lines, ${number.format(bucket.releaseLines)} shipped lines; ${bucket.meaningfulDays} meaningful workdays.`;
+  return `${person}, ${month}: absolute velocity ${levelText(bucket.score)} index per covered calendar day across ${bucket.days} days; ${bucket.commits} authored commits, ${number.format(bucket.churn)} non-VERSION changed lines, ${number.format(bucket.releaseLines)} authored lines included in releases; ${bucket.meaningfulDays} meaningful workdays.`;
 }
 
 function pulseMomentumDailyLabel(person,item) {
@@ -1141,8 +1118,8 @@ function pulseMomentumDailyLabel(person,item) {
 }
 function pulseMomentumSummary(model,levelModel=null) {
   const latest=row=>row.latest ? `${momentumNumber(row.latest.score)} · ${momentumState(row.latest)} · ${formatDate(row.latest.date)}` : 'Not established';
-  return `${!model.available?'<p class="pulse-gap-unavailable">No comparable full workday windows in this range. The trend requires complete prior evidence; missing history is not interpreted as a decline.</p>':''}<div class="pulse-gap-summary-head"><strong>Individual contribution direction + sustained level</strong><span>Direction compares each person with their own earlier period. Level separately compares recorded contribution across selected people; a high, steady contributor should stand out here.</span></div>
-    <div class="table-scroll"><table class="pulse-gap-table"><thead><tr><th>Contributor</th><th>Latest momentum</th><th>Recent contribution level</th><th>Vs selected peers</th><th>Recent pace / day</th><th>Previous pace / day</th><th>Meaningful days recent / prior</th><th>Distributed days recent / prior</th><th>Mean directional score</th><th>Building days</th><th>Cooling days</th><th>Workdays scored</th></tr></thead><tbody>
+  return `${!model.available?'<p class="pulse-gap-unavailable">No comparable full workday windows in this range. The trend requires complete prior evidence; missing history is not interpreted as a decline.</p>':''}<div class="pulse-gap-summary-head"><strong>Contribution direction and recorded velocity</strong><span>Momentum compares each person with their own earlier pace. Recent absolute recorded velocity provides a separate magnitude reference, including when directional change is near zero.</span></div>
+    <div class="table-scroll"><table class="pulse-gap-table"><thead><tr><th>Contributor</th><th>Latest momentum</th><th>Recent absolute velocity</th><th>Other-contributor median (context only)</th><th>Recent pace / day</th><th>Previous pace / day</th><th>Meaningful days recent / prior</th><th>Distributed days recent / prior</th><th>Mean directional score</th><th>Building days</th><th>Cooling days</th><th>Workdays scored</th></tr></thead><tbody>
     ${model.rows.map(row=>`<tr><th>${esc(row.name)}</th><td>${latest(row)}</td><td><strong>${levelText(levelModel?.byId.get(row.id)?.recentLevel)}</strong></td><td>${esc(levelPeerText(levelModel?.byId.get(row.id)?.peer))}</td><td>${pulseScore(row.latest?.recent?.pace)}</td><td>${pulseScore(row.latest?.previous?.pace)}</td><td>${row.latest?`${row.latest.recent.meaningfulDays} / ${row.latest.previous.meaningfulDays}`:'—'}</td><td>${row.latest?`${row.latest.recent.distributedDays} / ${row.latest.previous.distributedDays}`:'—'}</td><td>${momentumNumber(row.averageScore)}</td><td>${number.format(row.buildingDays)}</td><td>${number.format(row.coolingDays)}</td><td>${number.format(row.scoredDays)}</td></tr>`).join('')}</tbody></table></div>
     <p class="pulse-gap-caution">Daily contribution units blend 25% commits (cap 4/day), 45% non-VERSION line churn (cap 200/day), 15% churn-weighted time distribution, and 15% authored lines introduced in tagged releases (cap 200/day, weekend tags credited on the next workday). Comparison pace = 75% mean daily contribution units + 25% meaningful-day consistency (workdays with at least ${model.temporal.meaningfulLines} non-VERSION changed lines). Momentum = 100 × (recent pace − previous pace) / (recent pace + previous pace + 0.1). Scores ≥ +${MOMENTUM_DIRECTION_THRESHOLD} are building, ≤ −${MOMENTUM_DIRECTION_THRESHOLD} cooling. Monthly cells average eligible daily scores; positive and negative periods can cancel. No release is required for momentum to be measurable. Squashes, pairing, reviews, binary files, generated churn, holiday schedules and unseen work can all distort this view. It is not a performance rating.</p>`;
 }
@@ -1189,7 +1166,7 @@ function pulseGapSummary(model) {
 function renderMonthlyPulse(view) {
   const gapMode=!!pulseReleaseGap,momentumMode=!!pulseMomentum,levelMode=state.pulseLens==='level',signalMode=gapMode||momentumMode||levelMode;
   const signal=gapMode?pulseReleaseGap:momentumMode?pulseMomentum:pulseLevel;
-  const signalStyle=gapMode?pulseGapCellStyle:momentumMode?pulseMomentumCellStyle:null;
+  const signalStyle=gapMode?pulseGapCellStyle:momentumMode?pulseMomentumCellStyle:levelMode?velocityStyle:null;
   const startMonth=monthIndex(view.start),endMonth=monthIndex(view.end);
   const months=Array.from({length:endMonth-startMonth+1},(_,i)=>startMonth+i);
   const byPerson=view.contributors.map(c=>{
@@ -1202,8 +1179,8 @@ function renderMonthlyPulse(view) {
     }
     return {c,map};
   });
-  const scale=gapMode||momentumMode?null:makeIntensityScale(byPerson.flatMap(({map})=>months.map(m=>levelMode?(map.get(m)?.score??null):(map.get(m)||0))));
-  const columns=`minmax(128px,160px) repeat(${months.length}, minmax(22px, 1fr))`;
+  const scale=signalMode?null:makeIntensityScale(byPerson.flatMap(({map})=>months.map(m=>map.get(m)||0)));
+  const columns=`minmax(128px,160px) repeat(${months.length}, minmax(${levelMode?'38':'22'}px, 1fr))`;
   const yearHead=[];
   let i=0;
   while(i<months.length){
@@ -1213,7 +1190,7 @@ function renderMonthlyPulse(view) {
     yearHead.push(`<span class="pulse-year" style="grid-column:${i+2}/span ${end-i}">${year}</span>`);
     i=end;
   }
-  const monthLabels=months.map(m=>`<span class="pulse-month">${new Date(Date.UTC(Math.floor(m/12),m%12,1)).toLocaleDateString('en-GB',{month:'short',timeZone:'UTC'}).slice(0,1)}</span>`).join('');
+  const monthLabels=months.map(m=>`<span class="pulse-month">${new Date(Date.UTC(Math.floor(m/12),m%12,1)).toLocaleDateString('en-GB',{month:'short',timeZone:'UTC'}).slice(0,levelMode?3:1)}</span>`).join('');
   const cells=byPerson.map(({c,map})=>`<div class="pulse-label" title="${esc(c.displayName)}">${esc(c.displayName)}</div>${months.map(m=>{
     const bucket=map.get(m);
     const v=signalMode?(bucket?.score??null):(bucket||0);
@@ -1221,7 +1198,7 @@ function renderMonthlyPulse(view) {
     const label=levelMode ? pulseLevelMonthLabel(c.displayName,ym,bucket) : gapMode ? bucket ? `${c.displayName}, ${ym}: mean weighted release-gap signal ${pulseScore(v)} of 100 over ${bucket.days} eligible weekdays; ${bucket.attentionDays} days at least ${ATTENTION_THRESHOLD}; ${bucket.distributedDays} distributed days. Latest credited release ${bucket.lastRelease?.tag||'unknown'} (${bucket.lastRelease?.linesChanged??'—'} shipped changed lines); effective gap ${pulseScore(bucket.lastEffectiveGap)} days.` : `${c.displayName}, ${ym}: no eligible days with a prior credited release contribution.` :
       momentumMode ? bucket ? `${c.displayName}, ${ym}: mean momentum ${momentumNumber(v)} across ${bucket.days} comparable workdays; ${bucket.buildingDays} building and ${bucket.coolingDays} cooling days; ${bucket.distributedDays} distributed days; latest ${momentumNumber(bucket.latest.score)} on ${bucket.latest.date}.` : `${c.displayName}, ${ym}: insufficient comparable workday history.` :
       `${c.displayName} · ${ym}: ${number.format(v)} ${METRICS[view.metric].unit}; ${pulseTemporal?.byId.get(c.id)?.months.get(ym)?.meaningfulDays??0} meaningful workdays, ${pulseTemporal?.byId.get(c.id)?.months.get(ym)?.distributedDays??0} distributed workdays.`;
-    return `<div class="pulse-cell ${signalMode?'pulse-gap-month':''}" style="${signalStyle?signalStyle(v):intensityStyle(v,scale)}" title="${esc(label)}" role="img" aria-label="${esc(label)}"></div>`;
+    return `<div class="pulse-cell ${signalMode?'pulse-gap-month':''} ${levelMode?'pulse-velocity-cell pulse-velocity-month':''}" style="${signalStyle?signalStyle(v):intensityStyle(v,scale)}" title="${esc(label)}" role="img" aria-label="${esc(label)}">${levelMode?`<span aria-hidden="true">${esc(velocityCellText(v))}</span>`:''}</div>`;
   }).join('')}`).join('');
   $('pulse').innerHTML=`<div class="pulse-grid" style="grid-template-columns:${columns}"><span></span>${yearHead.join('')}<span></span>${monthLabels}${cells}</div>`;
   return scale;
@@ -1247,8 +1224,8 @@ function renderDailyPulse(view) {
   const weeks=view.weeks;
   const gapMode=!!pulseReleaseGap,momentumMode=!!pulseMomentum,levelMode=state.pulseLens==='level',signalMode=gapMode||momentumMode||levelMode;
   const signal=gapMode?pulseReleaseGap:momentumMode?pulseMomentum:pulseLevel;
-  const signalStyle=gapMode?pulseGapCellStyle:momentumMode?pulseMomentumCellStyle:null;
-  const scale=gapMode||momentumMode?null:makeIntensityScale(levelMode?view.contributors.flatMap(c=>[...pulseLevel.byId.get(c.id).daily.values()].map(day=>day.level)):view.contributors.flatMap(c=>Object.values(c.daily[view.metric])));
+  const signalStyle=gapMode?pulseGapCellStyle:momentumMode?pulseMomentumCellStyle:levelMode?velocityStyle:null;
+  const scale=signalMode?null:makeIntensityScale(view.contributors.flatMap(c=>Object.values(c.daily[view.metric])));
   const weekColumns=`repeat(${weeks.length}, var(--pulse-week-size))`;
   const months=dailyPulseMonths(view).map(m=>`<span class="pulse-daily-month" style="grid-column:${m.index+1}">${esc(m.label)}</span>`).join('');
   const weekdays=DAY_NAMES.map((day,i)=>`<span aria-hidden="true">${i%2===0?esc(day):''}</span>`).join('');
@@ -1261,7 +1238,7 @@ function renderDailyPulse(view) {
       const value=signalMode?(levelMode?(cell?.level??null):(cell?.score??null)):(c.daily[view.metric][day]||0);
       const label=gapMode ? pulseGapDailyLabel(c.displayName,cell) : momentumMode ? `${pulseMomentumDailyLabel(c.displayName,cell)}; ${pulseLevelDailyLabel(c.displayName,pulseLevel?.byId.get(c.id)?.daily.get(day))}` : levelMode?pulseLevelDailyLabel(c.displayName,cell) :
         `${c.displayName}, ${formatDate(day)}: ${number.format(value)} ${METRICS[view.metric].unit}; ${pulseTemporalDailyLabel(pulseTemporal?.byId.get(c.id)?.daily.get(day)||emptyTemporalDay(pulseTimeSettings()))}. View day activity.`;
-      return `<button type="button" class="pulse-cell pulse-daily-cell ${signalMode&&cell?.reason==='weekend'?'pulse-gap-weekend':''}" style="${signalStyle?signalStyle(value):intensityStyle(value,scale)}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(label)}" aria-label="${esc(label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover"></button>`;
+      return `<button type="button" class="pulse-cell pulse-daily-cell ${signalMode&&cell?.reason==='weekend'?'pulse-gap-weekend':''} ${levelMode?'pulse-velocity-cell pulse-velocity-day':''}" style="${signalStyle?signalStyle(value):intensityStyle(value,scale)}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(label)}" aria-label="${esc(label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${levelMode?`<span aria-hidden="true">${esc(velocityCellText(value))}</span>`:''}</button>`;
     })).join('');
     return `<div class="pulse-daily-contributor"><div class="pulse-daily-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div><div class="pulse-weekdays">${weekdays}</div><div class="pulse-day-cells" style="grid-template-columns:${weekColumns}">${cells}</div></div>`;
   }).join('');
@@ -1309,27 +1286,25 @@ function renderPulse(view) {
   $('pulse-momentum-summary').innerHTML=momentumMode&&view.contributors.length?pulseMomentumSummary(pulseMomentum,pulseLevel):'';
   $('pulse-level-summary').hidden=!levelMode||!view.contributors.length;
   $('pulse-level-summary').innerHTML=levelMode&&view.contributors.length?pulseLevelSummary(pulseLevel):'';
-  $('pulse-comparison').hidden=!(momentumMode||levelMode)||!view.contributors.length;
-  $('pulse-comparison').innerHTML=(momentumMode||levelMode)&&view.contributors.length?pulseLevelDistribution(pulseLevel):'';
   setText('pulse-hint',levelMode
-    ? `Recorded contribution level uses log-scaled evidence rather than hard caps: daily commits, non-VERSION changed lines, authored lines shipped in tagged releases and churn-weighted temporal distribution. Each daily square represents that day’s absolute composite index; each monthly square averages covered calendar days. One shared green scale across the selected contributors makes sustained high levels visible, even when Momentum is steady. The distribution above shows the selected dates with direct magnitude comparisons; the table below shows the separate trailing ${state.pulseLevelWorkdays}-working-day index. The index reflects recorded Git changes, not working hours or work quality.`
+    ? `Absolute recorded velocity is a fixed-scale, uncapped composite of authored commits, non-VERSION changed lines, authored changes included in releases, and temporal distribution. Daily and monthly cells show their actual numeric values: monthly values are averages per covered calendar day, including quiet days. The colour thresholds never adapt to peers or filtered maxima. The table below shows selected-period averages and a separate trailing ${state.pulseLevelWorkdays}-working-day view. One reference index unit corresponds to the weighted model’s reference inputs; this is not a work quota, measure of hours or quality.`
     :gapMode
     ? `Signal (0–100) = 100 × weighted release gap × max(1 − daily commits / ${state.pulseBusyDay}, 0) × max(1 − daily non-VERSION changed lines / ${state.pulseDailyChurn}, 0) × (1 − 0.15 × churn-weighted time distribution). The gap grows to 100% in ${state.pulseGapHorizon} days; incremental tagged releases reduce it by min(your shipped changed lines / ${state.pulseReleaseLines}, 1). A busy commit day or substantial churn can neutralise the signal; meaningful changes spread across distinct ${state.pulseTemporalPeriod}-minute windows can modestly soften any remainder (max 15%). ${daily?'Each square is one date; open a cell for its evidence.':'Each monthly square averages eligible weekday signals.'} Weekends, unobserved dates and days before measurable release credit are not scored.`
     :momentumMode
-    ? `Direction (−100 to +100): compare the latest ${state.pulseMomentumWorkdays} workdays with the prior ${state.pulseMomentumWorkdays} workdays for the same person. Daily contribution units blend 25% commits, 45% non-VERSION changed lines, 15% churn-weighted distribution, and 15% authored lines shipped in tagged releases. Window pace = 75% average units + 25% consistency (share of workdays with ≥ ${state.pulseMeaningfulLines} changed lines). Momentum = 100 × (recent pace − previous pace) / (recent pace + previous pace + 0.1). Positive is building; negative is cooling; zero can also mean no observed activity. The separate contribution-distribution chart above compares observed levels across the selected dates, not Momentum. ${daily?'Open a date for both windows and today’s evidence.':'Monthly cells average scored weekdays, so opposing directions can cancel.'} At least ${2*state.pulseMomentumWorkdays} complete imported weekdays are required; weekends are not scored.`
+    ? `Direction (−100 to +100): compare the latest ${state.pulseMomentumWorkdays} workdays with the prior ${state.pulseMomentumWorkdays} workdays for the same person. Daily contribution units blend 25% commits, 45% non-VERSION changed lines, 15% churn-weighted distribution, and 15% authored lines shipped in tagged releases. Window pace = 75% average units + 25% consistency (share of workdays with ≥ ${state.pulseMeaningfulLines} changed lines). Momentum = 100 × (recent pace − previous pace) / (recent pace + previous pace + 0.1). Positive is building; negative is cooling; zero can also mean no observed activity. The summary below separately shows absolute recent recorded contribution level. ${daily?'Open a date for both windows and today’s evidence.':'Monthly cells average scored weekdays, so opposing directions can cancel.'} At least ${2*state.pulseMomentumWorkdays} complete imported weekdays are required; weekends are not scored.`
     :daily
     ? `Each square is one authored day (Mon–Sun). Open a cell to see its first/last commit, span, active ${state.pulseTemporalPeriod}-minute windows and churn-weighted distribution. A single commit has unknown spread, not zero contribution. Scroll sideways for older weeks.`
     : 'One square per person and calendar month. Intensity still shows the selected absolute Git metric. The distribution summary underneath adds meaningful-day consistency, recorded clock span and timed-window coverage.');
-  const caption=gapMode?'RELEASE GAP × ACTIVITY':momentumMode?'CONTRIBUTION MOMENTUM':levelMode?'CONTRIBUTION LEVEL':METRICS[view.metric].label.toUpperCase();
+  const caption=gapMode?'RELEASE GAP × ACTIVITY':momentumMode?'CONTRIBUTION MOMENTUM':levelMode?'ABSOLUTE VELOCITY':METRICS[view.metric].label.toUpperCase();
   const legend=gapMode?pulseGapLegend():momentumMode?pulseMomentumLegend():null;
   if(!view.contributors.length||!view.spanDays){
-    setText('pulse-context',signalMode?`${caption} / ${daily?'DAILY':'MONTHLY'} · ${momentumMode?'−100 TO +100':levelMode?'SHARED INDEX':'0–100'}`:`${caption} / ${daily?'DAILY':'MONTHLY'} TOTALS · SHARED SCALE`);
+    setText('pulse-context',signalMode?`${caption} / ${daily?'DAILY':'MONTHLY'} · ${momentumMode?'−100 TO +100':levelMode?'FIXED ABSOLUTE INDEX':'0–100'}`:`${caption} / ${daily?'DAILY':'MONTHLY'} TOTALS · SHARED SCALE`);
     container.innerHTML=empty('Select contributors and a valid time window.');
     $('pulse-key').innerHTML=legend||intensityLegend(makeIntensityScale([]));
   } else {
     const scale=daily?renderDailyPulse(view):renderMonthlyPulse(view);
-    $('pulse-key').innerHTML=legend||(levelMode?pulseLevelLegend(scale):intensityLegend(scale,n=>number.format(n)));
-    setText('pulse-context',signalMode?`${caption} / ${daily?'DAILY':'MONTHLY'} · ${levelMode?'SHARED LOGARITHMIC INDEX SCALE':`FIXED ${momentumMode?'DIVERGING −100 TO +100':'0–100'} SCALE`}`:`${caption} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(scale.max)} SCALE`);
+    $('pulse-key').innerHTML=legend||(levelMode?velocityLegend():intensityLegend(scale,n=>number.format(n)));
+    setText('pulse-context',signalMode?`${caption} / ${daily?'DAILY':'MONTHLY'} · ${levelMode?'FIXED ABSOLUTE INDEX · INDEPENDENT OF COHORT':`FIXED ${momentumMode?'DIVERGING −100 TO +100':'0–100'} SCALE`}`:`${caption} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(scale.max)} SCALE`);
     container.scrollLeft=scrollToLatest?container.scrollWidth:oldScroll;
   }
   pulsePreviousMode=state.pulseMode;

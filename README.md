@@ -353,87 +353,72 @@ full imported, policy-filtered release index. The release and shared temporal se
 session export/import; older sessions restore missing settings to their
 documented defaults.
 
-### Contribution level: sustained contribution versus momentum (Pulse)
+### Absolute velocity: fixed-scale recorded contribution (Pulse)
 
-**Contribution level** answers the question that the existing direction-only
-Momentum lens cannot: *what if somebody consistently contributes much more
-than everyone else, so their momentum looks flat?* Momentum is unchanged and
-continues to measure the **difference from their own earlier pace**. The
-fourth Pulse lens measures **recorded contribution level** on a shared scale,
-without hard-capping all substantial days at the same score.
+**Absolute velocity** is the fourth Pulse lens. It shows how much activity was
+*recorded* per calendar day on an absolute, consistent index rather than a
+ratio to peers or a change relative to the contributor's own previous period.
+It replaces the oversized horizontal peer-distribution bars. **Momentum**
+continues to measure the change between a person's own two preceding windows,
+which may correctly remain near zero for a consistently active contributor.
 
-For every covered day, using the same import-wide author identities, selected
-merge/revert policy, Git evidence and incremental tag ancestry as Momentum:
+The index itself is the previously established uncapped Contribution Level
+formula. Its fixed colour thresholds, not the score, are the new behaviour:
 
 ```
-L(d) = 0.25 * log(1 + authored_commits) / log(1 + 4)
-     + 0.45 * log(1 + non_VERSION_changed_lines) / log(1 + 200)
-     + 0.20 * log(1 + authored_tagged_release_lines) / log(1 + 200)
-     + 0.10 * churn_weighted_distribution
-
-recent_level(N) = 0.80 * average L(d) over N complete recorded workdays
-                + 0.20 * meaningful_day_consistency over those days
+V(day) = 0.25 * ln(1 + authored_commits) / ln(5)
+       + 0.45 * ln(1 + non_VERSION_changed_lines) / ln(201)
+       + 0.20 * ln(1 + authored_lines_in_incremental_releases) / ln(201)
+       + 0.10 * churn_weighted_distribution
 ```
 
-The baselines 4 commits, 200 changed lines and 200 shipped lines each
-produce one normalised unit *within their component*, but **values above the
-baseline continue to count** with diminishing logarithmic returns. This is
-a descriptive index, not a productivity score; changed-line figures include
-rework, code generation and other work with different characteristics.
+The reference inputs (4 commits, 200 changed lines, 200 release-included lines,
+full distributed activity) produce a composite index of **1.0**; this is a
+unit-calibration example, **not a quota or performance target**. Values above
+1.0 remain uncapped and retain diminishing logarithmic returns. Lines can be
+inflated by generated changes or rework and do not establish delivery quality.
 
-The level lens offers:
+- **Daily cells:** numeric index directly in each cell; the colour at 0.5,
+  1.0 or 2.0 is identical for every contributor, date range and selection.
+  One substantial commit retains its ordinary churn credit even without
+  measurable activity spread. Weekends with authored activity are included.
+- **Monthly cells:** average daily index over *covered calendar days*,
+  including zero-activity days. Numeric value printed in each wider cell;
+  partial months use only covered dates.
+- **Fixed legend:** reference marks 0, 0.25, 0.5, 1, 1.5, 2 and 3+;
+  exact scores above 3 are still shown, not capped.
+- **Recent velocity table:** selected-period mean plus separate trailing
+  5/10/20-workday pace with authored commits, non-VERSION churn,
+  release-included line changes and consistency as transparent evidence.
+- **Unavailable vs quiet:** unobserved history stays hatched and displays
+  `—`; genuinely covered dates with no evidence show 0.
 
-- **Daily cells:** one cell per authored calendar date, with a **shared
-  green logarithmic colour scale** for everyone. Weekends are displayed, not
-  treated as unobserved; each cell shows that date's raw composite index.
-  One large commit retains its substantive changed-line credit even when
-  temporal spread cannot be measured.
-- **Monthly cells:** the arithmetic mean of daily index scores over the
-  covered calendar days in each visible month. A partial month is not
-  represented as a full-month total. Missing historical dates are hatched,
-  distinct from a genuinely quiet imported day.
-- **Recent sustained level:** 5, 10 (default) or 20 *covered working days*,
-  using the entire available history through the selected end date even if
-  the display starts later. This is separate from Momentum's two-window
-  directional comparison.
-- **Selected-period contribution distribution:** immediately above the Daily
-  or Monthly heatmap in the Level and Momentum lenses, a compact horizontal
-  chart shows each selected contributor's **mean composite index per covered
-  calendar day**, across the **selected authored-date range**. Bar widths are
-  linear in the index on one shared axis (not ranks or individualised scales).
-  The dashed mark is the median index of **all selected contributors**.
-  A person's optional `2.5×` figure instead compares their index with the
-  median of the **other selected contributors** over those same dates.
-- **Expandable peer evidence:** open **Compare the underlying recorded
-  evidence** to inspect own values against the other contributors' medians for
-  authored commits, non-VERSION changed lines, authored release-included
-  lines, meaningful-day consistency and distributed-day consistency. Raw
-  counts use the visible date range, while the two consistency percentages
-  use observed weekdays in that range. Missing dates remain unknown; a zero
-  peer median never produces an infinite or fabricated ratio.
-- **Recent peer reference:** the table under Level, and the corresponding
-  Momentum summary, retain the **recent 5/10/20-workday comparison** as a
-  separate measure. Its period can differ from the selected date range;
-  both contexts are explicitly labelled and never silently interchanged.
-- **Neutral presentation:** no leader callouts, star badges, daily winner
-  markers or ranked peer judgements. Different recorded levels appear through
-  comparable bar lengths, the common heatmap palette, explicit peer medians,
-  and actual underlying evidence rather than congratulations.
+The horizontal peer bars, median reference line and leader highlighting have
+been removed. Directional Momentum may still show a neutral peer reference in
+its optional summary; its calculation has not changed. Absolute velocity is
+an observable Git-change index, **not hours worked, quality or productivity**.
 
-Both daily and monthly level heatmaps use **one common observed value scale**
-for all selected contributors, not separate per-person palettes or percentile
-ranks. Raw commits, changed lines and release-included lines remain visible
-in summaries and daily evidence, so observers can question a synthetic index.
-When a contributor is alone or imported history is too short, comparison or
-recent-window indicators are explicitly unavailable. The lens and lookback
-option persist in session export/import, with safe defaults for older archives.
+### Compare every dimension: incremental tagged releases
 
-**Interpretation warning:** these are *records of Git activity*. Different
-roles, pairing, review work, squash/merge policies, machine-generated
-changes, holidays and work outside Git prevent interpreting a high index as
-better individual performance. The reference group changes when contributor
-selection changes; numerical ratios should not be compared across different
-cohorts without acknowledging that change.
+The contributor scorecard now distinguishes actual **tag-ancestry release
+participation** from VERSION-file edits. It shows the count of incremental
+canonical tagged releases containing the contributor's authored commits,
+introduced authored commits in those releases, and authored non-VERSION
+changed text lines introduced in those releases. An independent count of
+GitHub publisher / annotated-tag actor events is metadata only; it does not
+claim authored contribution or deployment. VERSION touches remain, explicitly
+labelled as a weaker supporting proxy.
+
+Release columns use the **release-event date** (GitHub publication date if
+available, otherwise tag/tagged-commit date) and full reconstructed ancestry;
+ordinary contributor columns use **authored dates**. Both respect the same
+merge/revert policy, but a released commit may have been authored outside the
+selected period. The baseline tag is not an incremental delivery event.
+Aliases resolving to one commit count as one release. Incomplete ancestry is
+flagged in the table footnote; missing tag evidence displays `—`, not zero.
+Binary changes cannot add measurable lines, and the release count may include
+re-introductions of changes on divergent Git lineages. All new columns support
+sorting and the **Copy visible table as CSV** action.
 
 ### Activity spread, churn-weighted windows and consistency (all Pulse lenses)
 
@@ -635,7 +620,9 @@ release notes, identities or other user content.
 - `assets/release-gap.js` — pure individual absolute-line-weighted release credit × authored-day metric, bounded temporal relief, monthly aggregation and coverage rules.
 - `assets/temporal-activity.js` — shared, cached pure authored-clock spread, distinct windows, churn-weighted distribution and consistency summaries.
 - `assets/momentum.js` — bounded, self-relative contribution direction with rolling meaningful-day consistency.
-- `assets/contribution-level.js` — uncapped logarithmic recorded-contribution index, selected-period peer distribution, raw-evidence medians and recent-window references.
+- `assets/contribution-level.js` — uncapped logarithmic recorded-contribution index and recent-window references.
+- `assets/absolute-velocity.js` — immutable cohort-independent index palette, numeric cell labels and fixed legend.
+- `assets/release-scorecard.js` — pure per-contributor canonical tagged-release participation and release-date totals.
 - `assets/impact-window.js` — pure viewport, zoom, pan and release reveal logic.
 - `assets/co-release.js` — complete-release co-participation and evidence by pair.
 - `assets/download-names.js` — bounded descriptive export filenames with local timestamps.

@@ -1161,50 +1161,22 @@
 @media(max-width:480px){.pulse-temporal-settings summary{flex-wrap:wrap}.pulse-temporal-settings-preview{margin-left:38px}.pulse-temporal-chevron{margin-left:auto}.pulse-temporal-stats{grid-template-columns:1fr}.pulse-temporal-axis{font-size:7px}}
 @media(prefers-reduced-motion:reduce){.pulse-temporal-chevron{transition:none}}
 
-/* Level comparisons use proportion, not medals or categorical winners.
-   Linear bars encode the already log-scaled composite index on one fixed
-   selected-cohort axis; the dashed reference is the whole-cohort median. */
+/* Fixed-value velocity cells. Every numeric index maps to the same colour,
+   irrespective of people selected or the current date-range maximum. */
 #pulse-level-settings select{max-width:130px}
-.pulse-peer-panel{margin:2px 0 22px;padding:19px 21px 16px;border:1px solid #dce7de;border-radius:12px;background:linear-gradient(145deg,#fbfdfb 0%,#f5f9f6 100%)}
-.pulse-peer-heading{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:16px}
-.pulse-peer-heading .eyebrow{font-size:9px;letter-spacing:.1em;color:#4a8062}
-.pulse-peer-heading h4{font:700 17px/1.2 var(--font);color:var(--ink);letter-spacing:-.025em;margin:5px 0 3px}
-.pulse-peer-heading p{font:10px/1.55 var(--mono);color:var(--muted);margin:0}
-.pulse-peer-metric{display:grid;gap:4px;justify-items:end;white-space:nowrap}
-.pulse-peer-metric span{font:10px var(--mono);color:var(--muted)}
-.pulse-peer-metric strong{font:600 20px var(--mono);font-variant-numeric:tabular-nums;color:var(--ink)}
-.pulse-peer-axis{display:flex;justify-content:space-between;gap:5px;margin:0 140px 7px 162px;color:#7e9285;font:9px var(--mono);font-variant-numeric:tabular-nums}
-.pulse-peer-rows{display:grid;gap:8px}
-.pulse-peer-row{display:grid;grid-template-columns:150px minmax(0,1fr) 128px;gap:12px;align-items:center;min-width:0}
-.pulse-peer-name{font:600 12px/1.35 var(--font);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#304c3b}
-.pulse-peer-track{height:18px;border-radius:4px;background:#e8efe9;position:relative;overflow:hidden;outline:1px solid #d9e7dc;outline-offset:-1px}
-.pulse-peer-bar{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#6fa58c,#296849);border-radius:3px;min-width:0}
-.pulse-peer-median{position:absolute;top:0;bottom:0;width:0;border-left:1.5px dashed #283b34;opacity:.8;pointer-events:none}
-.pulse-peer-values{font:600 13px var(--mono);font-variant-numeric:tabular-nums;text-align:right;min-width:0;color:#293f34}
-.pulse-peer-values strong{display:block}
-.pulse-peer-values small{display:block;margin-top:2px;font:9px/1.45 var(--mono);color:#687f71;overflow-wrap:anywhere}
-.pulse-peer-footnote{font:10px/1.6 var(--mono);color:#60766a;margin:11px 0 0;padding-left:162px}
-.pulse-peer-median-key{display:inline-block;height:10px;border-left:2px dashed #283b34;margin-right:5px;vertical-align:middle}
-.pulse-peer-evidence{margin-top:14px;border-top:1px solid #d7e4d9;padding-top:12px}
-.pulse-peer-evidence summary{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;position:relative;padding-right:25px;color:#305b43;font:600 11px/1.5 var(--font)}
-.pulse-peer-evidence summary::after{content:"+";position:absolute;right:2px;top:-3px;font:19px/1 var(--mono);color:#51745d}
-.pulse-peer-evidence[open] summary::after{content:"−"}
-.pulse-peer-evidence summary::marker{font-size:10px}
-.pulse-peer-evidence summary:focus-visible{outline:2px solid var(--green);outline-offset:4px;border-radius:3px}
-.pulse-peer-evidence summary small{font:10px/1.4 var(--mono);color:#728779}
-.pulse-peer-evidence[open] summary{margin-bottom:10px}
-.pulse-peer-table{min-width:830px}
-.pulse-peer-table th{max-width:195px;overflow-wrap:anywhere}
-.pulse-peer-table tbody th{min-width:145px}
-.pulse-peer-table td strong{display:block;font:600 12px var(--mono)}
-.pulse-peer-table td small,.pulse-peer-table th small{display:block;font:9px/1.55 var(--mono);color:var(--muted);margin-top:3px}
-.pulse-peer-evidence p{font:10px/1.55 var(--mono);color:#687f70;margin:10px 0 0}
-.pulse-peer-empty{font:11px/1.6 var(--mono);color:var(--muted);margin:0}
-.pulse-level-table{min-width:950px}
+.pulse-velocity-cell{display:flex;align-items:center;justify-content:center;font:600 9px/1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.025em;text-align:center}
+.pulse-velocity-day{padding:0;overflow:hidden}
+.pulse-velocity-day span{pointer-events:none;white-space:nowrap}
+.pulse-velocity-month{min-width:38px;height:29px;font-size:11px}
+.pulse-velocity-cell span{font-variant-numeric:tabular-nums}
+.velocity-legend{display:flex;flex-wrap:wrap;align-items:center;gap:5px 9px;font:10px/1.4 var(--mono);color:var(--muted)}
+.velocity-legend-caption{font-weight:700;letter-spacing:.07em;margin-right:4px}
+.velocity-legend-stop{display:inline-flex;align-items:center;gap:3px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.velocity-legend-stop i{display:inline-block;height:13px;width:17px;border-radius:3px;border:1px solid rgba(0,0,0,.1)}
+.pulse-level-table{min-width:900px}
 .pulse-level-table tbody th small,.pulse-level-table tbody td small{display:block;font:10px/1.5 var(--mono);color:#718577;max-width:220px;margin-top:3px}
-@media(max-width:780px){.pulse-peer-panel{padding:15px 13px}.pulse-peer-row{grid-template-columns:115px minmax(0,1fr) 110px;gap:8px}.pulse-peer-axis{margin-left:123px;margin-right:116px}.pulse-peer-footnote{padding-left:123px}}
-@media(max-width:540px){.pulse-peer-heading{align-items:flex-start}.pulse-peer-heading h4{font-size:15px}.pulse-peer-metric{white-space:normal;text-align:right;max-width:100px}.pulse-peer-row{grid-template-columns:minmax(0,1fr) 86px;gap:3px 9px;padding-bottom:5px;border-bottom:1px solid #e6eee8}.pulse-peer-name{grid-column:1;grid-row:1;font-size:11px}.pulse-peer-values{grid-column:2;grid-row:1 / span 2;font-size:12px}.pulse-peer-values small{font-size:8px}.pulse-peer-track{grid-column:1;grid-row:2;height:15px}.pulse-peer-axis{margin:0 95px 7px 0}.pulse-peer-footnote{padding-left:0}.pulse-peer-evidence summary{align-items:flex-start;flex-direction:column;gap:2px}}
-@media(forced-colors:active){.pulse-peer-panel,.pulse-peer-track,.pulse-peer-evidence{border:1px solid CanvasText}.pulse-peer-bar{background:Highlight}.pulse-peer-median{border-color:CanvasText}}
+@media(max-width:720px){.velocity-legend{gap:5px 7px}.pulse-velocity-day{font-size:8px}}
+@media(forced-colors:active){.pulse-velocity-cell{border:1px solid CanvasText}.velocity-legend-stop i{border:1px solid CanvasText}}
 .pulse-level-detail{margin:13px 18px 0;border:1px solid #c9e0d0;border-radius:8px;padding:12px 13px;background:#f2faf4}
 .pulse-level-detail .eyebrow{font-size:9px;color:#326b4d}
 .pulse-level-detail .pulse-gap-detail-top strong{color:#1e6d48}
@@ -1214,3 +1186,9 @@
 .pulse-level-detail small{display:block;margin-top:9px;font:10px/1.55 var(--mono);color:#577560}
 @media(max-width:720px){.pulse-level-detail{margin:10px 13px 0}.pulse-level-detail .pulse-gap-detail-facts span{flex-wrap:wrap}}
 @media(forced-colors:active){.pulse-level-detail{border:1px solid CanvasText}}
+
+/* Keep contributor attribution visible across the longer, release-aware table. */
+#scorecard-wrap .data-table thead th:first-child{position:sticky;left:0;z-index:3;background:#f6f7f2;box-shadow:1px 0 0 var(--line)}
+#scorecard-wrap .data-table tbody td:first-child{position:sticky;left:0;z-index:2;background:var(--paper);box-shadow:1px 0 0 var(--line-soft)}
+#scorecard-wrap .data-table tbody tr:hover td:first-child{background:#f7faf5}
+@media(forced-colors:active){#scorecard-wrap .data-table tbody td:first-child{border-right:1px solid CanvasText}}

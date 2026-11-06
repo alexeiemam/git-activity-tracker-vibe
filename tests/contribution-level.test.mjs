@@ -229,9 +229,11 @@ test('UI wiring keeps four distinct lenses, evidence, cache-busted module contra
   assert.match(app,/LEVEL_WINDOWS\.includes\(s\.pulseLevelWorkdays\)/);
   assert.match(app,/pulseLevelWorkdays:state\.pulseLevelWorkdays/);
   assert.match(app,/pulseLevelDayDetails\(levelItem\)/);
-  assert.match(html,/id="pulse-comparison" hidden/);
-  assert.match(app,/pulseLevelDistribution\(pulseLevel\)/);
-  assert.match(app,/Other selected contributors’ median/);
-  assert.match(css,/\.pulse-peer-bar/);
+  assert.doesNotMatch(html,/id="pulse-comparison"/);
+  assert.doesNotMatch(app,/pulseLevelDistribution\(pulseLevel\)/);
+  assert.match(html,/Absolute velocity/);
+  assert.match(app,/velocityStyle/);
+  assert.match(css,/\.pulse-velocity-cell/);
+  assert.doesNotMatch(css,/\.pulse-peer-bar/);
   for(const source of [app,css])assert.doesNotMatch(source,/pulse-level-spotlight|pulse-level-leading|pulse-level-badge|Broad observed lead|distinct daily level lead/);
 });
