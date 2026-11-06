@@ -5,7 +5,7 @@ import {dayNumber,dateAtDay,buildAnalysis,parseGitHistory} from '../assets/domai
 import {buildEvidenceIndex} from '../assets/perspectives.js';
 import {impactAnalysis} from '../assets/impact.js';
 import {momentumMatrix} from '../assets/momentum.js';
-import {contributionLevelUnits,contributionLevelMatrix,relativeLevel,median,DEFAULT_LEVEL_WINDOW} from '../assets/contribution-level.js';
+import {contributionLevelUnits,contributionLevelMatrix,relativeLevel,median,periodLevelDistribution,LEVEL_EVIDENCE,DEFAULT_LEVEL_WINDOW} from '../assets/contribution-level.js';
 import {intensityStyle,makeIntensityScale} from '../assets/value-colour.js';
 
 const weekdays=(date,count)=>{
@@ -41,7 +41,7 @@ test('uncapped log-scaled level distinguishes genuinely larger recorded contribu
   assert.equal(contributionLevelUnits({commits:1,churn:1e100})>0,true);
 });
 
-test('sustained high contributors stand out despite identical flat self-relative momentum',()=>{
+test('sustained recorded level remains comparable despite identical flat self-relative momentum',()=>{
   const dates=weekdays('2026-01-05',28);
   const activity=dates.flatMap(d=>[
     commit('0',d,250,9),commit('0',d,250,11),commit('0',d,250,14),commit('0',d,250,17),
@@ -59,15 +59,18 @@ test('sustained high contributors stand out despite identical flat self-relative
   assert.ok(high.distributedConsistency>low.distributedConsistency);
   assert.ok(high.peer.ratio>3);
   assert.equal(low.peer.ratio<1,true);
-  assert.equal(high.rank,1);
-  assert.equal(high.uniqueLeader,true);
-  assert.equal(high.broadLead,true);
-  assert.ok(high.leadingSignals.includes('Authored commits'));
-  assert.ok(high.leadingSignals.includes('Distributed-day consistency'));
-  assert.equal(level.leader,high);
-  assert.ok(level.byId.get('0').daily.get(dates[20]).leader);
-  assert.ok(level.byId.get('0').months.get('2026-02').leader);
-  assert.ok(!level.byId.get('1').daily.get(dates[20]).leader);
+  assert.equal(level.distribution.rows[0],high);
+  assert.equal(level.distribution.rows[1],low);
+  assert.equal(level.distribution.comparable,true);
+  assert.ok(Math.abs(level.distribution.median-(high.averageLevel+low.averageLevel)/2)<1e-10);
+  assert.ok(high.periodPeer.ratio>3,'selected-date comparison makes the level discrepancy measurable');
+  assert.equal(high.periodPeer.reference,low.averageLevel);
+  assert.equal(high.evidencePeers.commits.reference,low.commits);
+  assert.ok(high.evidencePeers.churn.ratio>3);
+  assert.equal(high.evidencePeers.distributedConsistency.reference,0);
+  assert.equal(high.evidencePeers.distributedConsistency.ratio,null);
+  assert.ok(high.daily.get(dates[20]).peer.ratio>3);
+  assert.ok(high.months.get('2026-02').peer.ratio>3);
   assert.equal(level.workdays,DEFAULT_LEVEL_WINDOW);
 });
 
@@ -129,16 +132,17 @@ test('peer comparisons exclude the subject and are safe for ties, quiet peers an
   const dates=weekdays('2026-01-05',15),index=history([commit('0',dates[5],300)],dates);
   const solo=matrix(index,dates,['0']);
   assert.equal(solo.comparable,false);
-  assert.equal(solo.byId.get('0').rank,1);
-  assert.equal(solo.byId.get('0').uniqueLeader,false);
-  assert.equal(solo.byId.get('0').leadingSignals.length,0);
+  assert.equal(solo.distribution.comparable,false);
+  assert.equal(solo.distribution.rows.length,1);
+  assert.equal(solo.byId.get('0').periodPeer.peers,0);
+  assert.equal(solo.byId.get('0').evidencePeers.commits.reference,null);
   const pair=matrix(index,dates);
   assert.equal(pair.byId.get('0').peer.ratio,null);
   assert.equal(pair.byId.get('0').peer.reference,0);
-  assert.equal(pair.byId.get('0').uniqueLeader,true);
+  assert.equal(pair.byId.get('0').periodPeer.ratio,null);
   const ties=matrix(history([commit('0',dates[5],300),commit('1',dates[5],300)],dates),dates);
-  assert.equal(ties.byId.get('0').uniqueLeader,false);
-  assert.equal(ties.byId.get('1').rank,1);
+  assert.equal(ties.distribution.rows.length,2);
+  assert.equal(ties.byId.get('1').periodPeer.ratio,1);
 });
 
 test('out-of-history dates remain unknown and workday warmup does not manufacture a recent pace',()=>{
@@ -150,7 +154,8 @@ test('out-of-history dates remain unknown and workday warmup does not manufactur
   assert.equal(row.daily.get('2026-01-06').level,0);
   assert.equal(row.recentLevel,null);
   assert.equal(row.averageLevel,0);
-  assert.equal(row.rank,null);
+  assert.equal(row.periodPeer.reference,null);
+  assert.equal(model.distribution.rows.length,1);
   assert.equal(model.available,true);
   assert.equal(contributionLevelMatrix(null,[contributor('0')],{from:dates[0],to:dates[3]}).available,false);
   assert.equal(contributionLevelMatrix(history([],dates),[contributor('0')],{from:dates[2],to:dates[0]}).available,false);
@@ -161,6 +166,54 @@ test('same cell colours are shared across people; no separate per-person normali
   assert.notEqual(intensityStyle(.1,scale),intensityStyle(2.5,scale));
   assert.notEqual(intensityStyle(null,scale),intensityStyle(0,scale));
   assert.ok(scale.max>scale.minPositive);
+});
+
+test('selected-range comparison is not silently replaced by the trailing workday level',()=>{
+  const dates=weekdays('2026-01-05',30);
+  const activity=[...dates.slice(0,10).map(date=>commit('0',date,900)),
+    ...dates.slice(20,30).map(date=>commit('1',date,900))];
+  const index=history(activity,dates);
+  const first=contributionLevelMatrix(index,['0','1'].map(contributor),{from:dates[0],to:dates[9]});
+  const latest=contributionLevelMatrix(index,['0','1'].map(contributor),{from:dates[20],to:dates[29]});
+  assert.ok(first.byId.get('0').averageLevel>first.byId.get('1').averageLevel);
+  assert.ok(latest.byId.get('1').averageLevel>latest.byId.get('0').averageLevel);
+  assert.equal(latest.byId.get('0').periodPeer.reference,latest.byId.get('1').averageLevel);
+  assert.equal(latest.byId.get('0').periodPeer.ratio,0);
+  assert.equal(latest.distribution.rows[0].id,'1');
+  assert.equal(latest.distribution.max,latest.byId.get('1').averageLevel);
+  assert.notEqual(latest.byId.get('0').recentLevel,first.byId.get('0').recentLevel);
+});
+
+test('peer evidence references exclude self and never invent a multiplier for zero or missing reference',()=>{
+  const dates=weekdays('2026-01-05',15);
+  const index=history([commit('0',dates[6],100)],dates);
+  const model=matrix(index,dates,['0','1','2']);
+  const a=model.byId.get('0'),b=model.byId.get('1'),c=model.byId.get('2');
+  assert.equal(a.evidencePeers.churn.reference,0);
+  assert.equal(a.evidencePeers.churn.ratio,null);
+  assert.equal(b.evidencePeers.churn.reference,50);
+  assert.equal(c.evidencePeers.churn.reference,50);
+  assert.equal(a.periodPeer.ratio,null);
+  assert.equal(model.distribution.median,0);
+  assert.ok(model.distribution.max>0);
+  assert.equal(LEVEL_EVIDENCE.length,5);
+  assert.deepEqual(periodLevelDistribution([]),{rows:[],median:null,max:0,comparable:false});
+  assert.equal(periodLevelDistribution([{averageLevel:null,coveredDays:0,name:'Missing'}]).median,null);
+});
+
+test('evidence comparison uses same selected date range, with meaningful weekday denominators',()=>{
+  const dates=weekdays('2026-01-05',15);
+  const index=history([commit('0',dates[6],200),commit('0',dates[7],200),commit('1',dates[7],20)],dates);
+  const narrowed=contributionLevelMatrix(index,['0','1'].map(contributor),{from:dates[7],to:dates[7]});
+  const a=narrowed.byId.get('0'),b=narrowed.byId.get('1');
+  assert.equal(a.commits,1);
+  assert.equal(a.churn,200);
+  assert.equal(a.coveredWorkdays,1);
+  assert.equal(b.evidencePeers.commits.reference,1);
+  assert.equal(b.evidencePeers.churn.reference,200);
+  assert.equal(b.evidencePeers.consistency.reference,1);
+  assert.equal(a.periodPeer.reference,b.averageLevel);
+  assert.ok(narrowed.distribution.rows.every(row=>row.coveredDays===1));
 });
 
 test('UI wiring keeps four distinct lenses, evidence, cache-busted module contracts and backwards-compatible settings',()=>{
@@ -176,5 +229,9 @@ test('UI wiring keeps four distinct lenses, evidence, cache-busted module contra
   assert.match(app,/LEVEL_WINDOWS\.includes\(s\.pulseLevelWorkdays\)/);
   assert.match(app,/pulseLevelWorkdays:state\.pulseLevelWorkdays/);
   assert.match(app,/pulseLevelDayDetails\(levelItem\)/);
-  assert.match(css,/\.pulse-level-leading/);
+  assert.match(html,/id="pulse-comparison" hidden/);
+  assert.match(app,/pulseLevelDistribution\(pulseLevel\)/);
+  assert.match(app,/Other selected contributors’ median/);
+  assert.match(css,/\.pulse-peer-bar/);
+  for(const source of [app,css])assert.doesNotMatch(source,/pulse-level-spotlight|pulse-level-leading|pulse-level-badge|Broad observed lead|distinct daily level lead/);
 });

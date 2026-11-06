@@ -7,9 +7,9 @@
  * selected-cohort peer comparisons reveal sustained, unusually high levels.
  * No score is a measure of work hours, output quality or individual performance.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-contribution-level-20261106-1';
-import {dailyEvidence} from './momentum.js?v=git-contribution-level-20261106-1';
-import {temporalActivityByPerson,emptyTemporalDay,temporalOptions,isWorkday} from './temporal-activity.js?v=git-contribution-level-20261106-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-peer-distribution-20261106-1';
+import {dailyEvidence} from './momentum.js?v=git-peer-distribution-20261106-1';
+import {temporalActivityByPerson,emptyTemporalDay,temporalOptions,isWorkday} from './temporal-activity.js?v=git-peer-distribution-20261106-1';
 
 export const LEVEL_WINDOWS = Object.freeze([5,10,20]);
 export const DEFAULT_LEVEL_WINDOW = 10;
@@ -41,28 +41,33 @@ export function relativeLevel(value,peers) {
 
 const monthBucket=month=>({month,days:0,total:0,score:null,commits:0,churn:0,
   releaseLines:0,meaningfulDays:0,distributedDays:0,weekdayDays:0});
-const metrics=[
-  ['commits','Authored commits'],['churn','Non-VERSION changed lines'],
-  ['releaseLines','Tagged-release changed lines'],['consistency','Meaningful-day consistency'],
-  ['distributedConsistency','Distributed-day consistency'],
-];
+/** Comparisons are descriptive: each reference excludes the current person. */
+export const LEVEL_EVIDENCE = Object.freeze([
+  {key:'commits',label:'Authored commits'},
+  {key:'churn',label:'Non-VERSION changed lines'},
+  {key:'releaseLines',label:'Authored lines included in releases'},
+  {key:'consistency',label:'Meaningful-day consistency'},
+  {key:'distributedConsistency',label:'Distributed-day consistency'},
+]);
 
-/** Compare one contributor only with other people in the currently selected cohort. */
 function compareRows(rows) {
   for(const row of rows) {
     const peers=rows.filter(other=>other!==row);
+    // Recent pace and selected-window mean are separate denominators. Never
+    // present one period's reference as though it described the other.
     row.peer=relativeLevel(row.recentLevel,peers.map(other=>other.recentLevel));
-    row.rank=row.recentLevel===null?null:1+rows.filter(other=>other.recentLevel!==null&&other.recentLevel>row.recentLevel+1e-9).length;
-    row.uniqueLeader=row.recentLevel!==null&&row.recentLevel>0&&peers.length>0&&
-      peers.every(other=>other.recentLevel!==null&&row.recentLevel>other.recentLevel+1e-9);
-    row.leadingSignals=[];
-    for(const [key,label] of metrics) {
-      const own=row[key];
-      if(!isValid(own)||own===0||!peers.length||!peers.every(p=>isValid(p[key])))continue;
-      if(peers.every(p=>own>p[key]+1e-9))row.leadingSignals.push(label);
-    }
-    row.broadLead=row.uniqueLeader&&row.leadingSignals.length>=3;
+    row.periodPeer=relativeLevel(row.averageLevel,peers.map(other=>other.averageLevel));
+    row.evidencePeers=Object.fromEntries(LEVEL_EVIDENCE.map(({key})=>
+      [key,relativeLevel(row[key],peers.map(other=>other[key]))]));
   }
+}
+
+/** Comparison for the *visible date selection*, not the trailing rolling window. */
+export function periodLevelDistribution(rows) {
+  const validRows=rows.filter(row=>isValid(row.averageLevel)&&row.coveredDays>0);
+  const sorted=[...validRows].sort((a,b)=>b.averageLevel-a.averageLevel||a.name.localeCompare(b.name));
+  return {rows:sorted,median:median(validRows.map(row=>row.averageLevel)),
+    max:sorted[0]?.averageLevel??0,comparable:validRows.length>1};
 }
 
 export function contributionLevelMatrix(index,contributors,window,options={}) {
@@ -102,7 +107,7 @@ export function contributionLevelMatrix(index,contributors,window,options={}) {
       if(date<start)continue;
       const item={date,level,reason:inCoverage?'scored':'outside-history',
         commits:original.commits,churn:original.churn,releaseLines:original.releaseLines,
-        releases:original.releases,temporal:time,weekday,peer:null,rank:null,leader:false};
+        releases:original.releases,temporal:time,weekday,peer:null};
       daily.set(date,item);
       if(level===null)continue;
       const month=date.slice(0,7);
@@ -124,13 +129,13 @@ export function contributionLevelMatrix(index,contributors,window,options={}) {
       commits,churn,releaseLines,meaningfulDays,distributedDays,
       consistency:coveredWorkdays?meaningfulDays/coveredWorkdays:null,
       distributedConsistency:coveredWorkdays?distributedDays/coveredWorkdays:null,
-      peer:null,rank:null,leadingSignals:[],uniqueLeader:false,broadLead:false};
+      peer:null,periodPeer:null,evidencePeers:null};
     rows.push(row);byId.set(row.id,row);
   }
   compareRows(rows);
-  // One cohort sort per date/month, not one peer scan *per contributor*.
-  // This keeps decade-scale imports and larger reconciled identity groups fast.
-  // All selected people share the same display dates and history coverage.
+  // One cohort sort per date/month, not one peer scan per person.
+  // The daily and monthly peer reference is the median of *other* selected
+  // people on that date/month. Unknown records cannot create zero references.
   function decoratePeers(mapName,key,field) {
     const ordered=rows.map(row=>row[mapName].get(key)).filter(Boolean)
       .filter(item=>isValid(item[field])).sort((a,b)=>a[field]-b[field]);
@@ -142,20 +147,13 @@ export function contributionLevelMatrix(index,contributors,window,options={}) {
         ?excludedAt(Math.floor(count/2))
         :(excludedAt(count/2-1)+excludedAt(count/2))/2;
       item.peer={reference,ratio:reference>0?round(value/reference):null,peers:count};
-      // Ties share the same rank, with zero never flagged as a standout.
-      let upper=i+1;
-      while(upper<n&&ordered[upper][field]<=value+1e-9)upper++;
-      item.rank=1+n-upper;
-      item.leader=n===rows.length&&n>1&&value>0&&i===n-1&&
-        value>ordered[n-2][field]+1e-9;
     }
   }
   if(rows.length) {
     for(const date of rows[0].daily.keys())decoratePeers('daily',date,'level');
     for(const month of rows[0].months.keys())decoratePeers('months',month,'score');
   }
-  const leader=rows.find(row=>row.broadLead)||rows.find(row=>row.uniqueLeader)||null;
-  return {rows,byId,leader,from:start,to:end,temporal,workdays,
+  return {rows,byId,distribution:periodLevelDistribution(rows),from:start,to:end,temporal,workdays,
     comparable:rows.length>1&&rows.some(row=>row.recentLevel!==null),
-    available:rows.some(row=>row.coveredDays>0),metricLabels:metrics};
+    available:rows.some(row=>row.coveredDays>0),metricLabels:LEVEL_EVIDENCE};
 }

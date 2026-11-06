@@ -396,20 +396,29 @@ The level lens offers:
   using the entire available history through the selected end date even if
   the display starts later. This is separate from Momentum's two-window
   directional comparison.
-- **Peer reference:** the *median composite index of the other selected
-  contributors* over that same recent window. A displayed `2.5×` means
-  **2.5 times the median composite index**, not 2.5 times the effort or
-  delivered value. When nobody else is selected, no peer ratio is shown;
-  zero-valued peer references are not divided by or represented as infinity.
-- **Broad observed lead:** an explanation of which *distinct evidence
-  dimensions* a contributor uniquely leads in the selected scope (commits,
-  non-VERSION churn, authored shipped lines, meaningful-day consistency,
-  distributed-day consistency). This is not a performance ranking; lead
-  indicators are tied to the currently selected cohort and evidence.
-- **Cross-lens context:** the Momentum summary now displays each person's
-  recent level and peer comparison alongside the signed direction. Small
-  amber cell markers identify clearly leading recorded daily/monthly levels
-  among the selected contributors (not a change in momentum).
+- **Selected-period contribution distribution:** immediately above the Daily
+  or Monthly heatmap in the Level and Momentum lenses, a compact horizontal
+  chart shows each selected contributor's **mean composite index per covered
+  calendar day**, across the **selected authored-date range**. Bar widths are
+  linear in the index on one shared axis (not ranks or individualised scales).
+  The dashed mark is the median index of **all selected contributors**.
+  A person's optional `2.5×` figure instead compares their index with the
+  median of the **other selected contributors** over those same dates.
+- **Expandable peer evidence:** open **Compare the underlying recorded
+  evidence** to inspect own values against the other contributors' medians for
+  authored commits, non-VERSION changed lines, authored release-included
+  lines, meaningful-day consistency and distributed-day consistency. Raw
+  counts use the visible date range, while the two consistency percentages
+  use observed weekdays in that range. Missing dates remain unknown; a zero
+  peer median never produces an infinite or fabricated ratio.
+- **Recent peer reference:** the table under Level, and the corresponding
+  Momentum summary, retain the **recent 5/10/20-workday comparison** as a
+  separate measure. Its period can differ from the selected date range;
+  both contexts are explicitly labelled and never silently interchanged.
+- **Neutral presentation:** no leader callouts, star badges, daily winner
+  markers or ranked peer judgements. Different recorded levels appear through
+  comparable bar lengths, the common heatmap palette, explicit peer medians,
+  and actual underlying evidence rather than congratulations.
 
 Both daily and monthly level heatmaps use **one common observed value scale**
 for all selected contributors, not separate per-person palettes or percentile
@@ -626,6 +635,7 @@ release notes, identities or other user content.
 - `assets/release-gap.js` — pure individual absolute-line-weighted release credit × authored-day metric, bounded temporal relief, monthly aggregation and coverage rules.
 - `assets/temporal-activity.js` — shared, cached pure authored-clock spread, distinct windows, churn-weighted distribution and consistency summaries.
 - `assets/momentum.js` — bounded, self-relative contribution direction with rolling meaningful-day consistency.
+- `assets/contribution-level.js` — uncapped logarithmic recorded-contribution index, selected-period peer distribution, raw-evidence medians and recent-window references.
 - `assets/impact-window.js` — pure viewport, zoom, pan and release reveal logic.
 - `assets/co-release.js` — complete-release co-participation and evidence by pair.
 - `assets/download-names.js` — bounded descriptive export filenames with local timestamps.

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=git-contribution-level-20261106-1">
+  <link rel="stylesheet" href="./assets/app.css?v=git-peer-distribution-20261106-1">
 </head>
 <body>
   <div class="page">
@@ -243,6 +243,7 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
                 <div class="pulse-temporal-settings-body"><label for="pulse-temporal-period">Active window <select id="pulse-temporal-period" aria-label="Length of each distinct authored-clock period"><option value="60">60 minutes</option><option value="90" selected>90 minutes</option><option value="120">120 minutes</option></select></label><label for="pulse-temporal-churn">Churn per window <select id="pulse-temporal-churn" aria-label="Changed non-VERSION lines for full credit in an active window"><option value="25">25 lines</option><option value="50" selected>50 lines</option><option value="100">100 lines</option></select></label><label for="pulse-meaningful-lines">Meaningful day at <select id="pulse-meaningful-lines" aria-label="Changed non-VERSION lines required for a meaningful workday"><option value="10">10 lines</option><option value="20" selected>20 lines</option><option value="50">50 lines</option></select></label></div>
                 <p>Distribution is a small supporting signal. Clock timestamps show where changes were recorded, <strong>not time worked</strong>. Days with missing or single-commit timestamps cannot establish a span.</p>
               </details>
+              <div id="pulse-comparison" hidden></div>
               <div class="viz-top"><span class="eyebrow" id="pulse-context"></span><div id="pulse-key" class="pulse-intensity-key" aria-label="Pulse colour scale"></div></div><p id="pulse-hint" class="pulse-hint"></p><div id="pulse" class="pulse-scroll" aria-label="Activity pulse chart"></div><div id="pulse-activity-summary" class="pulse-gap-summary" hidden></div><div id="pulse-gap-summary" class="pulse-gap-summary" hidden></div><div id="pulse-momentum-summary" class="pulse-gap-summary" hidden></div><div id="pulse-level-summary" class="pulse-gap-summary" hidden></div><div id="pulse-popover" class="pulse-popover" role="tooltip" hidden></div></div></section>
 
       <section class="report-section" aria-labelledby="rhythm-heading">
@@ -333,6 +334,6 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=git-contribution-level-20261106-1"></script>
+  <script type="module" src="./assets/app.js?v=git-peer-distribution-20261106-1"></script>
 </body>
 </html>

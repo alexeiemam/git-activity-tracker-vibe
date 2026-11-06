@@ -1,6 +1,6 @@
 /** Pure, escaped HTML presentations of deterministic Story Analysis. */
-import { DAY_NAMES } from './domain.js?v=git-contribution-level-20261106-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=git-contribution-level-20261106-1';
+import { DAY_NAMES } from './domain.js?v=git-peer-distribution-20261106-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=git-peer-distribution-20261106-1';
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const fmt=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});
 const pct=n=>n==null?'Not observed':`${fmt.format(n*100)}%`;
