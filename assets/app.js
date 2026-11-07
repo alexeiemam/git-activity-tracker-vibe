@@ -3,31 +3,32 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=git-continuity-weekends-20261107-1';
-import { generateDemoLog } from './demo-data.js?v=git-continuity-weekends-20261107-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-continuity-weekends-20261107-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-continuity-weekends-20261107-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-continuity-weekends-20261107-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-continuity-weekends-20261107-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=git-continuity-weekends-20261107-1';
-import { releaseScorecard } from './release-scorecard.js?v=git-continuity-weekends-20261107-1';
-import { continuityMatrix, continuityAuthoredColour, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=git-continuity-weekends-20261107-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-continuity-weekends-20261107-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-continuity-weekends-20261107-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-continuity-weekends-20261107-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-continuity-weekends-20261107-1';
-import { buildStoryAnalysis } from './stories.js?v=git-continuity-weekends-20261107-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-continuity-weekends-20261107-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-continuity-weekends-20261107-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-continuity-weekends-20261107-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-continuity-weekends-20261107-1';
-import { downloadFilename } from './download-names.js?v=git-continuity-weekends-20261107-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-continuity-weekends-20261107-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-continuity-weekends-20261107-1';
-import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-continuity-weekends-20261107-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-continuity-weekends-20261107-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-continuity-weekends-20261107-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-continuity-weekends-20261107-1';
+} from './domain.js?v=git-working-patterns-20261107-1';
+import { generateDemoLog } from './demo-data.js?v=git-working-patterns-20261107-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-working-patterns-20261107-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-working-patterns-20261107-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-working-patterns-20261107-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-working-patterns-20261107-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=git-working-patterns-20261107-1';
+import { releaseScorecard } from './release-scorecard.js?v=git-working-patterns-20261107-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=git-working-patterns-20261107-1';
+import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=git-working-patterns-20261107-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-working-patterns-20261107-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-working-patterns-20261107-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-working-patterns-20261107-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-working-patterns-20261107-1';
+import { buildStoryAnalysis } from './stories.js?v=git-working-patterns-20261107-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-working-patterns-20261107-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-working-patterns-20261107-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-working-patterns-20261107-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-working-patterns-20261107-1';
+import { downloadFilename } from './download-names.js?v=git-working-patterns-20261107-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-working-patterns-20261107-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-working-patterns-20261107-1';
+import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-working-patterns-20261107-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-working-patterns-20261107-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-working-patterns-20261107-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-working-patterns-20261107-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -43,7 +44,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-continuity-weekends-20261107-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-working-patterns-20261107-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -416,6 +417,37 @@ function linkedOrderRows(group, index) {
     }).join('')}</ol>
   </div>`;
 }
+const WORKDAY_ORDER=[1,2,3,4,5,6,0];
+function patternControls(group,index) {
+  const days=normalizeWorkingDays(group.workingDays);
+  return `<div class="pattern-controls" role="group" aria-label="Expected contribution weekdays for ${esc(group.displayName)}">
+    <div class="pattern-weekdays">${WORKDAY_ORDER.map(day=>`<button type="button" class="pattern-day ${days.includes(day)?'is-scheduled':''}" data-action="toggle-pattern-day" data-group="${index}" data-weekday="${day}" aria-pressed="${days.includes(day)}" title="${esc(WEEKDAY_LABELS[day])}: ${days.includes(day)?'expected':'not scheduled'}">${WEEKDAY_LABELS[day]}</button>`).join('')}</div>
+    <div class="pattern-presets"><button type="button" class="text-button" data-action="pattern-preset" data-group="${index}" data-pattern="four">Mon–Thu</button><button type="button" class="text-button" data-action="pattern-preset" data-group="${index}" data-pattern="five">Mon–Fri</button><button type="button" class="text-button" data-action="pattern-preset" data-group="${index}" data-pattern="none">None</button></div>
+  </div>`;
+}
+function renderWorkingPatterns(view) {
+  const editor=$('continuity-pattern-editor');
+  if(!editor)return;
+  const shown=new Set((view?.contributors||[]).map(c=>String(c.id)));
+  const rows=mergeGroups.map((group,index)=>({group,index})).filter(({index})=>shown.has(String(index)));
+  editor.innerHTML=rows.length?rows.map(({group,index})=>`<div class="continuity-pattern-row"><div><strong>${esc(group.displayName)}</strong><small>${esc(workingPatternLabel(group.workingDays))}</small></div>${patternControls(group,index)}</div>`).join(''):'<p>Select a contributor in the filters to set a working-day pattern.</p>';
+}
+function updateWorkingPattern(index,workingDays,origin) {
+  const group=mergeGroups[index];if(!group)return;
+  group.workingDays=normalizeWorkingDays(workingDays);
+  if(mergeUndo)forgetUndo();
+  const expandedMerge=origin?.closest('.merge-working-pattern')?.open===true;
+  if(!$('merge-step').hidden){
+    renderMergeUI();
+    if(expandedMerge){const details=document.querySelector(`[data-merge-card="${index}"] .merge-working-pattern`);if(details)details.open=true;}
+  }
+  if(analysis&&state.pulseLens==='continuity')renderPulse(analysis);
+  const selector=origin?.dataset.weekday!==undefined?`[data-action="toggle-pattern-day"][data-group="${index}"][data-weekday="${origin.dataset.weekday}"]`:
+    `[data-action="pattern-preset"][data-group="${index}"][data-pattern="${origin?.dataset.pattern||''}"]`;
+  // Re-rendering does not discard focus or force a full evidence rebuild.
+  const controls=[...document.querySelectorAll(selector)];
+  controls.find(el=>el.closest('#continuity-pattern-editor'))?.focus({preventScroll:true})||controls[0]?.focus({preventScroll:true});
+}
 function renderMergeUI() {
   $('merge-groups').innerHTML = mergeGroups.map((group, index) => {
     const open = identityPicker?.targetIndex === index;
@@ -439,6 +471,7 @@ function renderMergeUI() {
           <div class="identity-chips">${group.emails.length ? group.emails.map(email => `<span class="chip"><span title="${esc(email)}">${esc(identityMeta.get(email)?.kind||'Git author')} · ${esc(identityMeta.get(email)?.name||email)}</span>${group.emails.length > 1 ? `<button type="button" data-action="split-email" data-group="${index}" data-email="${esc(email)}" aria-label="Separate ${esc(email)} from ${groupName}" title="Separate this identity">×</button>` : ''}</span>`).join('') : '<span class="merge-group-caption">No identities yet. Select author emails to build this contributor.</span>'}</div>
           <div class="merge-add"><button type="button" class="merge-add-trigger" data-action="toggle-identity-picker" data-group="${index}" aria-expanded="${open}" ${open ? `aria-controls="identity-picker-${index}"` : ''} ${!available ? 'disabled title="No other identities available"' : ''}><span class="merge-plus" aria-hidden="true">${open ? '−' : '+'}</span>${open ? 'Close selector' : 'Add identities'}<span class="merge-plus-chevron" aria-hidden="true">${open ? '⌃' : '⌄'}</span></button>${group.emails.length > 1 ? `<button type="button" class="mini-button identity-arrange-toggle" data-action="toggle-linked-order" data-group="${index}" aria-expanded="${orderOpen}" ${orderOpen ? `aria-controls="linked-order-${index}"` : ''}>${orderOpen ? 'Close ordering' : 'Arrange linked identities'}</button><button class="mini-button" type="button" data-action="split-group" data-group="${index}">Separate all</button>` : ''}</div>
           ${orderOpen && group.emails.length > 1 ? `<div id="linked-order-${index}">${linkedOrderRows(group,index)}</div>` : ''}
+          <details class="merge-working-pattern"><summary>Expected contribution days · ${normalizeWorkingDays(group.workingDays).length}/week</summary><p class="merge-group-caption">Choose the weekly reference used by Contribution Continuity. Unscheduled dates can still earn extra credit.</p>${patternControls(group,index)}</details>
         </div>
       </div>
       ${open ? renderIdentityPicker(index) : ''}
@@ -545,7 +578,7 @@ function applyIdentityPicker() {
   if (!identityPicker?.selected.size) return;
   const {targetIndex, selected} = identityPicker;
   const target = mergeGroups[targetIndex];
-  const original = mergeGroups.map(g => ({displayName:g.displayName, emails:[...g.emails]}));
+  const original = mergeGroups.map(g => ({displayName:g.displayName, emails:[...g.emails],workingDays:normalizeWorkingDays(g.workingDays)}));
   const moved = [...selected];
   // Reference the destination by email, not by its old array index: groups
   // before it may disappear as their final identities move.
@@ -579,7 +612,7 @@ function splitEmail(index, email) {
   group.emails = group.emails.filter(e => e !== email);
   state.storyDismissed.clear();state.storyTrail=[];state.storyFindingId=null;
   if (!group.emails.length) mergeGroups.splice(index, 1);
-  mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email]});
+  mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email],workingDays:normalizeWorkingDays(group.workingDays)});
   renderMergeUI();
 }
 function splitGroup(index) {
@@ -590,7 +623,7 @@ function splitGroup(index) {
   const emails = [...group.emails];
   state.storyDismissed.clear();state.storyTrail=[];state.storyFindingId=null;
   mergeGroups.splice(index, 1);
-  for (const email of emails) mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email]});
+  for (const email of emails) mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email],workingDays:normalizeWorkingDays(group.workingDays)});
   renderMergeUI();
 }
 function skipMerge() {
@@ -1168,64 +1201,80 @@ function pulseGapSummary(model) {
 }
 
 
-// Neutral two-track continuity cells: authored activity and release inclusion
-// are separate clocks, with stable colours independent of the peer cohort.
-const continuityPct=value=>value===null?'—':`${Math.round(value*100)}%`;
-const continuityCoverageLabel=bucket=>bucket?.coverage!==null && bucket?.coverage!==undefined?
-  continuityPct(bucket.coverage):bucket?.weekendMeaningfulDays?'Weekend only':'—';
-const continuityWeekendDetail=bucket=>`${bucket.weekendMeaningfulDays||0} additional qualifying weekend ${bucket.weekendMeaningfulDays===1?'day':'days'}`;
+// Compact, independent missing/extra scales. Release inclusion stays below.
+const continuityPct=value=>value===null||value===undefined?'—':`${Math.round(value*100)}%`;
 const continuityReleaseRatio=(count,opportunities,available)=>!available?'Unknown':!opportunities?'No eligible tags':`${count} / ${opportunities} releases`;
+const continuityBandStyle=colour=>colour?`background:${colour}`:'background:repeating-linear-gradient(135deg,#f7f8f5 0,#f7f8f5 4px,#dfe5e0 4px,#dfe5e0 8px)';
+const continuityStatusLabel=status=>({met:'Met pattern',above:'Met + extra', 'slightly-under':'Modest gap',under:'Below pattern',unknown:'Unknown', 'no-schedule':'No scheduled days','extra-only':'Unscheduled contribution'})[status]||'Unknown';
 function continuityDayLabel(person,item) {
   if(!item||!item.observed)return `${person}: authored history unavailable for this date`;
-  const activity=item.meaningful?(item.workday?'meaningful weekday':'meaningful weekend day (+1 credit)'):
-    item.authored?(item.workday?'small weekday change':'small weekend change; below threshold'):
-      item.workday?'no qualifying authored activity':'weekend with no qualifying authored activity';
-  return `${person}, ${formatDate(item.date)}: ${item.commits} authored commits, ${number.format(item.churn)} non-VERSION changed lines; ${activity}; ${continuityReleaseRatio(item.events.length,item.opportunities,item.releaseAvailable)}; ${item.events.reduce((n,r)=>n+r.commits,0)} commits included in releases; rolling coverage ${continuityPct(item.rollingCoverage)}.`;
+  const activity=item.workday?(item.meaningful?'meaningful change on scheduled date':item.authored?'small change on scheduled date, below threshold':'missing qualifying contribution on scheduled date'):
+    (item.meaningful?'extra meaningful contribution on an unscheduled date':item.authored?'small change on unscheduled date, below threshold':'unscheduled date without qualifying change');
+  return `${person}, ${formatDate(item.date)}: ${item.commits} authored commits, ${number.format(item.churn)} non-VERSION changed lines; ${activity}; ${continuityReleaseRatio(item.events.length,item.opportunities,item.releaseAvailable)}. Rolling ${pulseContinuity.weeks}-week reference: ${item.rollingMissingDays??'unknown'} missing and ${item.rollingExtraDays??'unknown'} extra qualifying days. View evidence.`;
 }
 function continuityPeriodLabel(person,bucket,model) {
   if(!bucket)return `${person}: period outside imported data`;
-  return `${person}, ${bucket.from}–${bucket.to}: ${bucket.meaningfulDays} meaningful recorded days / ${bucket.coveredDays} observed baseline weekdays (${continuityCoverageLabel(bucket)}), including ${continuityWeekendDetail(bucket)}; ${bucket.smallDays} smaller-change weekdays and ${bucket.weekendSmallDays} smaller-change weekend days; ${continuityReleaseRatio(bucket.participations,bucket.opportunities,model.releaseAvailable)}; ${number.format(bucket.releasedCommits)} authored commits included in releases; ${bucket.releasedLines===null?'unknown':number.format(bucket.releasedLines)} released changed lines; rolling ${model.weeks}-week coverage ${continuityPct(bucket.rollingCoverage)}.`;
+  return `${person}, ${bucket.from}–${bucket.to}: ${continuityStatusLabel(bucket.status)}. ${bucket.onScheduleDays} of ${bucket.expectedDays} expected dates with meaningful authored changes; ${bucket.missedDays} missing expected dates; ${bucket.extraDays} meaningful extra dates; ${bucket.meaningfulDays} meaningful days total; ${bucket.unknownDays} dates outside imported bounds. ${continuityReleaseRatio(bucket.participations,bucket.opportunities,model.releaseAvailable)}. ${number.format(bucket.releasedCommits)} released authored commits and ${bucket.releasedLines===null?'unknown':number.format(bucket.releasedLines)} released changed lines. View evidence.`;
 }
-function continuityTile(bucket,model,{daily=false,compact=false}={}) {
+function continuityTile(bucket,model,{daily=false}={}) {
   const observed=daily?bucket?.observed:bucket?.observedDays>0;
-  const weekendOnly=!daily&&bucket?.coveredDays===0&&bucket?.weekendMeaningfulDays>0;
-  const activityColour=observed?continuityAuthoredColour(
-    daily?Number(bucket.meaningful):bucket.coverage,
-    daily?bucket.authored:bucket.smallDays+bucket.weekendSmallDays>0,weekendOnly):null;
+  const expected=daily?Number(observed&&bucket.workday):bucket?.expectedDays||0;
+  const missed=daily?Number(bucket?.missing):bucket?.missedDays||0;
+  const extra=daily?Number(bucket?.extra):bucket?.extraDays||0;
+  const missingColour=missingDayColour(missed,expected,observed);
+  const extraColour=extraDayColour(extra);
+  const mainText=!observed?'':daily?(expected?(missed?'−':'·'):'·'):(missed?`−${missed}`:expected?'=':'—');
+  const extraText=extra?`+${extra}`:'';
   const releases=daily?bucket?.events.length||0:bucket?.participations||0;
   const opportunities=bucket?.opportunities||0;
   const releaseColour=continuityReleaseColour(releases,opportunities,model.releaseAvailable);
-  // An all-weekend partial selection has a measured numerator but no valid
-  // weekday baseline: display the weekend events, not a fictitious ratio.
-  const activityText=daily?'':!bucket?.coveredDays&&bucket?.weekendMeaningfulDays?
-    (compact?`+${bucket.weekendMeaningfulDays} wknd`:`${bucket.weekendMeaningfulDays} wknd`):
-    compact?`${bucket?.meaningfulDays||0}/${bucket?.coveredDays||0}`:continuityCoverageLabel(bucket);
-  const releaseText=daily?'':!model.releaseAvailable?'?':!opportunities?'—':`${releases}/${opportunities}`;
-  const authorTextColour=observed&&(daily?bucket.meaningful:bucket.coverage>=0.6)?'#fff':'#193d36';
-  const releaseTextColour=model.releaseAvailable&&opportunities>0&&releases/opportunities>=0.6?'#fff':'#193d36';
-  return `<span class="continuity-band continuity-authored" style="${continuityBandStyle(activityColour)};color:${authorTextColour}" aria-hidden="true">${activityText}</span><span class="continuity-band continuity-delivered" style="${continuityBandStyle(releaseColour)};color:${releaseTextColour}" aria-hidden="true">${releaseText}</span>`;
+  const releaseText=daily?'':!model.releaseAvailable?'?':!opportunities?'·':releases?`${releases}r`:'0r';
+  const dark=observed&&expected>0&&missed/expected>2/3;
+  const extraDark=extra>=3;
+  return `<span class="continuity-schedule-balance" aria-hidden="true"><span class="continuity-missing-mark" style="${continuityBandStyle(missingColour)};color:${dark?'#fff':'#473e36'}">${mainText}</span>${extra?`<span class="continuity-extra-mark" style="background:${extraColour};color:${extraDark?'#fff':'#154660'}">${extraText}</span>`:''}</span><span class="continuity-band continuity-delivered" style="${continuityBandStyle(releaseColour)};color:${model.releaseAvailable&&opportunities>0&&releases/opportunities>=0.6?'#fff':'#193d36'}" aria-hidden="true">${releaseText}</span>`;
 }
 function pulseContinuityLegend() {
-  return `<div class="continuity-legend" role="group" aria-label="Separate authored activity and tagged-release participation tracks. Meaningful weekend days count above the weekday baseline. Colours are fixed across contributors. Hatched means outside observed history or release evidence unavailable."><span class="continuity-legend-key"><i style="background:${continuityAuthoredColour(1)}" aria-hidden="true"></i>Meaningful authored days (top)</span><span class="continuity-legend-key"><i style="background:${continuityAuthoredColour(1.2)}" aria-hidden="true"></i>Above weekday baseline (weekend credit)</span><span class="continuity-legend-key"><i style="background:${continuityAuthoredColour(0,true)}" aria-hidden="true"></i>Smaller changes</span><span class="continuity-legend-key"><i style="background:${continuityAuthoredColour(0)}" aria-hidden="true"></i>No qualifying authored activity</span><span class="continuity-legend-key"><i style="background:${continuityReleaseColour(1,1)}" aria-hidden="true"></i>Tagged-release inclusion (bottom)</span><span class="continuity-legend-key"><i style="background:${continuityReleaseColour(0,1)}" aria-hidden="true"></i>Tag without inclusion</span><span class="continuity-legend-key"><i style="background:${continuityReleaseColour(0,0)}" aria-hidden="true"></i>No eligible tag</span><span class="continuity-legend-key"><i class="continuity-unknown" aria-hidden="true"></i>Unknown evidence</span></div>`;
+  return `<div class="continuity-legend" role="group" aria-label="Independent colour scales: missing scheduled contribution dates in amber and red; extra meaningful contributions on unscheduled dates in blue. Meeting the working-day pattern is muted green. Bottom track shows authored contribution included in tagged releases; hatch marks indicate unavailable evidence.">
+    <span class="continuity-legend-label">Missing expected dates</span>
+    <span class="continuity-legend-key"><i style="background:${missingDayColour(0,4)}" aria-hidden="true"></i>None · pattern met (=)</span>
+    <span class="continuity-legend-key"><i style="background:${missingDayColour(1,4)}" aria-hidden="true"></i>Up to ⅓ expected dates missing · modest</span>
+    <span class="continuity-legend-key"><i style="background:${missingDayColour(2,4)}" aria-hidden="true"></i>⅓–⅔ missing · below pattern</span>
+    <span class="continuity-legend-key"><i style="background:${missingDayColour(3,4)}" aria-hidden="true"></i>More than ⅔ missing · extended gap</span>
+    <span class="continuity-legend-label">Extra meaningful dates</span>
+    <span class="continuity-legend-key"><i style="background:${extraDayColour(1)}" aria-hidden="true"></i>+1</span>
+    <span class="continuity-legend-key"><i style="background:${extraDayColour(2)}" aria-hidden="true"></i>+2</span>
+    <span class="continuity-legend-key"><i style="background:${extraDayColour(3)}" aria-hidden="true"></i>+3 or more</span>
+    <span class="continuity-legend-key"><i style="background:${continuityReleaseColour(1,1)}" aria-hidden="true"></i>Tagged-release inclusion (bottom, r = releases)</span>
+    <span class="continuity-legend-key"><i class="continuity-unknown" aria-hidden="true"></i>Unobserved / unknown</span>
+  </div>`;
 }
 function pulseContinuitySummary(model) {
-  if(!model.available)return '<p class="pulse-gap-unavailable">No comparable authored-history bounds are available. Continuity cannot treat missing observations as quiet workdays.</p>';
-  return `<div class="pulse-gap-summary-head"><strong>Observed contribution continuity</strong><span>Selected ${model.from}–${model.to} · meaningful weekend dates add credit above the observed weekday baseline · no peer ranking</span></div>
-    <div class="continuity-summary-scroll table-scroll"><table class="pulse-gap-table continuity-summary-table"><thead><tr><th>Contributor</th><th>Meaningful recorded days / weekday baseline</th><th>Weeks with meaningful activity</th><th>Longest recorded quiet stretch</th><th>Release participation</th><th>Authored commits in releases</th><th>Released changed lines</th><th>Rolling ${model.weeks}-week coverage</th></tr></thead><tbody>
-    ${model.rows.map(row=>`<tr><th>${esc(row.name)}</th><td><strong>${continuityCoverageLabel(row)}</strong><span class="continuity-mini-meter" role="img" aria-label="${esc(continuityCoverageLabel(row))} meaningful recorded days relative to weekday baseline"><i style="width:${row.coverage===null?0:Math.min(100,Math.round(row.coverage*100))}%"></i></span><small>${row.meaningfulDays} / ${row.coveredDays} baseline weekdays · ${continuityWeekendDetail(row)} · ${row.smallDays} smaller-change weekdays${row.weekendSmallDays?` · ${row.weekendSmallDays} smaller weekend days`:''}</small></td><td><strong>${row.meaningfulWeeks} / ${row.observedWeeks}</strong><small>Weeks with ≥ 1 meaningful recorded day (including weekends)</small></td><td><strong>${row.longestGap.workdays} weekdays</strong><small>${row.longestGap.from?`${row.longestGap.from}–${row.longestGap.to}`:'No measured quiet weekdays'}</small></td><td><strong>${!row.releaseAvailable?'Unknown':row.opportunities?`${row.participations} / ${row.opportunities}`:'No eligible releases'}</strong><small>${row.releaseParticipation===null?'Rate not defined':`${continuityPct(row.releaseParticipation)} of tagged incremental release opportunities`}</small></td><td>${!row.releaseAvailable?'—':number.format(row.releasedCommits)}</td><td>${!row.releaseAvailable||row.releasedLines===null?'—':number.format(row.releasedLines)}${row.partialReleases?`<small>${row.partialReleases} included releases with partial ancestry</small>`:''}</td><td><strong>${continuityPct(row.rollingCoverage)}</strong><small>${row.rollingCoverage===null?'Full trailing history unavailable':`Complete trailing ${model.weeks} weeks through ${model.to}; includes qualifying weekend dates`}</small></td></tr>`).join('')}</tbody></table></div>
-    <p class="pulse-gap-caution">A meaningful recorded day has at least ${model.meaningfulLines} authored non-VERSION changed text lines. The numerator counts meaningful dates from Monday through Sunday; the denominator counts every <em>observed Monday–Friday weekday</em>, including quiet ones. Thus 7/5 days (140%) is possible in a complete week. Weekends with small or no changes do not add credit or baseline days. The longest quiet stretch counts eligible weekdays without meaningful changes, and a meaningful weekend contribution breaks that streak. The release denominator is the number of distinct incremental tagged release events in the selected period; participation requires authored commits in reconstructed Git ancestry, not a publisher action. A weekend tag does not by itself count as a meaningful authored weekend day. Missing Git history is unknown, not a quiet day. These are recorded Git events, not verified days worked, work hours, availability, or individual performance.</p>`;
+  if(!model.available)return '<p class="pulse-gap-unavailable">No comparable authored-history bounds are available. Continuity cannot treat missing observations as quiet scheduled dates.</p>';
+  const overview=model.rows.map(row=>{
+    const weeks=[...row.weeks.values()].filter(w=>w.observedDays>0);
+    const met=weeks.filter(w=>['met','above'].includes(w.status)).length;
+    const modest=weeks.filter(w=>w.status==='slightly-under').length;
+    const below=weeks.filter(w=>w.status==='under').length;
+    const extra=weeks.filter(w=>w.extraDays>0).length;
+    const schedule=row.workingDays.length;
+    return `<div class="continuity-overview-row"><span class="continuity-overview-person">${esc(row.name)}<small>${schedule}-day weekly pattern</small></span><span class="continuity-overview-missing" style="background:${missingDayColour(row.missedDays,row.expectedDays)};color:${row.expectedDays&&row.missedDays/row.expectedDays>2/3?'#fff':'#35453c'}">−${row.missedDays}<small>missing expected dates</small></span><span class="continuity-overview-extra" style="background:${extraDayColour(row.extraDays)};color:${row.extraDays>=3?'#fff':'#35453c'}">+${row.extraDays}<small>extra dates</small></span><span class="continuity-overview-weeks">${met} weeks met · ${modest} modest gaps · ${below} below${extra?` · ${extra} with extras`:''}</span></div>`;
+  }).join('');
+  return `<div class="pulse-gap-summary-head"><strong>Contribution relative to each working-day pattern</strong><span>${model.from}–${model.to} · missing scheduled days and additional unscheduled contributions shown independently</span></div>
+    <div class="continuity-overview" aria-label="Working-pattern overview by contributor">${overview}</div>
+    <div class="continuity-summary-scroll table-scroll"><table class="pulse-gap-table continuity-summary-table"><thead><tr><th>Contributor</th><th>Weekly reference</th><th>Expected dates with activity</th><th>Missing expected dates</th><th>Extra dates</th><th>Longest scheduled gap</th><th>Release participation</th><th>Commits in releases</th><th>Released changed lines</th><th>Rolling ${model.weeks}-week picture</th></tr></thead><tbody>
+    ${model.rows.map(row=>`<tr><th>${esc(row.name)}</th><td><strong>${row.expectedPerWeek}/week</strong><small>${esc(row.workingDays.map(d=>WEEKDAY_LABELS[d]).join(', ')||'No scheduled dates')}</small></td><td><strong>${row.onScheduleDays} / ${row.expectedDays}</strong><small>${row.meaningfulDays} total meaningful dates · ${row.unknownDays?`${row.unknownDays} unknown dates`: 'fully observed selection'}</small></td><td><strong>−${row.missedDays}</strong><small>${continuityStatusLabel(row.status)}</small></td><td><strong>+${row.extraDays}</strong><small>Meaningful dates outside the pattern</small></td><td><strong>${row.longestGap.workdays} scheduled dates</strong><small>${row.longestGap.from?`${row.longestGap.from}–${row.longestGap.to}`:'No measured scheduled-date gap'}</small></td><td><strong>${continuityReleaseRatio(row.participations,row.opportunities,row.releaseAvailable)}</strong><small>${row.releaseParticipation===null?'Rate undefined':`${continuityPct(row.releaseParticipation)} of eligible incremental tags`}</small></td><td>${!row.releaseAvailable?'—':number.format(row.releasedCommits)}</td><td>${!row.releaseAvailable||row.releasedLines===null?'—':number.format(row.releasedLines)}</td><td><strong>${row.rollingMissingDays===null?'—':`−${row.rollingMissingDays}`} / ${row.rollingExtraDays===null?'—':`+${row.rollingExtraDays}`}</strong><small>${row.rollingMissingDays===null?'Full history unavailable':`Missing / extra qualifying days over ${model.weeks} complete weeks`}</small></td></tr>`).join('')}</tbody></table></div>
+    <p class="pulse-gap-caution">A meaningful day requires at least ${model.meaningfulLines} authored non-VERSION changed lines. Each contributor has a configurable weekly reference of 0–7 named dates (default Mon–Fri). Missing scheduled dates are counted independently of extra meaningful dates, so an extra Friday cannot conceal a missed scheduled Thursday. An isolated burst does not erase earlier gaps. For 4 expected dates, −1 is a modest gap and −2 or more is below pattern; for a one- or two-day reference a single missing date is substantial. Colours scale by the proportion of expected dates missing in the displayed period, while cells print the absolute count. The expected denominator includes only observed scheduled dates within the selected range. For a zero-day pattern the ratio is undefined, but extra meaningful dates are still credited. Tagged release participation uses release-event dates and reconstructed authored commits; publishing alone does not count. This visualises Git evidence against a chosen reference, not attendance, employment obligations, availability, or individual performance.</p>`;
 }
 function pulseContinuityDayDetails(item) {
   if(!item)return '';
   const ship=item.events.length?item.events.map(r=>`<li><strong>${esc(r.tag)}</strong> <span>${number.format(r.commits)} included commits · ${r.lines===null?'unknown':number.format(r.lines)} non-VERSION changed lines${r.partial?' · partial ancestry':''}</span></li>`).join(''):item.releaseAvailable?'<li>No authored contribution included in a tagged release on this date.</li>':'<li>Incremental tagged-release evidence is unavailable.</li>';
-  const observation=item.workday?
-    (item.meaningful?'Meaningful authored weekday recorded.':item.authored?'Small authored contribution; below the configured meaningful-day threshold.':'No qualifying authored changes recorded on this observed weekday.'):
-    (item.meaningful?'Meaningful authored weekend day: adds one credited day without increasing the weekday denominator.':item.authored?'Small authored weekend contribution: visible, but below the meaningful-day threshold.':'Weekend without qualifying changes: no extra credit and no addition to the weekday baseline.');
-  return `<section class="continuity-popover-section"><span class="eyebrow">CONTRIBUTION CONTINUITY · TWO OBSERVATION CLOCKS</span><div class="continuity-popover-stats"><span><strong>${item.observed?number.format(item.churn):'—'}</strong>non-VERSION authored lines</span><span><strong>${item.observed?item.commits:'—'}</strong>authored commits</span><span><strong>${continuityPct(item.rollingCoverage)}</strong>trailing ${pulseContinuity.weeks}-week coverage</span><span><strong>${continuityReleaseRatio(item.events.length,item.opportunities,item.releaseAvailable)}</strong>tagged release inclusion</span></div><p>${item.observed?observation:'Outside the imported Git observation window; no absence is inferred.'}</p><ul class="continuity-release-events">${ship}</ul></section>`;
+  const observation=item.workday?(item.meaningful?'Expected date with meaningful authored contribution.':item.authored?'Expected date with a smaller recorded change, below threshold.':'Expected date without qualifying authored change.'):
+    (item.meaningful?'Extra qualifying date outside this contributor’s pattern.':item.authored?'Unscheduled date with smaller recorded change; no extra-day credit.':'Unscheduled date with no qualifying changes.');
+  return `<section class="continuity-popover-section"><span class="eyebrow">CONTRIBUTION CONTINUITY · SCHEDULE-REFERENCED EVIDENCE</span><div class="continuity-popover-stats"><span><strong>${item.observed?number.format(item.churn):'—'}</strong>non-VERSION authored lines</span><span><strong>${item.observed?item.commits:'—'}</strong>authored commits</span><span><strong>${item.workday?'Expected':'Unscheduled'}</strong>configured weekly reference</span><span><strong>${item.rollingMissingDays===null?'—':`−${item.rollingMissingDays}`} / ${item.rollingExtraDays===null?'—':`+${item.rollingExtraDays}`}</strong>trailing ${pulseContinuity.weeks}-week missing / extra days</span><span><strong>${continuityReleaseRatio(item.events.length,item.opportunities,item.releaseAvailable)}</strong>tagged release inclusion</span></div><p>${item.observed?observation:'Outside the imported observation window; no absence is inferred.'}</p><ul class="continuity-release-events">${ship}</ul></section>`;
 }
 function pulseContinuityPeriodMarkup(person,bucket,model) {
   const events=bucket.events.length?bucket.events.map(event=>`<li><strong>${esc(event.tag)}</strong> · ${esc(event.date)}<span>${number.format(event.commits)} authored commits · ${event.lines===null?'unknown':number.format(event.lines)} changed lines${event.partial?' · partial ancestry':''}</span></li>`).join(''):model.releaseAvailable?'<li>No authored contributions to eligible tagged releases in this interval.</li>':'<li>Incremental tagged-release evidence is unavailable.</li>';
-  return `<div class="pulse-tip-heading"><div><span class="eyebrow">CONTRIBUTION CONTINUITY · PERIOD EVIDENCE</span><strong>${esc(bucket.from)} – ${esc(bucket.to)}</strong><span>${esc(person)}</span></div><button type="button" class="pulse-tip-close" data-action="close-pulse" aria-label="Close period details">×</button></div><section class="continuity-popover-section"><span class="eyebrow">AUTHORED DATE · MEANINGFUL DAYS VS WEEKDAY BASELINE</span><div class="continuity-popover-stats"><span><strong>${continuityCoverageLabel(bucket)}</strong>meaningful coverage; weekend credit can exceed 100%</span><span><strong>${bucket.meaningfulDays}/${bucket.coveredDays}</strong>meaningful days / baseline weekdays</span><span><strong>${bucket.weekdayMeaningfulDays}</strong>meaningful weekdays</span><span><strong>${bucket.weekendMeaningfulDays}</strong>additional meaningful weekend days</span><span><strong>${bucket.smallDays} + ${bucket.weekendSmallDays}</strong>smaller-change weekdays + weekends</span><span><strong>${bucket.commits}</strong>authored commits</span><span><strong>${number.format(bucket.churn)}</strong>non-VERSION changed lines</span><span><strong>${continuityPct(bucket.rollingCoverage)}</strong>trailing ${model.weeks}-week coverage</span></div>${bucket.unknownDays?`<p>${bucket.unknownDays} date(s) outside the imported observation window. Those days are not counted as zero.</p>`:''}${bucket.coveredDays===0&&bucket.weekendMeaningfulDays?'<p>This selection has meaningful weekend activity but no observed baseline weekdays; the percentage is undefined, not zero.</p>':''}</section><section class="continuity-popover-section"><span class="eyebrow">TAG EVENT DATE · RELEASE PARTICIPATION</span><div class="continuity-popover-stats"><span><strong>${continuityReleaseRatio(bucket.participations,bucket.opportunities,model.releaseAvailable)}</strong>authored release participation</span><span><strong>${!model.releaseAvailable?'—':number.format(bucket.releasedCommits)}</strong>commits in releases</span><span><strong>${!model.releaseAvailable||bucket.releasedLines===null?'—':number.format(bucket.releasedLines)}</strong>released changed lines</span></div><ul class="continuity-release-events">${events}</ul></section><p class="pulse-tip-note">Activity uses author dates; release inclusion uses incremental tag-event dates. A weekend tag is not a weekend authored-activity day unless a qualifying commit was actually authored then. Git evidence is not a measure of hours worked or individual performance.</p>`;
+  return `<div class="pulse-tip-heading"><div><span class="eyebrow">CONTRIBUTION CONTINUITY · PERIOD EVIDENCE</span><strong>${esc(bucket.from)} – ${esc(bucket.to)}</strong><span>${esc(person)}</span></div><button type="button" class="pulse-tip-close" data-action="close-pulse" aria-label="Close period details">×</button></div><section class="continuity-popover-section"><span class="eyebrow">AUTHORED DATES · EXPECTED AND EXTRA</span><div class="continuity-popover-stats"><span><strong>${continuityStatusLabel(bucket.status)}</strong>pattern-relative status</span><span><strong>${bucket.onScheduleDays} / ${bucket.expectedDays}</strong>expected dates with meaningful activity</span><span><strong>−${bucket.missedDays}</strong>missing expected dates</span><span><strong>+${bucket.extraDays}</strong>extra meaningful dates</span><span><strong>${bucket.meaningfulDays}</strong>total meaningful dates (including extras)</span><span><strong>${bucket.smallDays + bucket.weekendSmallDays}</strong>days with smaller recorded changes</span><span><strong>${bucket.commits}</strong>authored commits</span><span><strong>${number.format(bucket.churn)}</strong>non-VERSION changed lines</span><span><strong>${bucket.rollingMissingDays===null?'—':`−${bucket.rollingMissingDays}`} / ${bucket.rollingExtraDays===null?'—':`+${bucket.rollingExtraDays}`}</strong>trailing ${model.weeks}-week missing / extra days</span></div>${bucket.unknownDays?`<p>${bucket.unknownDays} date(s) outside the imported observation window; not counted as missed.</p>`:''}${!bucket.expectedDays?'<p>No expected dates in this observed selection. Extra activity remains visible; no percentage is calculated.</p>':''}</section><section class="continuity-popover-section"><span class="eyebrow">TAG EVENT DATE · RELEASE PARTICIPATION</span><div class="continuity-popover-stats"><span><strong>${continuityReleaseRatio(bucket.participations,bucket.opportunities,model.releaseAvailable)}</strong>authored release participation</span><span><strong>${!model.releaseAvailable?'—':number.format(bucket.releasedCommits)}</strong>commits in releases</span><span><strong>${!model.releaseAvailable||bucket.releasedLines===null?'—':number.format(bucket.releasedLines)}</strong>released changed lines</span></div><ul class="continuity-release-events">${events}</ul></section><p class="pulse-tip-note">Only observed configured dates count as expected. A tagged release uses its tag-event date, not the commit's authored date. Git evidence does not establish hours worked or availability.</p>`;
 }
 function renderContinuityPeriodPulse(view,mode) {
   const model=pulseContinuity;
@@ -1234,16 +1283,16 @@ function renderContinuityPeriodPulse(view,mode) {
     Array.from({length:monthIndex(view.end)-monthIndex(view.start)+1},(_,i)=>{
       const month=monthIndex(view.start)+i;return `${Math.floor(month/12)}-${String(month%12+1).padStart(2,'0')}`;
     });
-  const columns=`minmax(142px,176px) repeat(${keys.length}, minmax(${weeks?'56':'67'}px, 1fr))`;
+  const columns=`minmax(142px,176px) repeat(${keys.length}, minmax(${weeks?'68':'76'}px, 1fr))`;
   const axis=keys.map(key=>`<span class="continuity-axis-label" title="${esc(key)}">${weeks?esc(key.slice(5)):esc(key)}</span>`).join('');
   const rows=view.contributors.map(c=>{
     const record=model.byId.get(c.id);
     const bins=weeks?record?.weeks:record?.months;
     const cells=keys.map(key=>{
       const bucket=bins?.get(key),label=continuityPeriodLabel(c.displayName,bucket,model);
-      return `<button type="button" class="continuity-period-tile" data-action="pulse-period" data-pulse-period="true" data-person-id="${esc(c.id)}" data-period-key="${esc(key)}" title="${esc(label)}" aria-label="${esc(label)}. View interval evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${continuityTile(bucket,model,{compact:weeks})}</button>`;
+      return `<button type="button" class="continuity-period-tile" data-action="pulse-period" data-pulse-period="true" data-person-id="${esc(c.id)}" data-period-key="${esc(key)}" title="${esc(label)}" aria-label="${esc(label)}. View interval evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${continuityTile(bucket,model)}</button>`;
     }).join('');
-    return `<div class="continuity-period-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div>${cells}`;
+    return `<div class="continuity-period-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span><small>${record?.expectedPerWeek??5}d</small></div>${cells}`;
   }).join('');
   $('pulse').innerHTML=`<div class="continuity-period-board" style="grid-template-columns:${columns}"><span class="continuity-period-corner">AUTHOR / TAG</span>${axis}${rows}</div>`;
   return null;
@@ -1368,11 +1417,13 @@ function renderPulse(view) {
   pulseLevel=momentumMode||levelMode?contributionLevelMatrix(perspectiveIndex,view.contributors,{from:view.start,to:view.end},
     {workdays:levelMode?state.pulseLevelWorkdays:state.pulseMomentumWorkdays,temporal:timing}):null;
   pulseContinuity=continuityMode?continuityMatrix(perspectiveIndex,view.contributors,{from:view.start,to:view.end},
-    {weeks:state.pulseContinuityWeeks,meaningfulLines:state.pulseMeaningfulLines}):null;
+    {weeks:state.pulseContinuityWeeks,meaningfulLines:state.pulseMeaningfulLines,
+      workingDaysById:Object.fromEntries(mergeGroups.map((g,i)=>[String(i),normalizeWorkingDays(g.workingDays)]))}):null;
   $('pulse-gap-settings').hidden=!gapMode;
   $('pulse-momentum-settings').hidden=!momentumMode;
   $('pulse-level-settings').hidden=!levelMode;
   $('pulse-continuity-settings').hidden=!continuityMode;
+  if(continuityMode)renderWorkingPatterns(view);
   $('pulse-temporal-settings').hidden=false;
   $('pulse-gap-horizon').value=String(state.pulseGapHorizon);
   $('pulse-busy-day').value=String(state.pulseBusyDay);
@@ -1398,7 +1449,7 @@ function renderPulse(view) {
   $('pulse-continuity-summary').hidden=!continuityMode||!view.contributors.length;
   $('pulse-continuity-summary').innerHTML=continuityMode&&view.contributors.length?pulseContinuitySummary(pulseContinuity):'';
   setText('pulse-hint',continuityMode
-    ? `Two separate tracks per cell: top = meaningful authored activity, bottom = participation in incremental tagged releases. ${weekly?'Weekly cells show meaningful recorded days / baseline weekdays (including extra weekend credit) and included releases / eligible tagged releases.':daily?'Daily cells show authored change type and tagged-release inclusion on that date.':'Monthly cells show meaningful-day coverage and release participation separately.'} A meaningful authored day (including Saturday/Sunday) requires ≥ ${state.pulseMeaningfulLines} non-VERSION changed lines. Each qualifying weekend day adds one to the numerator, while the observed Monday–Friday baseline remains the denominator: 7/5 (140%) is possible. Quiet weekdays remain in the baseline. The rolling ${state.pulseContinuityWeeks}-week percentage is only reported with complete imported history. Select a cell to inspect evidence; no isolated burst resets earlier gaps. Absence from Git is not a measure of working hours or performance.`
+    ? `Continuity is measured against the weekday pattern selected for each contributor, not a fixed five-day week. ${weekly?'Weekly cells display missing scheduled dates (−) and extra meaningful dates (+) on separate amber/red and blue scales. The equals sign means every observed scheduled date had meaningful recorded activity.':'Daily and monthly cells preserve the same expected-versus-extra distinction.'} The lower band represents tagged-release inclusion; “r” counts distinct releases. A meaningful recorded date requires ≥ ${state.pulseMeaningfulLines} non-VERSION changed lines. A missing scheduled date is never cancelled by activity on an unscheduled date. The rolling ${state.pulseContinuityWeeks}-week view uses complete imported history, and a zero-day reference has no percentage denominator. Click any cell for the underlying dates and release evidence. This is a Git observation, not a claim about attendance or work hours.`
     :levelMode
     ? `Absolute recorded velocity is a fixed-scale, uncapped composite of authored commits, non-VERSION changed lines, authored changes included in releases, and temporal distribution. Daily and monthly cells show their actual numeric values: monthly values are averages per covered calendar day, including quiet days. The colour thresholds never adapt to peers or filtered maxima. The table below shows selected-period averages and a separate trailing ${state.pulseLevelWorkdays}-working-day view. One reference index unit corresponds to the weighted model’s reference inputs; this is not a work quota, measure of hours or quality.`
     :gapMode
@@ -2261,7 +2312,7 @@ function sessionPayload() {
   const selectedEmails=mergeGroups.flatMap((g,i)=>state.selectedIds.has(String(i))?g.emails:[]);
   const emailForId = id => /^(0|[1-9]\d*)$/.test(String(id)) ? mergeGroups[Number(id)]?.emails[0]||null : null;
   const payload={version:3,exportedAt:new Date().toISOString(),rangeYears:Number($('range-select').value),rawLog:$('log-input').value,
-    mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails]})),
+    mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails],workingDays:normalizeWorkingDays(g.workingDays)})),
     scope:{selectedEmails,period:state.period,start:state.start,end:state.end,metric:state.metric,mode:state.mode,denominator:state.denominator,
       includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode,
       pulseLens:state.pulseLens,pulseGapHorizon:state.pulseGapHorizon,pulseBusyDay:state.pulseBusyDay,pulseReleaseLines:state.pulseReleaseLines,pulseDailyChurn:state.pulseDailyChurn,pulseMomentumWorkdays:state.pulseMomentumWorkdays,pulseLevelWorkdays:state.pulseLevelWorkdays,pulseContinuityWeeks:state.pulseContinuityWeeks,pulseTemporalPeriod:state.pulseTemporalPeriod,pulseTemporalChurn:state.pulseTemporalChurn,pulseMeaningfulLines:state.pulseMeaningfulLines,
@@ -2376,7 +2427,7 @@ async function restoreSessionPayload(payload,filename='imported session') {
     const local=new Set();
     const valid=g.emails.filter(e=>{if(typeof e!=='string')return false;const key=e.toLowerCase();if(!emails.has(key)||used.has(key)||local.has(key))return false;local.add(key);return true;}).map(e=>e.toLowerCase());
     valid.forEach(e=>used.add(e));
-    return valid.length?[{displayName:String(g.displayName||valid[0]),emails:valid}]:[];
+    return valid.length?[{displayName:String(g.displayName||valid[0]),emails:valid,workingDays:normalizeWorkingDays(g.workingDays)}]:[];
   });
   // Preserve historical manual assignments; add provider accounts that were
   // introduced in a newer import or an older session format without duplication.
@@ -2501,6 +2552,8 @@ const ACTIONS={
   'choose-import':()=> $('file-import-input').click(),
   'export':exportSession,'copy-command':copyCommand,'analyse':analyse,'load-demo':loadDemo,
   'add-merge-group':()=>{if(requireResolvedIdentitySelection())return;forgetUndo();mergeGroups.push({displayName:'New contributor',emails:[]});identityPicker=null;renderMergeUI();openIdentityPicker(mergeGroups.length-1);},
+  'toggle-pattern-day':(_event,target)=>{const i=Number(target.dataset.group),day=Number(target.dataset.weekday),group=mergeGroups[i];if(!group||!Number.isInteger(day)||day<0||day>6)return;const current=normalizeWorkingDays(group.workingDays);updateWorkingPattern(i,current.includes(day)?current.filter(d=>d!==day):[...current,day],target);},
+  'pattern-preset':(_event,target)=>{const patterns={four:[1,2,3,4],five:[1,2,3,4,5],none:[]};if(Object.hasOwn(patterns,target.dataset.pattern))updateWorkingPattern(Number(target.dataset.group),patterns[target.dataset.pattern],target);},
   'move-contributor':(_e,t)=>moveContributorCard(Number(t.dataset.group), Number(t.dataset.position)),
   'toggle-linked-order':(_e,t)=>toggleLinkedOrder(Number(t.dataset.group)),
   'move-linked-identity':(_e,t)=>moveLinkedIdentity(Number(t.dataset.group),Number(t.dataset.position),Number(t.dataset.step)),

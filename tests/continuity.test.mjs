@@ -201,7 +201,8 @@ test('continuity UI is a fifth lens with weekly default, separate tracks and per
   assert.match(app,/state\.pulseMode='weekly'/);
   assert.match(app,/renderContinuityPeriodPulse/);
   assert.match(app,/renderContinuityDailyPulse/);
-  assert.match(app,/continuityAuthoredColour/);
+  assert.match(app,/missingDayColour/);
+  assert.match(app,/extraDayColour/);
   assert.match(app,/continuityReleaseColour/);
   assert.match(app,/data-pulse-period="true"/);
   assert.match(app,/pulseContinuityPeriodMarkup/);
@@ -330,14 +331,16 @@ test('partially observed weeks use only known baseline weekdays and meaningful w
   assert.equal(row.weeks.get('2026-10-05').unknownDays,2);
 });
 
-test('continuity interface communicates the over-100% weekend baseline and shows active weekend cells',()=>{
+test('continuity interface separates missing expected dates from additional recorded dates',()=>{
   const app=readFileSync(new URL('../assets/app.js',import.meta.url),'utf8');
   const css=readFileSync(new URL('../assets/app.css',import.meta.url),'utf8');
   const readme=readFileSync(new URL('../README.md',import.meta.url),'utf8');
-  assert.match(app,/7\/5 \(140%\)/);
-  assert.match(app,/weekendMeaningfulDays/);
-  assert.match(app,/Math\.min\(100,Math\.round\(row\.coverage\*100\)\)/);
+  assert.match(app,/data-action="toggle-pattern-day"/);
+  assert.match(app,/continuityScheduleStatus|continuityStatusLabel/);
+  assert.match(app,/missingDayColour/);
+  assert.match(app,/extraDayColour/);
   assert.match(app,/continuity-weekend-activity/);
-  assert.match(css,/continuity-weekend-activity/);
-  assert.match(readme,/7 \/ 5 \(140%\)/);
+  assert.match(css,/continuity-schedule-balance/);
+  assert.match(css,/continuity-overview/);
+  assert.match(readme,/7\/5 \(140%\)/);
 });

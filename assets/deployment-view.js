@@ -1,12 +1,12 @@
 /** UI fragments for the independent QA environments and production evidence. */
-import { DEPLOYMENT_ENVS } from './deployments.js?v=git-continuity-weekends-20261107-1';
-import { comparisonWindow } from './perspectives.js?v=git-continuity-weekends-20261107-1';
+import { DEPLOYMENT_ENVS } from './deployments.js?v=git-working-patterns-20261107-1';
+import { comparisonWindow } from './perspectives.js?v=git-working-patterns-20261107-1';
 const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const nf=new Intl.NumberFormat('en-GB');
 const f=v=>Number.isFinite(v)?nf.format(v):'—';
 const when=ms=>ms==null?'Unknown':new Date(ms).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
 const short=sha=>sha?sha.slice(0,9):'Unresolved';
-import { targetUrl } from './route-state.js?v=git-continuity-weekends-20261107-1';
+import { targetUrl } from './route-state.js?v=git-working-patterns-20261107-1';
 const href=(index,changes)=>esc(targetUrl(index.navigation?.path||'./index.html',index.navigation?.ui||{},index.navigation?.groups||index.groups,index.navigation?.datasetId,changes));
 const LINK=(index,{id,text})=>`<a class="deployment-link" href="${href(index,{view:'deployments',event:id})}" data-action="deployment-open" data-deployment-id="${esc(id)}">${esc(text)} ↗</a>`;
 const panel=(eyebrow,title,body)=>`<section class="primary-panel deployment-panel"><div class="primary-card-heading"><span class="primary-eyebrow">${esc(eyebrow)}</span><h3>${esc(title)}</h3></div>${body}</section>`;

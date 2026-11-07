@@ -3,7 +3,7 @@
  * Synthetic keys never masquerade as a Git author email, and adding one to a
  * contributor group does not manufacture a Git commit.
  */
-import { autoMatchGithubPublishers } from './impact.js?v=git-continuity-weekends-20261107-1';
+import { autoMatchGithubPublishers } from './impact.js?v=git-working-patterns-20261107-1';
 
 const emailPattern=/^[^\s@<>]{1,100}@[^\s@<>]{1,120}$/;
 export const herokuIdentity=email=>`heroku:${String(email||'').trim().toLowerCase()}`;
@@ -33,7 +33,7 @@ export function externalIdentities(github=[],heroku=[]) {
  * Existing manual group placement always wins (including session restores).
  */
 export function reconcileProviderGroups(groups,external,github=[],commits=[]) {
-  const result=groups.map(g=>({displayName:g.displayName,emails:[...g.emails]}));
+  const result=groups.map(g=>({...g,emails:[...g.emails]}));
   const claimed=new Set(result.flatMap(g=>g.emails));
   // Only match against original Git emails; external aliases should not be
   // used as weaker evidence to infer a completely different account.

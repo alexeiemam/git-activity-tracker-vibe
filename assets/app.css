@@ -1230,3 +1230,53 @@
 .continuity-release-events li span{display:block;color:#496955}
 @media(max-width:740px){.continuity-period-board{column-gap:3px;row-gap:5px}.continuity-period-person{font-size:10px}.continuity-legend{gap:7px 10px;font-size:9px}.continuity-popover-section{padding:11px 13px}}
 @media(forced-colors:active){.continuity-band,.continuity-period-tile,.continuity-mini-meter{border:1px solid CanvasText}.continuity-period-tile:focus-visible{outline:2px solid Highlight}}
+
+/* Contributor-specific working-day patterns. Controls are explicit, keyboard
+   accessible and remain distinct from any claim about hours/attendance. */
+.continuity-pattern-settings{flex:1 1 100%;max-width:100%;border:1px solid #d6e5da;background:#f7faf7;border-radius:9px;padding:0 12px}
+.continuity-pattern-settings>summary{font:600 11px/1.5 var(--font);color:#275c45;cursor:pointer;padding:10px 0;list-style-position:inside}
+.continuity-pattern-settings>p{margin:5px 0 12px;font:10px/1.55 var(--mono);color:var(--muted)}
+.continuity-pattern-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #e2eae3;padding:12px 0;min-width:0}
+.continuity-pattern-row>div:first-child{display:grid;gap:3px;min-width:110px;max-width:240px}
+.continuity-pattern-row strong{font:600 12px/1.4 var(--font);color:var(--ink);overflow-wrap:anywhere}
+.continuity-pattern-row small{color:var(--muted);font:10px/1.4 var(--mono)}
+.pattern-controls{display:flex;flex-wrap:wrap;align-items:center;gap:9px;min-width:0}
+.pattern-weekdays{display:flex;flex-wrap:wrap;gap:3px}
+.pattern-day{min-width:38px;min-height:33px;border:1px solid #cbdacf;border-radius:5px;color:#526358;background:#fff;font:600 10px/1.1 var(--mono);padding:6px 5px}
+.pattern-day.is-scheduled{background:#236b53;border-color:#236b53;color:#fff}
+.pattern-day:hover{border-color:#236b53}
+.pattern-day:focus-visible{outline:2px solid #236b53;outline-offset:2px}
+.pattern-presets{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.pattern-presets .text-button{font:10px var(--mono);padding:6px;white-space:nowrap;color:#306d55}
+.merge-working-pattern{margin:0 18px 12px;padding:0 11px;border:1px solid #e0eae2;background:#f8faf7;border-radius:7px}
+.merge-working-pattern>summary{cursor:pointer;padding:9px 0;font:600 11px/1.4 var(--font);color:#315e48}
+.merge-working-pattern .pattern-controls{padding:8px 0 12px}
+.merge-working-pattern>p{margin:4px 0}
+/* Missing scheduled days (warm) and extra meaningful dates (blue) are
+   independently coloured. Nothing is gold or ranked against peers. */
+.continuity-legend-label{font-weight:700;color:#344e42;border-left:2px solid #aabfb0;padding-left:7px}
+.continuity-schedule-balance{display:flex;flex:1 1 auto;min-height:22px;width:100%;gap:2px;font-variant-numeric:tabular-nums}
+.continuity-missing-mark,.continuity-extra-mark{display:flex;align-items:center;justify-content:center;min-width:0;border-radius:3px;font:700 12px/1 var(--mono)}
+.continuity-missing-mark{flex:1 1 60%}
+.continuity-extra-mark{flex:0 0 35%;font-size:10px;min-width:22px}
+.continuity-period-tile{min-height:55px}
+.continuity-period-person small{margin-left:auto;font:600 9px var(--mono);color:#638072;white-space:nowrap}
+.continuity-day-tile .continuity-schedule-balance{min-height:0;flex:1}
+.continuity-day-tile .continuity-missing-mark{font-size:9px}
+.continuity-day-tile .continuity-extra-mark{min-width:0;font-size:8px;flex-basis:52%}
+.continuity-overview{border:1px solid #dde8df;border-radius:9px;overflow:hidden;margin-bottom:16px}
+.continuity-overview-row{display:grid;grid-template-columns:minmax(130px,1.2fr) minmax(90px,.65fr) minmax(84px,.65fr) minmax(160px,1.5fr);align-items:center;gap:10px;padding:8px 12px;background:#fff}
+.continuity-overview-row+.continuity-overview-row{border-top:1px solid #e4ece6}
+.continuity-overview-person{font:600 12px/1.4 var(--font);color:#2b4c39;min-width:0;overflow-wrap:anywhere}
+.continuity-overview-person small{display:block;font:10px/1.5 var(--mono);color:var(--muted)}
+.continuity-overview-missing,.continuity-overview-extra{display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;border-radius:5px;padding:6px 8px;font:700 16px/1 var(--mono);font-variant-numeric:tabular-nums;color:#3e4f41}
+.continuity-overview-missing small,.continuity-overview-extra small{font:9px/1.4 var(--mono);text-align:center;color:inherit;opacity:.88}
+.continuity-overview-weeks{font:10px/1.6 var(--mono);color:#60776a}
+@media(max-width:740px){
+  .continuity-pattern-row{flex-direction:column;align-items:stretch}
+  .pattern-day{min-width:35px}
+  .continuity-overview-row{grid-template-columns:minmax(105px,1fr) repeat(2,minmax(65px,.6fr));gap:6px;padding:8px}
+  .continuity-overview-weeks{grid-column:1/-1;border-top:1px solid #edf0e9;padding-top:4px}
+  .continuity-overview-missing,.continuity-overview-extra{font-size:14px}
+}
+@media(forced-colors:active){.pattern-day.is-scheduled{border:2px solid Highlight}.continuity-schedule-balance>span,.continuity-overview-missing,.continuity-overview-extra{border:1px solid CanvasText}}

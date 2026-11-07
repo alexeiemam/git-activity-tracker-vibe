@@ -277,8 +277,7 @@ The **activity pulse** offers five complementary lenses: **Authored activity**
 (the existing raw totals, still the default), **Release gap × activity** (a warm,
 0–100 attention signal), and **Contribution momentum** (a diverging, signed
 trend against the same contributor's recent history), plus **Absolute velocity** (the fixed-scale, uncapped log index) and
-**Contribution continuity** (meaningful authored days, including extra weekend credit
-against a weekday baseline; observed quiet gaps and actual tagged-release participation). All support
+**Contribution continuity** (configurable per-identity working-day patterns, independently visible missing/extra contribution dates, observed quiet gaps and tagged-release participation). All support
 **Daily / Monthly** cells; Continuity additionally supports **Weekly** cells
 without changing the globally filtered commit policy.
 
@@ -399,67 +398,70 @@ been removed. Directional Momentum may still show a neutral peer reference in
 its optional summary; its calculation has not changed. Absolute velocity is
 an observable Git-change index, **not hours worked, quality or productivity**.
 
-### Contribution continuity: a fifth Pulse lens (daily / weekly / monthly)
+### Contribution continuity: scheduled expectations, missing days and extra days
 
-**Contribution continuity** makes sparse recorded activity visible over time,
-even when occasional large commit bursts or small release inclusions make the
-other Pulse lenses appear ordinary. It opens in **Weekly** resolution by
-default; switching back to another lens restores its supported daily/monthly
-resolution. A weekly or monthly cell is split into **two separate tracks**:
+**Contribution continuity** makes sparse Git contribution patterns legible without
+assuming that every contributor follows a five-day working week. The fifth
+Pulse lens opens in **Weekly** mode by default, with Daily and Monthly
+resolutions. In **Working-day patterns by contributor**, or on the **Review
+identities** cards, specify the *actual weekdays* in each contributor's
+reference pattern: 0–7 weekdays are supported, including 0/1/2/3/4/5-day
+weeks and scheduled Saturday/Sunday dates. **Mon–Fri is the default for older
+sessions**. The named-day pattern belongs to the reconciled contributor, is
+kept on reordering/identity merging and saved in session exports; on splitting
+a contributor, both new identities inherit that working-day reference.
 
-- **Top — meaningful authored activity:** qualifying Monday–Sunday authored
-  days with at least `20` non-VERSION changed lines / **all observed Monday–Friday
-  weekdays** in the cell. The threshold reuses **Temporal evidence → Meaningful
-  day at** (10/20/50). **Saturday/Sunday qualifying authored days are additional
-  numerator credit**, so a complete week may show **7 / 5 (140%)**. This is
-  intentional, not a bug or a claim of seven contracted days. Quiet weekdays
-  remain in the denominator; quiet weekends do not. Small weekday and weekend
-  commits remain visible as separate evidence, but do not earn meaningful-day
-  credit. Dates outside imported history are hatched, not treated as quiet.
-  A selected period with qualifying weekends but no observed weekdays shows
-  the weekend count and an **undefined** percentage, rather than fabricating a
-  zero denominator.
-- **Bottom — tagged-release inclusion:** distinct incremental tagged releases
-  containing at least one of this person's authored commits / **all eligible
-  tagged releases** in the period. The numerator is about reconstructed
-  incremental ancestry, not release publisher/driver identity, VERSION
-  touches or merely the number of commits. A contributor with four commits
-  included in one tagged release has one participation, not four. No eligible
-  tag events, zero participation and missing tag data have different colours
-  and labels. A Saturday release remains on Saturday's release-event clock;
-  it does not become a fabricated authored weekday.
+The new cells replace tiny working-day fractions with two separately coloured
+signals:
 
-The panel below the heatmap reports for each contributor **meaningful
-recorded days / observed baseline weekdays**, including the **additional
-qualifying weekend count**, **weeks containing meaningful authored activity**,
-**longest consecutive observed weekday gap without meaningful authored
-changes**, **distinct release participations / tagged-release opportunities**,
-**included authored commits**, **non-VERSION released changed lines** and
-**rolling 8/12/20-week activity coverage** (default 20 weeks). A qualifying
-weekend day **breaks a quiet-weekday streak**, but an unworked weekend neither
-extends nor erases it. Unknown imported history also breaks measured streaks.
-Rolling coverage uses full imported history prior to the selected window and
-remains **unknown** until the entire lookback is observed. The numerator
-includes meaningful weekends; the denominator remains all covered weekdays,
-so rolling percentages may exceed 100%. An occasional release contribution
-does **not** reset this rolling coverage or erase earlier quiet periods.
-Monthly and weekly cells use their actual covered weekday denominators,
-including partially selected months. Tagged-release events on weekends are
-independent of authored weekends: publishing on Saturday does not count as
-a meaningful authored Saturday unless qualifying source changes were actually
-authored that day.
+- **Missing expected dates (amber → red):** The upper track displays `=` when
+  all *observed, scheduled* dates have qualifying authored changes; `−1`
+  shows one missing expected date, `−2` two, and so forth. A four-day pattern
+  with 4/4 planned dates has **0 missing (met)**; 3/4 has **1 missing (modest
+  gap)**; 2/4 has **2 missing (below pattern)**. In one- and two-day patterns,
+  even one missing date is considered a substantial gap, not an innocuous
+  fraction. Colour severity is proportional to the expected dates in the
+  displayed period, while the cell label preserves the raw missing-day count.
+  This is a descriptive threshold, not a disciplinary judgement.
+- **Extra meaningful dates (independent blue scale):** An unscheduled date
+  with at least the configured meaningful-line threshold shows `+1`, `+2`,
+  etc. Qualifying weekend changes are **extra only when the contributor has
+  not scheduled that day**. If they normally work Saturday, Saturday is an
+  expected date instead. Extra dates never erase missing dates: three
+  scheduled days plus an unscheduled Friday still shows `−1` *and* `+1`.
+- **Tagged-release inclusion (bottom track):** Release counts remain separate
+  from authored activity, labelled `1r`, `2r`, etc., where `r` means distinct
+  incremental tagged releases containing authored commits. Tag/publisher
+  events do not create qualifying authored days, and VERSION-only churn does
+  not qualify as meaningful activity.
 
-Choose a weekly/monthly cell (or a daily cell) to inspect precise activity
-and release evidence, including release tags, included commits, changed lines
-and ancestry completeness. Every cell uses fixed colours independent of the
-selected people. No peer awards, winner labels, performance ratings or inferred
-working hours. Code review, pairing, leave, support work, uncommitted activity,
-squashed history and unimported branches can all alter the interpretation.
+A qualifying date requires at least **20 non-VERSION changed lines** by
+default (10/20/50 configurable in Temporal Evidence). An observed scheduled
+date below that threshold is still visible, but counts as missing from the
+*Git-activity reference*. A selected day outside the imported observation
+bounds does **not** count as an observed or missing date. Partially selected
+weeks and months use only the dates in their selection that are known.
 
-Settings and the weekly/daily/monthly selection survive session export/import;
-older sessions retain the original Authored activity default. Release counts
-are restricted to known canonical incremental tags (not baselines). A missing
-release feed makes the release opportunity metric unavailable rather than zero.
+The summary reports **scheduled qualifying dates / expected dates**, missing
+expected dates, extra dates, the longest consecutive stretch of scheduled
+dates without qualifying changes, weekly met/modest/below counts, release
+participation, actual released commits and non-VERSION changed lines. Rolling
+8/12/20-week results (20 weeks by default) preserve the full, unfiltered
+observation history and separately count missing and extra dates. Any
+percentage derived from qualifying recorded days and expected dates can
+exceed 100% when there are extras, but a 0-day schedule has **no denominator**;
+extras remain visible and no meaningless 0/0 or infinite percentage appears.
+For example, a five-day reference with seven qualifying days can still be
+reported as 7/5 (140%), while all its scheduled dates are marked met and two
+weekend dates are separately credited as extras.
+
+The warm and blue colour scales are **fixed across contributors** and explicitly
+labelled in the legend; nobody receives a winner badge. Popovers retain
+individual dates, churn, missing/extra evidence and release ancestry. The
+working-day pattern is a user-specified **reference for recorded Git activity**;
+it is not proof of contracted hours, leave, attendance, productivity or
+performance. Code review, pairing, squashed commits, non-Git tasks and
+unimported history may make the observed record incomplete.
 
 ### Compare every dimension: incremental tagged releases
 
