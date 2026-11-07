@@ -1,10 +1,10 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-absolute-velocity-20261106-1';
-import { impactAnalysis } from './impact.js?v=git-absolute-velocity-20261106-1';
-import { buildStoryAnalysis } from './stories.js?v=git-absolute-velocity-20261106-1';
-import { buildEvidenceIndex } from './perspectives.js?v=git-absolute-velocity-20261106-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-absolute-velocity-20261106-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-absolute-velocity-20261106-1';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-contribution-continuity-20261107-1';
+import { impactAnalysis } from './impact.js?v=git-contribution-continuity-20261107-1';
+import { buildStoryAnalysis } from './stories.js?v=git-contribution-continuity-20261107-1';
+import { buildEvidenceIndex } from './perspectives.js?v=git-contribution-continuity-20261107-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-contribution-continuity-20261107-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-contribution-continuity-20261107-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;

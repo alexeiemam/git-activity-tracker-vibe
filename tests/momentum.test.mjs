@@ -157,17 +157,17 @@ test('legacy or partial evidence cannot manufacture comparable pre-window histor
   assert.equal(result.available,false);
 });
 
-test('four Pulse lenses, settings, explanatory notes and export roundtrip are wired',()=>{
+test('five Pulse lenses, settings, explanatory notes and export roundtrip are wired',()=>{
   const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
   const app=readFileSync(new URL('../assets/app.js',import.meta.url),'utf8');
-  for(const lens of ['activity','release-gap','momentum','level'])assert.match(html,new RegExp(`data-pulse-lens="${lens}"`));
+  for(const lens of ['activity','release-gap','momentum','level','continuity'])assert.match(html,new RegExp(`data-pulse-lens="${lens}"`));
   for(const id of ['pulse-momentum-settings','pulse-momentum-workdays','pulse-momentum-summary','pulse-daily-churn'])
     assert.ok(html.includes(`id="${id}"`));
   assert.match(app,/pulseMomentum=momentumMode\?momentumMatrix\(perspectiveIndex,view\.contributors/);
   assert.match(app,/pulseDailyChurn:state\.pulseDailyChurn,pulseMomentumWorkdays:state\.pulseMomentumWorkdays/);
   assert.match(app,/MOMENTUM_WINDOWS\.includes\(s\.pulseMomentumWorkdays\)/);
   assert.match(app,/DAILY_CHURN_THRESHOLDS\.includes\(s\.pulseDailyChurn\)/);
-  assert.match(app,/\['activity','release-gap','momentum','level'\]\.includes\(s\.pulseLens\)/);
-  assert.match(app,/pulseDayMarkup\(details,gapItem,momentumItem,temporalItem,levelItem\)/);
+  assert.match(app,/\['activity','release-gap','momentum','level','continuity'\]\.includes\(s\.pulseLens\)/);
+  assert.match(app,/pulseDayMarkup\(details,gapItem,momentumItem,temporalItem,levelItem,continuityItem\)/);
   assert.ok(MOMENTUM_DIRECTION_THRESHOLD>0);
 });

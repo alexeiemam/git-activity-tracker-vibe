@@ -3,30 +3,31 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=git-absolute-velocity-20261106-1';
-import { generateDemoLog } from './demo-data.js?v=git-absolute-velocity-20261106-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-absolute-velocity-20261106-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-absolute-velocity-20261106-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-absolute-velocity-20261106-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-absolute-velocity-20261106-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=git-absolute-velocity-20261106-1';
-import { releaseScorecard } from './release-scorecard.js?v=git-absolute-velocity-20261106-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-absolute-velocity-20261106-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-absolute-velocity-20261106-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-absolute-velocity-20261106-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-absolute-velocity-20261106-1';
-import { buildStoryAnalysis } from './stories.js?v=git-absolute-velocity-20261106-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-absolute-velocity-20261106-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-absolute-velocity-20261106-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-absolute-velocity-20261106-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-absolute-velocity-20261106-1';
-import { downloadFilename } from './download-names.js?v=git-absolute-velocity-20261106-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-absolute-velocity-20261106-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-absolute-velocity-20261106-1';
-import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-absolute-velocity-20261106-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-absolute-velocity-20261106-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-absolute-velocity-20261106-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-absolute-velocity-20261106-1';
+} from './domain.js?v=git-contribution-continuity-20261107-1';
+import { generateDemoLog } from './demo-data.js?v=git-contribution-continuity-20261107-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-contribution-continuity-20261107-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-contribution-continuity-20261107-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-contribution-continuity-20261107-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-contribution-continuity-20261107-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=git-contribution-continuity-20261107-1';
+import { releaseScorecard } from './release-scorecard.js?v=git-contribution-continuity-20261107-1';
+import { continuityMatrix, continuityAuthoredColour, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=git-contribution-continuity-20261107-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-contribution-continuity-20261107-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-contribution-continuity-20261107-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-contribution-continuity-20261107-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-contribution-continuity-20261107-1';
+import { buildStoryAnalysis } from './stories.js?v=git-contribution-continuity-20261107-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-contribution-continuity-20261107-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-contribution-continuity-20261107-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-contribution-continuity-20261107-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-contribution-continuity-20261107-1';
+import { downloadFilename } from './download-names.js?v=git-contribution-continuity-20261107-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-contribution-continuity-20261107-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-contribution-continuity-20261107-1';
+import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-contribution-continuity-20261107-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-contribution-continuity-20261107-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-contribution-continuity-20261107-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-contribution-continuity-20261107-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -42,7 +43,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-absolute-velocity-20261106-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-contribution-continuity-20261107-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -196,7 +197,7 @@ const state = {
   period: 'all', start: null, end: null,
   includeMerges: false, includeReverts: true,
   metric: 'commits', mode: 'total', denominator: 'repository',
-  trend: 'rolling', pulseMode: 'monthly', pulseLens:'activity', pulseGapHorizon:DEFAULT_GAP_HORIZON, pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES, pulseDailyChurn:DEFAULT_DAILY_CHURN, pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT, rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
+  trend: 'rolling', pulseMode: 'monthly', pulseLens:'activity', pulseGapHorizon:DEFAULT_GAP_HORIZON, pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES, pulseDailyChurn:DEFAULT_DAILY_CHURN, pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT, rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
   rhythmTab: 'weekly', seasonMode: 'rate', seasonYears: null, sortKey: 'lens', sortDesc: true,
   impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
   impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,
@@ -642,7 +643,7 @@ function syncScopeAfterLoad() {
   const desiredStart = dateAtDay(dayNumber(anniversary)+1);
   const initialStart = min > desiredStart ? min : desiredStart;
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
-    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
+    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{},
     viewMode:'observatory',storyPerspective:'team',storyFocus:'selection',storyTopic:'all',storyCategory:'noteworthy',storyShowAll:false,
     storyFindingId:null,storyMonth:null,storyPairA:null,storyPairB:null,storyTrail:[],storyDismissed:new Set() });
@@ -657,14 +658,16 @@ function syncScopeAfterLoad() {
     state.includeReverts=s.includeReverts !== false;
     if (typeof s.period==='string') state.period=s.period;
     if (['rolling','weekly','cumulative'].includes(s.trend)) state.trend=s.trend;
-    if (['monthly','daily'].includes(s.pulseMode)) state.pulseMode=s.pulseMode;
-    if (['activity','release-gap','momentum','level'].includes(s.pulseLens)) state.pulseLens=s.pulseLens;
+    if (['monthly','daily','weekly'].includes(s.pulseMode)) state.pulseMode=s.pulseMode;
+    if (['activity','release-gap','momentum','level','continuity'].includes(s.pulseLens)) state.pulseLens=s.pulseLens;
+    if (state.pulseMode==='weekly'&&state.pulseLens!=='continuity')state.pulseMode='monthly';
     if (GAP_HORIZONS.includes(s.pulseGapHorizon)) state.pulseGapHorizon=s.pulseGapHorizon;
     if (BUSY_DAY_THRESHOLDS.includes(s.pulseBusyDay)) state.pulseBusyDay=s.pulseBusyDay;
     if (RELEASE_LINE_THRESHOLDS.includes(s.pulseReleaseLines)) state.pulseReleaseLines=s.pulseReleaseLines;
     if (DAILY_CHURN_THRESHOLDS.includes(s.pulseDailyChurn)) state.pulseDailyChurn=s.pulseDailyChurn;
     if (MOMENTUM_WINDOWS.includes(s.pulseMomentumWorkdays)) state.pulseMomentumWorkdays=s.pulseMomentumWorkdays;
     if (LEVEL_WINDOWS.includes(s.pulseLevelWorkdays)) state.pulseLevelWorkdays=s.pulseLevelWorkdays;
+    if (CONTINUITY_WINDOWS.includes(s.pulseContinuityWeeks)) state.pulseContinuityWeeks=s.pulseContinuityWeeks;
     if (TEMPORAL_PERIODS.includes(s.pulseTemporalPeriod)) state.pulseTemporalPeriod=s.pulseTemporalPeriod;
     if (TEMPORAL_CHURN_CAPS.includes(s.pulseTemporalChurn)) state.pulseTemporalChurn=s.pulseTemporalChurn;
     if (MEANINGFUL_CHURN_THRESHOLDS.includes(s.pulseMeaningfulLines)) state.pulseMeaningfulLines=s.pulseMeaningfulLines;
@@ -768,7 +771,7 @@ function changeDate() {
 }
 function resetFilters() {
   Object.assign(state,{ period:'all',start:sourceDateBounds().min,end:sourceDateBounds().max,
-    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
+    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
@@ -803,7 +806,7 @@ function updateControls() {
   $('denominator-select').disabled=false;
   $('metric-explanation').textContent=`${METRICS[state.metric].note}. ${state.mode==='share' ? 'Share uses the reference selected below.' : 'Reference is used for percent context and hotspots.'}`;
   document.querySelectorAll('[data-trend]').forEach(btn=>{const yes=btn.dataset.trend===state.trend;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
-  document.querySelectorAll('[data-pulse-mode]').forEach(btn=>{const yes=btn.dataset.pulseMode===state.pulseMode;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
+  document.querySelectorAll('[data-pulse-mode]').forEach(btn=>{if(btn.dataset.pulseMode==='weekly')btn.hidden=state.pulseLens!=='continuity';const yes=btn.dataset.pulseMode===state.pulseMode;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
   document.querySelectorAll('[data-pulse-lens]').forEach(btn=>{const yes=btn.dataset.pulseLens===state.pulseLens;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
 }
 function renderScope(view) {
@@ -1026,6 +1029,7 @@ function hidePulsePopover() {
 let pulseReleaseGap = null;
 let pulseMomentum = null;
 let pulseLevel = null;
+let pulseContinuity = null;
 let pulseTemporal = null;
 const pulseTimeSettings = () => ({period:state.pulseTemporalPeriod,churnCap:state.pulseTemporalChurn,meaningfulLines:state.pulseMeaningfulLines});
 const clockLabel = minutes => minutes===null||minutes===undefined ? '—' : `${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;
@@ -1163,6 +1167,90 @@ function pulseGapSummary(model) {
     <p class="pulse-gap-caution">A release reduces the accumulated gap by min(your recorded changed text lines / ${model.fullCreditLines}, 100%). Additions and deletions count; VERSION-only, zero-line and driver-only events earn no reset credit. Release ancestry is computed before the selected date window; line counts can be inflated by generated files or miss binary and unrecorded work. Daily authored churn also softens the score: the quiet-day factor multiplies max(1 − commits / ${model.busyDay}, 0) by max(1 − non-VERSION daily changed lines / ${model.busyChurn}, 0). Additionally, distributed substantive authored activity can soften at most ${Math.round(MAX_GAP_DISTRIBUTION_RELIEF*100)}% of the remaining daily signal; it cannot reset release credit, and unknown timestamps earn no extra relief. The first observed measurable release starts from an unknown earlier history, conservatively treated as a full gap before credit. A missing or quiet Git day is <em>not</em> evidence of inactivity, delivery responsibility, availability, or quality.</p>`;
 }
 
+
+// Neutral two-track continuity cells: authored activity and release inclusion
+// are separate clocks, with stable colours independent of the peer cohort.
+const continuityPct=value=>value===null?'—':`${Math.round(value*100)}%`;
+const continuityReleaseRatio=(count,opportunities,available)=>!available?'Unknown':!opportunities?'No eligible tags':`${count} / ${opportunities} releases`;
+function continuityDayLabel(person,item) {
+  if(!item||!item.observed)return `${person}: authored history unavailable for this date`;
+  return `${person}, ${formatDate(item.date)}: ${item.commits} authored commits, ${number.format(item.churn)} non-VERSION changed lines; ${item.workday?(item.meaningful?'meaningful authored workday':item.authored?'small recorded change':'no qualifying authored activity'):'weekend (outside activity coverage; substantive changes still visible)'}; ${continuityReleaseRatio(item.events.length,item.opportunities,item.releaseAvailable)}; ${item.events.reduce((n,r)=>n+r.commits,0)} commits included in releases; rolling coverage ${continuityPct(item.rollingCoverage)}.`;
+}
+function continuityPeriodLabel(person,bucket,model) {
+  if(!bucket)return `${person}: period outside imported data`;
+  return `${person}, ${bucket.from}–${bucket.to}: ${bucket.meaningfulDays} meaningful of ${bucket.coveredDays} covered weekdays (${continuityPct(bucket.coverage)}); ${bucket.smallDays} additional weekdays with small commits; ${continuityReleaseRatio(bucket.participations,bucket.opportunities,model.releaseAvailable)}; ${number.format(bucket.releasedCommits)} authored commits included in releases; ${bucket.releasedLines===null?'unknown':number.format(bucket.releasedLines)} released changed lines; rolling ${model.weeks}-week coverage ${continuityPct(bucket.rollingCoverage)}.`;
+}
+const continuityBandStyle=colour=>colour?`background:${colour}`:'background:repeating-linear-gradient(135deg,#f7f8f5 0,#f7f8f5 4px,#dfe5e0 4px,#dfe5e0 8px)';
+function continuityTile(bucket,model,{daily=false,compact=false}={}) {
+  const observed=daily?bucket?.observed:bucket?.coveredDays>0;
+  const activityColour=observed?continuityAuthoredColour(daily?Number(bucket.churn>=model.meaningfulLines):bucket.coverage,daily?bucket.authored:bucket.smallDays>0):null;
+  const releases= daily?bucket?.events.length||0:bucket?.participations||0;
+  const opportunities=bucket?.opportunities||0;
+  const releaseColour=continuityReleaseColour(releases,opportunities,model.releaseAvailable);
+  const activityText=daily?'':compact?`${bucket?.meaningfulDays||0}/${bucket?.coveredDays||0}`:continuityPct(bucket?.coverage??null);
+  const releaseText=daily?'':!model.releaseAvailable?'?':!opportunities?'—':`${releases}/${opportunities}`;
+  const authorTextColour=observed&&(daily?bucket.churn>=model.meaningfulLines:bucket.coverage>=0.6)?'#fff':'#193d36';
+  const releaseTextColour=model.releaseAvailable&&opportunities>0&&releases/opportunities>=0.6?'#fff':'#193d36';
+  return `<span class="continuity-band continuity-authored" style="${continuityBandStyle(activityColour)};color:${authorTextColour}" aria-hidden="true">${activityText}</span><span class="continuity-band continuity-delivered" style="${continuityBandStyle(releaseColour)};color:${releaseTextColour}" aria-hidden="true">${releaseText}</span>`;
+}
+function pulseContinuityLegend() {
+  return `<div class="continuity-legend" role="group" aria-label="Separate authored activity and tagged-release participation tracks. Colours are fixed across contributors. Hatched means outside observed history or release evidence unavailable."><span class="continuity-legend-key"><i style="background:${continuityAuthoredColour(1)}" aria-hidden="true"></i>Meaningful authored days (top)</span><span class="continuity-legend-key"><i style="background:${continuityAuthoredColour(0,true)}" aria-hidden="true"></i>Smaller changes</span><span class="continuity-legend-key"><i style="background:${continuityAuthoredColour(0)}" aria-hidden="true"></i>No qualifying authored activity</span><span class="continuity-legend-key"><i style="background:${continuityReleaseColour(1,1)}" aria-hidden="true"></i>Tagged-release inclusion (bottom)</span><span class="continuity-legend-key"><i style="background:${continuityReleaseColour(0,1)}" aria-hidden="true"></i>Tag without inclusion</span><span class="continuity-legend-key"><i style="background:${continuityReleaseColour(0,0)}" aria-hidden="true"></i>No eligible tag</span><span class="continuity-legend-key"><i class="continuity-unknown" aria-hidden="true"></i>Unknown evidence</span></div>`;
+}
+function pulseContinuitySummary(model) {
+  if(!model.available)return '<p class="pulse-gap-unavailable">No comparable authored-history bounds are available. Continuity cannot treat missing observations as quiet workdays.</p>';
+  return `<div class="pulse-gap-summary-head"><strong>Observed contribution continuity</strong><span>Selected ${model.from}–${model.to} · all observed working days count, including days without commits · no peer ranking</span></div>
+    <div class="continuity-summary-scroll table-scroll"><table class="pulse-gap-table continuity-summary-table"><thead><tr><th>Contributor</th><th>Meaningful workdays</th><th>Weeks with meaningful activity</th><th>Longest recorded quiet stretch</th><th>Release participation</th><th>Authored commits in releases</th><th>Released changed lines</th><th>Rolling ${model.weeks}-week coverage</th></tr></thead><tbody>
+    ${model.rows.map(row=>`<tr><th>${esc(row.name)}</th><td><strong>${continuityPct(row.coverage)}</strong><span class="continuity-mini-meter" role="img" aria-label="${esc(continuityPct(row.coverage))} meaningful days"><i style="width:${row.coverage===null?0:Math.round(row.coverage*100)}%"></i></span><small>${row.meaningfulDays} of ${row.coveredDays} covered workdays · ${row.smallDays} smaller-change days</small></td><td><strong>${row.meaningfulWeeks} / ${row.observedWeeks}</strong><small>Weeks with ≥ 1 meaningful authored workday</small></td><td><strong>${row.longestGap.workdays} workdays</strong><small>${row.longestGap.from?`${row.longestGap.from}–${row.longestGap.to}`:'No measured quiet workdays'}</small></td><td><strong>${!row.releaseAvailable?'Unknown':row.opportunities?`${row.participations} / ${row.opportunities}`:'No eligible releases'}</strong><small>${row.releaseParticipation===null?'Rate not defined':`${continuityPct(row.releaseParticipation)} of tagged incremental release opportunities`}</small></td><td>${!row.releaseAvailable?'—':number.format(row.releasedCommits)}</td><td>${!row.releaseAvailable||row.releasedLines===null?'—':number.format(row.releasedLines)}${row.partialReleases?`<small>${row.partialReleases} included releases with partial ancestry</small>`:''}</td><td><strong>${continuityPct(row.rollingCoverage)}</strong><small>${row.rollingCoverage===null?'Full trailing history unavailable':`Complete trailing ${model.weeks} weeks through ${model.to}`}</small></td></tr>`).join('')}</tbody></table></div>
+    <p class="pulse-gap-caution">A meaningful workday has at least ${model.meaningfulLines} authored non-VERSION changed text lines. Week and month percentages divide meaningful days by every <em>observed weekday</em> in that cell, including quiet ones; the longest gap counts consecutive observed eligible weekdays without meaningful authored changes. Small commits are shown separately. The release denominator is the number of distinct incremental tagged release events in the selected period; participation requires at least one authored commit in the release's reconstructed Git ancestry, not merely a tag or publisher action. A single release with four commits is still one release participation. Tag-event dates differ from authored commit dates, and VERSION-only lines earn no released churn credit. A missing tagged-release feed, zero eligible releases, partial ancestry and dates outside imported Git history have distinct states. Git excludes reviews, pairing, uncommitted work, leave and other responsibilities: none of these signals measure performance or hours worked.</p>`;
+}
+function pulseContinuityDayDetails(item) {
+  if(!item)return '';
+  const ship=item.events.length?item.events.map(r=>`<li><strong>${esc(r.tag)}</strong> <span>${number.format(r.commits)} included commits · ${r.lines===null?'unknown':number.format(r.lines)} non-VERSION changed lines${r.partial?' · partial ancestry':''}</span></li>`).join(''):item.releaseAvailable?'<li>No authored contribution included in a tagged release on this date.</li>':'<li>Incremental tagged-release evidence is unavailable.</li>';
+  return `<section class="continuity-popover-section"><span class="eyebrow">CONTRIBUTION CONTINUITY · TWO OBSERVATION CLOCKS</span><div class="continuity-popover-stats"><span><strong>${item.observed?number.format(item.churn):'—'}</strong>non-VERSION authored lines</span><span><strong>${item.observed?item.commits:'—'}</strong>authored commits</span><span><strong>${continuityPct(item.rollingCoverage)}</strong>trailing ${pulseContinuity.weeks}-week coverage</span><span><strong>${continuityReleaseRatio(item.events.length,item.opportunities,item.releaseAvailable)}</strong>tagged release inclusion</span></div><p>${item.observed?(item.workday?(item.meaningful?'Meaningful authored weekday recorded.':item.authored?'Small authored contribution; below the configured meaningful-day threshold.':'No qualifying authored changes recorded on this observed workday.'):'Weekend: authored and release events are visible, but weekends are not activity-coverage denominators.'):'Outside the imported Git observation window; no absence is inferred.'}</p><ul class="continuity-release-events">${ship}</ul></section>`;
+}
+function pulseContinuityPeriodMarkup(person,bucket,model) {
+  const events=bucket.events.length?bucket.events.map(event=>`<li><strong>${esc(event.tag)}</strong> · ${esc(event.date)}<span>${number.format(event.commits)} authored commits · ${event.lines===null?'unknown':number.format(event.lines)} changed lines${event.partial?' · partial ancestry':''}</span></li>`).join(''):model.releaseAvailable?'<li>No authored contributions to eligible tagged releases in this interval.</li>':'<li>Incremental tagged-release evidence is unavailable.</li>';
+  return `<div class="pulse-tip-heading"><div><span class="eyebrow">CONTRIBUTION CONTINUITY · PERIOD EVIDENCE</span><strong>${esc(bucket.from)} – ${esc(bucket.to)}</strong><span>${esc(person)}</span></div><button type="button" class="pulse-tip-close" data-action="close-pulse" aria-label="Close period details">×</button></div><section class="continuity-popover-section"><span class="eyebrow">AUTHORED DATE · WORKDAY COVERAGE</span><div class="continuity-popover-stats"><span><strong>${continuityPct(bucket.coverage)}</strong>meaningful coverage</span><span><strong>${bucket.meaningfulDays}/${bucket.coveredDays}</strong>meaningful / covered weekdays</span><span><strong>${bucket.smallDays}</strong>smaller-change weekdays</span><span><strong>${bucket.commits}</strong>authored commits</span><span><strong>${number.format(bucket.churn)}</strong>non-VERSION changed lines</span><span><strong>${continuityPct(bucket.rollingCoverage)}</strong>trailing ${model.weeks}-week coverage</span></div>${bucket.unknownDays?`<p>${bucket.unknownDays} date(s) outside the imported observation window. Those days are not counted as zero.</p>`:''}</section><section class="continuity-popover-section"><span class="eyebrow">TAG EVENT DATE · RELEASE PARTICIPATION</span><div class="continuity-popover-stats"><span><strong>${continuityReleaseRatio(bucket.participations,bucket.opportunities,model.releaseAvailable)}</strong>authored release participation</span><span><strong>${!model.releaseAvailable?'—':number.format(bucket.releasedCommits)}</strong>commits in releases</span><span><strong>${!model.releaseAvailable||bucket.releasedLines===null?'—':number.format(bucket.releasedLines)}</strong>released changed lines</span></div><ul class="continuity-release-events">${events}</ul></section><p class="pulse-tip-note">Activity uses author dates; release inclusion uses incremental tag-event dates. No release opportunity, missing tag history and no authored inclusion are different observations. Git evidence is not a measure of work hours or individual performance.</p>`;
+}
+function renderContinuityPeriodPulse(view,mode) {
+  const model=pulseContinuity;
+  const weeks=mode==='weekly';
+  const keys=weeks?Array.from({length:Math.floor((dayNumber(view.end)-dayNumber(mondayOf(view.start)))/7)+1},(_,i)=>dateAtDay(dayNumber(mondayOf(view.start))+i*7)):
+    Array.from({length:monthIndex(view.end)-monthIndex(view.start)+1},(_,i)=>{
+      const month=monthIndex(view.start)+i;return `${Math.floor(month/12)}-${String(month%12+1).padStart(2,'0')}`;
+    });
+  const columns=`minmax(142px,176px) repeat(${keys.length}, minmax(${weeks?'56':'67'}px, 1fr))`;
+  const axis=keys.map(key=>`<span class="continuity-axis-label" title="${esc(key)}">${weeks?esc(key.slice(5)):esc(key)}</span>`).join('');
+  const rows=view.contributors.map(c=>{
+    const record=model.byId.get(c.id);
+    const bins=weeks?record?.weeks:record?.months;
+    const cells=keys.map(key=>{
+      const bucket=bins?.get(key),label=continuityPeriodLabel(c.displayName,bucket,model);
+      return `<button type="button" class="continuity-period-tile" data-action="pulse-period" data-pulse-period="true" data-person-id="${esc(c.id)}" data-period-key="${esc(key)}" title="${esc(label)}" aria-label="${esc(label)}. View interval evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${continuityTile(bucket,model,{compact:weeks})}</button>`;
+    }).join('');
+    return `<div class="continuity-period-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div>${cells}`;
+  }).join('');
+  $('pulse').innerHTML=`<div class="continuity-period-board" style="grid-template-columns:${columns}"><span class="continuity-period-corner">AUTHOR / TAG</span>${axis}${rows}</div>`;
+  return null;
+}
+function renderContinuityDailyPulse(view) {
+  const weekColumns=`repeat(${view.weeks.length},var(--pulse-week-size))`;
+  const months=dailyPulseMonths(view).map(m=>`<span class="pulse-daily-month" style="grid-column:${m.index+1}">${esc(m.label)}</span>`).join('');
+  const weekdays=DAY_NAMES.map((d,i)=>`<span aria-hidden="true">${i%2===0?esc(d):''}</span>`).join('');
+  const rows=view.contributors.map(c=>{
+    const record=pulseContinuity.byId.get(c.id);
+    const cells=view.weeks.flatMap(week=>Array.from({length:7},(_,i)=>{
+      const day=dateAtDay(dayNumber(week)+i);
+      if(day<view.start||day>view.end)return '<span class="pulse-daily-outside" aria-hidden="true"></span>';
+      const item=record?.daily.get(day),label=continuityDayLabel(c.displayName,item);
+      return `<button type="button" class="pulse-cell pulse-daily-cell continuity-day-tile ${item&&!item.workday?'continuity-weekend':''}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(label)}" aria-label="${esc(label)}. View date evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${continuityTile(item,pulseContinuity,{daily:true})}</button>`;
+    })).join('');
+    return `<div class="pulse-daily-contributor"><div class="pulse-daily-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div><div class="pulse-weekdays">${weekdays}</div><div class="pulse-day-cells" style="grid-template-columns:${weekColumns}">${cells}</div></div>`;
+  }).join('');
+  $('pulse').innerHTML=`<div class="pulse-daily-board" style="--pulse-week-count:${view.weeks.length}"><div class="pulse-daily-axis"><span class="pulse-daily-spacer"></span><span></span><div class="pulse-daily-months" style="grid-template-columns:${weekColumns}">${months}</div></div>${rows}</div>`;
+  return null;
+}
+
 function renderMonthlyPulse(view) {
   const gapMode=!!pulseReleaseGap,momentumMode=!!pulseMomentum,levelMode=state.pulseLens==='level',signalMode=gapMode||momentumMode||levelMode;
   const signal=gapMode?pulseReleaseGap:momentumMode?pulseMomentum:pulseLevel;
@@ -1248,14 +1336,15 @@ function renderDailyPulse(view) {
 
 function renderPulse(view) {
   hidePulsePopover();
-  const daily=state.pulseMode==='daily';
+  const daily=state.pulseMode==='daily',weekly=state.pulseMode==='weekly';
+  const continuityMode=state.pulseLens==='continuity';
   const gapMode=state.pulseLens==='release-gap',momentumMode=state.pulseLens==='momentum',levelMode=state.pulseLens==='level';
-  const signalMode=gapMode||momentumMode||levelMode;
+  const signalMode=gapMode||momentumMode||levelMode||continuityMode;
   const timing=pulseTimeSettings();
   const container=$('pulse');
   const oldScroll=container.scrollLeft;
   const range=`${view.start}|${view.end}`;
-  const scrollToLatest=daily&&(pulsePreviousMode!=='daily'||pulsePreviousRange!==range);
+  const scrollToLatest=(daily||weekly)&&(pulsePreviousMode!==state.pulseMode||pulsePreviousRange!==range);
   pulseTemporal=!signalMode?temporalActivitySummary(perspectiveIndex,view.contributors,{from:view.start,to:view.end},timing):null;
   pulseReleaseGap=gapMode?releaseGapMatrix(perspectiveIndex,view.contributors,{from:view.start,to:view.end},
     {horizon:state.pulseGapHorizon,busyDay:state.pulseBusyDay,fullCreditLines:state.pulseReleaseLines,busyChurn:state.pulseDailyChurn,temporal:timing}):null;
@@ -1263,9 +1352,12 @@ function renderPulse(view) {
     {workdays:state.pulseMomentumWorkdays,temporal:timing}):null;
   pulseLevel=momentumMode||levelMode?contributionLevelMatrix(perspectiveIndex,view.contributors,{from:view.start,to:view.end},
     {workdays:levelMode?state.pulseLevelWorkdays:state.pulseMomentumWorkdays,temporal:timing}):null;
+  pulseContinuity=continuityMode?continuityMatrix(perspectiveIndex,view.contributors,{from:view.start,to:view.end},
+    {weeks:state.pulseContinuityWeeks,meaningfulLines:state.pulseMeaningfulLines}):null;
   $('pulse-gap-settings').hidden=!gapMode;
   $('pulse-momentum-settings').hidden=!momentumMode;
   $('pulse-level-settings').hidden=!levelMode;
+  $('pulse-continuity-settings').hidden=!continuityMode;
   $('pulse-temporal-settings').hidden=false;
   $('pulse-gap-horizon').value=String(state.pulseGapHorizon);
   $('pulse-busy-day').value=String(state.pulseBusyDay);
@@ -1273,10 +1365,12 @@ function renderPulse(view) {
   $('pulse-daily-churn').value=String(state.pulseDailyChurn);
   $('pulse-momentum-workdays').value=String(state.pulseMomentumWorkdays);
   $('pulse-level-workdays').value=String(state.pulseLevelWorkdays);
+  $('pulse-continuity-weeks').value=String(state.pulseContinuityWeeks);
   $('pulse-temporal-period').value=String(state.pulseTemporalPeriod);
   $('pulse-temporal-churn').value=String(state.pulseTemporalChurn);
   $('pulse-meaningful-lines').value=String(state.pulseMeaningfulLines);
   setText('pulse-temporal-settings-caption',`${state.pulseTemporalPeriod}m windows · ${state.pulseTemporalChurn} lines/window · ${state.pulseMeaningfulLines} lines/day`);
+  document.querySelectorAll('[data-pulse-mode]').forEach(btn=>{if(btn.dataset.pulseMode==='weekly')btn.hidden=!continuityMode;const selected=btn.dataset.pulseMode===state.pulseMode;btn.classList.toggle('active',selected);btn.setAttribute('aria-pressed',String(selected));});
   document.querySelectorAll('[data-pulse-lens]').forEach(btn=>{const selected=btn.dataset.pulseLens===state.pulseLens;btn.classList.toggle('active',selected);btn.setAttribute('aria-pressed',String(selected));});
   $('pulse-gap-summary').hidden=!gapMode||!view.contributors.length;
   $('pulse-gap-summary').innerHTML=gapMode&&view.contributors.length?pulseGapSummary(pulseReleaseGap):'';
@@ -1286,7 +1380,11 @@ function renderPulse(view) {
   $('pulse-momentum-summary').innerHTML=momentumMode&&view.contributors.length?pulseMomentumSummary(pulseMomentum,pulseLevel):'';
   $('pulse-level-summary').hidden=!levelMode||!view.contributors.length;
   $('pulse-level-summary').innerHTML=levelMode&&view.contributors.length?pulseLevelSummary(pulseLevel):'';
-  setText('pulse-hint',levelMode
+  $('pulse-continuity-summary').hidden=!continuityMode||!view.contributors.length;
+  $('pulse-continuity-summary').innerHTML=continuityMode&&view.contributors.length?pulseContinuitySummary(pulseContinuity):'';
+  setText('pulse-hint',continuityMode
+    ? `Two separate tracks per cell: top = meaningful authored activity, bottom = participation in incremental tagged releases. ${weekly?'Weekly cells show meaningful workdays / covered workdays and included releases / eligible tagged releases.':daily?'Daily cells show authored change type and tagged-release inclusion on that date.':'Monthly cells show meaningful-day coverage and release participation separately.'} A meaningful weekday requires ≥ ${state.pulseMeaningfulLines} non-VERSION changed lines. Coverage includes every observed weekday, including quiet days. The rolling ${state.pulseContinuityWeeks}-week percentage is only reported with complete imported history. Select a cell to inspect evidence; no isolated burst resets earlier gaps. Absence from Git is not a measure of working hours or performance.`
+    :levelMode
     ? `Absolute recorded velocity is a fixed-scale, uncapped composite of authored commits, non-VERSION changed lines, authored changes included in releases, and temporal distribution. Daily and monthly cells show their actual numeric values: monthly values are averages per covered calendar day, including quiet days. The colour thresholds never adapt to peers or filtered maxima. The table below shows selected-period averages and a separate trailing ${state.pulseLevelWorkdays}-working-day view. One reference index unit corresponds to the weighted model’s reference inputs; this is not a work quota, measure of hours or quality.`
     :gapMode
     ? `Signal (0–100) = 100 × weighted release gap × max(1 − daily commits / ${state.pulseBusyDay}, 0) × max(1 − daily non-VERSION changed lines / ${state.pulseDailyChurn}, 0) × (1 − 0.15 × churn-weighted time distribution). The gap grows to 100% in ${state.pulseGapHorizon} days; incremental tagged releases reduce it by min(your shipped changed lines / ${state.pulseReleaseLines}, 1). A busy commit day or substantial churn can neutralise the signal; meaningful changes spread across distinct ${state.pulseTemporalPeriod}-minute windows can modestly soften any remainder (max 15%). ${daily?'Each square is one date; open a cell for its evidence.':'Each monthly square averages eligible weekday signals.'} Weekends, unobserved dates and days before measurable release credit are not scored.`
@@ -1295,16 +1393,16 @@ function renderPulse(view) {
     :daily
     ? `Each square is one authored day (Mon–Sun). Open a cell to see its first/last commit, span, active ${state.pulseTemporalPeriod}-minute windows and churn-weighted distribution. A single commit has unknown spread, not zero contribution. Scroll sideways for older weeks.`
     : 'One square per person and calendar month. Intensity still shows the selected absolute Git metric. The distribution summary underneath adds meaningful-day consistency, recorded clock span and timed-window coverage.');
-  const caption=gapMode?'RELEASE GAP × ACTIVITY':momentumMode?'CONTRIBUTION MOMENTUM':levelMode?'ABSOLUTE VELOCITY':METRICS[view.metric].label.toUpperCase();
-  const legend=gapMode?pulseGapLegend():momentumMode?pulseMomentumLegend():null;
+  const caption=continuityMode?'CONTRIBUTION CONTINUITY':gapMode?'RELEASE GAP × ACTIVITY':momentumMode?'CONTRIBUTION MOMENTUM':levelMode?'ABSOLUTE VELOCITY':METRICS[view.metric].label.toUpperCase();
+  const legend=continuityMode?pulseContinuityLegend():gapMode?pulseGapLegend():momentumMode?pulseMomentumLegend():null;
   if(!view.contributors.length||!view.spanDays){
-    setText('pulse-context',signalMode?`${caption} / ${daily?'DAILY':'MONTHLY'} · ${momentumMode?'−100 TO +100':levelMode?'FIXED ABSOLUTE INDEX':'0–100'}`:`${caption} / ${daily?'DAILY':'MONTHLY'} TOTALS · SHARED SCALE`);
+    setText('pulse-context',signalMode?`${caption} / ${daily?'DAILY':weekly?'WEEKLY':'MONTHLY'} · ${continuityMode?'AUTHORED + TAGGED RELEASES':momentumMode?'−100 TO +100':levelMode?'FIXED ABSOLUTE INDEX':'0–100'}`:`${caption} / ${daily?'DAILY':'MONTHLY'} TOTALS · SHARED SCALE`);
     container.innerHTML=empty('Select contributors and a valid time window.');
     $('pulse-key').innerHTML=legend||intensityLegend(makeIntensityScale([]));
   } else {
-    const scale=daily?renderDailyPulse(view):renderMonthlyPulse(view);
+    const scale=continuityMode?(daily?renderContinuityDailyPulse(view):renderContinuityPeriodPulse(view,weekly?'weekly':'monthly')):daily?renderDailyPulse(view):renderMonthlyPulse(view);
     $('pulse-key').innerHTML=legend||(levelMode?velocityLegend():intensityLegend(scale,n=>number.format(n)));
-    setText('pulse-context',signalMode?`${caption} / ${daily?'DAILY':'MONTHLY'} · ${levelMode?'FIXED ABSOLUTE INDEX · INDEPENDENT OF COHORT':`FIXED ${momentumMode?'DIVERGING −100 TO +100':'0–100'} SCALE`}`:`${caption} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(scale.max)} SCALE`);
+    setText('pulse-context',signalMode?`${caption} / ${daily?'DAILY':weekly?'WEEKLY':'MONTHLY'} · ${continuityMode?'TWO SEPARATE OBSERVATION TRACKS':levelMode?'FIXED ABSOLUTE INDEX · INDEPENDENT OF COHORT':`FIXED ${momentumMode?'DIVERGING −100 TO +100':'0–100'} SCALE`}`:`${caption} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(scale.max)} SCALE`);
     container.scrollLeft=scrollToLatest?container.scrollWidth:oldScroll;
   }
   pulsePreviousMode=state.pulseMode;
@@ -1326,7 +1424,7 @@ function pulseGapDayDetails(item) {
   return `<div class="pulse-gap-detail"><span class="eyebrow">RELEASE CREDIT × RECENCY × DAY ACTIVITY</span><div class="pulse-gap-detail-top"><strong>${item.score===null?'—':`${pulseScore(item.score)} / 100`}</strong><span>${esc(message[item.reason]||'Descriptive combined signal')}</span></div><div class="pulse-gap-detail-facts"><span>Calendar days since release <b>${item.daysSinceRelease===null?'—':number.format(item.daysSinceRelease)}</b></span><span>Effective weighted release gap <b>${pulseScore(item.effectiveGapDays)} days</b></span><span>Lines in last release, authored by this person <b>${release?`+${number.format(release.linesAdded)} / −${number.format(release.linesDeleted)} (${number.format(release.linesChanged)} changed)`:'—'}</b></span><span>Credit earned by this release <b>${pulseCredit(release)} gap reduction</b></span><span>Authored commits on this date <b>${number.format(item.commits)}</b></span><span>Authored non-VERSION line churn on this date <b>${number.format(item.churn)}</b></span><span>Churn-weighted activity distribution <b>${item.temporal?.distribution===null?'Unmeasurable':ratioLabel(item.temporal?.distribution)}</b></span><span>Additional distribution relief <b>${item.temporal?.distribution===null?'None (unmeasurable)':ratioLabel(MAX_GAP_DISTRIBUTION_RELIEF*item.temporal.distribution)}</b></span><span>Last credited release <b>${last}</b></span></div><small>A small release contribution reduces, but does not entirely reset, the accumulated gap. High authored commit volume or substantial non-VERSION daily churn can neutralise the signal; distributed substantive time windows can soften the remainder by up to 15%. This is not a performance judgement; line counts do not reflect all work.</small></div>`;
 }
 
-function pulseDayMarkup(d,gapItem=null,momentumItem=null,temporalItem=null,levelItem=null) {
+function pulseDayMarkup(d,gapItem=null,momentumItem=null,temporalItem=null,levelItem=null,continuityItem=null) {
   const measure=METRICS[d.metric];
   const signed=n=>`${n>0?'+':n<0?'−':''}${number.format(Math.abs(n))}`;
   const share=d.share===null?'— (no reference activity)':`${percent(d.share)} of ${d.reference==='repository'?'repository':'selected cohort'} for this day`;
@@ -1342,6 +1440,7 @@ function pulseDayMarkup(d,gapItem=null,momentumItem=null,temporalItem=null,level
     ${pulseGapDayDetails(gapItem)}
     ${pulseMomentumDayDetails(momentumItem)}
     ${pulseLevelDayDetails(levelItem)}
+    ${pulseContinuityDayDetails(continuityItem)}
     ${pulseTemporalDayDetails(temporalItem)}
     <div class="pulse-tip-focus"><strong>${number.format(d.metricValue)}</strong><div><span>${esc(measure.label)} · day total</span><small>${esc(share)} · reference: ${number.format(d.referenceValue)} ${esc(measure.unit)}</small></div></div>
     <div class="pulse-tip-facts">${pulseFact('COMMITS',number.format(d.commitsCount))}${pulseFact('LINES ADDED',`+${number.format(d.added)}`)}${pulseFact('LINES REMOVED',`−${number.format(d.deleted)}`)}${pulseFact('TOTAL CHURN',number.format(d.churn))}${pulseFact('FILE TOUCHES',number.format(d.fileTouches))}${pulseFact('DISTINCT FILES',number.format(d.uniqueFiles))}</div>
@@ -1372,7 +1471,8 @@ function showPulsePopover(cell,{pin=false}={}) {
   const momentumItem=pulseMomentum?.byId.get(cell.dataset.personId)?.daily.get(cell.dataset.pulseDay)||null;
   const levelItem=pulseLevel?.byId.get(cell.dataset.personId)?.daily.get(cell.dataset.pulseDay)||null;
   const temporalItem=pulseTemporal?.byId.get(cell.dataset.personId)?.daily.get(cell.dataset.pulseDay)||gapItem?.temporal||momentumItem?.temporal||temporalDay(details.commits,pulseTimeSettings());
-  popup.innerHTML=pulseDayMarkup(details,gapItem,momentumItem,temporalItem,levelItem);
+  const continuityItem=pulseContinuity?.byId.get(cell.dataset.personId)?.daily.get(cell.dataset.pulseDay)||null;
+  popup.innerHTML=pulseDayMarkup(details,gapItem,momentumItem,temporalItem,levelItem,continuityItem);
   popup.hidden=false;
   popup.classList.toggle('is-pinned',pin);
   popup.setAttribute('role',pin?'dialog':'tooltip');
@@ -1382,16 +1482,31 @@ function showPulsePopover(cell,{pin=false}={}) {
   pulsePopoverPinned=pin;
   positionPulsePopover(cell);
 }
+function showPulsePeriodPopover(cell,{pin=false}={}) {
+  if(state.pulseLens!=='continuity'||state.pulseMode==='daily'||!pulseContinuity||
+     (pulsePopoverPinned&&!pin))return;
+  const row=pulseContinuity.byId.get(cell.dataset.personId);
+  const bucket=(state.pulseMode==='weekly'?row?.weeks:row?.months)?.get(cell.dataset.periodKey);
+  if(!row||!bucket)return;
+  const popup=$('pulse-popover'),same=pulsePopoverOrigin===cell;
+  popup.innerHTML=pulseContinuityPeriodMarkup(row.name,bucket,pulseContinuity);
+  popup.hidden=false;popup.classList.toggle('is-pinned',pin);
+  popup.setAttribute('role',pin?'dialog':'tooltip');
+  popup.setAttribute('aria-label',`Continuity evidence for ${row.name}, ${bucket.from} to ${bucket.to}`);
+  if(!same)popup.scrollTop=0;
+  pulsePopoverOrigin=cell;pulsePopoverPinned=pin;
+  positionPulsePopover(cell);
+}
 function onPulsePointerOver(event) {
   if(pulsePopoverPinned)return;
-  const cell=event.target.closest('[data-pulse-day]');
+  const cell=event.target.closest('[data-pulse-day],[data-pulse-period]');
   if(cell && cell===pulseSuppressHoverCell)return;
   if(cell!==pulseSuppressHoverCell)pulseSuppressHoverCell=null;
-  if(cell && (!pulsePopoverOrigin || pulsePopoverOrigin!==cell))showPulsePopover(cell);
+  if(cell && (!pulsePopoverOrigin || pulsePopoverOrigin!==cell))(cell.hasAttribute('data-pulse-period')?showPulsePeriodPopover(cell):showPulsePopover(cell));
 }
 function onPulsePointerOut(event) {
   if(pulsePopoverPinned)return;
-  const cell=event.target.closest('[data-pulse-day]');
+  const cell=event.target.closest('[data-pulse-day],[data-pulse-period]');
   if(!cell)return;
   if(cell===pulseSuppressHoverCell)pulseSuppressHoverCell=null;
   const to=event.relatedTarget;
@@ -1401,7 +1516,7 @@ function onPulsePointerOut(event) {
 function onPulseFocusOut(event) {
   if(pulsePopoverPinned)return;
   const to=event.relatedTarget;
-  if(!to || (!to.closest('[data-pulse-day]') && !$('pulse-popover').contains(to)))hidePulsePopover();
+  if(!to || (!to.closest('[data-pulse-day],[data-pulse-period]') && !$('pulse-popover').contains(to)))hidePulsePopover();
 }
 
 function microBars(values,labels,id,className='',maxPercent=100) {
@@ -2134,7 +2249,7 @@ function sessionPayload() {
     mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails]})),
     scope:{selectedEmails,period:state.period,start:state.start,end:state.end,metric:state.metric,mode:state.mode,denominator:state.denominator,
       includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode,
-      pulseLens:state.pulseLens,pulseGapHorizon:state.pulseGapHorizon,pulseBusyDay:state.pulseBusyDay,pulseReleaseLines:state.pulseReleaseLines,pulseDailyChurn:state.pulseDailyChurn,pulseMomentumWorkdays:state.pulseMomentumWorkdays,pulseLevelWorkdays:state.pulseLevelWorkdays,pulseTemporalPeriod:state.pulseTemporalPeriod,pulseTemporalChurn:state.pulseTemporalChurn,pulseMeaningfulLines:state.pulseMeaningfulLines,
+      pulseLens:state.pulseLens,pulseGapHorizon:state.pulseGapHorizon,pulseBusyDay:state.pulseBusyDay,pulseReleaseLines:state.pulseReleaseLines,pulseDailyChurn:state.pulseDailyChurn,pulseMomentumWorkdays:state.pulseMomentumWorkdays,pulseLevelWorkdays:state.pulseLevelWorkdays,pulseContinuityWeeks:state.pulseContinuityWeeks,pulseTemporalPeriod:state.pulseTemporalPeriod,pulseTemporalChurn:state.pulseTemporalChurn,pulseMeaningfulLines:state.pulseMeaningfulLines,
       rhythmDisplay:state.rhythmDisplay,rhythmTab:state.rhythmTab,seasonMode:state.seasonMode,seasonYears:state.seasonYears?[...state.seasonYears]:null,
       rhythmFocusEmail:emailForId(state.rhythmFocus),
       impactTab:state.impactTab,impactMetric:state.impactMetric,impactAreaMode:state.impactAreaMode,
@@ -2388,8 +2503,8 @@ const ACTIONS={
   'solo':(_e,t)=>{state.selectedIds=new Set([t.dataset.personId]);renderDashboard();},
   'reset-filters':resetFilters,
   'trend-mode':(_e,t)=>{state.trend=t.dataset.trend;if(analysis)renderTrend(analysis);},
-  'pulse-mode':(_e,t)=>{state.pulseMode=t.dataset.pulseMode;if(analysis)renderPulse(analysis);},
-  'pulse-lens':(_e,t)=>{state.pulseLens=t.dataset.pulseLens;updateControls();if(analysis)renderPulse(analysis);},
+  'pulse-mode':(_e,t)=>{if(t.dataset.pulseMode==='weekly'&&state.pulseLens!=='continuity')return;state.pulseMode=t.dataset.pulseMode;updateControls();if(analysis)renderPulse(analysis);},
+  'pulse-lens':(_e,t)=>{const previous=state.pulseLens;state.pulseLens=t.dataset.pulseLens;if(previous!=='continuity'&&state.pulseLens==='continuity')state.pulseMode='weekly';else if(state.pulseMode==='weekly'&&state.pulseLens!=='continuity')state.pulseMode='monthly';updateControls();if(analysis)renderPulse(analysis);},
   'rhythm-tab':(_e,t)=>{state.rhythmTab=t.dataset.rhythmTab;seasonHover=null;seasonPinned=null;renderRhythmExplorer(analysis);},
   'season-mode':(_e,t)=>{state.seasonMode=t.dataset.seasonMode;seasonHover=null;seasonPinned=null;renderSeasonality(analysis);},
   'season-all-years':()=>{state.seasonYears=null;seasonHover=null;seasonPinned=null;renderSeasonality(analysis);},
@@ -2452,6 +2567,7 @@ const ACTIONS={
   'rhythm-inspect':(_e,t)=>{const next={kind:t.dataset.rhythmKind,index:Number(t.dataset.rhythmIndex)};rhythmPinned=rhythmDatumKey(rhythmPinned)===rhythmDatumKey(next)?null:next;rhythmHover=next;renderRhythmDetail();},
   'rhythm-unpin':()=>{rhythmPinned=null;rhythmHover=null;renderRhythmDetail();},
   'pulse-day':(_e,t)=>{if(pulsePopoverPinned&&pulsePopoverOrigin===t)hidePulsePopover();else showPulsePopover(t,{pin:true});},
+  'pulse-period':(_e,t)=>{if(pulsePopoverPinned&&pulsePopoverOrigin===t)hidePulsePopover();else showPulsePeriodPopover(t,{pin:true});},
   'close-pulse':closePulseAndRestoreFocus,
   'sort-table':(_e,t)=>{const key=t.dataset.sort;state.sortDesc=state.sortKey===key?!state.sortDesc:true;state.sortKey=key;renderTable(analysis);},
   'copy-csv':copyCsv,
@@ -2546,6 +2662,7 @@ function handleDocumentChange(event) {
     case 'pulse-temporal-period':state.pulseTemporalPeriod=TEMPORAL_PERIODS.includes(Number(t.value))?Number(t.value):TEMPORAL_PERIOD_DEFAULT;renderPulse(analysis);break;
     case 'pulse-temporal-churn':state.pulseTemporalChurn=TEMPORAL_CHURN_CAPS.includes(Number(t.value))?Number(t.value):TEMPORAL_CHURN_DEFAULT;renderPulse(analysis);break;
     case 'pulse-meaningful-lines':state.pulseMeaningfulLines=MEANINGFUL_CHURN_THRESHOLDS.includes(Number(t.value))?Number(t.value):MEANINGFUL_CHURN_DEFAULT;renderPulse(analysis);break;
+    case 'pulse-continuity-weeks':state.pulseContinuityWeeks=CONTINUITY_WINDOWS.includes(Number(t.value))?Number(t.value):DEFAULT_CONTINUITY_WINDOW;renderPulse(analysis);break;
     case 'deployment-env':primary.deploymentEnv=t.value;primary.deploymentFocus=null;primary.deploymentPage=0;renderPrimary();break;
     case 'deployment-year':primary.deploymentYear=t.value;primary.deploymentFocus=null;primary.deploymentPage=0;renderPrimary();break;
     case 'impact-metric-select':state.impactMetric=t.value;renderDashboard();break;
@@ -2664,7 +2781,7 @@ function init() {
   });
   $('pulse').addEventListener('pointerover',onPulsePointerOver);
   $('pulse').addEventListener('pointerout',onPulsePointerOut);
-  $('pulse').addEventListener('focusin',event=>{const cell=event.target.closest('[data-pulse-day]');if(cell&&!pulsePopoverPinned&&!pulseSuppressFocus)showPulsePopover(cell);});
+  $('pulse').addEventListener('focusin',event=>{const cell=event.target.closest('[data-pulse-day],[data-pulse-period]');if(cell&&!pulsePopoverPinned&&!pulseSuppressFocus)(cell.hasAttribute('data-pulse-period')?showPulsePeriodPopover(cell):showPulsePopover(cell));});
   $('pulse').addEventListener('focusout',onPulseFocusOut);
   $('pulse').addEventListener('scroll',()=>hidePulsePopover(),{passive:true});
   $('pulse-popover').addEventListener('pointerleave',event=>{if(!pulsePopoverPinned&&!pulsePopoverOrigin?.contains(event.relatedTarget))hidePulsePopover();});

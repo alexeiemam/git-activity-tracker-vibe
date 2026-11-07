@@ -4,7 +4,7 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=git-absolute-velocity-20261106-1';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=git-contribution-continuity-20261107-1';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },

@@ -273,13 +273,14 @@ The **ranking, trend and comparison table** use the chosen metric and mode. The 
 
 ### Release gap × authored activity (Pulse)
 
-The **activity pulse** offers four complementary lenses: **Authored activity**
+The **activity pulse** offers five complementary lenses: **Authored activity**
 (the existing raw totals, still the default), **Release gap × activity** (a warm,
 0–100 attention signal), and **Contribution momentum** (a diverging, signed
-trend against the same contributor's recent history), plus **Contribution
-level** (an uncapped, log-scaled index that exposes sustained differences
-between selected contributors). Each supports individual
-**Daily / Monthly** cells without changing the globally filtered commit policy.
+trend against the same contributor's recent history), plus **Absolute velocity** (the fixed-scale, uncapped log index) and
+**Contribution continuity** (meaningful authored workday coverage, observed quiet
+gaps, and actual incremental tagged-release participation). All support
+**Daily / Monthly** cells; Continuity additionally supports **Weekly** cells
+without changing the globally filtered commit policy.
 
 The release-gap factor is no longer a binary "last release resets everything"
 clock: **the contributor's absolute authored text-line changes in each
@@ -397,6 +398,57 @@ The horizontal peer bars, median reference line and leader highlighting have
 been removed. Directional Momentum may still show a neutral peer reference in
 its optional summary; its calculation has not changed. Absolute velocity is
 an observable Git-change index, **not hours worked, quality or productivity**.
+
+### Contribution continuity: a fifth Pulse lens (daily / weekly / monthly)
+
+**Contribution continuity** makes sparse recorded activity visible over time,
+even when occasional large commit bursts or small release inclusions make the
+other Pulse lenses appear ordinary. It opens in **Weekly** resolution by
+default; switching back to another lens restores its supported daily/monthly
+resolution. A weekly or monthly cell is split into **two separate tracks**:
+
+- **Top — meaningful authored activity:** number of covered weekdays with at
+  least `20` non-VERSION changed lines / all observed weekdays in the cell.
+  The threshold reuses **Temporal evidence → Meaningful day at** (10/20/50).
+  Covered, commit-free weekdays stay in the denominator. Small commits are
+  retained as separate evidence and pale blue when they do not qualify;
+  unknown imported dates are hatched, not treated as zeros. Daily cells show
+  the underlying authored day, including weekends (outside the workday
+  denominator).
+- **Bottom — tagged-release inclusion:** distinct incremental tagged releases
+  containing at least one of this person's authored commits / **all eligible
+  tagged releases** in the period. The numerator is about reconstructed
+  incremental ancestry, not release publisher/driver identity, VERSION
+  touches or merely the number of commits. A contributor with four commits
+  included in one tagged release has one participation, not four. No eligible
+  tag events, zero participation and missing tag data have different colours
+  and labels. A Saturday release remains on Saturday's release-event clock;
+  it does not become a fabricated authored weekday.
+
+The panel below the heatmap reports for each contributor **meaningful workdays
+/ covered workdays**, **weeks containing meaningful authored activity**,
+**longest consecutive observed workday gap without meaningful authored
+changes**, **distinct release participations / tagged-release opportunities**,
+**included authored commits**, **non-VERSION released changed lines** and a
+**rolling 8/12/20-week activity coverage** (default 20 weeks). The longest gap
+is measured within the selected dates; weekends don't break it, but unknown
+imported history does. Rolling coverage uses full imported history prior to
+the selected window and remains **unknown** until the entire lookback is
+observed. An occasional release contribution does **not** reset this rolling
+coverage or erase earlier quiet periods. Monthly and weekly cells use their
+actual covered weekday denominators, including partially selected months.
+
+Choose a weekly/monthly cell (or a daily cell) to inspect precise activity
+and release evidence, including release tags, included commits, changed lines
+and ancestry completeness. Every cell uses fixed colours independent of the
+selected people. No peer awards, winner labels, performance ratings or inferred
+working hours. Code review, pairing, leave, support work, uncommitted activity,
+squashed history and unimported branches can all alter the interpretation.
+
+Settings and the weekly/daily/monthly selection survive session export/import;
+older sessions retain the original Authored activity default. Release counts
+are restricted to known canonical incremental tags (not baselines). A missing
+release feed makes the release opportunity metric unavailable rather than zero.
 
 ### Compare every dimension: incremental tagged releases
 
