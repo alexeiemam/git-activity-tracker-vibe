@@ -1,14 +1,15 @@
 /**
  * Contribution continuity is an observation of Git records, not performance.
  *
- * The selected window includes quiet weekdays in its activity denominator;
- * tagged incremental releases form a separate opportunity denominator. Author
+ * The selected window includes quiet weekdays in its five-day baseline;
+ * meaningful weekend dates earn additional numerator credit, up to 7/5 days
+ * in a complete week. Tagged releases use a separate denominator. Author
  * dates and release-event dates are intentionally never conflated. Import
  * bounds, missing tags and incomplete release ancestry stay visible.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-contribution-continuity-20261107-1';
-import {dailyEvidence} from './momentum.js?v=git-contribution-continuity-20261107-1';
-import {isWorkday} from './temporal-activity.js?v=git-contribution-continuity-20261107-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-continuity-weekends-20261107-1';
+import {dailyEvidence} from './momentum.js?v=git-continuity-weekends-20261107-1';
+import {isWorkday} from './temporal-activity.js?v=git-continuity-weekends-20261107-1';
 
 export const CONTINUITY_WINDOWS=Object.freeze([8,12,20]);
 export const DEFAULT_CONTINUITY_WINDOW=20;
@@ -17,7 +18,9 @@ const validLines=value=>typeof value==='number'&&Number.isFinite(value)&&value>=
 export const mondayOfDate=date=>dateAtDay(dayNumber(date)-(new Date(`${date}T12:00:00Z`).getUTCDay()+6)%7);
 
 function newBucket(key,from,to) {
-  return {key,from,to,coveredDays:0,meaningfulDays:0,smallDays:0,authoredDays:0,
+  return {key,from,to,observedDays:0,coveredDays:0,observedWeekendDays:0,
+    meaningfulDays:0,weekdayMeaningfulDays:0,weekendMeaningfulDays:0,
+    smallDays:0,weekendSmallDays:0,authoredDays:0,
     commits:0,churn:0,opportunities:0,participations:0,releasedCommits:0,
     releasedLines:0,linesKnown:true,partialReleases:0,events:[],unknownDays:0,
     rollingCoverage:null};
@@ -25,13 +28,22 @@ function newBucket(key,from,to) {
 function append(bucket,day) {
   if(!bucket||!day)return;
   bucket.unknownDays+=Number(!day.observed);
-  if(day.workday&&day.observed){
-    bucket.coveredDays++;
-    bucket.meaningfulDays+=Number(day.meaningful);
-    bucket.smallDays+=Number(day.authored&&!day.meaningful);
+  if(day.observed){
+    bucket.observedDays++;
+    if(day.workday) bucket.coveredDays++;
+    else bucket.observedWeekendDays++;
+    if(day.meaningful){
+      bucket.meaningfulDays++;
+      if(day.workday)bucket.weekdayMeaningfulDays++;
+      else bucket.weekendMeaningfulDays++;
+    } else if(day.authored){
+      if(day.workday)bucket.smallDays++;
+      else bucket.weekendSmallDays++;
+    }
     bucket.authoredDays+=Number(day.authored);
+    bucket.commits+=day.commits;
+    bucket.churn+=day.churn;
   }
-  if(day.observed){bucket.commits+=day.commits;bucket.churn+=day.churn;}
   bucket.opportunities+=day.opportunities||0;
   bucket.participations+=day.events.length;
   for(const event of day.events){
@@ -53,7 +65,9 @@ function finalize(bucket,releaseAvailable) {
 
 /**
  * A rolling lookback is only scored if its *entire* calendar period is inside
- * observed import bounds. Quiet eligible weekdays remain in the denominator.
+ * observed import bounds. Quiet eligible weekdays remain in the denominator,
+ * while qualifying weekend dates add to the numerator without adding baseline
+ * weekdays. Consequently the returned rate may legitimately exceed 1 (100%).
  */
 export function continuityMatrix(index,contributors,window,options={}) {
   const weeks=CONTINUITY_WINDOWS.includes(Number(options.weeks))?Number(options.weeks):DEFAULT_CONTINUITY_WINDOW;
@@ -105,10 +119,11 @@ export function continuityMatrix(index,contributors,window,options={}) {
     const prefixAt=new Map();
     for(let d=prefixFrom;d<=endingDay;d++){
       const date=dateAtDay(d);
-      const covered=hasActivity&&date>=bounds.min&&date<=bounds.max&&isWorkday(date);
+      const observed=hasActivity&&date>=bounds.min&&date<=bounds.max;
+      const covered=observed&&isWorkday(date);
       const item=authored.get(date);
       coveredPrefix.push(coveredPrefix.at(-1)+Number(covered));
-      meaningfulPrefix.push(meaningfulPrefix.at(-1)+Number(covered&&(item?.churn||0)>=meaningfulLines));
+      meaningfulPrefix.push(meaningfulPrefix.at(-1)+Number(observed&&(item?.churn||0)>=meaningfulLines));
       prefixAt.set(d,coveredPrefix.length-1);
     }
     const rollingAt=day=>{
@@ -127,7 +142,7 @@ export function continuityMatrix(index,contributors,window,options={}) {
       const release=releaseDays.get(date);
       const events=release?.members.get(id)||[];
       const item={date,observed,workday:isWorkday(date),commits,churn,authored:commits>0,
-        meaningful:observed&&isWorkday(date)&&churn>=meaningfulLines,
+        meaningful:observed&&churn>=meaningfulLines,
         opportunities:release?.opportunities||0,events,rollingCoverage:rollingAt(d),
         releaseAvailable,partialOpportunities:release?.partial||0};
       daily.set(date,item);
@@ -139,15 +154,15 @@ export function continuityMatrix(index,contributors,window,options={}) {
       append(monthly.get(monthKey),item);
       monthly.get(monthKey).to=date;
       append(row,item);
-      if(item.workday){
-        if(!item.observed){currentGap=0;firstGap=null;lastGap=null;}
-        else if(item.meaningful){currentGap=0;firstGap=null;lastGap=null;}
-        else {
-          currentGap++;
-          firstGap??=date;
-          lastGap=date;
-          if(currentGap>longestGap.workdays)longestGap={workdays:currentGap,from:firstGap,to:lastGap};
-        }
+      // A substantive weekend contribution breaks a quiet weekday streak,
+      // but an unworked weekend neither lengthens nor erases one.
+      if(item.meaningful || (item.workday&&!item.observed)){
+        currentGap=0;firstGap=null;lastGap=null;
+      } else if(item.workday){
+        currentGap++;
+        firstGap??=date;
+        lastGap=date;
+        if(currentGap>longestGap.workdays)longestGap={workdays:currentGap,from:firstGap,to:lastGap};
       }
     }
     for(const bucket of weekly.values()){
@@ -159,7 +174,7 @@ export function continuityMatrix(index,contributors,window,options={}) {
       finalize(bucket,releaseAvailable);
     }
     finalize(row,releaseAvailable);
-    const observedWeeks=[...weekly.values()].filter(bucket=>bucket.coveredDays>0);
+    const observedWeeks=[...weekly.values()].filter(bucket=>bucket.observedDays>0);
     const meaningfulWeeks=observedWeeks.filter(bucket=>bucket.meaningfulDays>0).length;
     const releaseWeeks=[...weekly.values()].filter(bucket=>bucket.participations>0).length;
     const result={...row,id,name:person.displayName,daily,weeks:weekly,months:monthly,
@@ -175,9 +190,10 @@ export function continuityMatrix(index,contributors,window,options={}) {
 }
 
 /** Fixed, non-cohort-normalised colours: quiet days remain visibly quiet. */
-export function continuityAuthoredColour(coverage,small=false) {
-  if(coverage===null||!Number.isFinite(coverage))return null;
+export function continuityAuthoredColour(coverage,small=false,weekendOnly=false) {
+  if(coverage===null||!Number.isFinite(coverage))return weekendOnly?'#c5dfd3':null;
   if(coverage<=0)return small?'#c9dbe8':'#eef0ed';
+  if(coverage>1)return '#0e5148'; // Qualifying weekend days exceed the five-day baseline.
   const palette=['#c5dfd3','#96cbb8','#6cae9a','#368a77','#176955'];
   return palette[Math.min(4,Math.max(0,Math.ceil(coverage*5)-1))];
 }

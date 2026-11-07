@@ -218,3 +218,126 @@ test('partially selected months and weeks use only in-window dates in evidence t
   assert.equal(row.weeks.get('2026-02-16').to,'2026-02-18');
   assert.equal(row.coveredDays,countWorkdays('2026-02-10','2026-02-18'));
 });
+
+test('seven substantive authored dates earn 7/5 days (140%) without changing the weekday baseline',()=>{
+  const dates=Array.from({length:7},(_,i)=>dateAtDay(dayNumber('2026-10-05')+i));
+  const index={bounds:{min:'2026-10-01',max:'2026-10-31'},
+    activity:dates.map(date=>commit(date,40)),releases:[]};
+  const row=continuityMatrix(index,[people[0]],{from:'2026-10-05',to:'2026-10-11'}).rows[0];
+  const week=row.weeks.get('2026-10-05');
+  assert.equal(row.meaningfulDays,7);
+  assert.equal(row.weekdayMeaningfulDays,5);
+  assert.equal(row.weekendMeaningfulDays,2);
+  assert.equal(row.coveredDays,5);
+  assert.equal(row.observedWeekendDays,2);
+  assert.equal(row.coverage,1.4);
+  assert.equal(week.meaningfulDays,7);
+  assert.equal(week.coveredDays,5);
+  assert.equal(week.coverage,1.4);
+  assert.equal(row.meaningfulWeeks,1);
+  assert.equal(row.observedWeeks,1);
+  assert.equal(row.longestGap.workdays,0);
+  assert.equal(row.daily.get('2026-10-10').meaningful,true);
+  assert.equal(row.daily.get('2026-10-10').workday,false);
+  assert.notEqual(continuityAuthoredColour(1.4),continuityAuthoredColour(1),
+    'over-baseline cells have a stable, distinguishable colour');
+});
+
+test('rolling eight-week continuity includes weekend days and can exceed 100%',()=>{
+  const dates=Array.from({length:56},(_,i)=>dateAtDay(dayNumber('2026-09-07')+i));
+  assert.equal(dates.at(-1),'2026-11-01');
+  const index={bounds:{min:dates[0],max:dates.at(-1)},activity:dates.map(date=>commit(date,50)),releases:[]};
+  const row=continuityMatrix(index,[people[0]],{from:'2026-10-26',to:'2026-11-01'},{weeks:8}).rows[0];
+  assert.equal(row.coverage,1.4);
+  assert.equal(row.rollingCoverage,1.4);
+  assert.equal(row.weeks.get('2026-10-26').rollingCoverage,1.4);
+  assert.equal(row.months.get('2026-10').weekendMeaningfulDays,1,'October partial month contains Saturday only');
+  assert.equal(row.months.get('2026-11').weekendMeaningfulDays,1,'November partial month contains Sunday only');
+  assert.equal(row.months.get('2026-11').coverage,null,'a Sunday-only month has no weekday denominator');
+});
+
+test('weekend-only imported days earn visible credit without inventing a zero denominator',()=>{
+  const input={bounds:{min:'2026-10-10',max:'2026-10-11'},
+    activity:[commit('2026-10-10',35),commit('2026-10-11',40)],releases:[]};
+  const row=continuityMatrix(input,[people[0]],{from:'2026-10-10',to:'2026-10-11'}).rows[0];
+  assert.equal(row.coveredDays,0);
+  assert.equal(row.meaningfulDays,2);
+  assert.equal(row.weekendMeaningfulDays,2);
+  assert.equal(row.coverage,null);
+  assert.equal(row.observedWeeks,1);
+  assert.equal(row.meaningfulWeeks,1);
+  assert.equal(row.weeks.get('2026-10-05').observedDays,2);
+  assert.notEqual(continuityAuthoredColour(null,false,true),null,
+    'weekend-only authored evidence should not appear as unknown/hatching');
+});
+
+test('small weekend commits and VERSION-only churn do not earn qualifying-day credit',()=>{
+  const index={bounds:{min:'2026-10-05',max:'2026-10-11'},activity:[
+    commit('2026-10-10',5),commit('2026-10-11',100,'0','VERSION')],releases:[]};
+  const row=continuityMatrix(index,[people[0]],{from:'2026-10-05',to:'2026-10-11'}).rows[0];
+  assert.equal(row.coveredDays,5);
+  assert.equal(row.meaningfulDays,0);
+  assert.equal(row.weekendSmallDays,2);
+  assert.equal(row.weekendMeaningfulDays,0);
+  assert.equal(row.coverage,0);
+  assert.equal(row.longestGap.workdays,5);
+});
+
+test('multiple substantive weekend commits on one date count as a single credited day',()=>{
+  const index={bounds:{min:'2026-10-05',max:'2026-10-11'},activity:[
+    commit('2026-10-10',30),commit('2026-10-10',35)],releases:[]};
+  const row=continuityMatrix(index,[people[0]],{from:'2026-10-05',to:'2026-10-11'}).rows[0];
+  assert.equal(row.weekendMeaningfulDays,1);
+  assert.equal(row.meaningfulDays,1);
+  assert.equal(row.daily.get('2026-10-10').commits,2);
+  assert.equal(row.daily.get('2026-10-10').churn,65);
+});
+
+test('a substantive weekend day breaks a quiet-weekday streak but idle weekends do not',()=>{
+  const window={from:'2026-10-09',to:'2026-10-13'}; // Fri, Sat, Sun, Mon, Tue
+  const bounds={min:window.from,max:window.to};
+  const withWeekend=continuityMatrix({bounds,activity:[commit('2026-10-10',25)],releases:[]},
+    [people[0]],window).rows[0];
+  const withoutWeekend=continuityMatrix({bounds,activity:[],releases:[]},
+    [people[0]],window).rows[0];
+  assert.equal(withWeekend.coveredDays,3);
+  assert.equal(withWeekend.weekendMeaningfulDays,1);
+  assert.equal(withWeekend.longestGap.workdays,2);
+  assert.equal(withoutWeekend.longestGap.workdays,3);
+});
+
+test('weekend tag events alone do not create authored weekend credit',()=>{
+  const index={bounds:{min:'2026-10-05',max:'2026-10-11'},activity:[],
+    releases:[{tag:'v2',date:'2026-10-10',members:[{id:'0',commits:3,releaseLineChurn:130}]}]};
+  const row=continuityMatrix(index,[people[0]],{from:'2026-10-05',to:'2026-10-11'}).rows[0];
+  assert.equal(row.weekendMeaningfulDays,0);
+  assert.equal(row.coverage,0);
+  assert.equal(row.participations,1);
+  assert.equal(row.releasedCommits,3);
+  assert.equal(row.releasedLines,130);
+});
+
+test('partially observed weeks use only known baseline weekdays and meaningful weekend records',()=>{
+  const index={bounds:{min:'2026-10-07',max:'2026-10-11'},activity:[
+    commit('2026-10-07',30),commit('2026-10-10',25),commit('2026-10-11',40)],releases:[]};
+  const row=continuityMatrix(index,[people[0]],{from:'2026-10-05',to:'2026-10-11'}).rows[0];
+  assert.equal(row.coveredDays,3);
+  assert.equal(row.meaningfulDays,3);
+  assert.equal(row.weekendMeaningfulDays,2);
+  assert.equal(row.coverage,1);
+  assert.equal(row.partialHistory,true);
+  assert.equal(row.rollingCoverage,null);
+  assert.equal(row.weeks.get('2026-10-05').unknownDays,2);
+});
+
+test('continuity interface communicates the over-100% weekend baseline and shows active weekend cells',()=>{
+  const app=readFileSync(new URL('../assets/app.js',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../assets/app.css',import.meta.url),'utf8');
+  const readme=readFileSync(new URL('../README.md',import.meta.url),'utf8');
+  assert.match(app,/7\/5 \(140%\)/);
+  assert.match(app,/weekendMeaningfulDays/);
+  assert.match(app,/Math\.min\(100,Math\.round\(row\.coverage\*100\)\)/);
+  assert.match(app,/continuity-weekend-activity/);
+  assert.match(css,/continuity-weekend-activity/);
+  assert.match(readme,/7 \/ 5 \(140%\)/);
+});

@@ -3,7 +3,7 @@
  * Synthetic keys never masquerade as a Git author email, and adding one to a
  * contributor group does not manufacture a Git commit.
  */
-import { autoMatchGithubPublishers } from './impact.js?v=git-contribution-continuity-20261107-1';
+import { autoMatchGithubPublishers } from './impact.js?v=git-continuity-weekends-20261107-1';
 
 const emailPattern=/^[^\s@<>]{1,100}@[^\s@<>]{1,120}$/;
 export const herokuIdentity=email=>`heroku:${String(email||'').trim().toLowerCase()}`;
