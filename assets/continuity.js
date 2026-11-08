@@ -2,14 +2,17 @@
  * Contribution continuity is an observation of Git records, not performance.
  *
  * The selected window includes quiet dates matching the configured contributor
- * working-day pattern. Meaningful off-pattern dates earn extra credit, but
- * never cancel a missing scheduled day. Tagged releases use a separate denominator. Author
+ * working-day pattern. Count-first weekly balances measure whether the total
+ * number of qualifying dates meets that reference, even on different weekdays.
+ * Exact scheduled-day misses and off-pattern substitutions remain the breakdown.
+ * Surpluses in one week never erase shortfalls in another. Tagged releases
+ * use a separate denominator. Author
  * dates and release-event dates are intentionally never conflated. Import
  * bounds, missing tags and incomplete release ancestry stay visible.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-working-patterns-20261107-1';
-import {dailyEvidence} from './momentum.js?v=git-working-patterns-20261107-1';
-import {normalizeWorkingDays,isScheduledDay,continuityScheduleStatus} from './working-patterns.js?v=git-working-patterns-20261107-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-continuity-count-first-20261108-1';
+import {dailyEvidence} from './momentum.js?v=git-continuity-count-first-20261108-1';
+import {normalizeWorkingDays,isScheduledDay,continuityScheduleStatus,continuityCountBalance} from './working-patterns.js?v=git-continuity-count-first-20261108-1';
 
 export const CONTINUITY_WINDOWS=Object.freeze([8,12,20]);
 export const DEFAULT_CONTINUITY_WINDOW=20;
@@ -20,6 +23,7 @@ export const mondayOfDate=date=>dateAtDay(dayNumber(date)-(new Date(`${date}T12:
 function newBucket(key,from,to) {
   return {key,from,to,observedDays:0,coveredDays:0,observedWeekendDays:0,
     expectedDays:0,onScheduleDays:0,missedDays:0,extraDays:0,
+    shortfallDays:0,overageDays:0,substitutionDays:0,
     meaningfulDays:0,weekdayMeaningfulDays:0,weekendMeaningfulDays:0,
     smallDays:0,weekendSmallDays:0,authoredDays:0,
     commits:0,churn:0,opportunities:0,participations:0,releasedCommits:0,
@@ -60,8 +64,15 @@ function append(bucket,day) {
     bucket.partialReleases+=Number(event.partial);
   }
 }
-function finalize(bucket,releaseAvailable) {
+function finalize(bucket,releaseAvailable,weeklyBalance=null) {
   bucket.coverage=bucket.expectedDays?round(bucket.meaningfulDays/bucket.expectedDays):null;
+  // Weekly/period cells use the count of meaningful dates, not weekday matching.
+  // Calendar-month and selected-window totals sum separate weekly balances,
+  // so 3/4 one week + 5/4 the next never becomes an unqualified 8/8 "met".
+  const primary=weeklyBalance||continuityCountBalance(bucket);
+  bucket.shortfallDays=primary.shortfallDays;
+  bucket.overageDays=primary.overageDays;
+  bucket.substitutionDays=weeklyBalance?.substitutionDays??Math.min(bucket.missedDays,bucket.extraDays);
   bucket.status=continuityScheduleStatus(bucket);
   bucket.releaseParticipation=releaseAvailable&&bucket.opportunities>0?
     round(bucket.participations/bucket.opportunities):null;
@@ -73,8 +84,9 @@ function finalize(bucket,releaseAvailable) {
 /**
  * A rolling lookback is only scored if its *entire* calendar period is inside
  * observed import bounds. Each contributor has their own scheduled-day
- * denominator; qualifying off-pattern dates count as extras. Missing scheduled
- * days and extras are reported independently, even when their net counts agree.
+ * denominator; qualifying off-pattern dates can substitute for missed planned
+ * dates. Exact weekday adherence remains inspectable separately. Weekly
+ * shortfall and overage are never netted across different weeks.
  */
 export function continuityMatrix(index,contributors,window,options={}) {
   const weeks=CONTINUITY_WINDOWS.includes(Number(options.weeks))?Number(options.weeks):DEFAULT_CONTINUITY_WINDOW;
@@ -117,6 +129,10 @@ export function continuityMatrix(index,contributors,window,options={}) {
     const workingDays=normalizeWorkingDays(Object.hasOwn(patterns,id)?patterns[id]:person.workingDays);
     const authored=source.get(id)||new Map();
     const daily=new Map(),monthly=new Map(),weekly=new Map();
+    // Monthly status sums the separate *calendar-week slices inside that month*
+    // instead of disguising quiet weeks with busy weeks. Raw monthly activity
+    // and release evidence keep their actual calendar dates.
+    const monthWeekSlices=new Map();
     const row=newBucket('selected',from,to);
     row.workingDays=workingDays;
     row.expectedPerWeek=workingDays.length;
@@ -140,7 +156,9 @@ export function continuityMatrix(index,contributors,window,options={}) {
       extraPrefix.push(extraPrefix.at(-1)+Number(meaningful&&!covered));
       prefixAt.set(d,coveredPrefix.length-1);
     }
+    const rollingCache=new Map();
     const rollingAt=day=>{
+      if(rollingCache.has(day))return rollingCache.get(day);
       const earliest=day-weeks*7+1,latest=dateAtDay(day);
       if(!hasActivity||earliest<dayNumber(bounds.min)||latest>bounds.max)return null;
       const a=earliest===prefixFrom?0:prefixAt.get(earliest-1),b=prefixAt.get(day);
@@ -148,9 +166,37 @@ export function continuityMatrix(index,contributors,window,options={}) {
       const expectedDays=coveredPrefix[b]-coveredPrefix[a];
       const meaningfulDays=meaningfulPrefix[b]-meaningfulPrefix[a];
       const scheduledMeaningfulDays=scheduledMeaningfulPrefix[b]-scheduledMeaningfulPrefix[a];
-      return {expectedDays,meaningfulDays,missedDays:expectedDays-scheduledMeaningfulDays,
-        extraDays:extraPrefix[b]-extraPrefix[a],
+      const missedDays=expectedDays-scheduledMeaningfulDays;
+      const extraDays=extraPrefix[b]-extraPrefix[a];
+      // Assess each calendar-week segment separately, including the two partial
+      // edge weeks of a rolling lookback. Never net an overage in a different
+      // week against an earlier shortfall.
+      let shortfallDays=0,overageDays=0,substitutionDays=0;
+      let weeksMet=0,weeksUnder=0,weeksOver=0;
+      const firstMonday=earliest-(new Date(`${dateAtDay(earliest)}T12:00:00Z`).getUTCDay()+6)%7;
+      for(let w=firstMonday;w<=day;w+=7){
+        const start=Math.max(earliest,w),end=Math.min(day,w+6);
+        const before=start===prefixFrom?0:prefixAt.get(start-1),after=prefixAt.get(end);
+        if(before===undefined||after===undefined)continue;
+        const expected=coveredPrefix[after]-coveredPrefix[before];
+        const actual=meaningfulPrefix[after]-meaningfulPrefix[before];
+        const scheduled=scheduledMeaningfulPrefix[after]-scheduledMeaningfulPrefix[before];
+        const surplus=extraPrefix[after]-extraPrefix[before];
+        const balance=continuityCountBalance({expectedDays:expected,meaningfulDays:actual,observedDays:end-start+1});
+        shortfallDays+=balance.shortfallDays;
+        overageDays+=balance.overageDays;
+        substitutionDays+=Math.min(expected-scheduled,surplus);
+        if(expected>0){
+          if(balance.shortfallDays)weeksUnder++;
+          else if(balance.overageDays)weeksOver++;
+          else weeksMet++;
+        }
+      }
+      const result={expectedDays,meaningfulDays,missedDays,extraDays,
+        shortfallDays,overageDays,substitutionDays,weeksMet,weeksUnder,weeksOver,
         coverage:expectedDays?round(meaningfulDays/expectedDays):null};
+      rollingCache.set(day,result);
+      return result;
     };
     for(let d=startingDay;d<=endingDay;d++){
       const date=dateAtDay(d),observed=hasActivity&&date>=bounds.min&&date<=bounds.max;
@@ -167,6 +213,9 @@ export function continuityMatrix(index,contributors,window,options={}) {
         commits,churn,authored:commits>0,meaningful,
         opportunities:release?.opportunities||0,events,rollingCoverage:rolling?.coverage??null,
         rollingMissingDays:rolling?.missedDays??null,rollingExtraDays:rolling?.extraDays??null,
+        rollingShortfallDays:rolling?.shortfallDays??null,rollingOverageDays:rolling?.overageDays??null,
+        rollingWeeksMet:rolling?.weeksMet??null,rollingWeeksUnder:rolling?.weeksUnder??null,
+        rollingWeeksOver:rolling?.weeksOver??null,
         releaseAvailable,partialOpportunities:release?.partial||0};
       daily.set(date,item);
       const weekKey=mondayOfDate(date),monthKey=date.slice(0,7);
@@ -176,6 +225,10 @@ export function continuityMatrix(index,contributors,window,options={}) {
       weekly.get(weekKey).to=date;
       append(monthly.get(monthKey),item);
       monthly.get(monthKey).to=date;
+      if(!monthWeekSlices.has(monthKey))monthWeekSlices.set(monthKey,new Map());
+      const slices=monthWeekSlices.get(monthKey);
+      if(!slices.has(weekKey))slices.set(weekKey,newBucket(weekKey,date,date));
+      append(slices.get(weekKey),item);
       append(row,item);
       // Meaningful activity on an unscheduled date breaks a quiet-date streak,
       // but an unscheduled date without qualifying activity has no effect.
@@ -188,21 +241,40 @@ export function continuityMatrix(index,contributors,window,options={}) {
         if(currentGap>longestGap.workdays)longestGap={workdays:currentGap,from:firstGap,to:lastGap};
       }
     }
+    const sumWeeklyBalances=buckets=>[...buckets].reduce((total,b)=>({
+      shortfallDays:total.shortfallDays+b.shortfallDays,
+      overageDays:total.overageDays+b.overageDays,
+      substitutionDays:total.substitutionDays+b.substitutionDays,
+    }),{shortfallDays:0,overageDays:0,substitutionDays:0});
+    const attachRolling=(bucket,rolling)=>{
+      bucket.rollingCoverage=rolling?.coverage??null;
+      bucket.rollingMissingDays=rolling?.missedDays??null;
+      bucket.rollingExtraDays=rolling?.extraDays??null;
+      bucket.rollingShortfallDays=rolling?.shortfallDays??null;
+      bucket.rollingOverageDays=rolling?.overageDays??null;
+      bucket.rollingWeeksMet=rolling?.weeksMet??null;
+      bucket.rollingWeeksUnder=rolling?.weeksUnder??null;
+      bucket.rollingWeeksOver=rolling?.weeksOver??null;
+    };
     for(const bucket of weekly.values()){
-      const rolling=rollingAt(Math.min(endingDay,dayNumber(bucket.to)));
-      bucket.rollingCoverage=rolling?.coverage??null;
-      bucket.rollingMissingDays=rolling?.missedDays??null;
-      bucket.rollingExtraDays=rolling?.extraDays??null;
+      attachRolling(bucket,rollingAt(Math.min(endingDay,dayNumber(bucket.to))));
       finalize(bucket,releaseAvailable);
     }
-    for(const bucket of monthly.values()){
-      const rolling=rollingAt(Math.min(endingDay,dayNumber(bucket.to)));
-      bucket.rollingCoverage=rolling?.coverage??null;
-      bucket.rollingMissingDays=rolling?.missedDays??null;
-      bucket.rollingExtraDays=rolling?.extraDays??null;
-      finalize(bucket,releaseAvailable);
+    for(const [monthKey,bucket] of monthly){
+      attachRolling(bucket,rollingAt(Math.min(endingDay,dayNumber(bucket.to))));
+      const slices=[...monthWeekSlices.get(monthKey).values()].map(slice=>finalize(slice,releaseAvailable));
+      finalize(bucket,releaseAvailable,sumWeeklyBalances(slices));
     }
-    finalize(row,releaseAvailable);
+    finalize(row,releaseAvailable,sumWeeklyBalances(weekly.values()));
+    for(const item of daily.values()){
+      const week=weekly.get(mondayOfDate(item.date));
+      item.weeklyMeaningfulDays=week?.meaningfulDays??null;
+      item.weeklyExpectedDays=week?.expectedDays??null;
+      item.weeklyShortfallDays=week?.shortfallDays??null;
+      item.weeklyOverageDays=week?.overageDays??null;
+      item.weeklyStatus=week?.status??'unknown';
+      item.weeklySubstitutionDays=week?.substitutionDays??null;
+    }
     const observedWeeks=[...weekly.values()].filter(bucket=>bucket.observedDays>0);
     const meaningfulWeeks=observedWeeks.filter(bucket=>bucket.meaningfulDays>0).length;
     const releaseWeeks=[...weekly.values()].filter(bucket=>bucket.participations>0).length;
@@ -211,6 +283,11 @@ export function continuityMatrix(index,contributors,window,options={}) {
       rollingCoverage:rollingAt(endingDay)?.coverage??null,
       rollingMissingDays:rollingAt(endingDay)?.missedDays??null,
       rollingExtraDays:rollingAt(endingDay)?.extraDays??null,
+      rollingShortfallDays:rollingAt(endingDay)?.shortfallDays??null,
+      rollingOverageDays:rollingAt(endingDay)?.overageDays??null,
+      rollingWeeksMet:rollingAt(endingDay)?.weeksMet??null,
+      rollingWeeksUnder:rollingAt(endingDay)?.weeksUnder??null,
+      rollingWeeksOver:rollingAt(endingDay)?.weeksOver??null,
       partialHistory:row.unknownDays>0,
       releaseAvailable};
     rows.push(result);byId.set(id,result);

@@ -1,10 +1,10 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-working-patterns-20261107-1';
-import { impactAnalysis } from './impact.js?v=git-working-patterns-20261107-1';
-import { buildStoryAnalysis } from './stories.js?v=git-working-patterns-20261107-1';
-import { buildEvidenceIndex } from './perspectives.js?v=git-working-patterns-20261107-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-working-patterns-20261107-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-working-patterns-20261107-1';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-continuity-count-first-20261108-1';
+import { impactAnalysis } from './impact.js?v=git-continuity-count-first-20261108-1';
+import { buildStoryAnalysis } from './stories.js?v=git-continuity-count-first-20261108-1';
+import { buildEvidenceIndex } from './perspectives.js?v=git-continuity-count-first-20261108-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-continuity-count-first-20261108-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-continuity-count-first-20261108-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;

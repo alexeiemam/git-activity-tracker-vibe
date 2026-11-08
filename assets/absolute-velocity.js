@@ -6,7 +6,7 @@
  * These colours never depend on the selected people, period or data maximum.
  * A value above the darkest reference still retains its exact numeric value.
  */
-import {positiveColour,ZERO_COLOUR,MISSING_BACKGROUND} from './value-colour.js?v=git-working-patterns-20261107-1';
+import {positiveColour,ZERO_COLOUR,MISSING_BACKGROUND} from './value-colour.js?v=git-continuity-count-first-20261108-1';
 
 export const VELOCITY_MARKS=Object.freeze([0,0.25,0.5,1,1.5,2,3]);
 export const VELOCITY_DARK_AT=3;

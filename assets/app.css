@@ -1211,7 +1211,7 @@
 .continuity-delivered{min-height:17px;font-size:9px}
 .continuity-day-tile{display:flex;flex-direction:column;gap:1px;overflow:hidden;padding:1px}
 .continuity-day-tile .continuity-band{width:100%;flex:1;min-height:0;border-radius:1px}
-/* Keep quiet weekends visually subdued, but never dim substantive weekend evidence. */
+/* Keep quiet off-pattern dates subdued, but never dim substantive recorded evidence. */
 .continuity-day-tile.continuity-weekend:not(.continuity-weekend-activity){opacity:.65}
 .continuity-day-tile.continuity-weekend-activity{opacity:1;box-shadow:inset 0 0 0 1px rgba(27,103,82,.25)}
 .continuity-summary-table{min-width:1040px}
@@ -1252,8 +1252,8 @@
 .merge-working-pattern>summary{cursor:pointer;padding:9px 0;font:600 11px/1.4 var(--font);color:#315e48}
 .merge-working-pattern .pattern-controls{padding:8px 0 12px}
 .merge-working-pattern>p{margin:4px 0}
-/* Missing scheduled days (warm) and extra meaningful dates (blue) are
-   independently coloured. Nothing is gold or ranked against peers. */
+/* Weekly count shortfalls (warm) and overages (blue) have independent
+   fixed scales. Named-day adherence is evidence, not the primary grade. */
 .continuity-legend-label{font-weight:700;color:#344e42;border-left:2px solid #aabfb0;padding-left:7px}
 .continuity-schedule-balance{display:flex;flex:1 1 auto;min-height:22px;width:100%;gap:2px;font-variant-numeric:tabular-nums}
 .continuity-missing-mark,.continuity-extra-mark{display:flex;align-items:center;justify-content:center;min-width:0;border-radius:3px;font:700 12px/1 var(--mono)}
@@ -1265,18 +1265,18 @@
 .continuity-day-tile .continuity-missing-mark{font-size:9px}
 .continuity-day-tile .continuity-extra-mark{min-width:0;font-size:8px;flex-basis:52%}
 .continuity-overview{border:1px solid #dde8df;border-radius:9px;overflow:hidden;margin-bottom:16px}
-.continuity-overview-row{display:grid;grid-template-columns:minmax(130px,1.2fr) minmax(90px,.65fr) minmax(84px,.65fr) minmax(160px,1.5fr);align-items:center;gap:10px;padding:8px 12px;background:#fff}
+.continuity-overview-row{display:grid;grid-template-columns:minmax(120px,1.2fr) minmax(75px,.6fr) minmax(74px,.65fr) minmax(74px,.65fr) minmax(175px,1.55fr);align-items:center;gap:10px;padding:8px 12px;background:#fff}
 .continuity-overview-row+.continuity-overview-row{border-top:1px solid #e4ece6}
 .continuity-overview-person{font:600 12px/1.4 var(--font);color:#2b4c39;min-width:0;overflow-wrap:anywhere}
 .continuity-overview-person small{display:block;font:10px/1.5 var(--mono);color:var(--muted)}
-.continuity-overview-missing,.continuity-overview-extra{display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;border-radius:5px;padding:6px 8px;font:700 16px/1 var(--mono);font-variant-numeric:tabular-nums;color:#3e4f41}
-.continuity-overview-missing small,.continuity-overview-extra small{font:9px/1.4 var(--mono);text-align:center;color:inherit;opacity:.88}
-.continuity-overview-weeks{font:10px/1.6 var(--mono);color:#60776a}
+.continuity-overview-pace,.continuity-overview-missing,.continuity-overview-extra{display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;border-radius:5px;padding:6px 8px;font:700 16px/1 var(--mono);font-variant-numeric:tabular-nums;color:#3e4f41}
+.continuity-overview-pace small,.continuity-overview-missing small,.continuity-overview-extra small{font:9px/1.4 var(--mono);text-align:center;color:inherit;opacity:.88}
+.continuity-overview-pace{background:#f0f4f1;color:#365848}.continuity-overview-weeks{font:10px/1.6 var(--mono);color:#60776a;min-width:0}.continuity-overview-weeks strong{display:block;font:600 11px/1.45 var(--mono);color:#365848}.continuity-overview-weeks small{display:block;font:9px/1.5 var(--mono);color:#60776a}
 @media(max-width:740px){
   .continuity-pattern-row{flex-direction:column;align-items:stretch}
   .pattern-day{min-width:35px}
-  .continuity-overview-row{grid-template-columns:minmax(105px,1fr) repeat(2,minmax(65px,.6fr));gap:6px;padding:8px}
+  .continuity-overview-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:8px}.continuity-overview-person{grid-column:1/-1}.continuity-overview-pace{grid-column:1}
   .continuity-overview-weeks{grid-column:1/-1;border-top:1px solid #edf0e9;padding-top:4px}
-  .continuity-overview-missing,.continuity-overview-extra{font-size:14px}
+  .continuity-overview-pace,.continuity-overview-missing,.continuity-overview-extra{font-size:14px}
 }
 @media(forced-colors:active){.pattern-day.is-scheduled{border:2px solid Highlight}.continuity-schedule-balance>span,.continuity-overview-missing,.continuity-overview-extra{border:1px solid CanvasText}}
