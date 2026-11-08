@@ -770,3 +770,85 @@ important saved settings. **Forget local copy** removes the stored session.
 Saved links expire 30 days after they are saved; expired entries are
 removed when opened. Browser storage can be unavailable or quota-limited,
 which is reported rather than silently implying the link can be reopened.
+
+## Contribution Signature and two complementary quadrants
+
+The **Detailed analytical workbench → Activity Pulse → Contribution Continuity**
+now offers four subviews: **Combined signature** (the default when entering the
+continuity lens), **Delivery quadrant**, **Contribution quadrant**, and the
+original **Day counts**. These subviews share the selected contributors, the
+selected dates, author/release inclusion policy, identity reconciliation,
+meaningful-day threshold and each person's configured 0–7-day reference.
+The selected subview survives a compressed or legacy session export/import;
+older sessions use Combined signature by default. The original Daily, Weekly
+and Monthly continuity cells remain available under Day counts.
+
+**Combined signature** displays a weekly three-band cell for each contributor:
+
+1. **Expected-day count:** `=` when the count of qualifying authored dates meets
+   the configured reference, `−N` below it, and a distinct blue `+N` for extra
+   meaningful dates. Named weekdays and substitutions are supporting detail,
+   not a rigid attendance test. This is the existing count-first weekly model.
+2. **Authored-only output:** a fixed-scale, magnitude-preserving index per
+   expected day. It uses only authored commits, non-VERSION additions and
+   deletions, and churn-weighted temporal distribution. The existing
+   Contribution Level formula's release component is removed, then the
+   remaining 80% is renormalised. This avoids double counting release credit
+   when the third band is shown. For a zero-day reference, no per-expected-day
+   rate is invented: the cell shows `∑` followed by the observed authored-only
+   total, without suggesting a comparable rate.
+3. **Release inclusion:** the number of distinct incremental tagged releases
+   containing the contributor's authored commits, dated by **tag/release event**
+   rather than by when those commits were authored. Incomplete lineage is
+   disclosed in cell details. Tag publishers/drivers alone earn no authorship
+   credit; baseline tags and canonical tag aliases never become new releases.
+
+Click or focus a weekly cell for the existing evidence popover showing exact
+commit counts, changed lines, expected weekdays, substitutions, overage and
+release events. Partially observed weeks are marked and remain visible, but
+are **excluded** from the quadrant denominators. In the signature summary,
+only complete, fully observed Monday–Sunday weeks count towards per-expected-
+day output and attainment: unknown dates do not become zero-activity days.
+
+**Delivery-focused quadrant:**
+
+- X: distinct **complete** tagged-release opportunities with authored
+  participation, divided by all eligible complete incremental tagged-release
+  opportunities in the selected **release-event** date window (0–100%).
+- Y: authored non-VERSION changed lines introduced in those releases divided
+  by the same eligible release opportunities, displayed on a labelled
+  logarithmic axis. A small touch and substantial release contribution are
+  not equated. Circle size modestly indicates authored commits included in
+  those releases. The fixed descriptive guide lines are 50% on X and 200
+  changed lines per eligible release on Y. Neither is a target or rating.
+- Releases with missing ancestry are **excluded** from both denominator and
+  numerator and their count is disclosed; missing member line counts suppress
+  the magnitude coordinate. With no eligible complete releases, coordinates
+  are **unavailable**, never an invented 0%. Because release event dates differ
+  from author dates, this is **not a conversion/funnel rate** from the selected
+  authored-activity window.
+
+**Contribution-focused quadrant:**
+
+- X: the mean of `min(qualifying dates / expected dates, 1)` across complete,
+  observed Monday–Sunday weeks. A 5/4 week cannot cancel a 2/4 week. Each
+  person's named-day pattern establishes their expected-day count; alternative
+  days may substitute. The complete-week count and weeks actually meeting
+  the expectation remain available in the evidence table.
+- Y: authored-only output index per expected reference day over those same
+  complete weeks, including quiet scheduled days and contributions on
+  unscheduled days. No release credit enters this axis. Circle size modestly
+  represents authored commits. The fixed guide lines are 75% attainment and
+  one reference index unit/day. These are descriptive visual calibrations.
+- An explicitly configured **0-day pattern** has no meaningful expected-day
+  denominator and cannot be plotted on this quadrant, though its authored
+  activity is preserved in the signature and evidence. Partial windows or
+  missing authored evidence likewise remain **unplotted**, not quietly zero.
+
+Both maps show a compact evidence table and an independent colour-coded marker
+legend. The position and area of a dot describe only recorded Git patterns,
+not someone's personality, work hours, productivity or quality. Generated
+changes, binary-only work, reviews, design, support, unavailable branches,
+and unequal responsibilities remain limitations. Unlike a peer-optimised
+winner chart, the quadrants' reference lines and numeric axes retain their
+meaning when contributors are selected or deselected.

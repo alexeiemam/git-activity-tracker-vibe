@@ -1280,3 +1280,56 @@
   .continuity-overview-pace,.continuity-overview-missing,.continuity-overview-extra{font-size:14px}
 }
 @media(forced-colors:active){.pattern-day.is-scheduled{border:2px solid Highlight}.continuity-schedule-balance>span,.continuity-overview-missing,.continuity-overview-extra{border:1px solid CanvasText}}
+
+/* Three independent Contribution Signature perspectives. Fixed score colours
+   never turn a peer into a winner or infer working hours. */
+.signature-view-switch{display:grid;gap:7px;flex:1 1 100%;min-width:0}
+.signature-view-label{font:700 9px/1.4 var(--mono);color:#56705d;letter-spacing:.09em}
+.signature-view-switch .segmented{display:flex;flex-wrap:wrap;width:max-content;max-width:100%;gap:3px}
+.signature-view-switch .segment{white-space:nowrap}
+.signature-intro{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;margin:1px 0 15px}
+.signature-intro strong{font:700 17px/1.3 var(--font);color:var(--ink)}
+.signature-intro p{font:11px/1.7 var(--font);color:#53675b;margin:4px 0 0;max-width:630px}
+.signature-intro>span{white-space:nowrap;color:#6c8071;font:10px/1.5 var(--mono);padding-top:3px}
+.signature-board{display:grid;gap:6px;align-items:stretch;width:max-content;min-width:100%;padding:2px 3px 12px}
+.signature-axis,.signature-corner{display:flex;align-items:end;justify-content:center;font:10px/1.4 var(--mono);color:#698073;padding-bottom:3px}
+.signature-corner{justify-content:flex-start;position:sticky;left:0;background:var(--paper);z-index:4}
+.signature-name{display:flex;gap:8px;align-items:center;position:sticky;left:0;z-index:3;padding:6px 5px;background:var(--paper);min-width:0;border-top:1px solid var(--line-soft)}
+.signature-name span{font:600 12px/1.3 var(--font);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.signature-name small{margin-left:auto;white-space:nowrap;font:10px/1.3 var(--mono);color:#748577}
+.signature-week{display:flex;flex-direction:column;gap:2px;min-width:76px;min-height:86px;padding:3px;border:1px solid #dce5dd;border-radius:8px;background:#fff;cursor:pointer;transition:box-shadow .12s ease,border-color .12s ease}
+.signature-week:hover,.signature-week:focus-visible{outline:2px solid #276e55;outline-offset:1px;z-index:5;box-shadow:0 3px 11px #25472e14}
+.signature-week.is-partial{border-style:dashed;border-color:#a9b6ae}
+.signature-band{display:flex;align-items:center;justify-content:center;position:relative;border-radius:4px;font:700 12px/1 var(--mono);font-variant-numeric:tabular-nums;min-width:0}
+.signature-days{flex:1;min-height:26px}
+.signature-days small{position:absolute;right:2px;top:2px;border-radius:3px;padding:2px 3px;font:700 8px/1 var(--mono);color:#184667}
+.signature-output{flex:1;min-height:25px;border:1px solid #d7e5da}
+.signature-release{height:17px;flex-shrink:0;font-size:9px;color:#163c46}
+.signature-legend{display:flex;align-items:center;flex-wrap:wrap;gap:7px 16px;font:10px/1.6 var(--mono);color:#5b7064}
+.signature-legend>span{display:inline-flex;gap:5px;align-items:center}
+.signature-legend i{display:inline-block;width:14px;height:11px;border-radius:2px;border:1px solid #d1e1d6}
+.signature-map-wrap{display:grid;gap:12px;justify-items:center;border:1px solid #dce6df;border-radius:12px;background:linear-gradient(160deg,#fff,#f8faf7);padding:17px 15px 13px;max-width:850px;margin:0 auto 15px}
+.signature-quadrant-svg{display:block;width:100%;max-width:690px;height:auto;overflow:visible}
+.signature-point{filter:drop-shadow(0 1px 2px #1736293a)}
+.signature-map-legend{display:flex;justify-content:center;gap:8px 17px;align-items:center;flex-wrap:wrap}
+.signature-map-legend span{display:inline-flex;align-items:center;gap:6px;font:10px/1.45 var(--mono);color:#3e594a}
+.signature-map-legend i{width:10px;height:10px;border:1px solid #fff;box-shadow:0 0 0 1px #cedbd2;border-radius:50%;display:inline-block}
+.signature-axis-note,.signature-unmapped{font:10px/1.6 var(--mono);color:#63796b}
+.signature-unmapped{padding:10px 12px;background:#f3f6f3;border-left:2px solid #90a597;border-radius:4px}
+.signature-evidence-table{min-width:850px}
+@media(max-width:720px){
+  .signature-intro{display:grid;gap:4px}
+  .signature-intro>span{white-space:normal}
+  .signature-view-switch .segmented{width:100%}
+  .signature-view-switch .segment{flex:1 1 44%;font-size:10px}
+  .signature-board{gap:4px}
+  .signature-map-wrap{padding:10px 5px}
+  .signature-map-legend{gap:6px 10px}
+}
+@media(forced-colors:active){
+  .signature-week,.signature-band,.signature-quadrant-svg .signature-point{border:1px solid CanvasText}
+  .signature-week:focus-visible{outline:2px solid Highlight}
+}
+/* Preserve readable plot labels on narrow screens; scroll within the card. */
+.signature-map-wrap{overflow-x:auto;max-width:100%}
+.signature-quadrant-svg{min-width:520px}

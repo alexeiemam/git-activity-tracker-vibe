@@ -18,7 +18,7 @@ test('HTML loads external CSS and module JavaScript', () => {
 });
 
 test('all Pulse signal modules expose every named export requested by the entrypoint', async () => {
-  for(const file of ['release-gap.js','momentum.js','temporal-activity.js','contribution-level.js','absolute-velocity.js','release-scorecard.js','continuity.js','working-patterns.js']) {
+  for(const file of ['release-gap.js','momentum.js','temporal-activity.js','contribution-level.js','absolute-velocity.js','release-scorecard.js','continuity.js','working-patterns.js','contribution-signature.js','contribution-signature-view.js']) {
     const escaped=file.replace('.', '\\.');
     const statement=app.match(new RegExp(`import\\s*\\{([^}]+)\\}\\s*from\\s*['"]\\./${escaped}\\?v=[^'"]+['"]`));
     assert.ok(statement, `app.js must import ${file}`);
