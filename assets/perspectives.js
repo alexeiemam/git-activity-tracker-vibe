@@ -4,8 +4,8 @@
  * complete introduced Git ancestry (subject only to the explicitly declared
  * merge/revert policy); an authored period is a different observation clock.
  */
-import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=git-contribution-signature-20261108-1';
-import { changeCategory, fileKind } from './impact.js?v=git-contribution-signature-20261108-1';
+import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=git-quadrant-inspection-20261108-1';
+import { changeCategory, fileKind } from './impact.js?v=git-quadrant-inspection-20261108-1';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);

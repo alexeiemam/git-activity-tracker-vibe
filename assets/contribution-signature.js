@@ -6,10 +6,10 @@
  * The two are NOT a shipped/committed conversion rate. Scores are descriptive
  * indices, not worked hours, code quality, or employment assessments.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-contribution-signature-20261108-1';
-import {dailyEvidence} from './momentum.js?v=git-contribution-signature-20261108-1';
-import {temporalActivityByPerson,temporalOptions,emptyTemporalDay} from './temporal-activity.js?v=git-contribution-signature-20261108-1';
-import {contributionLevelUnits} from './contribution-level.js?v=git-contribution-signature-20261108-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-quadrant-inspection-20261108-1';
+import {dailyEvidence} from './momentum.js?v=git-quadrant-inspection-20261108-1';
+import {temporalActivityByPerson,temporalOptions,emptyTemporalDay} from './temporal-activity.js?v=git-quadrant-inspection-20261108-1';
+import {contributionLevelUnits} from './contribution-level.js?v=git-quadrant-inspection-20261108-1';
 
 export const SIGNATURE_MODES=Object.freeze(['days','signature','delivery','contribution']);
 export const DEFAULT_SIGNATURE_MODE='signature';

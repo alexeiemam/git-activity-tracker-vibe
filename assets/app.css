@@ -1312,7 +1312,7 @@
 .signature-quadrant-svg{display:block;width:100%;max-width:690px;height:auto;overflow:visible}
 .signature-point{filter:drop-shadow(0 1px 2px #1736293a)}
 .signature-map-legend{display:flex;justify-content:center;gap:8px 17px;align-items:center;flex-wrap:wrap}
-.signature-map-legend span{display:inline-flex;align-items:center;gap:6px;font:10px/1.45 var(--mono);color:#3e594a}
+.signature-map-legend>span{display:inline-flex;align-items:center;gap:6px;font:10px/1.45 var(--mono);color:#3e594a}
 .signature-map-legend i{width:10px;height:10px;border:1px solid #fff;box-shadow:0 0 0 1px #cedbd2;border-radius:50%;display:inline-block}
 .signature-axis-note,.signature-unmapped{font:10px/1.6 var(--mono);color:#63796b}
 .signature-unmapped{padding:10px 12px;background:#f3f6f3;border-left:2px solid #90a597;border-radius:4px}
@@ -1333,3 +1333,66 @@
 /* Preserve readable plot labels on narrow screens; scroll within the card. */
 .signature-map-wrap{overflow-x:auto;max-width:100%}
 .signature-quadrant-svg{min-width:520px}
+
+/* Quadrant inspection: identity and region are immediate, while measured
+   coordinates and reference-line reasoning remain legible beside the plot. */
+.signature-map-wrap{overflow:visible;max-width:1040px;display:block;padding:16px}
+.signature-map-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(248px,298px);gap:16px;width:100%;align-items:start}
+.signature-map-plot-scroll{min-width:0;overflow-x:auto;overflow-y:hidden;border-radius:9px}
+.signature-map-stage{position:relative;width:100%;min-width:520px}
+.signature-quadrant-svg{max-width:none;min-width:520px;width:100%}
+.signature-point{cursor:pointer;outline:none;transition:filter .12s ease}
+.signature-point-disc,.signature-point-ring{transition:stroke-width .12s ease,opacity .12s ease}
+.signature-point-ring{opacity:0}
+.signature-point-number{pointer-events:none;font-family:var(--mono);paint-order:stroke;stroke:#17493838;stroke-width:.4px}
+.signature-point:is(:hover,:focus-visible,.is-inspected){filter:drop-shadow(0 2px 5px #1b4f4570)}
+.signature-point:is(:hover,:focus-visible,.is-inspected) .signature-point-ring{opacity:1;stroke-width:4px}
+.signature-point:focus-visible .signature-point-disc{stroke:#102b29;stroke-width:2.7px}
+.signature-hover-tag{position:absolute;z-index:5;max-width:220px;min-width:150px;padding:8px 11px;pointer-events:none;border-radius:8px;border:1px solid #bdd3ca;background:#203f39;color:#fff;box-shadow:0 8px 20px #1c423a3d;font:11px/1.4 var(--font);text-align:left}
+.signature-hover-tag[hidden]{display:none}
+.signature-hover-tag strong,.signature-hover-tag span{display:block;overflow-wrap:anywhere}
+.signature-hover-tag strong{font:700 12px/1.25 var(--font)}
+.signature-hover-tag span{margin-top:3px;color:#d0e7dc;font-size:10px}
+.signature-point-inspector{min-width:0;min-height:284px;background:#fff;border:1px solid #d8e5dd;border-radius:12px;box-shadow:0 4px 18px #1946320a;padding:13px 14px;color:#314c3b}
+.signature-inspector-placeholder{display:grid;align-content:center;min-height:245px;gap:10px;text-align:center}
+.signature-inspector-placeholder>span,.signature-inspector-kicker{font:700 9px/1.5 var(--mono);letter-spacing:.09em;color:#668078}
+.signature-inspector-placeholder strong{font:700 15px/1.3 var(--font);color:#284a3e}
+.signature-inspector-placeholder p{font:11px/1.65 var(--font);color:#64786a;max-width:225px;margin:0 auto}
+.signature-inspector-kicker{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.signature-inspector-clear{cursor:pointer;background:#edf4f0;border:1px solid #d4e5db;border-radius:5px;color:#285e4b;font:600 10px/1 var(--mono);padding:5px 7px}
+.signature-inspector-clear:hover,.signature-inspector-clear:focus-visible{background:#dcefe4;outline:2px solid #517d68;outline-offset:1px}
+.signature-inspector-person{display:flex;align-items:center;gap:8px;margin:10px 0 7px;min-width:0}
+.signature-inspector-person i{height:13px;width:13px;border-radius:50%;flex-shrink:0;border:2px solid #fff;box-shadow:0 0 0 1px #d4e0d9}
+.signature-inspector-person strong{font:700 17px/1.3 var(--font);color:#193f34;overflow-wrap:anywhere}
+.signature-inspector-region{display:inline-block;max-width:100%;padding:5px 8px;border-radius:5px;background:#edf3f0;color:#385a4b;font:600 10px/1.4 var(--font)}
+.signature-inspector-axes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:13px 0}
+.signature-inspector-axes>div{border:1px solid #e1e9e2;border-radius:8px;padding:8px;background:#f8faf8;min-width:0}
+.signature-inspector-axes small,.signature-inspector-axes strong,.signature-inspector-axes span{display:block}
+.signature-inspector-axes small{font:9px/1.4 var(--mono);color:#667d6c}
+.signature-inspector-axes strong{font:700 20px/1.4 var(--mono);color:#205b4c;font-variant-numeric:tabular-nums;padding:3px 0}
+.signature-inspector-axes span{font:10px/1.5 var(--font);color:#586c5f;overflow-wrap:anywhere}
+.signature-inspector-reason{border-left:3px solid #7ca893;padding:3px 0 3px 10px;margin-bottom:10px}
+.signature-inspector-reason strong{font:700 11px/1.4 var(--font);color:#2f5240}
+.signature-inspector-reason p,.signature-inspector-context,.signature-inspector-caveat{font:10px/1.65 var(--font);color:#586e61;margin:4px 0}
+.signature-inspector-caveat{display:block;color:#738678;margin-top:10px;border-top:1px solid #e8eee9;padding-top:8px}
+.signature-map-legend{margin:0 0 13px;padding:0 0 11px;border-bottom:1px solid #e4ede6;justify-content:flex-start}
+.signature-legend-person{display:inline-flex;gap:5px;align-items:center;border:1px solid #dbe7de;border-radius:6px;background:#fff;cursor:pointer;font:11px/1.3 var(--font);padding:5px 8px;color:#345848;max-width:100%;text-align:left;overflow-wrap:anywhere}
+.signature-legend-person i{width:10px;height:10px;flex-shrink:0}
+.signature-legend-index{font:700 10px/1.4 var(--mono);color:#6b8273}
+.signature-legend-person:is(:hover,:focus-visible,.is-inspected){background:#edf5f0;border-color:#77aa92;outline:2px solid #b9dbcb;outline-offset:1px}
+@media(max-width:930px){
+  .signature-map-grid{grid-template-columns:1fr;gap:12px}
+  .signature-point-inspector{min-height:150px}
+  .signature-inspector-placeholder{min-height:105px}
+}
+@media(max-width:720px){
+  .signature-map-wrap{padding:9px}
+  .signature-map-grid{gap:8px}
+  .signature-map-legend{gap:6px}
+  .signature-inspector-axes strong{font-size:18px}
+}
+@media(forced-colors:active){
+  .signature-point:is(:hover,:focus-visible,.is-inspected) .signature-point-ring{stroke:Highlight}
+  .signature-inspector-region,.signature-legend-person,.signature-point-inspector,.signature-hover-tag{border:1px solid CanvasText}
+}
+@media(prefers-reduced-motion:reduce){.signature-point,.signature-point-disc,.signature-point-ring{transition:none}}

@@ -845,6 +845,19 @@ day output and attainment: unknown dates do not become zero-activity days.
   activity is preserved in the signature and evidence. Partial windows or
   missing authored evidence likewise remain **unplotted**, not quietly zero.
 
+**Inspecting quadrant contributors:** Each point has a visible number matching a
+selectable name in the legend **above** the plot. Hovering a point immediately
+shows its full contributor name and descriptive quadrant region; the adjacent
+**Point Inspector** explains both coordinates, their eligible denominators,
+and exactly how each value compares with the fixed reference line. Click or tap
+any point or contributor name to retain that explanation; click the selection
+again, use **Clear**, or press **Escape** to release it. Keyboard Tab focuses
+points and names, and Enter/Space selects a point. Coincident points remain
+individually inspectable by their legend entries. The evidence table also has
+a **Quadrant region** column, including `Not plotted` when evidence is missing.
+Region labels express fixed reference-line combinations rather than an
+assessment of someone's character, effort or performance.
+
 Both maps show a compact evidence table and an independent colour-coded marker
 legend. The position and area of a dot describe only recorded Git patterns,
 not someone's personality, work hours, productivity or quality. Generated

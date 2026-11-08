@@ -10,9 +10,9 @@
  * dates and release-event dates are intentionally never conflated. Import
  * bounds, missing tags and incomplete release ancestry stay visible.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-contribution-signature-20261108-1';
-import {dailyEvidence} from './momentum.js?v=git-contribution-signature-20261108-1';
-import {normalizeWorkingDays,isScheduledDay,continuityScheduleStatus,continuityCountBalance} from './working-patterns.js?v=git-contribution-signature-20261108-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-quadrant-inspection-20261108-1';
+import {dailyEvidence} from './momentum.js?v=git-quadrant-inspection-20261108-1';
+import {normalizeWorkingDays,isScheduledDay,continuityScheduleStatus,continuityCountBalance} from './working-patterns.js?v=git-quadrant-inspection-20261108-1';
 
 export const CONTINUITY_WINDOWS=Object.freeze([8,12,20]);
 export const DEFAULT_CONTINUITY_WINDOW=20;
