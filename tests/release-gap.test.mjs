@@ -201,7 +201,7 @@ test('Pulse lens and knobs have a complete UI and session round-trip',()=>{
   for (const id of ['pulse-gap-settings','pulse-gap-horizon','pulse-busy-day','pulse-release-lines','pulse-gap-summary'])
     assert.ok(html.includes(`id="${id}"`));
   assert.match(html,/data-pulse-lens="release-gap"/);
-  assert.match(app,/pulseLens:state\.pulseLens,pulseGapHorizon:state\.pulseGapHorizon,pulseBusyDay:state\.pulseBusyDay,pulseReleaseLines:state\.pulseReleaseLines/);
+  assert.match(app,/pulseLens:state\.pulseLens,[^\n]*pulseGapHorizon:state\.pulseGapHorizon,pulseBusyDay:state\.pulseBusyDay,pulseReleaseLines:state\.pulseReleaseLines/);
   assert.match(app,/state\.pulseLens=s\.pulseLens/);
   assert.match(app,/pulseReleaseGap=gapMode\?releaseGapMatrix\(perspectiveIndex,view\.contributors/);
   assert.match(app,/fullCreditLines:state\.pulseReleaseLines/);

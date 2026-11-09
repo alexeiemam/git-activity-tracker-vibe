@@ -7,7 +7,7 @@
  * Baseline snapshots never count as incremental releases. A publisher/tagger
  * alone is not credited with authored release involvement or deployed work.
  */
-import {validDate} from './domain.js?v=git-quadrant-inspection-20261108-1';
+import {validDate} from './domain.js?v=git-motion-explorer-20261108-1';
 
 const number=value=>typeof value==='number'&&Number.isFinite(value)&&value>=0?value:null;
 

@@ -3,34 +3,36 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=git-quadrant-inspection-20261108-1';
-import { generateDemoLog } from './demo-data.js?v=git-quadrant-inspection-20261108-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-quadrant-inspection-20261108-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-quadrant-inspection-20261108-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-quadrant-inspection-20261108-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-quadrant-inspection-20261108-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=git-quadrant-inspection-20261108-1';
-import { releaseScorecard } from './release-scorecard.js?v=git-quadrant-inspection-20261108-1';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=git-quadrant-inspection-20261108-1';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=git-quadrant-inspection-20261108-1';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=git-quadrant-inspection-20261108-1';
-import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=git-quadrant-inspection-20261108-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-quadrant-inspection-20261108-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-quadrant-inspection-20261108-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-quadrant-inspection-20261108-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-quadrant-inspection-20261108-1';
-import { buildStoryAnalysis } from './stories.js?v=git-quadrant-inspection-20261108-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-quadrant-inspection-20261108-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-quadrant-inspection-20261108-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-quadrant-inspection-20261108-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-quadrant-inspection-20261108-1';
-import { downloadFilename } from './download-names.js?v=git-quadrant-inspection-20261108-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-quadrant-inspection-20261108-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-quadrant-inspection-20261108-1';
-import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-quadrant-inspection-20261108-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-quadrant-inspection-20261108-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-quadrant-inspection-20261108-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-quadrant-inspection-20261108-1';
+} from './domain.js?v=git-motion-explorer-20261108-1';
+import { generateDemoLog } from './demo-data.js?v=git-motion-explorer-20261108-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-motion-explorer-20261108-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-motion-explorer-20261108-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-motion-explorer-20261108-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-motion-explorer-20261108-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=git-motion-explorer-20261108-1';
+import { releaseScorecard } from './release-scorecard.js?v=git-motion-explorer-20261108-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=git-motion-explorer-20261108-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=git-motion-explorer-20261108-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=git-motion-explorer-20261108-1';
+import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=git-motion-explorer-20261108-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-motion-explorer-20261108-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-motion-explorer-20261108-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-motion-explorer-20261108-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-motion-explorer-20261108-1';
+import { buildStoryAnalysis } from './stories.js?v=git-motion-explorer-20261108-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-motion-explorer-20261108-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-motion-explorer-20261108-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-motion-explorer-20261108-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-motion-explorer-20261108-1';
+import { downloadFilename } from './download-names.js?v=git-motion-explorer-20261108-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-motion-explorer-20261108-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-motion-explorer-20261108-1';
+import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-motion-explorer-20261108-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-motion-explorer-20261108-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-motion-explorer-20261108-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-motion-explorer-20261108-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=git-motion-explorer-20261108-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=git-motion-explorer-20261108-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -46,7 +48,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-quadrant-inspection-20261108-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-motion-explorer-20261108-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -195,7 +197,9 @@ let analysis = null;
 let pendingImport = null;
 let rawHistoryEnrichment=[];
 let tableRows = [];
+const defaultMotionState = () => ({motionViews:{...DEFAULT_MOTION_VIEWS},motionWeeks:8,motionStep:1,motionTrail:'short',motionLabels:'hover',motionLevelDisplay:'strip',motionFrameIndex:-1,motionSelectedId:null});
 const state = {
+  ...defaultMotionState(),
   selectedIds: new Set(), search: '',
   period: 'all', start: null, end: null,
   includeMerges: false, includeReverts: true,
@@ -678,7 +682,7 @@ function syncScopeAfterLoad() {
   const desiredStart = dateAtDay(dayNumber(anniversary)+1);
   const initialStart = min > desiredStart ? min : desiredStart;
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
-    metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
+    ...defaultMotionState(),metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{},
     viewMode:'observatory',storyPerspective:'team',storyFocus:'selection',storyTopic:'all',storyCategory:'noteworthy',storyShowAll:false,
     storyFindingId:null,storyMonth:null,storyPairA:null,storyPairB:null,storyTrail:[],storyDismissed:new Set() });
@@ -696,6 +700,12 @@ function syncScopeAfterLoad() {
     if (['monthly','daily','weekly'].includes(s.pulseMode)) state.pulseMode=s.pulseMode;
     if (['activity','release-gap','momentum','level','continuity'].includes(s.pulseLens)) state.pulseLens=s.pulseLens;
     if (SIGNATURE_MODES.includes(s.continuityView)) state.continuityView=s.continuityView;
+    if(s.motionViews&&typeof s.motionViews==='object'&&!Array.isArray(s.motionViews)) for(const lens of MOTION_MODES){if(['cells','motion'].includes(s.motionViews[lens]))state.motionViews[lens]=s.motionViews[lens];}
+    if(MOTION_WINDOWS.includes(s.motionWeeks))state.motionWeeks=s.motionWeeks;
+    if(MOTION_STEPS.includes(s.motionStep))state.motionStep=s.motionStep;
+    if(MOTION_TRAILS.includes(s.motionTrail))state.motionTrail=s.motionTrail;
+    if(MOTION_LABELS.includes(s.motionLabels))state.motionLabels=s.motionLabels;
+    if(['strip','map'].includes(s.motionLevelDisplay))state.motionLevelDisplay=s.motionLevelDisplay;
     if (state.pulseMode==='weekly'&&state.pulseLens!=='continuity')state.pulseMode='monthly';
     if (GAP_HORIZONS.includes(s.pulseGapHorizon)) state.pulseGapHorizon=s.pulseGapHorizon;
     if (BUSY_DAY_THRESHOLDS.includes(s.pulseBusyDay)) state.pulseBusyDay=s.pulseBusyDay;
@@ -807,7 +817,7 @@ function changeDate() {
 }
 function resetFilters() {
   Object.assign(state,{ period:'all',start:sourceDateBounds().min,end:sourceDateBounds().max,
-    includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
+    ...defaultMotionState(),includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
@@ -1062,6 +1072,7 @@ function hidePulsePopover() {
   pulsePopoverPinned = false;
 }
 
+let stopMotionExplorer = null;
 let pulseReleaseGap = null;
 let pulseMomentum = null;
 let pulseLevel = null;
@@ -1412,6 +1423,7 @@ function renderDailyPulse(view) {
 }
 
 function renderPulse(view) {
+  if(stopMotionExplorer){stopMotionExplorer();stopMotionExplorer=null;}
   hidePulsePopover();
   const daily=state.pulseMode==='daily',weekly=state.pulseMode==='weekly';
   const continuityMode=state.pulseLens==='continuity';
@@ -1433,13 +1445,20 @@ function renderPulse(view) {
     {weeks:state.pulseContinuityWeeks,meaningfulLines:state.pulseMeaningfulLines,
       workingDaysById:Object.fromEntries(mergeGroups.map((g,i)=>[String(i),normalizeWorkingDays(g.workingDays)]))}):null;
   const signatureMode=continuityMode&&state.continuityView!=='days';
+  const motionLens=continuityMode?state.continuityView:state.pulseLens;
+  const motionPossible=MOTION_MODES.includes(motionLens);
+  const motionVisible=motionPossible&&state.motionViews[motionLens]==='motion';
+  const motionSelector=$('pulse-motion-selector');
+  motionSelector.hidden=!motionPossible;
+  document.querySelectorAll('[data-motion-view]').forEach(button=>{const on=button.dataset.motionView===(motionVisible?'motion':'cells');button.classList.toggle('active',on);button.setAttribute('aria-pressed',String(on));
+    button.textContent=button.dataset.motionView==='motion'?'Time explorer':(signatureMode?'Snapshot':'Cells');});
   const signature=signatureMode?signatureMatrix(perspectiveIndex,pulseContinuity,view.contributors,{from:view.start,to:view.end},{temporal:timing}):null;
   $('pulse-gap-settings').hidden=!gapMode;
   $('pulse-momentum-settings').hidden=!momentumMode;
   $('pulse-level-settings').hidden=!levelMode;
   $('pulse-continuity-settings').hidden=!continuityMode;
   if(continuityMode)renderWorkingPatterns(view);
-  $('pulse-mode-control').hidden=signatureMode;
+  $('pulse-mode-control').hidden=signatureMode||motionVisible;
   document.querySelectorAll('[data-continuity-view]').forEach(btn=>{const selected=btn.dataset.continuityView===state.continuityView;btn.classList.toggle('active',selected);btn.setAttribute('aria-pressed',String(selected));});
   $('pulse-temporal-settings').hidden=false;
   $('pulse-gap-horizon').value=String(state.pulseGapHorizon);
@@ -1465,7 +1484,7 @@ function renderPulse(view) {
   $('pulse-level-summary').innerHTML=levelMode&&view.contributors.length?pulseLevelSummary(pulseLevel):'';
   $('pulse-continuity-summary').hidden=!continuityMode||!view.contributors.length||(signatureMode&&!(['signature','days'].includes(state.continuityView)));
   $('pulse-continuity-summary').innerHTML=continuityMode&&view.contributors.length?(signatureMode?(state.continuityView==='signature'?renderSignatureSummary(signature):''):pulseContinuitySummary(pulseContinuity)):'';
-  setText('pulse-hint',signatureMode
+  setText('pulse-hint',motionVisible?'Scrub or play fully observed calendar-week windows. Select a contributor by marker or legend to spotlight their path; choose fading trails to inspect movement. Coordinates retain the same scale across the whole animation. Empty or incomplete evidence is never scored as zero.' :signatureMode
     ? state.continuityView==='signature'
       ? 'Three independent weekly bands: count-first expected days, fixed-scale authored-only output per expected day, and authored inclusion in tagged releases. Partial weeks remain visible but do not enter quadrant ratios. Select a week to inspect its count-first continuity and release events.'
       : state.continuityView==='delivery'
@@ -1489,17 +1508,37 @@ function renderPulse(view) {
     container.innerHTML=empty('Select contributors and a valid time window.');
     $('pulse-key').innerHTML=legend||intensityLegend(makeIntensityScale([]));
   } else {
-    const scale=signatureMode?null:continuityMode?(daily?renderContinuityDailyPulse(view):renderContinuityPeriodPulse(view,weekly?'weekly':'monthly')):daily?renderDailyPulse(view):renderMonthlyPulse(view);
-    if(signatureMode){
+    const scale=motionVisible||signatureMode?null:continuityMode?(daily?renderContinuityDailyPulse(view):renderContinuityPeriodPulse(view,weekly?'weekly':'monthly')):daily?renderDailyPulse(view):renderMonthlyPulse(view);
+    if(motionVisible){
+      const colours=Object.fromEntries(view.contributors.map(c=>[String(c.id),color(c.id)]));
+      const motion=buildMotionScenes(perspectiveIndex,view.contributors,{from:view.start,to:view.end},motionLens,{
+        weeks:state.motionWeeks,step:state.motionStep,trail:state.motionTrail,labels:state.motionLabels,
+        levelDisplay:state.motionLevelDisplay,temporal:timing,meaningfulLines:state.pulseMeaningfulLines,
+        workingDaysById:Object.fromEntries(mergeGroups.map((g,i)=>[String(i),normalizeWorkingDays(g.workingDays)])),
+        continuityWeeks:state.pulseContinuityWeeks,gapHorizon:state.pulseGapHorizon,
+        busyDay:state.pulseBusyDay,releaseLines:state.pulseReleaseLines,dailyChurn:state.pulseDailyChurn,
+        momentumWorkdays:state.pulseMomentumWorkdays,levelWorkdays:state.pulseLevelWorkdays});
+      const options={weeks:state.motionWeeks,step:state.motionStep,trail:state.motionTrail,labels:state.motionLabels,
+        index:state.motionFrameIndex,selectedId:state.motionSelectedId};
+      container.innerHTML=renderMotionExplorer(motion,options,colours);
+      stopMotionExplorer=bindMotionExplorer(container,motion,options,colours,(key,value,rerender)=>{
+        const fields={weeks:'motionWeeks',step:'motionStep',trail:'motionTrail',labels:'motionLabels',
+          levelDisplay:'motionLevelDisplay',index:'motionFrameIndex',selectedId:'motionSelectedId'};
+        if(!Object.hasOwn(fields,key))return;
+        state[fields[key]]=value;
+        if(rerender){state.motionFrameIndex=-1;renderPulse(view);}
+      });
+    }
+    if(signatureMode&&!motionVisible){
       const colours=Object.fromEntries(view.contributors.map(c=>[String(c.id),color(c.id)]));
       container.innerHTML=state.continuityView==='signature'?renderContributionSignature(signature,{colours}):renderSignatureQuadrant(signature,state.continuityView,{colours});
       if(state.continuityView!=='signature')bindSignatureQuadrant(container);
     }
-    $('pulse-key').innerHTML=signatureMode?(state.continuityView==='signature'?renderSignatureLegend():
+    $('pulse-key').innerHTML=motionVisible?'<span class="signature-axis-note">Shared plot scale across frames / observed Git evidence, not performance</span>':signatureMode?(state.continuityView==='signature'?renderSignatureLegend():
       '<span class="signature-axis-note">Fixed reference lines · no contributor rankings or inferred work hours</span>'):
       legend||(levelMode?velocityLegend():intensityLegend(scale,n=>number.format(n)));
-    setText('pulse-context',signatureMode?`CONTRIBUTION ${state.continuityView==='signature'?'SIGNATURE · THREE WEEKLY TRACKS':state.continuityView.toUpperCase()+' QUADRANT · SELECTED PERIOD'}`:signalMode?`${caption} / ${daily?'DAILY':weekly?'WEEKLY':'MONTHLY'} · ${continuityMode?'TWO SEPARATE OBSERVATION TRACKS':levelMode?'FIXED ABSOLUTE INDEX · INDEPENDENT OF COHORT':`FIXED ${momentumMode?'DIVERGING −100 TO +100':'0–100'} SCALE`}`:`${caption} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(scale.max)} SCALE`);
-    container.scrollLeft=scrollToLatest?container.scrollWidth:oldScroll;
+    setText('pulse-context',motionVisible?`TIME EXPLORER / ${motionLens.toUpperCase()} / ${state.motionWeeks}-WEEK WINDOWS`:signatureMode?`CONTRIBUTION ${state.continuityView==='signature'?'SIGNATURE · THREE WEEKLY TRACKS':state.continuityView.toUpperCase()+' QUADRANT · SELECTED PERIOD'}`:signalMode?`${caption} / ${daily?'DAILY':weekly?'WEEKLY':'MONTHLY'} · ${continuityMode?'TWO SEPARATE OBSERVATION TRACKS':levelMode?'FIXED ABSOLUTE INDEX · INDEPENDENT OF COHORT':`FIXED ${momentumMode?'DIVERGING −100 TO +100':'0–100'} SCALE`}`:`${caption} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(scale.max)} SCALE`);
+    container.scrollLeft=motionVisible?0:(scrollToLatest?container.scrollWidth:oldScroll);
   }
   pulsePreviousMode=state.pulseMode;
   pulsePreviousRange=range;
@@ -2345,7 +2384,7 @@ function sessionPayload() {
     mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails],workingDays:normalizeWorkingDays(g.workingDays)})),
     scope:{selectedEmails,period:state.period,start:state.start,end:state.end,metric:state.metric,mode:state.mode,denominator:state.denominator,
       includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode,
-      pulseLens:state.pulseLens,pulseGapHorizon:state.pulseGapHorizon,pulseBusyDay:state.pulseBusyDay,pulseReleaseLines:state.pulseReleaseLines,pulseDailyChurn:state.pulseDailyChurn,pulseMomentumWorkdays:state.pulseMomentumWorkdays,pulseLevelWorkdays:state.pulseLevelWorkdays,pulseContinuityWeeks:state.pulseContinuityWeeks,continuityView:state.continuityView,pulseTemporalPeriod:state.pulseTemporalPeriod,pulseTemporalChurn:state.pulseTemporalChurn,pulseMeaningfulLines:state.pulseMeaningfulLines,
+      pulseLens:state.pulseLens,motionViews:state.motionViews,motionWeeks:state.motionWeeks,motionStep:state.motionStep,motionTrail:state.motionTrail,motionLabels:state.motionLabels,motionLevelDisplay:state.motionLevelDisplay,pulseGapHorizon:state.pulseGapHorizon,pulseBusyDay:state.pulseBusyDay,pulseReleaseLines:state.pulseReleaseLines,pulseDailyChurn:state.pulseDailyChurn,pulseMomentumWorkdays:state.pulseMomentumWorkdays,pulseLevelWorkdays:state.pulseLevelWorkdays,pulseContinuityWeeks:state.pulseContinuityWeeks,continuityView:state.continuityView,pulseTemporalPeriod:state.pulseTemporalPeriod,pulseTemporalChurn:state.pulseTemporalChurn,pulseMeaningfulLines:state.pulseMeaningfulLines,
       rhythmDisplay:state.rhythmDisplay,rhythmTab:state.rhythmTab,seasonMode:state.seasonMode,seasonYears:state.seasonYears?[...state.seasonYears]:null,
       rhythmFocusEmail:emailForId(state.rhythmFocus),
       impactTab:state.impactTab,impactMetric:state.impactMetric,impactAreaMode:state.impactAreaMode,
@@ -2602,6 +2641,7 @@ const ACTIONS={
   'reset-filters':resetFilters,
   'trend-mode':(_e,t)=>{state.trend=t.dataset.trend;if(analysis)renderTrend(analysis);},
   'pulse-mode':(_e,t)=>{if(t.dataset.pulseMode==='weekly'&&state.pulseLens!=='continuity')return;state.pulseMode=t.dataset.pulseMode;updateControls();if(analysis)renderPulse(analysis);},
+  'pulse-motion-view':(_e,t)=>{const lens=state.pulseLens==='continuity'?state.continuityView:state.pulseLens;if(!MOTION_MODES.includes(lens))return;if(!['cells','motion'].includes(t.dataset.motionView))return;state.motionViews[lens]=t.dataset.motionView;state.motionFrameIndex=-1;if(analysis)renderPulse(analysis);},
   'pulse-lens':(_e,t)=>{const previous=state.pulseLens;state.pulseLens=t.dataset.pulseLens;if(previous!=='continuity'&&state.pulseLens==='continuity')state.pulseMode='weekly';else if(state.pulseMode==='weekly'&&state.pulseLens!=='continuity')state.pulseMode='monthly';updateControls();if(analysis)renderPulse(analysis);},
   'continuity-view':(_e,t)=>{if(!SIGNATURE_MODES.includes(t.dataset.continuityView))return;state.continuityView=t.dataset.continuityView;updateControls();if(analysis)renderPulse(analysis);},
   'rhythm-tab':(_e,t)=>{state.rhythmTab=t.dataset.rhythmTab;seasonHover=null;seasonPinned=null;renderRhythmExplorer(analysis);},

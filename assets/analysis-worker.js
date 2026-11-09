@@ -1,10 +1,10 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-quadrant-inspection-20261108-1';
-import { impactAnalysis } from './impact.js?v=git-quadrant-inspection-20261108-1';
-import { buildStoryAnalysis } from './stories.js?v=git-quadrant-inspection-20261108-1';
-import { buildEvidenceIndex } from './perspectives.js?v=git-quadrant-inspection-20261108-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-quadrant-inspection-20261108-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-quadrant-inspection-20261108-1';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-motion-explorer-20261108-1';
+import { impactAnalysis } from './impact.js?v=git-motion-explorer-20261108-1';
+import { buildStoryAnalysis } from './stories.js?v=git-motion-explorer-20261108-1';
+import { buildEvidenceIndex } from './perspectives.js?v=git-motion-explorer-20261108-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-motion-explorer-20261108-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-motion-explorer-20261108-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;

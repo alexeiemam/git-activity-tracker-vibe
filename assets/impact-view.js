@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=git-quadrant-inspection-20261108-1';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=git-quadrant-inspection-20261108-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=git-quadrant-inspection-20261108-1';
+import { IMPACT_METRICS } from './impact.js?v=git-motion-explorer-20261108-1';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=git-motion-explorer-20261108-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=git-motion-explorer-20261108-1';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});

@@ -865,3 +865,68 @@ changes, binary-only work, reviews, design, support, unavailable branches,
 and unequal responsibilities remain limitations. Unlike a peer-optimised
 winner chart, the quadrants' reference lines and numeric axes retain their
 meaning when contributors are selected or deselected.
+
+## Time Explorer: spatial movement through selected history
+
+Activity Pulse now has **Time explorer** beside its existing **Cells** view
+(or **Snapshot** in the two Signature quadrants). The two quadrants open in
+Time Explorer by default; the other four Pulse lenses retain their familiar
+heatmaps as the default. The original numbered, hoverable quadrant snapshot and
+its full evidence inspector remain available without changing any scores.
+
+**Navigation:** Detailed analytical workbench -> Activity Pulse -> choose a
+lens. For the existing quadrants, first choose Contribution continuity, then
+Delivery quadrant or Contribution quadrant. Use the conspicuous **Cells /
+Time explorer** (or **Snapshot / Time explorer**) control above the plot.
+
+**Shared playback** uses a fully observed moving calendar-week window within
+the global date selection. Choose 4, 8, 12 or 20 weeks and advance by 1, 2 or 4
+weeks. The most recent *complete* Sunday-ending window is always reachable;
+partial edge weeks are not silently padded with zero activity. If the selection
+is too short, the empty-state window selector offers shorter windows. The
+slider, previous/next, first/last and Play/Pause controls are equivalent ways to
+inspect the same frames. Playback pauses on view changes and when the browser
+tab becomes hidden; it never alters imported history.
+
+Short (last five frames), full and disabled trails show actual movement only
+between comparable frame positions, with direction arrows. Use the contributor
+legend, pointer hover, keyboard focus or point selection to inspect identity,
+classification, both coordinates, evidence and start-to-current movement.
+Click/tap to spotlight an identity and fade the others; Escape clears the
+selection. Marker numbers match the legend. Labels can appear on hover,
+for every visible point, or not at all. The chart and the point inspector
+remain usable on narrow/mobile screens. A missing or insufficient coordinate
+remains **unplotted**; there is no invented zero position.
+
+### Companion spatial views and their independent axes
+
+| Pulse lens | Horizontal position | Vertical position |
+| --- | --- | --- |
+| **Authored activity -> Activity map** | Meaningful authored dates / all observed calendar dates | Non-VERSION changed lines / observed calendar date (log scale) |
+| **Release gap x activity -> Gap/activity map** | Weighted release-gap proportion of configured horizon | Average daily authored support from commits, churn and distributed changes |
+| **Contribution momentum -> Momentum phase-space** | Absolute recorded contribution index / observed date (log scale) | Latest valid own-history momentum (-100 to +100) |
+| **Absolute velocity -> Velocity map** | Schedule-adjusted expected-day attainment | Absolute contribution index / expected day (log scale) |
+| **Absolute velocity -> Distance strip** | Absolute contribution index / observed calendar day (log scale) | Fixed identity lanes, **not** contributor rankings |
+| **Delivery quadrant -> Delivery trajectory** | Authored participation / eligible complete incremental releases | Released changed lines / eligible complete release (log scale) |
+| **Contribution quadrant -> Contribution trajectory** | Mean capped expected-day attainment over complete weeks | Authored-only output index / expected day (log scale) |
+
+The Absolute Velocity Time Explorer has its own **Display** switch between the
+landscape and the distance strip. Both preserve a common numeric scale across
+the selected animation; the strip keeps a fixed lane for each contributor so
+changes in separation are visible without ranking or celebrating individuals.
+The authored-only Contribution quadrant excludes release bonuses, while
+Delivery uses tag dates and complete incremental tag ancestry. Neither
+reclassifies commits authored in February as March authored activity merely
+because the tag was published in March. The other metrics reuse their existing
+configured thresholds and unchanged calculation engines.
+
+Each animation holds **all plotted positions against one axis scale** computed
+for the selected frames. There are no peer-dependent colour resets, hidden
+rescalings from one frame to the next, or motion paths across unknown evidence.
+The evidence inspector shows numeric delta X/Y from the first comparable
+window and the average normalised positional movement per step as a descriptive
+variation measure. It is not a productivity grade. Historical point locations
+and the current scrubbing position are calculated locally. Window, step,
+trail, label, display, and selected view preferences persist in session exports;
+older exports use conservative defaults. Git timestamps and numstat do not
+measure work hours, effort, quality, collaboration or impact outside Git.

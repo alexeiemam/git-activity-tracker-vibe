@@ -11,9 +11,9 @@
  * This is NOT a rating of people or performance. Line counts miss pairing,
  * reviews, binary work, and many other kinds of contribution.
  */
-import { dayNumber, dateAtDay, validDate } from './domain.js?v=git-quadrant-inspection-20261108-1';
-import { nonVersionChurn, temporalActivityByPerson, emptyTemporalDay, MAX_GAP_DISTRIBUTION_RELIEF, temporalOptions } from './temporal-activity.js?v=git-quadrant-inspection-20261108-1';
-export { nonVersionChurn } from './temporal-activity.js?v=git-quadrant-inspection-20261108-1';
+import { dayNumber, dateAtDay, validDate } from './domain.js?v=git-motion-explorer-20261108-1';
+import { nonVersionChurn, temporalActivityByPerson, emptyTemporalDay, MAX_GAP_DISTRIBUTION_RELIEF, temporalOptions } from './temporal-activity.js?v=git-motion-explorer-20261108-1';
+export { nonVersionChurn } from './temporal-activity.js?v=git-motion-explorer-20261108-1';
 
 export const GAP_HORIZONS = Object.freeze([30, 60, 90]);
 export const BUSY_DAY_THRESHOLDS = Object.freeze([2, 4, 6]);

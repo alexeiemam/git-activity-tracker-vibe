@@ -4,7 +4,7 @@
  * Findings are descriptive, deterministic and sample-gated. No inferred
  * employment, effort, productivity, deployment or missing-branch outcomes.
  */
-import { dateAtDay, dayNumber, dayOfWeek, fileArea, validDate } from './domain.js?v=git-quadrant-inspection-20261108-1';
+import { dateAtDay, dayNumber, dayOfWeek, fileArea, validDate } from './domain.js?v=git-motion-explorer-20261108-1';
 
 const DAY_MS = 86_400_000;
 const min = (a,b) => a < b ? a : b;
