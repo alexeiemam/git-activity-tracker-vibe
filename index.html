@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=git-incremental-activity-20261113-1">
+  <link rel="stylesheet" href="./assets/app.css?v=git-ingest-input-20261113-1">
 </head>
 <body>
   <div class="page">
@@ -184,6 +184,7 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
           <p class="input-hint">Run inside your repository. This uses up to three bounded Heroku Release List pages per environment (up to 3,000 events; later pages require the authenticated Heroku API and Python 3). It fetches tags from <code>origin</code>, adds GitHub Releases via <code>gh</code>, independently captures up to 3,000 Heroku releases each from remotes <code>STAG</code>, <code>BETA</code> and <code>PROD</code> (when authenticated), and copies authored history without a committer-date cutoff. It also checks up to 18 deployment SHAs against local Git objects and imports at most 175 additional commits per missing branch tip. To opt into at most four bounded GitHub fetches for unavailable SHA objects, run <code>export GIT_SIGNALS_FETCH_DEPLOYMENT_SHAS=1</code> before the command. These fetches may update local shallow-repository metadata; failure leaves deployment evidence explicitly unresolved. No credentials or Heroku config values are requested; the imported release metadata and Git history stay in your browser. Incomplete Heroku access is reported per environment. The command uses macOS <code>pbcopy</code>; on other systems, remove the final pipe and copy terminal output.</p>
           <label class="field-label" for="log-input">Git history + optional GitHub and Heroku release evidence</label>
           <textarea id="log-input" placeholder="TAG|v8.9.1||hash|commit|2026-10-01T09:12:00+01:00&#10;GHRELEASE|base64-encoded-GitHub-Release-metadata&#10;HEROKU|PROD|base64-encoded-Heroku-release-list&#10;COMMIT|hash|email|name|author-time|committer-time|subject|parents&#10;25  8  app/models/example.rb" spellcheck="false"></textarea>
+          <p class="input-hint">The paste field clears after a successful import. Your evidence remains in the current session and its export.</p>
           <div class="source-actions"><button type="button" data-action="analyse" class="button primary">Analyse history <span aria-hidden="true">→</span></button><button type="button" data-action="load-demo" class="button soft">Explore demo dataset</button><span id="parse-error" class="error-text" role="alert" aria-live="polite"></span></div>
         </div>
       </details>
@@ -340,6 +341,6 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=git-incremental-activity-20261113-1"></script>
+  <script type="module" src="./assets/app.js?v=git-ingest-input-20261113-1"></script>
 </body>
 </html>

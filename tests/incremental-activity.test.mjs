@@ -3,7 +3,7 @@ import test from 'node:test';
 import {Worker} from 'node:worker_threads';
 import {readFileSync} from 'node:fs';
 import {parseGitHistory,buildAnalysis} from '../assets/domain.js';
-import {mergeGitHistories,isCompleteRecapture,compactAdditionalCapture} from '../assets/history-merge.js';
+import {mergeGitHistories,isCompleteRecapture,compactAdditionalCapture,hasImportableEvidence} from '../assets/history-merge.js';
 import {extendContributorGroups} from '../assets/external-identities.js';
 
 const hash=n=>n.toString(16).padStart(40,'0');
@@ -134,9 +134,10 @@ test('incremental update worker changes its cached source only after validated m
     const merged=await run('append',{raw:addition});
     assert.equal(merged.history.commits.length,3);
     assert.equal(merged.changes.commits.added,1);
-    const noChange=await run('append',{raw:'COMMIT|bad'});
-    assert.equal(noChange.changed,false,'malformed/unrecognised lines cannot mutate the existing worker dataset');
-    const second=await run('append',{raw:addition});assert.equal(second.changed,false);
+    await assert.rejects(run('append',{raw:'COMMIT|bad'}),/No usable activity found/,
+      'invalid pastes are errors, so the UI keeps them available for correction');
+    const second=await run('append',{raw:addition});assert.equal(second.changed,false,
+      'a fully overlapping valid import is successfully processed without double-counting');
     const view=await run('build',{
       groups:[{displayName:'Alice',emails:['alice@demo.test']},{displayName:'Bob',emails:['bob@demo.test']}],
       scope:{start:'2026-11-01',end:'2026-11-13',selectedIds:new Set(['0','1'])},
@@ -157,4 +158,32 @@ test('the shipped dashboard exposes incremental import independently of identity
   assert.match(app,/extendContributorGroups\(mergeGroups,identityMeta/);
   assert.match(app,/if\(localDatasetId\)\{[\s\S]*saveLocalHistory\(localDatasetId,sessionPayload\(\)\)/);
   assert.match(app,/importRevision\+\+;computedKey=null;computedResult=null;/);
+});
+
+test('valid imports are distinguishable from ignored or malformed pastes',()=>{
+  const parse=raw=>parseGitHistory(raw,{allowEmpty:true});
+  assert.equal(hasImportableEvidence(parse(commit(1))),true);
+  assert.equal(hasImportableEvidence(parse(tag('v1',hash(1)))),true);
+  assert.equal(hasImportableEvidence(parse('GHSTATUS|ok')),true,'status-only captures are usable');
+  assert.equal(hasImportableEvidence(parse('HEROKUSTATUS|BETA|partial')),true);
+  assert.equal(hasImportableEvidence(parse(`HISTORYSHALLOW|${hash(1)}`)),true);
+  assert.equal(hasImportableEvidence(parse(`HISTORYENRICH|${hash(1)}|complete|0`)),true);
+  assert.equal(hasImportableEvidence(parse('COMMIT|bad')),false);
+  assert.equal(hasImportableEvidence(parse('GHRELEASE|invalid')),false,'warnings alone do not qualify as a valid ingest');
+  assert.equal(hasImportableEvidence(parse('random text')),false);
+});
+
+test('pasted history is cleared after success, but never becomes the session source of truth',()=>{
+  const app=readFileSync(new URL('../assets/app.js',import.meta.url),'utf8');
+  assert.match(app,/parsedHistory=history;activeRawLog=raw;[\s\S]*?\$\('log-input'\)\.value='';/,
+    'initial successful ingestion clears the primary paste field');
+  assert.match(app,/parsedHistory=history;activeRawLog=payload.rawLog;[\s\S]*?\$\('log-input'\)\.value='';/,
+    'restoring a session leaves the primary paste field empty');
+  assert.doesNotMatch(app,/\$\('log-input'\)\.value=(?:activeRawLog|payload.rawLog)/,
+    'adding evidence and restoring must not reinsert the full capture into the field');
+  assert.match(app,/rawLog:activeRawLog/, 'session export still uses the canonical imported capture');
+  assert.match(app,/if\(!result.changed\)\{[\s\S]*?\$\('append-log-input'\)\.value='';[\s\S]*?toggleAddActivity\(false\);/,
+    'an accepted fully overlapping capture closes and clears the add-activity form');
+  assert.match(app,/if\(!hasImportableEvidence\(incoming\)\)throw new Error/,
+    'invalid evidence is rejected before the successful merge path');
 });

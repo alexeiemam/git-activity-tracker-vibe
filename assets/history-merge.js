@@ -23,6 +23,15 @@ export function bestCaptureStatus(previous, incoming, provider='github') {
   return statusRank(incoming,provider) > statusRank(previous,provider) ? incoming : previous || 'not-captured';
 }
 
+/** An ignored/invalid paste must not be mistaken for a successful no-op import.
+ * Metadata-only updates (including status and ancestry records) are valid. */
+export function hasImportableEvidence(history) {
+  return ['commits','tags','githubReleases','herokuReleases','historyEnrichment','shallowBoundaries']
+    .some(key=>history?.[key]?.length>0) ||
+    (history?.githubStatus && history.githubStatus!=='not-captured') ||
+    Object.values(history?.herokuStatus||{}).some(status=>status!=='not-captured');
+}
+
 function preferredCommit(before, after) {
   // The SHA is authoritative. Never silently reassign an existing SHA to a
   // different author/date, even if a later paste is malformed.

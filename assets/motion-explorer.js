@@ -4,13 +4,13 @@
  * date selection. Author activity is dated by authorship; releases by tag date.
  * These coordinates describe recorded Git evidence, never attendance or quality.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-incremental-activity-20261113-1';
-import {mondayOfDate,continuityMatrix} from './continuity.js?v=git-incremental-activity-20261113-1';
-import {signatureMatrix,DELIVERY_REFERENCE_LINES,CONTRIBUTION_REFERENCE_INDEX} from './contribution-signature.js?v=git-incremental-activity-20261113-1';
-import {dailyEvidence} from './momentum.js?v=git-incremental-activity-20261113-1';
-import {momentumMatrix} from './momentum.js?v=git-incremental-activity-20261113-1';
-import {contributionLevelMatrix} from './contribution-level.js?v=git-incremental-activity-20261113-1';
-import {releaseGapMatrix} from './release-gap.js?v=git-incremental-activity-20261113-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=git-ingest-input-20261113-1';
+import {mondayOfDate,continuityMatrix} from './continuity.js?v=git-ingest-input-20261113-1';
+import {signatureMatrix,DELIVERY_REFERENCE_LINES,CONTRIBUTION_REFERENCE_INDEX} from './contribution-signature.js?v=git-ingest-input-20261113-1';
+import {dailyEvidence} from './momentum.js?v=git-ingest-input-20261113-1';
+import {momentumMatrix} from './momentum.js?v=git-ingest-input-20261113-1';
+import {contributionLevelMatrix} from './contribution-level.js?v=git-ingest-input-20261113-1';
+import {releaseGapMatrix} from './release-gap.js?v=git-ingest-input-20261113-1';
 
 export const MOTION_WINDOWS=Object.freeze([4,8,12,20]);
 export const MOTION_STEPS=Object.freeze([1,2,4]);

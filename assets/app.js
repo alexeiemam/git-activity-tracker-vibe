@@ -3,37 +3,37 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=git-incremental-activity-20261113-1';
-import { generateDemoLog } from './demo-data.js?v=git-incremental-activity-20261113-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-incremental-activity-20261113-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-incremental-activity-20261113-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-incremental-activity-20261113-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-incremental-activity-20261113-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=git-incremental-activity-20261113-1';
-import { releaseScorecard } from './release-scorecard.js?v=git-incremental-activity-20261113-1';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=git-incremental-activity-20261113-1';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=git-incremental-activity-20261113-1';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=git-incremental-activity-20261113-1';
-import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=git-incremental-activity-20261113-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-incremental-activity-20261113-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-incremental-activity-20261113-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-incremental-activity-20261113-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-incremental-activity-20261113-1';
-import { buildStoryAnalysis } from './stories.js?v=git-incremental-activity-20261113-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-incremental-activity-20261113-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-incremental-activity-20261113-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-incremental-activity-20261113-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-incremental-activity-20261113-1';
-import { downloadFilename } from './download-names.js?v=git-incremental-activity-20261113-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-incremental-activity-20261113-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-incremental-activity-20261113-1';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=git-incremental-activity-20261113-1';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture } from './history-merge.js?v=git-incremental-activity-20261113-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-incremental-activity-20261113-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-incremental-activity-20261113-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-incremental-activity-20261113-1';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=git-incremental-activity-20261113-1';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=git-incremental-activity-20261113-1';
+} from './domain.js?v=git-ingest-input-20261113-1';
+import { generateDemoLog } from './demo-data.js?v=git-ingest-input-20261113-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-ingest-input-20261113-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-ingest-input-20261113-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-ingest-input-20261113-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-ingest-input-20261113-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=git-ingest-input-20261113-1';
+import { releaseScorecard } from './release-scorecard.js?v=git-ingest-input-20261113-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=git-ingest-input-20261113-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=git-ingest-input-20261113-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=git-ingest-input-20261113-1';
+import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=git-ingest-input-20261113-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-ingest-input-20261113-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-ingest-input-20261113-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-ingest-input-20261113-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-ingest-input-20261113-1';
+import { buildStoryAnalysis } from './stories.js?v=git-ingest-input-20261113-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-ingest-input-20261113-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-ingest-input-20261113-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-ingest-input-20261113-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-ingest-input-20261113-1';
+import { downloadFilename } from './download-names.js?v=git-ingest-input-20261113-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-ingest-input-20261113-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-ingest-input-20261113-1';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=git-ingest-input-20261113-1';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=git-ingest-input-20261113-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-ingest-input-20261113-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-ingest-input-20261113-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-ingest-input-20261113-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=git-ingest-input-20261113-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=git-ingest-input-20261113-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -51,7 +51,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-incremental-activity-20261113-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-ingest-input-20261113-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -655,6 +655,9 @@ async function analyse() {
   catch(error) {finishProgress(generation,error);return setText('parse-error',error.message);}
   if (generation!==progressGeneration) return;
   parsedHistory=history;activeRawLog=raw;
+  // The imported capture is retained independently for session export and future merges.
+  // Clear only after parsing succeeds; on failure, leave the paste editable.
+  $('log-input').value='';
   $('append-history-panel').hidden=true;$('add-activity-toggle').setAttribute('aria-expanded','false');
   $('append-status').hidden=true;$('append-log-input').value='';
   ({commits:rawCommits,tags:rawTags,githubReleases:rawGithubReleases,
@@ -698,6 +701,7 @@ async function processAdditionalHistory(raw,generation) {
   showProgress('Reading additional history',10,'Using compatibility processing on this browser',generation);
   await yieldToUI();
   const incoming=parseGitHistory(raw,{allowEmpty:true});
+  if(!hasImportableEvidence(incoming))throw new Error('No usable activity found in the pasted capture.');
   const merged=mergeGitHistories(parsedHistory,incoming);
   return {...merged,replaceRaw:isCompleteRecapture(parsedHistory,incoming,merged.history)};
 }
@@ -723,7 +727,10 @@ async function appendActivity() {
     finishProgress(generation,null,'Already up to date','Overlapping commits and release events were not counted twice.');
     $('append-status').hidden=false;
     setText('append-status','No new activity found. Your current identities, filters and session are unchanged.');
-    setAppendBusy(false);return;
+    $('append-log-input').value='';
+    setAppendBusy(false);
+    toggleAddActivity(false);
+    return;
   }
 
   // From this point forward the combined, validated evidence becomes active.
@@ -735,7 +742,8 @@ async function appendActivity() {
   const previousRaw=activeRawLog;
   const delta=result.replaceRaw ? raw : compactAdditionalCapture(previousRaw,raw,parsedHistoryBeforeAppend,result.history);
   activeRawLog=result.replaceRaw ? raw : `${previousRaw.trimEnd()}\n${delta}`;
-  $('log-input').value=activeRawLog;
+  // The replacement field is not a mirror of the imported evidence. Keep it
+  // empty (or preserve a separately drafted replacement capture).
   const oldGroups=mergeGroups.length;
   identityMeta=makeIdentityCatalogue(rawCommits,rawGithubReleases,rawHerokuReleases);
   const extended=extendContributorGroups(mergeGroups,identityMeta,rawGithubReleases,rawHerokuReleases,rawCommits);
@@ -2609,7 +2617,8 @@ async function restoreSessionPayload(payload,filename='imported session') {
   mergeUndo = null;
   linkedOrderEditors.clear();
   renderMergeFeedback();
-  $('log-input').value=payload.rawLog;
+  // Restoring a session does not need to populate the paste field again.
+  $('log-input').value='';
   if(Number.isInteger(Number(payload.rangeYears)) && +payload.rangeYears>=1 && +payload.rangeYears<=5) $('range-select').value=String(payload.rangeYears);
   const emails=new Set(identityMeta.keys());
   const used=new Set();
