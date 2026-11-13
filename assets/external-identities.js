@@ -3,7 +3,7 @@
  * Synthetic keys never masquerade as a Git author email, and adding one to a
  * contributor group does not manufacture a Git commit.
  */
-import { autoMatchGithubPublishers } from './impact.js?v=git-motion-explorer-20261108-1';
+import { autoMatchGithubPublishers } from './impact.js?v=git-incremental-activity-20261113-1';
 
 const emailPattern=/^[^\s@<>]{1,100}@[^\s@<>]{1,120}$/;
 export const herokuIdentity=email=>`heroku:${String(email||'').trim().toLowerCase()}`;
@@ -55,4 +55,26 @@ export function reconcileProviderGroups(groups,external,github=[],commits=[]) {
     claimed.add(key);
   }
   return result;
+}
+
+/**
+ * An incremental import must never undo names, linked identities, working-day
+ * schedules or ordering chosen by the user. Known keys stay put. New Git
+ * emails are kept separate (guessing by display name would be destructive);
+ * provider identities are attached only when their exact/unique match is safe.
+ */
+export function extendContributorGroups(groups,catalogue,github=[],heroku=[],commits=[]) {
+  const result=groups.map(group=>({...group,emails:[...group.emails]}));
+  const known=new Set(result.flatMap(group=>group.emails));
+  const added=[];
+  for(const [email,meta] of catalogue) {
+    if(known.has(email) || email.startsWith('github:') || email.startsWith('heroku:'))continue;
+    result.push({displayName:meta.name || email,emails:[email]});
+    known.add(email);added.push(email);
+  }
+  const withProviders=reconcileProviderGroups(result,externalIdentities(github,heroku),github,commits);
+  for(const group of withProviders)for(const key of group.emails)if(!known.has(key)){
+    known.add(key);added.push(key);
+  }
+  return {groups:withProviders,added};
 }

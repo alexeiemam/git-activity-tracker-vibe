@@ -3,36 +3,37 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=git-motion-explorer-20261108-1';
-import { generateDemoLog } from './demo-data.js?v=git-motion-explorer-20261108-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-motion-explorer-20261108-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-motion-explorer-20261108-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-motion-explorer-20261108-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-motion-explorer-20261108-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=git-motion-explorer-20261108-1';
-import { releaseScorecard } from './release-scorecard.js?v=git-motion-explorer-20261108-1';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=git-motion-explorer-20261108-1';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=git-motion-explorer-20261108-1';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=git-motion-explorer-20261108-1';
-import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=git-motion-explorer-20261108-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-motion-explorer-20261108-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-motion-explorer-20261108-1';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-motion-explorer-20261108-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-motion-explorer-20261108-1';
-import { buildStoryAnalysis } from './stories.js?v=git-motion-explorer-20261108-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-motion-explorer-20261108-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-motion-explorer-20261108-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-motion-explorer-20261108-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-motion-explorer-20261108-1';
-import { downloadFilename } from './download-names.js?v=git-motion-explorer-20261108-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-motion-explorer-20261108-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-motion-explorer-20261108-1';
-import { externalIdentities, reconcileProviderGroups } from './external-identities.js?v=git-motion-explorer-20261108-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-motion-explorer-20261108-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-motion-explorer-20261108-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-motion-explorer-20261108-1';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=git-motion-explorer-20261108-1';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=git-motion-explorer-20261108-1';
+} from './domain.js?v=git-incremental-activity-20261113-1';
+import { generateDemoLog } from './demo-data.js?v=git-incremental-activity-20261113-1';
+import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-incremental-activity-20261113-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-incremental-activity-20261113-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-incremental-activity-20261113-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-incremental-activity-20261113-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=git-incremental-activity-20261113-1';
+import { releaseScorecard } from './release-scorecard.js?v=git-incremental-activity-20261113-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=git-incremental-activity-20261113-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=git-incremental-activity-20261113-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=git-incremental-activity-20261113-1';
+import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=git-incremental-activity-20261113-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=git-incremental-activity-20261113-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactReach, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=git-incremental-activity-20261113-1';
+import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=git-incremental-activity-20261113-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=git-incremental-activity-20261113-1';
+import { buildStoryAnalysis } from './stories.js?v=git-incremental-activity-20261113-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-incremental-activity-20261113-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-incremental-activity-20261113-1';
+import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-incremental-activity-20261113-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-incremental-activity-20261113-1';
+import { downloadFilename } from './download-names.js?v=git-incremental-activity-20261113-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-incremental-activity-20261113-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-incremental-activity-20261113-1';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=git-incremental-activity-20261113-1';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture } from './history-merge.js?v=git-incremental-activity-20261113-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-incremental-activity-20261113-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-incremental-activity-20261113-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-incremental-activity-20261113-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=git-incremental-activity-20261113-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=git-incremental-activity-20261113-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -42,13 +43,15 @@ let analysisWorker = null, workerSerial = 0, workerFaulted = false;
 const workerJobs = new Map();
 let renderGeneration = 0, progressGeneration = 0, progressTimer = null;
 let computedKey = null, computedResult = null, importRevision = 0;
-let sessionTransferBusy = false;
+let sessionTransferBusy = false, appendBusy = false;
+let parsedHistory = null, activeRawLog = ''; // Canonical imported text, independent of editable replacement field.
+let scopeFollowsLatest = true;
 
 function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-motion-explorer-20261108-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=git-incremental-activity-20261113-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -640,6 +643,7 @@ function skipMerge() {
   buildDashboard();
 }
 async function analyse() {
+  if(appendBusy || sessionTransferBusy)return;
   setText('parse-error','');
   const raw = $('log-input').value.trim();
   if (!raw) return setText('parse-error','Paste a git log or load the demo.');
@@ -650,6 +654,9 @@ async function analyse() {
   try {history=await processImportedHistory(raw,generation);}
   catch(error) {finishProgress(generation,error);return setText('parse-error',error.message);}
   if (generation!==progressGeneration) return;
+  parsedHistory=history;activeRawLog=raw;
+  $('append-history-panel').hidden=true;$('add-activity-toggle').setAttribute('aria-expanded','false');
+  $('append-status').hidden=true;$('append-log-input').value='';
   ({commits:rawCommits,tags:rawTags,githubReleases:rawGithubReleases,
     githubStatus,herokuReleases:rawHerokuReleases,herokuStatus,historyEnrichment:rawHistoryEnrichment,captureWarnings:githubWarnings}=history);
   importRevision++;computedKey=null;computedResult=null;
@@ -667,12 +674,121 @@ async function analyse() {
   renderMergeUI();
   $('merge-step').scrollIntoView({ behavior:'smooth', block:'start' });
 }
+function toggleAddActivity(open = $('append-history-panel').hidden) {
+  if(appendBusy)return;
+  $('append-history-panel').hidden=!open;
+  $('add-activity-toggle').setAttribute('aria-expanded',String(open));
+  if(open){$('append-log-input').focus({preventScroll:true});$('append-history-panel').scrollIntoView({behavior:'smooth',block:'nearest'});}
+  else $('add-activity-toggle').focus({preventScroll:true});
+}
+function setAppendBusy(busy) {
+  appendBusy=busy;
+  $('append-activity-btn').disabled=busy || sessionTransferBusy;
+  $('add-activity-toggle').disabled=busy;
+  document.querySelector('[data-action="analyse"]').disabled=busy;
+  document.querySelector('[data-action="load-demo"]').disabled=busy;
+  document.querySelector('[data-action="choose-import"]').disabled=busy || sessionTransferBusy;
+  $('export-btn').disabled=busy || sessionTransferBusy;
+}
+async function processAdditionalHistory(raw,generation) {
+  const request=askWorker('append',{raw},progress=>showProgress(progress.phase,Math.round(progress.value*.76),progress.message,generation));
+  if(request){
+    try{return await request;}catch(error){if(!workerFaulted)throw error;}
+  }
+  showProgress('Reading additional history',10,'Using compatibility processing on this browser',generation);
+  await yieldToUI();
+  const incoming=parseGitHistory(raw,{allowEmpty:true});
+  const merged=mergeGitHistories(parsedHistory,incoming);
+  return {...merged,replaceRaw:isCompleteRecapture(parsedHistory,incoming,merged.history)};
+}
+/** Append evidence without entering the destructive initial-import identity flow. */
+async function appendActivity() {
+  if(appendBusy||sessionTransferBusy||!parsedHistory||$('dashboard').hidden)return;
+  const raw=$('append-log-input').value.trim();
+  if(!raw){setText('append-error','Paste new Git history or release activity first.');return;}
+  setText('append-error','');
+  const previousBounds=sourceDateBounds();
+  const selectedAll=mergeGroups.length>0&&mergeGroups.every((_,i)=>state.selectedIds.has(String(i)));
+  const generation=++progressGeneration;
+  setAppendBusy(true);
+  showProgress('Adding activity',4,'Comparing additional evidence with the imported history',generation);
+  let result;
+  try {result=await processAdditionalHistory(raw,generation);}
+  catch(error){
+    if(generation===progressGeneration){finishProgress(generation,error);setText('append-error',`Nothing was changed: ${error.message}`);}
+    setAppendBusy(false);return;
+  }
+  if(generation!==progressGeneration){setAppendBusy(false);return;}
+  if(!result.changed){
+    finishProgress(generation,null,'Already up to date','Overlapping commits and release events were not counted twice.');
+    $('append-status').hidden=false;
+    setText('append-status','No new activity found. Your current identities, filters and session are unchanged.');
+    setAppendBusy(false);return;
+  }
+
+  // From this point forward the combined, validated evidence becomes active.
+  const parsedHistoryBeforeAppend=parsedHistory;
+  parsedHistory=result.history;
+  ({commits:rawCommits,tags:rawTags,githubReleases:rawGithubReleases,
+    githubStatus,herokuReleases:rawHerokuReleases,herokuStatus,
+    historyEnrichment:rawHistoryEnrichment,captureWarnings:githubWarnings}=parsedHistory);
+  const previousRaw=activeRawLog;
+  const delta=result.replaceRaw ? raw : compactAdditionalCapture(previousRaw,raw,parsedHistoryBeforeAppend,result.history);
+  activeRawLog=result.replaceRaw ? raw : `${previousRaw.trimEnd()}\n${delta}`;
+  $('log-input').value=activeRawLog;
+  const oldGroups=mergeGroups.length;
+  identityMeta=makeIdentityCatalogue(rawCommits,rawGithubReleases,rawHerokuReleases);
+  const extended=extendContributorGroups(mergeGroups,identityMeta,rawGithubReleases,rawHerokuReleases,rawCommits);
+  mergeGroups=extended.groups;
+  if(selectedAll)for(let i=oldGroups;i<mergeGroups.length;i++)state.selectedIds.add(String(i));
+  identityPicker=null;mergeUndo=null;linkedOrderEditors.clear();
+  const bounds=sourceDateBounds();
+  // Preserve explicit historical windows. A live/latest window advances to
+  // include new dates; older fixed windows remain exactly where the user set them.
+  if(state.period!=='custom'){
+    const window=periodForPreset(rawCommits,state.period,bounds);
+    state.start=window.start;state.end=window.end;
+  }else if(scopeFollowsLatest && state.end===previousBounds.max && bounds.max>previousBounds.max){
+    state.end=bounds.max;
+  }
+  if(primary.periodPreset!=='custom'&&primary.periodTo===previousBounds.max &&
+      primary.periodFrom&&bounds.max>previousBounds.max){
+    const span=dayNumber(primary.periodTo)-dayNumber(primary.periodFrom);
+    primary.periodTo=bounds.max;
+    primary.periodFrom=dateAtDay(dayNumber(bounds.max)-span);
+  }
+  importRevision++;computedKey=null;computedResult=null;
+  configureOptions();
+  setText('source-status',`${number.format(rawCommits.length)} commits · ${number.format(rawTags.length)} tags · ${number.format(rawGithubReleases.length)} GitHub Releases · ${number.format(rawHerokuReleases.length)} Heroku events · identities retained`);
+  $('append-log-input').value='';
+  setAppendBusy(false);
+  toggleAddActivity(false); // Keep navigation in place rather than reopening step 02.
+  const changes=result.changes;
+  const label=(name,count,plural=`${name}s`)=>`${number.format(count)} ${count===1?name:plural}`;
+  const additions=[label('commit',changes.commits.added),label('tag',changes.tags.added),
+    label('GitHub Release',changes.githubReleases.added),label('Heroku event',changes.herokuReleases.added)];
+  const updated=Object.entries(changes).filter(([name,v])=>v?.updated>0).reduce((total,[,v])=>total+v.updated,0);
+  let notice=`Added ${additions.join(' · ')}`;
+  if(updated)notice+=` · ${label('updated record',updated)}`;
+  if(extended.added.length)notice+=` · ${label('new identity',extended.added.length,'new identities')} kept separate or safely linked. Review identities whenever you like.`;
+  else notice+=' · Existing identity choices preserved.';
+  if(changes.statusChanged)notice+=' · Capture availability updated.';
+  $('append-status').hidden=false;setText('append-status',notice);
+  setText('append-error','');
+  // Update only a previously opt-in local copy. Never silently enable storage.
+  if(localDatasetId){
+    try {await saveLocalHistory(localDatasetId,sessionPayload());historyNotice('Updated the browser-local copy with the appended activity.');}
+    catch(error){historyNotice(`Activity added, but browser-local copy could not be updated: ${error.message}`);}
+  }
+  await renderDashboard();
+}
 function loadDemo() {
   $('range-select').value='3';
   $('log-input').value=generateDemoLog({years:3,commits:720});
   analyse();
 }
 function syncScopeAfterLoad() {
+  scopeFollowsLatest=true;
   const { min,max } = sourceDateBounds();
   const years = Math.max(1, Math.min(5, Number($('range-select').value) || 3));
   const anchored = new Date(`${max}T12:00:00Z`);
@@ -690,6 +806,7 @@ function syncScopeAfterLoad() {
   if (!pendingImport)restorePrimary(null);
   if (pendingImport?.scope) {
     const s = pendingImport.scope;
+    scopeFollowsLatest=typeof s.followsLatest==='boolean' ? s.followsLatest : s.period!=='custom';
     if (METRICS[s.metric]) state.metric=s.metric;
     if (['total','share','per_active_day','per_week'].includes(s.mode)) state.mode=s.mode;
     if (['selection','repository'].includes(s.denominator)) state.denominator=s.denominator;
@@ -795,7 +912,7 @@ function configureOptions() {
   $('metric-select').innerHTML=Object.entries(METRICS).map(([key,m])=>`<option value="${key}">${esc(m.label)}</option>`).join('');
 }
 function updatePeriod(preset) {
-  state.period=preset;
+  state.period=preset;scopeFollowsLatest=preset!=='custom';
   if (preset !== 'custom') {
     const dates=periodForPreset(rawCommits,preset,sourceDateBounds());
     state.start=dates.start;state.end=dates.end;
@@ -811,11 +928,12 @@ function changeDate() {
     $('date-to').value=state.end || '';
     return;
   }
-  state.period='custom';state.start=start;state.end=end;
+  state.period='custom';scopeFollowsLatest=false;state.start=start;state.end=end;
   setText('scope-error','');
   renderDashboard();
 }
 function resetFilters() {
+  scopeFollowsLatest=true;
   Object.assign(state,{ period:'all',start:sourceDateBounds().min,end:sourceDateBounds().max,
     ...defaultMotionState(),includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
@@ -2380,9 +2498,9 @@ function sessionPayload() {
   if(!rawCommits.length)return null;
   const selectedEmails=mergeGroups.flatMap((g,i)=>state.selectedIds.has(String(i))?g.emails:[]);
   const emailForId = id => /^(0|[1-9]\d*)$/.test(String(id)) ? mergeGroups[Number(id)]?.emails[0]||null : null;
-  const payload={version:3,exportedAt:new Date().toISOString(),rangeYears:Number($('range-select').value),rawLog:$('log-input').value,
+  const payload={version:3,exportedAt:new Date().toISOString(),rangeYears:Number($('range-select').value),rawLog:activeRawLog,
     mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails],workingDays:normalizeWorkingDays(g.workingDays)})),
-    scope:{selectedEmails,period:state.period,start:state.start,end:state.end,metric:state.metric,mode:state.mode,denominator:state.denominator,
+    scope:{selectedEmails,period:state.period,start:state.start,end:state.end,followsLatest:scopeFollowsLatest,metric:state.metric,mode:state.mode,denominator:state.denominator,
       includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode,
       pulseLens:state.pulseLens,motionViews:state.motionViews,motionWeeks:state.motionWeeks,motionStep:state.motionStep,motionTrail:state.motionTrail,motionLabels:state.motionLabels,motionLevelDisplay:state.motionLevelDisplay,pulseGapHorizon:state.pulseGapHorizon,pulseBusyDay:state.pulseBusyDay,pulseReleaseLines:state.pulseReleaseLines,pulseDailyChurn:state.pulseDailyChurn,pulseMomentumWorkdays:state.pulseMomentumWorkdays,pulseLevelWorkdays:state.pulseLevelWorkdays,pulseContinuityWeeks:state.pulseContinuityWeeks,continuityView:state.continuityView,pulseTemporalPeriod:state.pulseTemporalPeriod,pulseTemporalChurn:state.pulseTemporalChurn,pulseMeaningfulLines:state.pulseMeaningfulLines,
       rhythmDisplay:state.rhythmDisplay,rhythmTab:state.rhythmTab,seasonMode:state.seasonMode,seasonYears:state.seasonYears?[...state.seasonYears]:null,
@@ -2407,6 +2525,7 @@ function setSessionTransferBusy(busy) {
   sessionTransferBusy=busy;
   $('export-btn').disabled=busy;
   document.querySelector('[data-action="choose-import"]').disabled=busy;
+  $('append-activity-btn').disabled=busy || appendBusy;
 }
 function downloadSessionBlob(blob, compressed) {
   const uri=URL.createObjectURL(blob);
@@ -2419,7 +2538,7 @@ function downloadSessionBlob(blob, compressed) {
 }
 const formatSize = bytes => bytes >= 1048576 ? `${(bytes/1048576).toFixed(1)} MiB` : `${Math.max(1,Math.round(bytes/1024))} KiB`;
 async function exportSession() {
-  if(sessionTransferBusy)return;
+  if(sessionTransferBusy || appendBusy)return;
   const payload=sessionPayload();if(!payload)return;
   setSessionTransferBusy(true);
   const generation=++progressGeneration;
@@ -2446,7 +2565,7 @@ async function exportSession() {
 }
 async function importSession(event) {
   const file=event.target.files?.[0];event.target.value='';
-  if(!file||sessionTransferBusy)return;
+  if(!file||sessionTransferBusy||appendBusy)return;
   setSessionTransferBusy(true);
   const generation=++progressGeneration;
   showProgress('Opening session',4,'Detecting JSON or gzip archive format',generation);
@@ -2478,6 +2597,9 @@ async function restoreSessionPayload(payload,filename='imported session') {
   try {history=await processImportedHistory(payload.rawLog,generation);}
   catch(err){finishProgress(generation,err);return setText('parse-error',err.message);}
   if (generation!==progressGeneration)return;
+  parsedHistory=history;activeRawLog=payload.rawLog;
+  $('append-history-panel').hidden=true;$('add-activity-toggle').setAttribute('aria-expanded','false');
+  $('append-status').hidden=true;$('append-log-input').value='';
   rawHistoryEnrichment=history.historyEnrichment||[];
   rawCommits=history.commits;rawTags=history.tags;
   rawGithubReleases=history.githubReleases;githubStatus=history.githubStatus;rawHerokuReleases=history.herokuReleases;herokuStatus=history.herokuStatus;githubWarnings=history.captureWarnings;
@@ -2516,6 +2638,9 @@ const ACTIONS={
     if(target.dataset.experience==='evidence')switchExperience('evidence');
     else goPrimary(target.dataset.experience,{}, {remember:true});
   },
+  'toggle-add-activity':()=>toggleAddActivity(),
+  'cancel-add-activity':()=>toggleAddActivity(false),
+  'append-activity':()=>appendActivity(),
   'review-identities':()=>{identityPicker=null;renderMergeUI();$('merge-step').hidden=false;$('merge-step').scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-evidence-filters':async()=>{
     $('legacy-scope-details').open=true;

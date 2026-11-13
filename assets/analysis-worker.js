@@ -1,10 +1,11 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-motion-explorer-20261108-1';
-import { impactAnalysis } from './impact.js?v=git-motion-explorer-20261108-1';
-import { buildStoryAnalysis } from './stories.js?v=git-motion-explorer-20261108-1';
-import { buildEvidenceIndex } from './perspectives.js?v=git-motion-explorer-20261108-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-motion-explorer-20261108-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-motion-explorer-20261108-1';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-incremental-activity-20261113-1';
+import { mergeGitHistories, isCompleteRecapture } from './history-merge.js?v=git-incremental-activity-20261113-1';
+import { impactAnalysis } from './impact.js?v=git-incremental-activity-20261113-1';
+import { buildStoryAnalysis } from './stories.js?v=git-incremental-activity-20261113-1';
+import { buildEvidenceIndex } from './perspectives.js?v=git-incremental-activity-20261113-1';
+import { buildDeploymentIndex } from './deployments.js?v=git-incremental-activity-20261113-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-incremental-activity-20261113-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;
@@ -26,6 +27,18 @@ self.onmessage = async ({data}) => {
       cachedPrimary=null;cachedPrimaryKey=null;
       progress(id,'Reading history',95,`${history.commits.length.toLocaleString()} commits · ${history.herokuReleases.length.toLocaleString()} Heroku events parsed`);
       self.postMessage({id,type:'result',result:history});
+    } else if (type === 'append') {
+      if(!history)throw new Error('Import repository history before adding activity.');
+      progress(id,'Reading additional history',8,'Checking new and overlapping Git and release records');
+      const incoming=parseGitHistory(data.raw,{allowEmpty:true});
+      const merged=mergeGitHistories(history,incoming);
+      const replaceRaw=isCompleteRecapture(history,incoming,merged.history);
+      if(merged.changed){
+        history=merged.history;
+        cachedPrimary=null;cachedPrimaryKey=null;
+      }
+      progress(id,'Reading additional history',96,'Matching SHA, tag and deployment identities');
+      self.postMessage({id,type:'result',result:{...merged,replaceRaw}});
     } else if (type === 'build') {
       if (!history) throw new Error('Import history before building the dashboard.');
       progress(id,'Building comparisons',10,'Applying author-date scope and contributor identities');

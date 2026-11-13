@@ -17,6 +17,42 @@ reconciled identity set so moving a card or rearranging its linked identities
 does not change that person's colour. Existing contributor selections and
 focused views are reconciled by identity when the cards move.
 
+## Add activity without redoing identities
+
+After the first dashboard is built, use **+ Add activity** beside **Review identities**.
+Paste another capture from the **same repository** (including the entire command
+output again), or just additional `COMMIT|…`, `TAG|…`, `GHRELEASE|…` or
+`HEROKU|…` rows, then click **Add & refresh dashboard**. The initial **Analyse
+history** action remains a replacement import; use the new action for ongoing
+updates.
+
+- Overlapping commit SHAs, tag names, GitHub release tags and Heroku release
+  versions are deduplicated. Changed release metadata or richer commit records
+  update the evidence rather than adding a second event. Unavailable later API
+  captures do not erase evidence captured successfully earlier. A complete
+  replacement capture also replaces the stored raw text to avoid repeated
+  session growth; partial additions keep the existing raw source intact.
+- Previously reconciled contributor group memberships, manually edited names,
+  card/identity order and expected working-day patterns are retained exactly.
+  Newly encountered Git author emails are separate unless an existing durable
+  key matches; new GitHub/Heroku actors are linked only using the existing
+  safe exact-match rules. **Review identities** remains optional, and does not
+  interrupt the update.
+- Contributor selections, comparison preferences, active tabs and navigation
+  are preserved. Relative and latest-following date windows move forward to
+  show the newer evidence; explicit historical date ranges stay fixed. All
+  release and deployment evidence is recomputed from the union.
+- The update is local and non-destructive when the paste contains no new data.
+  An existing opt-in browser-local multi-tab session is refreshed in place;
+  no browser storage is enabled without prior consent. Exports include the
+  updated activity and reconciled identities, and remain importable on older
+  sessions.
+
+The capture must belong to the same repository. SHA identity alone cannot
+reliably detect an accidental paste from another repository; if you need an
+unrelated repository, start a new session instead. Updates are additive and do
+not represent deletion of a tag, release, or old commit from a remote source.
+
 ## Run
 
 From this directory, serve the static app with:

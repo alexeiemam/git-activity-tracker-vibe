@@ -4,7 +4,8 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=git-motion-explorer-20261108-1';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=git-incremental-activity-20261113-1';
+import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=git-incremental-activity-20261113-1';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },
@@ -84,7 +85,7 @@ export function decodeGithubRelease(value) {
   } catch { return null; }
 }
 
-export function parseGitHistory(raw) {
+export function parseGitHistory(raw, {allowEmpty=false} = {}) {
   const commits = [];
   const tags = [];
   const githubReleases = [];
@@ -123,7 +124,7 @@ export function parseGitHistory(raw) {
     if (line.startsWith('HEROKUSTATUS|')) {
       flush();
       const match=line.match(/^HEROKUSTATUS\|(STAG|BETA|PROD)\|(ok|partial|unavailable|missing-cli|missing-remote)$/);
-      if(match)herokuStatus[match[1]]=match[2];
+      if(match)herokuStatus[match[1]]=bestCaptureStatus(herokuStatus[match[1]],match[2],'heroku');
       continue;
     }
     if (line.startsWith('GHRELEASE|')) {
@@ -136,7 +137,7 @@ export function parseGitHistory(raw) {
     if (line.startsWith('GHSTATUS|')) {
       flush();
       const status=line.slice('GHSTATUS|'.length);
-      if (['ok','unavailable','missing-cli','unsupported-origin'].includes(status)) githubStatus=status;
+      if (['ok','unavailable','missing-cli','unsupported-origin'].includes(status)) githubStatus=bestCaptureStatus(githubStatus,status);
       continue;
     }
     if (line.startsWith('TAG|')) {
@@ -208,16 +209,11 @@ export function parseGitHistory(raw) {
   }
   flush();
   for(const c of commits)if(shallowBoundaries.has(c.hash.toLowerCase()))c.parentsKnown=false;
-  const seen = new Set();
-  const unique = commits.filter(commit => {
-    if (!commit.date) return false;
-    if (!commit.hash) return true;
-    if (seen.has(commit.hash)) return false;
-    seen.add(commit.hash);
-    return true;
-  });
-  if (!unique.length) throw new Error('No dated commits found. Use the generated git log command.');
-  return { commits: unique, tags: tags.filter(t => t.name), githubReleases, githubStatus, herokuReleases, herokuStatus, historyEnrichment, captureWarnings };
+  const parsed=mergeGitHistories({}, {commits:commits.filter(c=>c.date),tags:tags.filter(t=>t.name),
+    githubReleases,githubStatus,herokuReleases,herokuStatus,historyEnrichment,
+    shallowBoundaries:[...shallowBoundaries],captureWarnings}).history;
+  if (!allowEmpty && !parsed.commits.length) throw new Error('No dated commits found. Use the generated git log command.');
+  return parsed;
 }
 
 export function parseGitLog(raw) { return parseGitHistory(raw).commits; }

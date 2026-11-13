@@ -1485,3 +1485,18 @@
 
 .motion-empty-choice{display:flex;gap:10px;align-items:center;margin-top:14px;font:600 11px var(--mono);color:#4b6857}
 .motion-empty-choice select{border:1px solid #a7c9b0;background:white;color:#274f37;border-radius:5px;padding:7px 10px}
+
+/* Incremental capture: supplementary to the main import, never an identity wizard. */
+.append-history-panel{border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:20px 22px;margin:14px 0 22px;scroll-margin-top:18px}
+.append-history-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:18px}
+.append-history-top h3{font-size:19px;letter-spacing:-.035em;margin:5px 0 8px}
+.append-history-top p{font-size:12px;line-height:1.65;color:var(--muted);max-width:860px;margin:0}
+.append-history-top p a{color:var(--green);text-decoration:underline;text-underline-offset:3px}
+.append-close{border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--muted);min-width:32px;min-height:32px;font-size:19px}
+.append-close:hover,.append-close:focus-visible{color:var(--ink);background:var(--bg)}
+#append-log-input{display:block;width:100%;min-height:160px;resize:vertical;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:12px 14px;margin-top:8px;font:11px/1.65 var(--mono);color:var(--ink)}
+#append-log-input:focus-visible{outline:2px solid var(--green);outline-offset:1px}
+.append-history-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:13px}
+.append-history-actions .error-text{flex:1;min-width:200px}
+.append-activity-status{font:11px/1.65 var(--mono);color:var(--green);padding:0 0 10px;margin:0}
+@media(max-width:680px){.append-history-panel{padding:16px}.append-history-top{gap:8px}#append-log-input{min-height:190px}.append-history-actions{align-items:stretch}.append-history-actions .error-text{flex-basis:100%}}

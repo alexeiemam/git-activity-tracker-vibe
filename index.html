@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=git-motion-explorer-20261108-1">
+  <link rel="stylesheet" href="./assets/app.css?v=git-incremental-activity-20261113-1">
 </head>
 <body>
   <div class="page">
@@ -198,7 +198,14 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
     </section>
 
     <section id="dashboard" hidden aria-labelledby="dashboard-heading">
-      <div class="dashboard-intro"><div><div class="eyebrow section-kicker"><span class="step-dot dark">03</span> THREE WAYS TO EXPLORE</div><h2 id="dashboard-heading">Follow the evidence.</h2><p id="data-coverage" class="subtle"></p></div><div class="dashboard-intro-actions"><button type="button" data-action="review-identities" class="button outline">Review identities</button><button type="button" data-action="primary-evidence-filters" class="button outline">Advanced evidence filters <span aria-hidden="true">↗</span></button></div></div>
+      <div class="dashboard-intro"><div><div class="eyebrow section-kicker"><span class="step-dot dark">03</span> THREE WAYS TO EXPLORE</div><h2 id="dashboard-heading">Follow the evidence.</h2><p id="data-coverage" class="subtle"></p></div><div class="dashboard-intro-actions"><button type="button" id="add-activity-toggle" data-action="toggle-add-activity" class="button soft" aria-expanded="false" aria-controls="append-history-panel">+ Add activity</button><button type="button" data-action="review-identities" class="button outline">Review identities</button><button type="button" data-action="primary-evidence-filters" class="button outline">Advanced evidence filters <span aria-hidden="true">↗</span></button></div></div>
+      <p id="append-status" class="append-activity-status" role="status" aria-live="polite" hidden></p>
+      <section id="append-history-panel" class="append-history-panel" aria-labelledby="append-heading" hidden>
+        <div class="append-history-top"><div><span class="eyebrow">INCREMENTAL UPDATE</span><h3 id="append-heading">Add commits &amp; release activity</h3><p>Paste another capture from the <a href="#source-title">same repository</a> (even a full overlapping capture), or just new <code>COMMIT</code>, <code>TAG</code>, <code>GHRELEASE</code> and <code>HEROKU</code> records. Duplicate SHAs and release events are not counted twice. Your contributor names, linked identities, working-day schedules, ordering, selected people and current views stay in place. Any previously unseen identities remain separately reviewable.</p></div><button type="button" class="append-close" data-action="cancel-add-activity" aria-label="Close add activity">×</button></div>
+        <label class="field-label" for="append-log-input">Additional captured activity</label>
+        <textarea id="append-log-input" spellcheck="false" placeholder="COMMIT|hash|email|name|author-time|committer-time|subject|parents&#10;25  8  app/models/example.rb&#10;TAG|v8.10.1||hash|commit|2026-11-12T09:00:00Z"></textarea>
+        <div class="append-history-actions"><button type="button" id="append-activity-btn" data-action="append-activity" class="button primary">Add &amp; refresh dashboard</button><button type="button" data-action="cancel-add-activity" class="button outline">Cancel</button><span id="append-error" class="error-text" role="alert" aria-live="polite"></span></div>
+      </section>
 
       <nav class="experience-switch" aria-label="Choose a primary repository perspective">
         <a href="?view=observatory" class="experience-choice is-current" data-action="experience-mode" data-experience="observatory" aria-current="page" aria-controls="stories-view"><span class="experience-symbol" aria-hidden="true">◈</span><span><strong>Observatory</strong><small>What shipped · Release anatomy and history</small></span></a>
@@ -333,6 +340,6 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=git-motion-explorer-20261108-1"></script>
+  <script type="module" src="./assets/app.js?v=git-incremental-activity-20261113-1"></script>
 </body>
 </html>
