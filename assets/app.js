@@ -30,6 +30,7 @@ import { buildDeploymentIndex } from './deployments.js?v=git-ingest-input-202611
 import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=git-ingest-input-20261113-1';
 import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=git-ingest-input-20261113-1';
 import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=git-ingest-input-20261113-1';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=git-ingest-input-20261113-1';
 import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=git-ingest-input-20261113-1';
 import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=git-ingest-input-20261113-1';
 import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=git-ingest-input-20261113-1';
@@ -195,6 +196,8 @@ let mergeGroups = [];
 let identityMeta = new Map();
 let identityPicker = null; // { targetIndex, selected: Set, query } — staged until Apply
 let mergeUndo = null;
+// Imported identity mappings for keys not present in the loaded history.
+let identityReserve = [];
 const linkedOrderEditors = new Set();
 let analysis = null;
 let pendingImport = null;
@@ -373,10 +376,10 @@ function mergeCandidates(index, query = '') {
   }]).filter(entry => entry.emails.length);
 }
 function countWord(n, singular, plural = `${singular}s`) { return `${number.format(n)} ${n === 1 ? singular : plural}`; }
-function renderMergeFeedback(message = '', canUndo = false) {
+function renderMergeFeedback(message = '', canUndo = false, undoLabel = 'Undo merge') {
   const el = $('merge-feedback');
   el.hidden = !message;
-  el.innerHTML = message ? `<span>${esc(message)}</span>${canUndo ? '<button type="button" data-action="undo-identity-merge" class="text-button">Undo merge</button>' : ''}` : '';
+  el.innerHTML = message ? `<span>${esc(message)}</span>${canUndo ? `<button type="button" data-action="undo-identity-merge" class="text-button">${esc(undoLabel)}</button>` : ''}` : '';
 }
 function forgetUndo() {
   mergeUndo = null;
@@ -606,12 +609,16 @@ function applyIdentityPicker() {
 }
 function undoIdentityMerge() {
   if (!mergeUndo || requireResolvedIdentitySelection()) return;
+  if (mergeUndo.reserve) { // Identity import: it rebased views forward, so rebase back.
+    rebaseContributorViews(mergeGroups, mergeUndo);
+    identityReserve = mergeUndo.reserve;
+  }
   mergeGroups = mergeUndo;
   state.storyDismissed.clear();state.storyTrail=[];state.storyFindingId=null;
   mergeUndo = null;
   identityPicker = null;
   renderMergeUI();
-  renderMergeFeedback('Identity move undone.');
+  renderMergeFeedback('Identity change undone.');
 }
 function splitEmail(index, email) {
   const group = mergeGroups[index];
@@ -664,7 +671,7 @@ async function analyse() {
     githubStatus,herokuReleases:rawHerokuReleases,herokuStatus,historyEnrichment:rawHistoryEnrichment,captureWarnings:githubWarnings}=history);
   importRevision++;computedKey=null;computedResult=null;
   finishProgress(generation,null,'History ready','Review the proposed contributor identities, then build your dashboard.');
-  pendingImport = null;localDatasetId=null;
+  pendingImport = null;localDatasetId=null;identityReserve=[];
   identityMeta = makeIdentityCatalogue(rawCommits,rawGithubReleases,rawHerokuReleases);
   identityPicker = null;
   mergeUndo = null;
@@ -747,7 +754,8 @@ async function appendActivity() {
   const oldGroups=mergeGroups.length;
   identityMeta=makeIdentityCatalogue(rawCommits,rawGithubReleases,rawHerokuReleases);
   const extended=extendContributorGroups(mergeGroups,identityMeta,rawGithubReleases,rawHerokuReleases,rawCommits);
-  mergeGroups=extended.groups;
+  const reserved=adoptReservedIdentities(extended.groups,extended.added,identityReserve,new Set(identityMeta.keys()));
+  mergeGroups=reserved.groups;identityReserve=reserved.reserve;
   if(selectedAll)for(let i=oldGroups;i<mergeGroups.length;i++)state.selectedIds.add(String(i));
   identityPicker=null;mergeUndo=null;linkedOrderEditors.clear();
   const bounds=sourceDateBounds();
@@ -778,7 +786,8 @@ async function appendActivity() {
   const updated=Object.entries(changes).filter(([name,v])=>v?.updated>0).reduce((total,[,v])=>total+v.updated,0);
   let notice=`Added ${additions.join(' · ')}`;
   if(updated)notice+=` · ${label('updated record',updated)}`;
-  if(extended.added.length)notice+=` · ${label('new identity',extended.added.length,'new identities')} kept separate or safely linked. Review identities whenever you like.`;
+  if(reserved.adopted)notice+=` · ${label('new identity',reserved.adopted,'new identities')} linked from your imported identity configuration`;
+  if(extended.added.length>reserved.adopted)notice+=` · ${label('new identity',extended.added.length-reserved.adopted,'new identities')} kept separate or safely linked. Review identities whenever you like.`;
   else notice+=' · Existing identity choices preserved.';
   if(changes.statusChanged)notice+=' · Capture availability updated.';
   $('append-status').hidden=false;setText('append-status',notice);
@@ -2527,6 +2536,7 @@ function sessionPayload() {
       storyMonth:state.storyMonth,storyDismissed:[...state.storyDismissed].slice(0,300),
       storyFindingId:state.storyFindingId,storyTrail:state.storyTrail.slice(-8),
       primary:primaryStateForExport(primary,mergeGroups)}};
+  if(identityReserve.length)payload.identityReserve=identityReserve.map(g=>({displayName:g.displayName,emails:[...g.emails],workingDays:g.workingDays}));
   return payload;
 }
 function setSessionTransferBusy(busy) {
@@ -2596,6 +2606,39 @@ async function importSession(event) {
     setText('parse-error',`Could not import session: ${error.message}`);
   }finally{setSessionTransferBusy(false);}
 }
+function exportIdentities() {
+  if(requireResolvedIdentitySelection())return;
+  const config=buildIdentityConfig(mergeGroups,identityReserve);
+  if(!config.groups.length)return renderMergeFeedback('There are no contributor identities to export yet.');
+  const uri=URL.createObjectURL(new Blob([JSON.stringify(config,null,2)],{type:'application/json'}));
+  const a=document.createElement('a');
+  a.href=uri;a.download=downloadFilename('identities');
+  document.body.appendChild(a);
+  a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(uri),60000);
+  const keys=config.groups.reduce((total,g)=>total+g.identities.length,0);
+  renderMergeFeedback(`Exported ${countWord(config.groups.length,'contributor')} · ${countWord(keys,'identity','identities')}. No commit history is included.`);
+}
+/** Apply names, links, order and schedules without touching the imported evidence. */
+async function importIdentities(event) {
+  const file=event.target.files?.[0];event.target.value='';
+  if(!file||!rawCommits.length||requireResolvedIdentitySelection())return;
+  let config;
+  try {config=parseIdentityConfig(await decodeSessionArchive(file));}
+  catch(error){return renderMergeFeedback(`Could not import identities: ${error.message}`);}
+  const before=mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails],workingDays:normalizeWorkingDays(g.workingDays)}));
+  const previousReserve=identityReserve;
+  const result=applyIdentityConfig(mergeGroups,config,new Set(identityMeta.keys()));
+  identityPicker=null;linkedOrderEditors.clear();
+  rebaseContributorViews(mergeGroups,result.groups);
+  mergeGroups=result.groups.map(g=>({...g,workingDays:normalizeWorkingDays(g.workingDays)}));
+  identityReserve=result.reserve;
+  state.storyDismissed.clear();state.storyTrail=[];state.storyFindingId=null;
+  mergeUndo=Object.assign(before,{reserve:previousReserve});
+  renderMergeUI();
+  const held=result.unmatched?` · ${countWord(result.unmatched,'identity','identities')} not in this history kept for future activity`:'';
+  renderMergeFeedback(`Applied ${countWord(result.matched,'identity','identities')} from ${file.name}${held}. Build the dashboard to apply.`,true,'Undo import');
+}
 async function restoreSessionPayload(payload,filename='imported session') {
   if(typeof payload?.rawLog!=='string' || !Array.isArray(payload.mergeGroups)) return setText('parse-error','Invalid session: rawLog and mergeGroups required.');
   renderGeneration++; // Prevent an earlier session build from rendering over this one.
@@ -2631,6 +2674,7 @@ async function restoreSessionPayload(payload,filename='imported session') {
   });
   // Preserve historical manual assignments; add provider accounts that were
   // introduced in a newer import or an older session format without duplication.
+  identityReserve=reserveFor(sanitizeIdentityGroups([...payload.mergeGroups,...(Array.isArray(payload.identityReserve)?payload.identityReserve:[])]),emails);
   mergeGroups=reconcileProviderGroups(mergeGroups,externalIdentities(rawGithubReleases,rawHerokuReleases),rawGithubReleases,rawCommits);
   const restoredKeys=new Set(mergeGroups.flatMap(g=>g.emails));
   for(const [email,meta] of identityMeta){if(restoredKeys.has(email))continue;
@@ -2753,6 +2797,8 @@ const ACTIONS={
     catch {notice.textContent='Clipboard access was blocked by the browser. Try another browser context or use the visible evidence details.';}
   },
   'choose-import':()=> $('file-import-input').click(),
+  'export-identities':exportIdentities,
+  'choose-identity-import':()=>{if(!requireResolvedIdentitySelection())$('identity-import-input').click();},
   'export':exportSession,'copy-command':copyCommand,'analyse':analyse,'load-demo':loadDemo,
   'add-merge-group':()=>{if(requireResolvedIdentitySelection())return;forgetUndo();mergeGroups.push({displayName:'New contributor',emails:[]});identityPicker=null;renderMergeUI();openIdentityPicker(mergeGroups.length-1);},
   'toggle-pattern-day':(_event,target)=>{const i=Number(target.dataset.group),day=Number(target.dataset.weekday),group=mergeGroups[i];if(!group||!Number.isInteger(day)||day<0||day>6)return;const current=normalizeWorkingDays(group.workingDays);updateWorkingPattern(i,current.includes(day)?current.filter(d=>d!==day):[...current,day],target);},
@@ -2921,6 +2967,7 @@ function handleDocumentChange(event) {
       if(month){state.storyMonth=month.month;renderStories();focusStoryMonth();}break;
     }
     case 'file-import-input':importSession(event);break;
+    case 'identity-import-input':importIdentities(event);break;
     case 'period-select':updatePeriod(t.value);break;
     case 'date-from':case 'date-to':changeDate();break;
     case 'filter-merges':state.includeMerges=t.checked;renderDashboard();break;

@@ -701,6 +701,30 @@ export falls back to the original `.json` format; a browser without gzip
 be unpacked with `gunzip -k session.json.gz` and the resulting JSON imported.
 You can also unpack exported archives with `gunzip` or `gzip -d` outside the app.
 
+### Identity configuration
+
+**Export identities** and **Import identities** (in **Confirm identities**, also
+reachable from the dashboard via **Review identities**) move contributor
+identity choices independently of any commit data. The export is a small,
+readable JSON file named `git-signals-identities-YYYY-MM-DD_HH-mm-ss.json`:
+
+```json
+{"format":"git-signals-identities","version":1,"exportedAt":"…",
+ "groups":[{"displayName":"Alice","identities":["alice@work.test","github:alice"],"workingDays":[1,2,3,4,5]}]}
+```
+
+It contains contributor names, linked Git author emails and GitHub/Heroku
+identity keys, contributor order and working-day schedules, and no history.
+Importing applies it to whatever history is currently loaded: configured
+contributors come first in the file's order, and identities the file does not
+mention stay where they were. A full session export can also be selected as the
+source; only its identities are used. **Undo import** reverts the change.
+
+Identities in the file that are not in the loaded history are kept rather than
+discarded. They are included in later identity and session exports, and when
+**Add activity** introduces one of them it joins the contributor the
+configuration put it with instead of appearing as a new, separate identity.
+
 **Export all · CSV** for People & Releases remains plain CSV, named
 `git-signals-release-matrix-YYYY-MM-DD_HH-mm-ss.csv`. Its format is unchanged.
 Export filenames remain short, descriptive and never contain imported Git text,
