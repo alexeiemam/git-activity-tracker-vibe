@@ -2608,7 +2608,8 @@ async function importSession(event) {
 }
 function exportIdentities() {
   if(requireResolvedIdentitySelection())return;
-  const config=buildIdentityConfig(mergeGroups,identityReserve);
+  // Write schedules explicitly so a default here never inherits a different one on import.
+  const config=buildIdentityConfig(mergeGroups.map(g=>({...g,workingDays:normalizeWorkingDays(g.workingDays)})),identityReserve);
   if(!config.groups.length)return renderMergeFeedback('There are no contributor identities to export yet.');
   const uri=URL.createObjectURL(new Blob([JSON.stringify(config,null,2)],{type:'application/json'}));
   const a=document.createElement('a');
@@ -2617,7 +2618,7 @@ function exportIdentities() {
   a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(uri),60000);
   const keys=config.groups.reduce((total,g)=>total+g.identities.length,0);
-  renderMergeFeedback(`Exported ${countWord(config.groups.length,'contributor')} · ${countWord(keys,'identity','identities')}. No commit history is included.`);
+  renderMergeFeedback(`Exported ${countWord(config.groups.length,'contributor')} · ${countWord(keys,'identity','identities')}. No commit history is included.`,Boolean(mergeUndo),mergeUndo?.reserve?'Undo import':'Undo merge');
 }
 /** Apply names, links, order and schedules without touching the imported evidence. */
 async function importIdentities(event) {
