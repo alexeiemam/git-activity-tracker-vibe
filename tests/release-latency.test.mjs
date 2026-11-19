@@ -66,7 +66,7 @@ test('a person\'s time to release includes not-yet-released commits and a same-w
   assert.ok(Math.abs(ada.releaseAge.oldestWaiting-(31-25+15/24))<.01,'waits until the end of the imported history');
   assert.equal(ada.teamReleaseAge.released,4,'comparison includes Ben');
   const html=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'contributors',contributorFocus:'0',contributorTab:'delivery'});
-  assert.match(html,/COMMIT AGE AT RELEASE/);
+  assert.match(html,/<h3>Time to release<\/h3>/);
   assert.match(html,/Not yet released/);
   const compare=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'contributors',contributorFocus:'0',contributorTab:'compare',compareB:'1'});
   assert.match(compare,/Median time to release/);

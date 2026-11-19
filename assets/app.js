@@ -22,7 +22,7 @@ import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } 
 import { buildStoryAnalysis } from './stories.js?v=git-ingest-input-20261113-1';
 import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-ingest-input-20261113-1';
 import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-ingest-input-20261113-1';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline } from './perspective-view.js?v=git-ingest-input-20261113-1';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=git-ingest-input-20261113-1';
 import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-ingest-input-20261113-1';
 import { downloadFilename } from './download-names.js?v=git-ingest-input-20261113-1';
 import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-ingest-input-20261113-1';
@@ -1071,12 +1071,12 @@ function renderStats(view) {
   if (METRICS[view.metric].unit==='releases') {
     const role=view.metric==='release_leadership'?'led':'shipped work in';
     const releases=c=>`<strong>${esc(number.format(metricValue(c,view.metric)))}</strong> (${esc(percent(metricValue(c,view.metric)/refMetric*100))})`;
-    $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> ${role} ${releases(first)} of the ${esc(number.format(refMetric))} tagged releases in scope${second?`; <strong>${esc(second.displayName)}</strong> follows with ${releases(second)}.`:'.'} These are measures of recorded activity, not a ranking of performance.`;
+    $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> ${role} ${releases(first)} of the ${esc(number.format(refMetric))} tagged releases in scope${second?`; <strong>${esc(second.displayName)}</strong> follows with ${releases(second)}.`:'.'}`;
     return;
   }
   // Same units for both people: the recorded amount, then its share of the reference total.
   const amount=c=>`<strong>${esc(number.format(metricValue(c,view.metric)))}</strong> (${esc(refMetric?percent(metricValue(c,view.metric)/refMetric*100):'0%')})`;
-  $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> accounts for ${amount(first)} of ${esc(METRICS[view.metric].label.toLowerCase())} in the ${view.denominator==='repository'?'repository':'selected cohort'}${second?`; <strong>${esc(second.displayName)}</strong> follows with ${amount(second)}.`:'.'} These are measures of recorded activity, not a ranking of performance.`;
+  $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> accounts for ${amount(first)} of ${esc(METRICS[view.metric].label.toLowerCase())} in the ${view.denominator==='repository'?'repository':'selected cohort'}${second?`; <strong>${esc(second.displayName)}</strong> follows with ${amount(second)}.`:'.'}`;
 }
 function renderRanking(view) {
   const label=METRICS[view.metric].label;
@@ -2454,6 +2454,7 @@ function setExperienceVisibility() {
     }else button.setAttribute('aria-pressed',String(active));
   }
   showImpactTabsFor(tab);showPulseLensesFor(tab);
+  $('reading-guide-body').innerHTML=readingGuide(perspectiveIndex,tab);
   const saved=$('local-link-toggle');
   if(saved)saved.textContent=localDatasetId?'Update saved history for other tabs':'Enable multi-tab links';
   const forget=$('local-link-clear');if(forget)forget.hidden=!localDatasetId;

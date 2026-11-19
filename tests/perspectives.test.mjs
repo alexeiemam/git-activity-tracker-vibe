@@ -255,3 +255,13 @@ test('scope people narrow the Rhythm timeline and the codebase who-changed-what 
  assert.doesNotMatch(everyone,/Everyone else/);
  assert.match(renderPrimaryExplorer(scoped,ui({mode:'rhythm'})),/The scope, unfolding/);
 });
+
+test('each tab has one reading guide instead of caveats repeated under every chart',async()=>{
+ const {readingGuide}=await import('../assets/perspective-view.js');
+ assert.match(readingGuide(index,'contributors'),/not a ranking of performance/);
+ assert.match(readingGuide(index,'rhythm'),/not hours worked/);
+ assert.match(readingGuide(index,'observatory'),/merges excluded/,'the evidence policy is part of every guide');
+ const html=renderPrimaryExplorer(index,ui({mode:'contributors'}));
+ assert.doesNotMatch(html,/primary-footnote|Not a productivity ranking/);
+ assert.doesNotMatch(html,/class="primary-eyebrow">DELIVERED CONTRIBUTIONS/,'cards carry one heading, not an eyebrow and a title');
+});

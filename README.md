@@ -91,7 +91,10 @@ underneath:
 | **Deployments** | Where did it run? | Heroku environments and their relationship to tagged releases |
 | **Evidence** | The records | The contributor table (copyable as CSV) and recent commits |
 
-Old links to `?view=periods` open the Rhythm tab.
+Old links to `?view=periods` open the Rhythm tab. Cards carry a single
+heading, and each tab ends with **How to read this tab**: the evidence's clocks
+and merge/revert policy, what Git can and cannot show, and the caveats that
+apply to that tab, gathered in one place instead of repeated under every chart.
 
 **The scope bar** sits above every tab and says who and when the tab
 describes: the people, the dates (all imported dates, the latest 7, 14, 30,
