@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {footprintArea,buildCodebaseMap,releaseFootprint,typicalFootprint,footprintReference,footprintShape,footprintNote,footprintSimilarity,similarReleases} from '../assets/release-footprint.js';
+import {footprintArea,topOf,OTHER_FOLDERS,buildCodebaseMap,releaseFootprint,typicalFootprint,footprintReference,footprintShape,footprintNote,footprintSimilarity,similarReleases} from '../assets/release-footprint.js';
 import {parseGitHistory,buildAnalysis} from '../assets/domain.js';
 import {impactAnalysis} from '../assets/impact.js';
 import {buildEvidenceIndex,releaseFootprints} from '../assets/perspectives.js';
@@ -9,31 +9,43 @@ import {primaryDefaults,restorePrimaryState} from '../assets/perspective-state.j
 
 const commit=(...paths)=>({files:paths.map(p=>typeof p==='string'?{path:p,added:5,deleted:1}:p)});
 
-test('areas are up to three directories deep',()=>{
-  assert.equal(footprintArea('app/models/user/profile/edit.rb'),'app/models/user/');
-  assert.equal(footprintArea('app/models/user/profile.rb'),'app/models/user/');
-  assert.equal(footprintArea('app/models/user.rb'),'app/models/');
-  assert.equal(footprintArea('app/x.rb'),'app/');
-  assert.equal(footprintArea('README.md'),'(root)');
+test('files up to five levels deep are cells by name; deeper paths fold into their fifth-level folder',()=>{
+  assert.equal(footprintArea('app/models/user.rb'),'app/models/user.rb');
+  assert.equal(footprintArea('a/b/c/d/e.rb'),'a/b/c/d/e.rb','five segments: still the file');
+  assert.equal(footprintArea('a/b/c/d/e/f.rb'),'a/b/c/d/e/','six segments: its fifth-level folder');
+  assert.equal(footprintArea('a/b/c/d/e/f/g/h.rb'),'a/b/c/d/e/');
+  assert.equal(footprintArea('README.md'),'README.md');
+  assert.equal(topOf('README.md'),'(root)');
+  assert.equal(topOf('app/models/user.rb'),'app/');
 });
 
-test('the map keeps the busiest areas and folds the rest into one cell per top-level directory',()=>{
-  const map=buildCodebaseMap([commit('app/models/a.rb','app/models/b.rb','app/views/x.erb','spec/models/a_spec.rb','spec/models/b_spec.rb','app/jobs/j.rb')],{maxCells:2});
+test('the map keeps the busiest cells and folds the rest into one cell per top-level directory',()=>{
+  const map=buildCodebaseMap([commit('app/models/user.rb','app/models/user.rb','app/views/x.erb','spec/models/user_spec.rb','spec/models/user_spec.rb','app/jobs/j.rb')],{maxCells:2});
   assert.deepEqual(map.groups.map(g=>g.top),['app/','spec/']);
-  assert.deepEqual(map.groups[0].cells.map(c=>c.key),['app/models/','app/…']);
-  assert.equal(map.cellOf.get('app/jobs/'),'app/…');
-  assert.equal(map.groups[0].cells[1].areas,2,'views and jobs were folded together');
+  assert.deepEqual(map.groups[0].cells.map(c=>c.key),['app/models/user.rb','app/…']);
+  assert.equal(map.cellOf.get('app/jobs/j.rb'),'app/…');
+  assert.equal(map.groups[0].cells[1].areas,2,'views and jobs files were folded together');
 });
 
-test('a footprint records shares, spread and concentration on the shared map',()=>{
-  const map=buildCodebaseMap([commit('app/models/a.rb','app/views/v.erb','spec/models/s.rb','lib/x/y.rb')]);
-  const fp=releaseFootprint([commit('app/models/a.rb','app/models/b.rb','app/models/c.rb',{path:'spec/models/s.rb',added:90,deleted:0})],map);
+test('top-level folders without any of the busiest cells share one block, placed last',()=>{
+  const map=buildCodebaseMap([commit('app/a.rb','app/a.rb','spec/s.rb','lib/l.rb')],{maxCells:1});
+  assert.deepEqual(map.groups.map(g=>g.top),['app/',OTHER_FOLDERS]);
+  assert.equal(map.cellOf.get('spec/s.rb'),map.cellOf.get('lib/l.rb'),'spec and lib fold together');
+  assert.equal(map.groups[1].cells[0].label,'quieter top-level folders');
+});
+
+test('a footprint records shares and spread per cell, and concentration per two-level folder',()=>{
+  const release=[commit('app/models/a.rb','app/models/b.rb','app/models/c.rb',{path:'spec/models/s.rb',added:90,deleted:0})];
+  const map=buildCodebaseMap([...release,commit('lib/x/y.rb','app/views/v.erb')]);
+  const fp=releaseFootprint(release,map);
   assert.equal(fp.touches,4);
-  assert.equal(fp.cells,2);
+  assert.equal(fp.cells,4,'each file is its own cell');
   assert.equal(fp.topLevels,2);
-  assert.equal(fp.top2Share,1);
-  assert.equal(fp.shares.files[map.keys.indexOf('app/models/')],.75);
-  assert.ok(fp.shares.lines[map.keys.indexOf('spec/models/')]>.8,'lines weighting favours the big change');
+  assert.equal(fp.top2Share,1,'app/models/ and spec/models/ hold every touch');
+  assert.equal(fp.shares.files[map.keys.indexOf('app/models/a.rb')],.25);
+  assert.ok(fp.shares.lines[map.keys.indexOf('spec/models/s.rb')]>.8,'lines weighting favours the big change');
+  const spread=releaseFootprint([commit('app/a/x.rb','lib/b/y.rb','spec/c/z.rb','config/d/w.rb')],buildCodebaseMap([commit('app/a/x.rb','lib/b/y.rb','spec/c/z.rb','config/d/w.rb')]));
+  assert.equal(spread.top2Share,.5,'four folders, one touch each');
 });
 
 test('footprint shapes are relative to the average release and fall back to fixed thresholds',()=>{

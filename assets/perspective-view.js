@@ -1,7 +1,7 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
 import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait } from './perspectives.js?v=four-tabs-20261119-1';
 import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=four-tabs-20261119-1';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, releaseFootprint, footprintArea } from './release-footprint.js?v=four-tabs-20261119-1';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, releaseFootprint, footprintArea, topOf, OTHER_FOLDERS } from './release-footprint.js?v=four-tabs-20261119-1';
 import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=four-tabs-20261119-1';
 import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=four-tabs-20261119-1';
 import { targetUrl } from './route-state.js?v=four-tabs-20261119-1';
@@ -109,7 +109,13 @@ const toggleButton=(key,value,label,current)=>`<button type="button" class="prim
 const compareToggle=on=>`<button type="button" class="primary-preset ${on?'active':''}" data-action="primary-toggle" data-key="shapeCompare" data-value="${on?'off':'on'}" aria-pressed="${on}">Compare with all releases</button>`;
 /** Shared by both halves of the release shape and by the strips. */
 const shapeWeightControl=ui=>`<div class="primary-preset-row" role="group" aria-label="Weight by">${toggleButton('shapeWeight','count','Commits & files',ui.shapeWeight||'count')}${toggleButton('shapeWeight','lines','Lines changed',ui.shapeWeight||'count')}</div>`;
-const cellName=cell=>cell.key.endsWith('…')?'… other':cell.key===cell.top?'(top level)':cell.key.slice(cell.top.length);
+/** A cell shows what it is: a file by its name, a folder by its last segment; the full path is in its tooltip. */
+const cellName=cell=>{
+  if(cell.key.endsWith('…'))return '… other';
+  if(cell.key===cell.top)return '(top level)';
+  const parts=cell.key.split('/').filter(Boolean);
+  return cell.key.endsWith('/')?`${parts.at(-1)}/`:parts.at(-1);
+};
 
 /**
  * One fixed map for every release and every scope: top-level blocks, cells
@@ -121,10 +127,11 @@ function codebaseMap(map,shares,typical,{weightLabel,subject="this release's",se
   const picker=selected!==undefined;
   const position=new Map(map.keys.map((key,i)=>[key,i]));
   const max=Math.max(...shares,.0001),maxTypical=typical?Math.max(...typical,.0001):1;
-  const height=Math.max(190,Math.max(...map.groups.map(g=>g.cells.length))*20);
-  const top=g=>picker?`<button type="button" class="primary-map-top${selected===g.top?' is-selected':''}" data-action="primary-select-area" data-area="${e(g.top)}" aria-pressed="${selected===g.top}" title="Select all of ${e(g.top)}">${e(g.top)}</button>`
+  const top=g=>g.top===OTHER_FOLDERS?`<span class="primary-map-top is-other">${e(g.top)}</span>`:picker?`<button type="button" class="primary-map-top${selected===g.top?' is-selected':''}" data-action="primary-select-area" data-area="${e(g.top)}" aria-pressed="${selected===g.top}" title="Select all of ${e(g.top)}">${e(g.top)}</button>`
     :`<button type="button" class="primary-map-top" data-action="primary-open-area" data-area="${e(g.top)}" title="Open ${e(g.top)} in the codebase explorer">${e(g.top)}</button>`;
-  const groups=map.groups.map(g=>`<div class="primary-map-group" style="flex-grow:${g.touches}">${top(g)}<div class="primary-map-cells" style="height:${height}px">${g.cells.map(cell=>{
+  // Each block starts at its share of all-time activity, so busy folders get room for their tiles.
+  const total=map.groups.reduce((n,g)=>n+g.touches,0)||1;
+  const groups=map.groups.map(g=>`<div class="primary-map-group" style="flex:${g.touches} 1 calc(${(100*g.touches/total).toFixed(1)}% - 6px)">${top(g)}<div class="primary-map-cells">${g.cells.map(cell=>{
     const i=position.get(cell.key),share=shares[i]||0,alpha=share?0.08+0.92*share/max:0;
     const typicalShare=typical?typical[i]||0:null;
     const title=`${cell.label}: ${p(share)} of ${subject} ${weightLabel}${typicalShare!=null?` · all releases ${p(typicalShare)}`:''}`;
@@ -133,9 +140,10 @@ function codebaseMap(map,shares,typical,{weightLabel,subject="this release's",se
     return picker?`<button type="button" class="${cls}${selected===cell.key?' is-selected':''}" style="${style}" data-action="primary-select-area" data-area="${e(cell.key)}" aria-pressed="${selected===cell.key}" title="${e(title)}">${inner}</button>`
       :`<div class="${cls}" style="${style}" title="${e(title)}">${inner}</div>`;
   }).join('')}</div></div>`).join('');
-  const ranked=map.keys.map((key,i)=>({key,share:shares[i],typical:typical?typical[i]:null})).filter(x=>x.share>0).sort((a,b)=>b.share-a.share).slice(0,5);
+  const labels=new Map(map.groups.flatMap(g=>g.cells.map(cell=>[cell.key,cell.label])));
+  const ranked=map.keys.map((key,i)=>({key:labels.get(key)||key,share:shares[i],typical:typical?typical[i]:null})).filter(x=>x.share>0).sort((a,b)=>b.share-a.share).slice(0,5);
   return `<div class="primary-map" ${picker?'role="group" aria-label="Codebase map: select an area"':`role="img" aria-label="${e(`Codebase map: ${ranked.map(x=>`${x.key} ${p(x.share)}`).join(', ')}`)}"`}>${groups}</div>
-    <p class="primary-legend-row"><span><i class="primary-age-key"></i> Darker = more of ${subject} ${e(weightLabel)}</span>${typical?'<span><i class="primary-age-key is-bar"></i> Bar = share across all releases</span>':''}<span>Cell size = all-time activity</span></p>
+    <p class="primary-legend-row"><span><i class="primary-age-key"></i> Darker = more of ${subject} ${e(weightLabel)}</span>${typical?'<span><i class="primary-age-key is-bar"></i> Bar = share across all releases</span>':''}<span>Tile size = all-time activity</span></p>
     ${ranked.length?`<p class="primary-muted primary-map-top-list">Most changed: ${ranked.map(x=>`<strong>${e(x.key)}</strong> ${p(x.share)}${x.typical!=null?` <small>(all releases ${p(x.typical)})</small>`:''}`).join(' · ')}</p>`:''}`;
 }
 
@@ -189,9 +197,9 @@ function releaseShapePanel(index,r,details,ui){
       ${r.baseline?'<p class="primary-warning">First tag in the imported history: it ships everything authored before it, so these ages include initial development.</p>':''}
     </section>
     <section class="primary-shape-part" aria-label="Codebase footprint">
-      <div class="primary-shape-part-head"><h5>Where they landed</h5><span class="primary-muted">Up to three directories deep</span></div>
+      <div class="primary-shape-part-head"><h5>Where they landed</h5><span class="primary-muted">Files, or folders up to five levels deep</span></div>
       ${placeBody}
-      <div class="primary-facts">${stat(f(foot.touches),'File touches',placeTypical.touches!=null?`Average release ${f(placeTypical.touches)}`:'')}${stat(f(foot.lines),'Lines changed','Added + deleted')}${stat(f(foot.cells),'Areas touched','Up to three directories deep')}${stat(f(foot.topLevels),'Top-level directories',placeTypical.topLevels!=null?`Average release ${f(placeTypical.topLevels)}`:'')}</div>
+      <div class="primary-facts">${stat(f(foot.touches),'File touches',placeTypical.touches!=null?`Average release ${f(placeTypical.touches)}`:'')}${stat(f(foot.lines),'Lines changed','Added + deleted')}${stat(f(foot.cells),'Map cells touched','Files, or folders five levels deep')}${stat(f(foot.topLevels),'Top-level directories',placeTypical.topLevels!=null?`Average release ${f(placeTypical.topLevels)}`:'')}</div>
       <div class="primary-similar"><h5>Releases like this one</h5>${similar.length?similar.map(x=>{const other=byHash.get(x.hash);return `<div class="primary-similar-row">${tagButton(index,other)}<small>${e(day(other.date))}</small>${footprintBadge(footprints.releases.get(x.hash).shape,placeRef)}<span>${p(x.similarity)} similar</span></div>`;}).join(''):`<p class="primary-muted">${r.baseline?'The first tag is not compared with incremental releases.':'No other release changed a similar mix of areas.'}</p>`}</div>
       ${caption(`Similarity compares the share of ${weightLabel} in each area (cosine similarity). A footprint shows where changes landed, not their value or risk; renames and generated files can dominate lines changed.`)}
     </section>
@@ -205,7 +213,7 @@ const READING_GUIDE={
   observatory:['Tag ancestry defines what a release contains; release events are dated by GitHub publication, an annotated tag or the tagged commit.','The first tag is a baseline that ships all earlier history. Releases with incomplete ancestry, squashes and unmatched publishers need interpretation.','A release lead is the GitHub publisher or tagger, not a claim about who authored its code. Release shapes describe the age and location of shipped work, not its urgency, value or risk.','A GitHub release is not necessarily a production deployment. Environment events come from Heroku and are linked to tags by Git ancestry, not by dates or version numbers.'],
   contributors:['These are measures of recorded activity, not a ranking of performance.','Release participation and leadership are independent roles. A share of commits is not a share of effort, ownership or value.','The contributor table\'s first column follows the Measure above; copy it as CSV for your own analysis. Merge detection uses parent hashes when available (subject heuristics for older logs), and VERSION touches are a repository-specific proxy, not a verified release count.'],
   rhythm:['Times are as recorded by each commit\'s author, in their own time zone; they show when changes were recorded, not hours worked.','A gap means no matching authored records in this import, not absence from work. Working-day patterns are observations, not verified schedules.'],
-  codebase:['The map shows areas up to three directories deep; the people grid uses top-level folders. A file touched in several commits counts each time; binary changes count as touches but not lines.','Touching the same files does not establish ownership or direct collaboration.'],
+  codebase:['The map shows files by name down to five levels, and deeper changes under their fifth-level folder; the people grid uses top-level folders. A file touched in several commits counts each time; binary changes count as touches but not lines.','Touching the same files does not establish ownership or direct collaboration.'],
 };
 export function readingGuide(index,tab){
   const general=index?[`${filterSentence(index)}.`,'Git records changes, not effort, difficulty, value, code quality or working hours. Only the imported, reachable history is visible; uncollected branches and missing dates are not counted.']:[];
@@ -436,7 +444,8 @@ function codebaseView(index,ui){
   const {map}=releaseFootprints(index);
   const fp=releaseFootprint(commits,map);
   const selected=ui.codeArea||null;
-  const matches=path=>{const area=footprintArea(path);return area===selected||map.cellOf.get(area)===selected||selected!=='(root)'&&area.startsWith(selected);};
+  // A selection is a map cell, a top-level block or a folder from a link.
+  const matches=path=>{const area=footprintArea(path);return area===selected||map.cellOf.get(area)===selected||topOf(area)===selected||selected.endsWith('/')&&area.startsWith(selected);};
   const portrait=selected?areaPortrait(index,commits,matches):null;
   const clockSwitch=`<div class="primary-preset-row" role="group" aria-label="Count changes">${toggleButton('codebaseClock','authored','Authored',clock)}${toggleButton('codebaseClock','released','Released',clock)}</div>`;
   const basis=clock==='released'?'commits shipped by releases published in the scope dates':'commits authored in the scope dates';

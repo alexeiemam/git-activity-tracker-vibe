@@ -883,10 +883,10 @@ button.primary-shape{cursor:pointer;line-height:1.4}button.primary-shape:hover{f
 .primary-fp-col.selected{outline:2px solid #c06b2c;outline-offset:1px}
 .primary-fp-tall{gap:1px}.primary-fp-rows{display:flex;flex-direction:column;gap:1px;font:10px var(--mono);color:#5f7565;padding-top:0}.primary-fp-rows span{display:flex;align-items:flex-start;border-top:1px solid #dfe7de;white-space:nowrap;overflow:hidden;min-height:8px}
 .primary-map{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
-.primary-map-group{display:flex;flex-direction:column;gap:4px;flex-basis:96px;min-width:96px}
+.primary-map-group{display:flex;flex-direction:column;gap:4px;min-width:140px}
 .primary-map-top{padding:0;border:0;background:none;text-align:left;font:600 11px var(--mono);color:#2a684c;text-decoration:underline;text-underline-offset:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.primary-map-cells{display:flex;flex-direction:column;gap:2px}
-.primary-map-cell{flex-basis:0;min-height:16px;border:1px solid #dbe4da;border-radius:3px;padding:2px 5px;overflow:hidden;font:10px/1.3 var(--mono);color:#2e4a39;background:#f3f6f1}
+.primary-map-cells{display:flex;flex-wrap:wrap;align-content:flex-start;gap:2px}
+.primary-map-cell{flex-basis:84px;min-width:0;min-height:30px;border:1px solid #dbe4da;border-radius:3px;padding:2px 5px;overflow:hidden;font:10px/1.3 var(--mono);color:#2e4a39;background:#f3f6f1}
 .primary-map-cell span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .primary-map-cell.is-strong{color:#fff}.primary-map-cell{position:relative}.primary-map-cell b{position:absolute;left:3px;bottom:3px;height:3px;max-width:calc(100% - 6px);background:#e08a43;border-radius:2px}.primary-age-key.is-bar{height:3px;background:#e08a43;vertical-align:3px}
 .primary-map-top-list{margin:0 0 12px}.primary-map-top-list small{color:#758274}
@@ -1584,3 +1584,6 @@ button.primary-map-cell{text-align:left;font:inherit;cursor:pointer;width:100%;c
 button.primary-map-cell:hover{outline:2px solid #4f9a78;outline-offset:-2px}
 button.primary-map-cell:focus-visible,.primary-map-top:focus-visible{outline:3px solid #c2925d;outline-offset:-3px}
 .primary-map-cell.is-selected,.primary-map-top.is-selected{outline:3px solid #c2925d;outline-offset:-3px}
+
+.primary-map-cell>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.primary-map-top.is-other{text-decoration:none;color:var(--muted)}

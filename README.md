@@ -115,8 +115,13 @@ surrounding fortnight or a person's recent period set the scope's dates (and,
 for a person, its people).
 
 **Codebase** is organised around a code area. **The codebase map** is the same
-map release footprints use (areas up to three directories deep, sized by
-all-time activity), shaded by the scope's changes on one of two clocks:
+map release footprints use: a file is its own tile when its path is at most
+five levels deep (`app/models/user.rb`, `README.md`), and deeper changes are
+grouped under their fifth-level folder. The busiest 80 tiles across all
+history are shown by name inside their top-level folder; quieter files fold
+into that folder's "… other" tile, and top-level folders with none of the
+busiest tiles share one "other folders" block. Each folder's block starts at
+its share of all-time activity, so busy folders get room for their tiles. The map is shaded by the scope's changes on one of two clocks:
 **Authored** (commits authored in the scope dates) or **Released** (commits
 shipped by releases published in the scope dates, each commit counted once).
 Select a cell, or a top-level block, to open that area's portrait: file
@@ -373,13 +378,14 @@ are not measured.
 ### Codebase footprint
 
 **Releases › Release anatomy › Release shape › Where they landed** shows where a release's
-changes landed, up to three directories deep (`app/models/concerns/`; files
-higher up count as their own directory, e.g. `app/models/`, and root files as
-`(root)`).
+changes landed, on the same tiles as the Codebase map: files up to five
+levels deep by name, deeper changes under their fifth-level folder. The
+**Focused** shape still measures concentration over two-level folders
+(`app/models/`), so file-level tiles don't change what it means.
 
 - One **map** is built from the whole imported history, so every release is
-  drawn on the same cells: top-level directories are blocks, the busiest 60
-  areas are cells sized by all-time activity, and quieter areas fold
+  drawn on the same tiles: top-level directories are blocks, the busiest 80
+  files or folders are tiles sized by all-time activity, and quieter areas fold
   into one "… other" cell per directory. Shading shows this release's share;
   **Compare with all releases** adds an orange bar per cell for the share of
   all incremental releases' changes, pooled. Select a directory name to open
@@ -390,7 +396,7 @@ higher up count as their own directory, e.g. `app/models/`, and root files as
   values until there are five): **Broad sweep** (twice the file touches at
   half the lines per file, often renames or reformatting), **Cross-cutting**
   (at least 1.5× the average number of top-level directories, minimum three),
-  **Focused** (two areas hold three quarters of file touches), otherwise
+  **Focused** (two two-level folders hold three quarters of file touches), otherwise
   **Spread**. **Browse releases › Footprint** filters by shape, and each
   release in the index shows both its wait shape and its footprint shape.
 - **Releases like this one** lists up to four releases with the most similar
