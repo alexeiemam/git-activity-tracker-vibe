@@ -1033,7 +1033,8 @@ function renderStats(view) {
   // Release roles are rates over releases in scope, not portions of an additive total.
   if (METRICS[view.metric].unit==='releases') {
     const role=view.metric==='release_leadership'?'led':'shipped work in';
-    $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> ${role} <strong>${esc(figure)}</strong> of the ${esc(number.format(refMetric))} tagged releases in scope${second?`; <strong>${esc(second.displayName)}</strong> follows with <strong>${esc(number.format(metricValue(second,view.metric)))}</strong>.`:'.'} These are measures of recorded activity, not a ranking of performance.`;
+    const releases=c=>`<strong>${esc(number.format(metricValue(c,view.metric)))}</strong> (${esc(percent(metricValue(c,view.metric)/refMetric*100))})`;
+    $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> ${role} ${releases(first)} of the ${esc(number.format(refMetric))} tagged releases in scope${second?`; <strong>${esc(second.displayName)}</strong> follows with ${releases(second)}.`:'.'} These are measures of recorded activity, not a ranking of performance.`;
     return;
   }
   $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> accounts for <strong>${esc(figure)}</strong> of ${esc(METRICS[view.metric].label.toLowerCase())} in the ${view.denominator==='repository'?'repository':'selected cohort'}${second?`; <strong>${esc(second.displayName)}</strong> follows at <strong>${esc(number.format(metricValue(second,view.metric)))}</strong>.`:'.'} These are measures of recorded activity, not a ranking of performance.`;
