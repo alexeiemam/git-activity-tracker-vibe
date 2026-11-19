@@ -85,7 +85,7 @@ underneath:
 
 | Tab | Question | Contents |
 | --- | --- | --- |
-| **Releases** | What shipped, and where did it go? | **Browse releases** (the list beside the selected release's anatomy), **Overview** (landscape, mix, cohorts, deployment evidence, release gaps, Impact › Release detail, People & releases and Change evolution) and, when deployment history was imported, **Environments** (Heroku STAG/BETA/PROD events and how they relate to tags) |
+| **Releases** | What shipped, and where did it go? | **Browse releases** (seven ways to pick a release, with the selected release's anatomy) and, when deployment history was imported, **Environments** (published versus production, Heroku STAG/BETA/PROD events and how they relate to tags) |
 | **People** | Who contributed? | Contributor portraits; summary, contribution side by side, momentum over time, every measure per person (copyable as CSV) and each person's mix of commit sizes |
 | **Rhythm** | When, and how steadily? | The scope unfolding over time; the activity pulse; weekly, yearly and seasonal rhythms |
 | **Codebase** | Where in the code? | The codebase map (up to three directory levels) with an area portrait, and who works where |
@@ -134,14 +134,15 @@ grid on the same clock, with an **Everyone else** row when the scope is
 narrowed; select a cell to list its commits. The scope bar is the only date
 control.
 
-- **Releases — start with releases.** The tab opens on **Browse releases**:
-  the filterable list stays in view beside the release it opens (the wait and
-  footprint strips take the full width above it). **Overview** holds the
-  landscape and the detailed release charts; selecting a time bucket or a
-  release kind there returns to the filtered list. A release landscape shows aligned
-  calendar-bucket lanes for release counts, contributor appearances and codebase
-  area occurrences. Empty buckets remain visible, so quiet delivery periods
-  cannot disappear. Browse **all tagged releases**, search by tag, filter by
+- **Releases — start with releases.** **Browse releases** opens with the
+  repository's release counts and cadence, then seven ways to pick a release:
+  **List** (kept in view beside the release it opens), **Timeline** (release
+  events with the scope's authored contributions), **Groups** (cohorts by
+  version transition, lead or year, each able to narrow the list), **People**
+  (who led and authored each release), **Follow-up** (how many of a release's
+  paths were revisited afterwards), **Wait shapes** and **Footprints**. Every
+  view opens the chosen release's anatomy below it; the release-kind filter
+  shows how many releases of each kind there are. Browse **all tagged releases**, search by tag, filter by
   year and SemVer transition, or inspect release cohorts (patch/minor/major).
   Compare release cohorts by **SemVer transition, matched release lead or calendar year**. Select any release to open its **Release Anatomy**: complete Git-ancestry
   incremental commits, recorded contributors and their commit shares, the
@@ -216,6 +217,12 @@ compatibility with existing tests, but Stories is no longer the primary UX.
 The app remains dependency-free and local-first.
 
 ## Git + GitHub Impact Explorer: tag-first delivery evidence
+
+The Impact Explorer provides three of the **Releases › Browse releases** views:
+**Timeline** (its impact timeline), **People** (its people & releases matrix)
+and **Follow-up** (its change evolution table). Selecting a release in any of
+them opens that release's anatomy below; its own Release detail view gave way
+to the anatomy.
 
 **Source of truth:** Git tags are the primary release **code boundaries**. Published GitHub Releases enrich those boundaries with the GitHub publication timestamp, title, publisher account, notes and URL. GitHub's `created_at` is **not** treated as a release date. Missing/draft GitHub Releases leave the Git-only tag evidence intact. `release publisher = assumed driver` is a stated **assumption**, not proof of deployment responsibility. GitHub publishers are automatically linked to existing merged Git author groups when an exact, unambiguous identity is available (GitHub noreply email, unique email username, or exact author/contributor name). Ambiguous or unknown publishers remain unassigned rather than guessed. The **People & releases** view provides a reviewable publisher → contributor matcher; explicit overrides and exclusions persist in exported sessions, by author email, across identity merges.
 
@@ -446,8 +453,8 @@ The **ranking, trend and comparison table** use the chosen metric and mode. The 
 
 The **activity pulse** offers five complementary lenses, each shown on the tab
 whose question it answers: **Rhythm** shows **Authored activity** and
-**Contribution continuity**, **People** shows **Contribution momentum** and
-**Absolute velocity**, and **Releases** shows **Release gap × activity**.
+**Contribution continuity**, **People** shows **Contribution momentum**,
+**Absolute velocity** and **Release gap × activity**.
 Authored activity has its own **Colour by** measure (any authored measure,
 independent of the People tab's measure). The lenses are: **Authored activity**
 (raw totals), **Release gap × activity** (a warm,

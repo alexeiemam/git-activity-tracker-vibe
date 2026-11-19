@@ -5,6 +5,7 @@ import {buildAnalysis,parseGitHistory,dayNumber,dateAtDay} from '../assets/domai
 import {impactAnalysis} from '../assets/impact.js';
 import {buildEvidenceIndex,comparisonWindow,windowOf,periodDigest,contributorPortrait,releaseLandscape,releaseDetails,codebaseCommits,areaPortrait,briefingText} from '../assets/perspectives.js';
 import {renderPrimaryExplorer,periodBriefingForUi,scopeHeadline} from '../assets/perspective-view.js';
+import {restorePrimaryState} from '../assets/perspective-state.js';
 
 const h=ch=>ch.repeat(40);
 const tagged=(tag,hash,date)=>`TAG|${tag}||${hash}|commit|${date}T12:00:00Z`;
@@ -194,11 +195,11 @@ test('period inspection works when release events exist but no commits were auth
 });
 
 test('release cohort controls offer lead and year compositions without productivity scoring',()=>{
- const driver=renderPrimaryExplorer(index,ui({mode:'observatory',releaseView:'overview',cohortBy:'driver'}));
- const years=renderPrimaryExplorer(index,ui({mode:'observatory',releaseView:'overview',cohortBy:'year'}));
+ const driver=renderPrimaryExplorer(index,ui({mode:'observatory',releaseBrowse:'groups',cohortBy:'driver'}));
+ const years=renderPrimaryExplorer(index,ui({mode:'observatory',releaseBrowse:'groups',cohortBy:'year'}));
  assert.match(driver,/Group by/);
  assert.match(driver,/Lead unknown|Unmatched:/);
- assert.match(years,/2025/);
+ assert.match(years,/data-action="primary-filter-release-year" data-year="2025">List these releases/);
  assert.doesNotMatch(driver,/productivity score:\s*\d+/);
 });
 
@@ -273,21 +274,27 @@ test('each tab has one reading guide instead of caveats repeated under every cha
  assert.doesNotMatch(html,/class="primary-eyebrow">DELIVERED CONTRIBUTIONS/,'cards carry one heading, not an eyebrow and a title');
 });
 
-test('Releases opens on the list beside the selected release; the overview holds the landscape',()=>{
+test('Releases opens on the list beside the selected release; every other view picks a release above it',()=>{
  const browse=renderPrimaryExplorer(index,ui({mode:'observatory'}));
  assert.match(browse,/class="primary-release-browse"><div class="primary-release-sidebar"><div id="primary-browse-releases"/);
  assert.match(browse,/<div class="primary-release-detail"><section class="primary-anatomy/);
  assert.doesNotMatch(browse,/The release landscape/);
  const strips=renderPrimaryExplorer(index,ui({mode:'observatory',releaseBrowse:'wait'}));
  assert.doesNotMatch(strips,/primary-release-sidebar/,'strips need the full width');
- const overview=renderPrimaryExplorer(index,ui({mode:'observatory',releaseView:'overview'}));
- assert.match(overview,/The release landscape/);
- assert.doesNotMatch(overview,/primary-anatomy/);
+ assert.match(browse,/class="primary-browse-summary">3 tagged releases/,'the overview numbers lead the browse card');
+ for(const mode of ['timeline','people','followup']){
+  const html=renderPrimaryExplorer(index,ui({mode:'observatory',releaseBrowse:mode}));
+  assert.match(html,new RegExp(`id="primary-impact-slot" class="primary-impact-slot" data-mode="${mode}"`),'the impact explorer is placed here');
+  assert.match(html,/primary-anatomy/,'the release it picks opens below');
+ }
+ assert.equal(restorePrimaryState({primary:{releaseView:'overview'}}).releaseView,'browse','sessions saved on Overview open Browse');
 });
 
 test('views sit with their subject: change evolution with releases, commit sizes with people',()=>{
  const app=readFileSync(new URL('../assets/app.js',import.meta.url),'utf8');
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
- assert.match(app,/observatory:\{tabs:\['timeline','matrix','durability'\]/);
+ assert.match(app,/const IMPACT_BROWSE=\{timeline:'timeline',people:'matrix',followup:'durability'\}/);
+ assert.match(app,/contributors:\{lenses:\['momentum','level','release-gap'\]/,'release gaps sit with people');
+ assert.match(html,/id="impact-explorer" data-tabs="hosted"/);
  assert.match(html,/aria-labelledby="footprint-heading" data-tabs="contributors"/);
 });

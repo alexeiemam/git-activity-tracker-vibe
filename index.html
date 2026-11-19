@@ -324,7 +324,7 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
         </div>
       </section>
 
-      <section class="report-section" id="impact-explorer" data-tabs="observatory" aria-labelledby="impact-heading">
+      <section class="report-section" id="impact-explorer" data-tabs="hosted" aria-labelledby="impact-heading" hidden>
         <div class="section-header"><div><h3 id="impact-heading">Impact, in context.</h3><p>Which changes reached tagged releases, which areas did they touch, who contributed, and what happened afterwards? Git evidence, not a productivity score.</p></div></div>
         <div class="report-card impact-report-card">
           <div id="impact-empty" role="status" aria-live="polite"><div class="impact-empty"><strong>Preparing release intelligence…</strong><p>If this remains visible after the dashboard loads, its JavaScript may not have initialised. Refresh the page to load the latest assets.</p></div></div>
@@ -334,11 +334,6 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
             <div class="impact-scope" id="impact-scope"></div>
             <div class="impact-block-heading"><div><span class="eyebrow">01 / THE IMPACT TIMELINE</span><h4>Delivery, over time.</h4><p>Git tags define release contents; GitHub publication dates locate published Releases. VERSION edits remain supporting signals.</p></div><div class="impact-release-settings"><div id="impact-release-control" class="impact-release-control"></div><div class="impact-toolbar" id="impact-matrix-toolbar"><label for="impact-metric-select">TIMELINE + MATRIX MEASURE</label><select id="impact-metric-select" class="impact-select"><option value="commits">Commits</option><option value="share">Commit share</option><option value="churn">Line churn</option><option value="paths">Distinct paths</option><option value="areas">Codebase areas</option></select></div></div></div>
             <div id="impact-timeline" aria-label="Release events by scoped authored contributions"></div>
-            <div class="impact-tabs" role="group" aria-label="Impact analysis perspective">
-              <button type="button" class="impact-tab is-active" data-action="impact-tab" data-impact-tab="timeline" aria-pressed="true">Release detail</button>
-              <button type="button" class="impact-tab" data-action="impact-tab" data-impact-tab="matrix" aria-pressed="false">People &amp; releases</button>
-              <button type="button" class="impact-tab" data-action="impact-tab" data-impact-tab="durability" aria-pressed="false">Change evolution</button>
-            </div>
             <div class="impact-content-head"><div><span class="eyebrow">02 / EXPLORE THE EVIDENCE</span><h5 id="impact-tab-title">A release, under the microscope.</h5></div>
             </div>
             <div id="impact-content" aria-live="polite"></div>

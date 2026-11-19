@@ -1,6 +1,6 @@
 /** Bounded, browser-independent navigation state for the three primary perspectives. */
 export const primaryDefaults=()=>({
-  mode:'observatory',cohortBy:'type',releaseHash:null,releaseType:'all',releaseYear:'all',releaseQuery:'',releasePage:0,releaseBin:null,
+  mode:'observatory',cohortBy:'type',releaseHash:null,releaseType:'all',releaseYear:'all',releaseQuery:'',releasePage:0,
   releaseView:'browse',releaseShape:'all',releaseFootprint:'all',releaseBrowse:'list',fingerprintView:'arrival',shapeWeight:'count',shapeCompare:'on',
   periodPreset:'14',periodFrom:null,periodTo:null,periodComparison:'previous',compareFrom:null,compareTo:null,
   periodBucket:null,periodSelectedId:null,periodFocusPerson:null,periodFocusArea:null,
@@ -14,7 +14,7 @@ const accepted={
   releaseType:['all','major','minor','patch','prerelease','unclassified','divergent','baseline','same-version'],
   releaseShape:['all','hotfix','steady','long-tail','backlog','initial','unmeasured'],
   releaseFootprint:['all','focused','spread','cross-cutting','broad-sweep','initial','unmeasured'],
-  releaseView:['browse','overview','environments'],releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off'],
+  releaseView:['browse','environments'],releaseBrowse:['list','timeline','groups','people','followup','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off'],
   periodComparison:['none','previous','year','custom'],
   contributorTab:['delivery','together','focus','evolution','compare'],
   coReleaseSort:['shared','overlap'],
@@ -35,6 +35,8 @@ export function restorePrimaryState(scope,groups=[]) {
   if(state.mode==='periods')state.mode='rhythm';
   // Deployments became the Environments view of Releases.
   if(state.mode==='deployments')Object.assign(state,{mode:'observatory',releaseView:'environments'});
+  // Releases › Overview was folded into Browse releases.
+  if(state.releaseView==='overview')state.releaseView='browse';
   for(const [key,values] of Object.entries(accepted))if(!values.includes(state[key]))state[key]=primaryDefaults()[key];
   for(const key of ['periodFrom','periodTo','compareFrom','compareTo'])
     if(state[key]&&!/^\d{4}-\d{2}-\d{2}$/.test(state[key]))state[key]=null;

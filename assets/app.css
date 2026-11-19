@@ -1592,3 +1592,11 @@ button.primary-map-cell:focus-visible,.primary-map-top:focus-visible{outline:3px
 .primary-collapsible:not(.is-expanded)>.primary-collapsible-body{max-height:320px;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 72%,transparent);mask-image:linear-gradient(to bottom,#000 72%,transparent)}
 .primary-collapsible-toggle{display:block;margin:6px 0 10px;font:600 11px var(--mono)}
 .primary-collapsible-body:focus-within{max-height:none!important;-webkit-mask-image:none!important;mask-image:none!important}
+
+/* The impact explorer inside Browse releases: one view per browse mode, no heading or tabs of its own. */
+.primary-impact-slot #impact-explorer{margin:8px 0 0}
+.primary-impact-slot #impact-explorer>.section-header,.primary-impact-slot #impact-summary{display:none}
+#impact-explorer[data-mode="timeline"] .impact-content-head,#impact-explorer[data-mode="timeline"] #impact-content{display:none}
+#impact-explorer[data-mode="people"] .impact-block-heading>div:first-child,#impact-explorer[data-mode="people"] #impact-timeline,#impact-explorer[data-mode="people"] #impact-release-control,
+#impact-explorer[data-mode="followup"] .impact-block-heading,#impact-explorer[data-mode="followup"] #impact-timeline{display:none}
+.primary-browse-summary{margin:0 0 12px;font-size:12px;color:#587264}

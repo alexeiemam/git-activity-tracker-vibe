@@ -307,7 +307,9 @@ function renderPrimary(){
   primary.periodTo=state.end||analysis?.end||primary.periodTo;
   primary.mode=state.viewMode;
   perspectiveIndex.navigation={ui:primary,groups:mergeGroups.map((g,i)=>({...g,id:String(i)})),datasetId:localDatasetId,path:routePath(),scope:{ids:scopeIds()}};
+  parkImpact();
   $('stories-view').innerHTML=renderPrimaryExplorer(perspectiveIndex,primary);
+  placeImpact();
   $('scope-headline').innerHTML=scopeHeadline(perspectiveIndex,primary);
   syncBrowserRoute();
 }
@@ -2275,10 +2277,10 @@ function scrollToImpactMarker(hash, {restoreFocus=null,showTimeline=true}={}) {
     }
   });
 }
-function chooseImpactRelease(hash, {focus=null,showTimeline=true}={}) {
+function chooseImpactRelease(hash, {focus=null,showTimeline=true,tab='timeline'}={}) {
   if(!impactModel?.releases.some(r=>r.hash===hash))return;
   state.impactReleaseHash=hash;
-  state.impactTab='timeline';
+  state.impactTab=tab;
   setTimelinePreference(impactTimelineReveal(impactModel,timelinePreference(),hash));
   renderImpact(analysis);
   scrollToImpactMarker(hash,{restoreFocus:focus,showTimeline});
@@ -2401,16 +2403,22 @@ function storyPerson() {
   return storyModel.people.find(p=>p.id===state.storyFocus&&p.id!=='selection') ||
     storyModel.people.find(p=>p.id!=='selection') || null;
 }
-/** The impact explorer is shared: Releases shows its release views, Codebase its codebase views. */
-const IMPACT_VIEWS={observatory:{tabs:['timeline','matrix','durability'],title:'Impact, in context.'}};
-function showImpactTabsFor(tab) {
-  const host=IMPACT_VIEWS[tab];if(!host)return;
-  setText('impact-heading',host.title);
-  for(const button of document.querySelectorAll('[data-impact-tab]'))button.hidden=!host.tabs.includes(button.dataset.impactTab);
-  if(!host.tabs.includes(state.impactTab)){
-    state.impactTab=host.tabs[0];
-    if(evidenceRendered.keys.has('impact'))renderImpact(analysis);
-  }
+/** Browse modes the impact explorer provides, and the impact view behind each. */
+const IMPACT_BROWSE={timeline:'timeline',people:'matrix',followup:'durability'};
+/** Before the Releases view re-renders, return the impact explorer to its home so it survives. */
+function parkImpact() {
+  const impact=$('impact-explorer');
+  if(impact?.closest('#stories-view')){$('evidence-view').append(impact);impact.hidden=true;}
+}
+/** Put the impact explorer into the Browse releases slot, showing the view its browse mode asks for. */
+function placeImpact() {
+  const impact=$('impact-explorer'),slot=$('primary-impact-slot');
+  if(!slot||!evidenceRendered.keys.has('impact'))return;
+  const tab=IMPACT_BROWSE[slot.dataset.mode];
+  impact.dataset.mode=slot.dataset.mode;
+  if(impact.parentElement!==slot)slot.append(impact);
+  impact.hidden=false;
+  if(state.impactTab!==tab){state.impactTab=tab;renderImpact(analysis);}
 }
 /**
  * The activity pulse answers a different question on each tab: Rhythm shows
@@ -2419,10 +2427,9 @@ function showImpactTabsFor(tab) {
  */
 const PULSE_VIEWS={
   rhythm:{lenses:['activity','continuity'],title:'The activity pulse.',intro:'Authored changes per person over time, and recorded contribution continuity against each person\'s working-day pattern.'},
-  contributors:{lenses:['momentum','level'],title:'Momentum and pace.',intro:'Directional momentum against each person\'s own preceding period, and absolute velocity on a fixed scale.'},
-  observatory:{lenses:['release-gap'],title:'Release gaps and activity.',intro:'Where long gaps since a person\'s last released change coincide with quiet authored days.'},
+  contributors:{lenses:['momentum','level','release-gap'],title:'Momentum and pace.',intro:'Directional momentum against each person\'s own preceding period, absolute velocity on a fixed scale, and where long gaps since a person\'s last released change coincide with quiet authored days.'},
 };
-const pulseLensByTab={rhythm:'activity',contributors:'momentum',observatory:'release-gap'};
+const pulseLensByTab={rhythm:'activity',contributors:'momentum'};
 function showPulseLensesFor(tab) {
   const host=PULSE_VIEWS[tab];if(!host)return;
   for(const button of document.querySelectorAll('[data-pulse-lens]'))button.hidden=!host.lenses.includes(button.dataset.pulseLens);
@@ -2441,7 +2448,7 @@ const sectionTabs=node=>(node.dataset.tabs||'').split(/\s+/);
 function setExperienceVisibility() {
   const tab=state.viewMode;
   const sections=[...document.querySelectorAll('#evidence-view [data-tabs]')];
-  for(const node of sections)node.hidden=!sectionTabs(node).includes(evidenceTabOf(tab));
+  for(const node of sections)node.hidden=!sectionTabs(node).includes(tab);
   $('evidence-view').hidden=!sections.some(node=>!node.hidden);
   for(const button of document.querySelectorAll('[data-experience]')){
     const active=button.dataset.experience===tab;
@@ -2451,7 +2458,7 @@ function setExperienceVisibility() {
       button.href=targetUrl(routePath(),{...primary,mode:tab},mergeGroups.map((g,i)=>({...g,id:String(i)})),localDatasetId,{view:button.dataset.experience});
     }else button.setAttribute('aria-pressed',String(active));
   }
-  showImpactTabsFor(tab);showPulseLensesFor(tab);
+  showPulseLensesFor(tab);
   $('reading-guide-body').innerHTML=readingGuide(perspectiveIndex,tab);
   const saved=$('local-link-toggle');
   if(saved)saved.textContent=localDatasetId?'Update saved history for other tabs':'Enable multi-tab links';
@@ -2494,7 +2501,7 @@ function focusStoryMonth() {
  */
 const EVIDENCE_STAGES=[
   {key:'comparison',tabs:['contributors'],label:'Preparing comparisons',value:79,help:'Summary, ranking, trends and the contributor table',render:()=>{renderStats(analysis);renderRanking(analysis);renderTrend(analysis);renderTable(analysis);}},
-  {key:'pulse',tabs:['rhythm','contributors','observatory'],label:'Rendering activity pulse',value:84,help:'Comparing authored dates',render:()=>renderPulse(analysis)},
+  {key:'pulse',tabs:['rhythm','contributors'],label:'Rendering activity pulse',value:84,help:'Comparing authored dates',render:()=>renderPulse(analysis)},
   {key:'rhythm',tabs:['rhythm'],label:'Rendering weekly rhythms',value:89,help:'Weekdays, hours and seasonality',render:()=>renderRhythm(analysis)},
   {key:'impact',tabs:['observatory'],label:'Rendering impact evidence',value:94,help:'Tagged releases and contributor roles',render:()=>renderImpact(analysis)},
   {key:'sizes',tabs:['contributors'],label:'Measuring change sizes',value:96,help:'Each person\'s mix of commit sizes',render:()=>renderFootprint(analysis)},
@@ -2502,7 +2509,8 @@ const EVIDENCE_STAGES=[
 let evidenceRendered={run:-1,keys:new Set()};
 const evidencePending=new Map();
 /** The detailed release charts belong to the Releases overview, not to browsing. */
-const evidenceTabOf=tab=>tab==='observatory'&&primary.releaseView!=='overview'?null:tab;
+/** Releases only needs the impact explorer while one of its browse modes is showing. */
+const evidenceTabOf=tab=>tab==='observatory'&&!(primary.releaseView==='browse'&&IMPACT_BROWSE[primary.releaseBrowse])?null:tab;
 const stagesFor=tab=>EVIDENCE_STAGES.filter(stage=>stage.tabs.includes(evidenceTabOf(tab)));
 const evidenceReady=(tab,run=renderGeneration)=>evidenceRendered.run===run&&stagesFor(tab).every(stage=>evidenceRendered.keys.has(stage.key));
 async function ensureEvidenceRendered(tab=state.viewMode,run=renderGeneration,generation=progressGeneration) {
@@ -2551,7 +2559,7 @@ async function showTabEvidence(tab=state.viewMode) {
   if(!analysis||evidenceReady(tab))return;
   const generation=++progressGeneration;
   showProgress('Opening the view',76,'Rendering the requested charts in manageable stages',generation);
-  try{await ensureEvidenceRendered(tab,renderGeneration,generation);finishProgress(generation,null,'View ready','All views use the same filtered evidence.');}
+  try{await ensureEvidenceRendered(tab,renderGeneration,generation);placeImpact();finishProgress(generation,null,'View ready','All views use the same filtered evidence.');}
   catch(error){finishProgress(generation,error);$('scope-error').textContent=`Rendering failed: ${error.message}`;}
 }
 /** The tab that holds a workbench anchor. */
@@ -2590,6 +2598,7 @@ async function renderDashboard() {
     if(run!==renderGeneration)return;
     renderPrimary();
     await ensureEvidenceRendered(state.viewMode,run,generation);
+    if(run===renderGeneration)placeImpact();
     if(run===renderGeneration)finishProgress(generation,null,'Repository ready',
       'Tag-defined releases and authored activity are ready to explore.');
   }catch(error){
@@ -2810,14 +2819,14 @@ const ACTIONS={
   'primary-open-area':(_e,t)=>goPrimary('codebase',{codeArea:t.dataset.area}),
   'primary-select-area':(_e,t)=>{Object.assign(primary,{codeArea:t.dataset.area||null,periodFocusPerson:null,periodFocusArea:null});routePushPending=true;renderPrimary();},
   'primary-release-page':(_e,t)=>{primary.releasePage=Math.max(0,Number(t.dataset.page)||0);renderPrimary();},
-  'primary-reset-release-search':()=>{Object.assign(primary,{releaseBin:null,releaseYear:'all',releaseType:'all',releaseShape:'all',releaseFootprint:'all',releaseQuery:'',releasePage:0});renderPrimary();},
+  'primary-reset-release-search':()=>{Object.assign(primary,{releaseYear:'all',releaseType:'all',releaseShape:'all',releaseFootprint:'all',releaseQuery:'',releasePage:0});renderPrimary();},
   'primary-toggle':(_e,t)=>{
-    const options={mapExpanded:['on','off'],codebaseClock:['authored','released'],releaseView:['browse','overview','environments'],releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off']};
+    const options={mapExpanded:['on','off'],codebaseClock:['authored','released'],releaseView:['browse','environments'],releaseBrowse:['list','timeline','groups','people','followup','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off']};
     if(!options[t.dataset.key]?.includes(t.dataset.value))return;
     primary[t.dataset.key]=t.dataset.value;
-    if(t.dataset.key==='releaseView'){routePushPending=true;setExperienceVisibility();}
+    if(t.dataset.key==='releaseView')routePushPending=true;
     renderPrimary();
-    if(t.dataset.key==='releaseView')showTabEvidence('observatory');
+    if(['releaseView','releaseBrowse'].includes(t.dataset.key))showTabEvidence('observatory').then(placeImpact);
     // Re-rendering replaces the control; keep keyboard focus on the same choice (the compare switch flips its value).
     const same=`[data-action="primary-toggle"][data-key="${t.dataset.key}"]`;
     (document.querySelector(`${same}[data-value="${t.dataset.value}"]`)||document.querySelector(same))?.focus({preventScroll:true});
@@ -2826,19 +2835,18 @@ const ACTIONS={
     // A shape badge opens every release side by side, filtered to that shape.
     const [filter,other]=t.dataset.browse==='footprint'?['releaseFootprint','releaseShape']:['releaseShape','releaseFootprint'];
     Object.assign(primary,{releaseView:'browse',releaseBrowse:t.dataset.browse==='footprint'?'footprint':'wait',[filter]:t.dataset.shape,[other]:'all',
-      releaseType:'all',releaseYear:'all',releaseBin:null,releaseQuery:'',releasePage:0});
+      releaseType:'all',releaseYear:'all',releaseQuery:'',releasePage:0});
     renderPrimary();
     const target=$('primary-browse-releases');target?.scrollIntoView({behavior:'smooth',block:'start'});target?.focus({preventScroll:true});
   },
   'primary-strip-release':(_e,t)=>{
     // Choosing a release outside the filters clears them so the anatomy can show it.
-    if(t.dataset.match==='false')Object.assign(primary,{releaseShape:'all',releaseFootprint:'all',releaseType:'all',releaseYear:'all',releaseBin:null,releaseQuery:'',releasePage:0});
+    if(t.dataset.match==='false')Object.assign(primary,{releaseShape:'all',releaseFootprint:'all',releaseType:'all',releaseYear:'all',releaseQuery:'',releasePage:0});
     primary.releaseHash=t.dataset.hash;routePushPending=true;renderPrimary();
     document.querySelector(`[data-action="primary-strip-release"][data-hash="${t.dataset.hash}"]`)?.focus({preventScroll:true});
   },
-  'primary-reset-release-bin':()=>{primary.releaseBin=null;renderPrimary();},
+  'primary-filter-release-year':(_e,t)=>{Object.assign(primary,{releaseYear:t.dataset.year,releasePage:0,releaseView:'browse',releaseBrowse:'list'});renderPrimary();$('primary-browse-releases')?.scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-filter-release-type':(_e,t)=>{Object.assign(primary,{releaseType:t.dataset.type,releasePage:0,releaseView:'browse',releaseBrowse:'list'});setExperienceVisibility();renderPrimary();$('primary-browse-releases')?.scrollIntoView({behavior:'smooth',block:'start'});},
-  'primary-observatory-bin':(_e,t)=>{Object.assign(primary,{releaseBin:t.dataset.bin,releasePage:0,releaseView:'browse',releaseBrowse:'list'});setExperienceVisibility();renderPrimary();$('primary-browse-releases')?.scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-release-period':(_e,t)=>{
     const date=t.dataset.date;if(!date)return;
     const at=dayNumber(date);
@@ -2858,7 +2866,11 @@ const ACTIONS={
   'primary-person-period':(_e,t)=>{const window=windowOf(perspectiveIndex,30);setScope({from:window.from,to:window.to,people:[t.dataset.person]},'rhythm');},
   'primary-open-rhythm':async()=>{state.rhythmFocus=primary.contributorFocus;await switchExperience('rhythm',{target:'rhythm-heading'});if(evidenceRendered.keys.has('rhythm'))renderRhythm(analysis);},
   'primary-evidence-person':async(_e,t)=>{state.rhythmFocus=t.dataset.person;await switchExperience('contributors',{target:'ranking-heading'});},
-  'primary-evidence-release':async(_e,t)=>storyOpenEvidence('impact-explorer',t.dataset.hash),
+  'primary-evidence-release':(_e,t)=>{
+    // A release's evidence is the impact timeline, opened at that release.
+    Object.assign(primary,{releaseView:'browse',releaseBrowse:'timeline',releaseHash:t.dataset.hash});state.impactReleaseHash=t.dataset.hash;
+    routePushPending=true;renderPrimary();showTabEvidence('observatory').then(()=>{placeImpact();$('primary-browse-releases')?.scrollIntoView({behavior:'smooth',block:'start'});});
+  },
   'toggle-scope':()=>{
     const open=$('scope-panel').hidden;
     $('scope-panel').hidden=!open;$('scope-toggle').setAttribute('aria-expanded',String(open));
@@ -2969,9 +2981,11 @@ const ACTIONS={
   },
   'impact-tab':(_e,t)=>{state.impactTab=t.dataset.impactTab;renderImpact(analysis);},
   'impact-release':(event,t)=>{
-    const fromMarker=!!t.closest('.impact-timeline-scroll');
-    chooseImpactRelease(t.dataset.impactHash,{focus:event.type==='keydown'&&fromMarker?'marker':null,showTimeline:!fromMarker});
-    if(fromMarker && event.type!=='keydown')$('impact-content').scrollIntoView({behavior:'smooth',block:'nearest'});
+    // In Browse releases the impact views pick the release shown below them.
+    const hash=t.dataset.impactHash,fromMarker=!!t.closest('.impact-timeline-scroll');
+    if(primary.releaseHash!==hash){primary.releaseHash=hash;routePushPending=true;renderPrimary();}
+    chooseImpactRelease(hash,{focus:event.type==='keydown'&&fromMarker?'marker':null,showTimeline:false,tab:state.impactTab});
+    if(event.type!=='keydown')$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});
   },
   'impact-range-preset':(_event,t)=>{
     setTimelinePreference({mode:t.dataset.impactRange});
