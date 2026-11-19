@@ -287,26 +287,26 @@ all tag lineages). It is not effort, review or delivery lead time.
   Choose a view:
   - **Arrival**: each commit placed by how long before the release it was
     authored (log scale), in contributor lanes, with the median marked.
-  - **Age histogram**: commits per age bucket (< 1 day … 6+ months), with the
-    repository's **typical release** as a dashed outline (hide or show it).
-    The typical release averages each incremental release's shape, so large
-    releases do not dominate.
+  - **Age histogram**: commits per age bucket (< 1 day … 6+ months). **Compare
+    with all releases** adds a dashed outline of every commit shipped by
+    incremental releases, pooled, so larger releases count in proportion.
   - **Across releases**: every release as one column of age buckets in time
     order (darker = more work of that age); select a column to open it.
   **Weight by** switches between commits and lines changed (added + deleted),
   so one large old change is not equal to one small fresh fix. The first tag
   ships all earlier history, so its ages include initial development, it is
-  labelled as such and it is left out of the typical release.
+  labelled as such and it is left out of the all-releases comparison.
 - **Release shapes** describe the age of shipped work, by commit count,
-  relative to this repository's typical incremental release (the median of
-  release medians and of release 90th percentiles), so a quarterly project and
-  a daily one each get meaningful labels: **Hotfix-shaped** (90% of commits
-  younger than half the typical median wait), **Backlog flush** (median wait
-  over twice the typical), **Long tail** (oldest 10% waited over twice the
-  typical 90th percentile, and at least four times its own median), otherwise
-  **Steady**. With fewer than five incremental releases, fixed thresholds
-  (typical median 15 days, 90th percentile 30 days) are used instead. Each
-  badge's tooltip states the actual thresholds. Shapes are descriptions, not
+  relative to **all commits shipped by incremental releases, pooled** (their
+  overall median wait and 90th percentile), so a quarterly project and a daily
+  one each get meaningful labels: **Hotfix-shaped** (90% of commits younger
+  than half the overall median wait), **Backlog flush** (median wait over twice
+  the overall median), **Long tail** (oldest 10% waited over twice the overall
+  90th percentile, and at least four times its own median), otherwise
+  **Steady**. The panel states the reference, e.g. "all 644 commits shipped
+  across 11 incremental releases: median wait 45.5 days". With fewer than five
+  incremental releases, fixed thresholds (median 15 days, 90th percentile 30
+  days) are used instead. Each badge's tooltip states the actual thresholds. Shapes are descriptions, not
   judgements of urgency or quality. Each release in
   the index shows its shape, and **Browse releases › Shape** filters by it (the
   Across releases view dims the rest). View, weighting, overlay and shape
@@ -321,6 +321,35 @@ all tag lineages). It is not effort, review or delivery lead time.
 
 Commits without an author time, or whose release is recorded before authorship,
 are not measured.
+
+### Codebase footprint
+
+**Observatory › Release anatomy › Codebase footprint** shows where a release's
+changes landed, two directories deep (`app/models/`; files directly in a
+top-level directory count as that directory, and root files as `(root)`).
+
+- One **map** is built from the whole imported history, so every release is
+  drawn on the same cells: top-level directories are blocks, the busiest 40
+  two-level areas are cells sized by all-time activity, and quieter areas fold
+  into one "… other" cell per directory. Shading shows this release's share;
+  **Compare with all releases** adds an orange bar per cell for the share of
+  all incremental releases' changes, pooled. Select a directory name to open
+  it in the codebase explorer.
+- **Across releases** shows every release as a column of the same cells in
+  time order; select a column to open that release.
+- **Weight by** files touched or lines changed.
+- **Footprint shapes**, relative to the average incremental release (fixed
+  values until there are five): **Broad sweep** (twice the file touches at
+  half the lines per file, often renames or reformatting), **Cross-cutting**
+  (at least 1.5× the average number of top-level directories, minimum three),
+  **Focused** (two areas hold three quarters of file touches), otherwise
+  **Spread**. **Browse releases › Footprint** filters by shape, and each
+  release in the index shows both its wait shape and its footprint shape.
+- **Releases like this one** lists up to four releases with the most similar
+  mix of areas (cosine similarity of area shares, at least 50%).
+
+A footprint shows where changes landed, not their value or risk; renames and
+generated files can dominate lines changed.
 
 ### Individual release impact
 

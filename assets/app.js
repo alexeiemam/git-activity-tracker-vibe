@@ -2724,15 +2724,16 @@ const ACTIONS={
   'deployment-select':(_e,t)=>{primary.deploymentFocus=t.dataset.deploymentId;routePushPending=true;renderPrimary();$('deployment-inspector')?.scrollIntoView({behavior:'smooth',block:'nearest'});},
   'deployment-page':(_e,t)=>{primary.deploymentPage=Math.max(0,Number(t.dataset.page)||0);primary.deploymentFocus=null;renderPrimary();},
   'primary-back':()=>window.history.back(),
-  'primary-open-release':(_e,t)=>{goPrimary('observatory',{releaseHash:t.dataset.hash,releaseType:'all',releaseYear:'all',releaseShape:'all',releaseBin:null,releaseQuery:'',releasePage:0},{scroll:false});$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
+  'primary-open-release':(_e,t)=>{goPrimary('observatory',{releaseHash:t.dataset.hash,releaseType:'all',releaseYear:'all',releaseShape:'all',releaseFootprint:'all',releaseBin:null,releaseQuery:'',releasePage:0},{scroll:false});$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-select-release':(_e,t)=>{primary.releaseHash=t.dataset.hash;routePushPending=true;renderPrimary();$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-open-person':(_e,t)=>goPrimary('contributors',{contributorFocus:t.dataset.person,contributorTab:'delivery',contributorRange:primary.mode==='periods'?'period':'all'}),
   'primary-open-area':(_e,t)=>goPrimary('codebase',{codeArea:t.dataset.area,codebaseRange:primary.mode==='periods'?'period':'all'}),
   'primary-select-area':(_e,t)=>{primary.codeArea=t.dataset.area;routePushPending=true;renderPrimary();},
   'primary-release-page':(_e,t)=>{primary.releasePage=Math.max(0,Number(t.dataset.page)||0);renderPrimary();},
-  'primary-reset-release-search':()=>{Object.assign(primary,{releaseBin:null,releaseYear:'all',releaseType:'all',releaseShape:'all',releaseQuery:'',releasePage:0});renderPrimary();},
+  'primary-reset-release-search':()=>{Object.assign(primary,{releaseBin:null,releaseYear:'all',releaseType:'all',releaseShape:'all',releaseFootprint:'all',releaseQuery:'',releasePage:0});renderPrimary();},
   'primary-fingerprint':(_e,t)=>{
-    const options={fingerprintView:['arrival','histogram','strip'],fingerprintWeight:['commits','lines'],fingerprintTypical:['on','off']};
+    const options={fingerprintView:['arrival','histogram','strip'],fingerprintWeight:['commits','lines'],fingerprintTypical:['on','off'],
+      footprintView:['map','strip'],footprintWeight:['files','lines'],footprintTypical:['on','off']};
     if(!options[t.dataset.key]?.includes(t.dataset.value))return;
     primary[t.dataset.key]=t.dataset.value;renderPrimary();
     // Re-rendering replaces the control; keep keyboard focus on the same choice (the typical toggle flips its value).
@@ -2740,11 +2741,14 @@ const ACTIONS={
     (document.querySelector(`${same}[data-value="${t.dataset.value}"]`)||document.querySelector(same))?.focus({preventScroll:true});
   },
   'primary-fingerprint-release':(_e,t)=>{
-    // Choosing a release outside the shape filter clears the filter so the anatomy can show it.
-    if(primary.releaseShape&&primary.releaseShape!=='all'&&t.dataset.shape!==primary.releaseShape)primary.releaseShape='all';
-    Object.assign(primary,{releaseHash:t.dataset.hash,releaseType:'all',releaseYear:'all',releaseBin:null,releaseQuery:'',releasePage:0});
+    // Choosing a release outside the strip's shape filter clears that filter so the anatomy can show it.
+    const filter=t.dataset.filterKey==='releaseFootprint'?'releaseFootprint':'releaseShape';
+    if(primary[filter]&&primary[filter]!=='all'&&t.dataset.shape!==primary[filter])primary[filter]='all';
+    const other=filter==='releaseShape'?'releaseFootprint':'releaseShape';
+    Object.assign(primary,{releaseHash:t.dataset.hash,[other]:'all',releaseType:'all',releaseYear:'all',releaseBin:null,releaseQuery:'',releasePage:0});
     routePushPending=true;renderPrimary();
-    document.querySelector(`[data-action="primary-fingerprint-release"][data-hash="${t.dataset.hash}"]`)?.focus({preventScroll:true});
+    const strip=filter==='releaseFootprint'?'[data-filter-key="releaseFootprint"]':':not([data-filter-key])';
+    document.querySelector(`[data-action="primary-fingerprint-release"][data-hash="${t.dataset.hash}"]${strip}`)?.focus({preventScroll:true});
   },
   'primary-reset-release-bin':()=>{primary.releaseBin=null;renderPrimary();},
   'primary-filter-release-type':(_e,t)=>{primary.releaseType=t.dataset.type;primary.releasePage=0;renderPrimary();},
@@ -2961,7 +2965,7 @@ function handleDocumentChange(event) {
     renderDashboard();return;
   }
   const primaryFields={
-    'primary-release-type':'releaseType','primary-release-year':'releaseYear','primary-release-shape':'releaseShape','primary-cohort-by':'cohortBy',
+    'primary-release-type':'releaseType','primary-release-year':'releaseYear','primary-release-shape':'releaseShape','primary-release-footprint':'releaseFootprint','primary-cohort-by':'cohortBy',
     'primary-period-from':'periodFrom','primary-period-to':'periodTo',
     'primary-period-comparison':'periodComparison','primary-compare-from':'compareFrom','primary-compare-to':'compareTo',
     'primary-contributor-focus':'contributorFocus','primary-contributor-range':'contributorRange',
@@ -2974,12 +2978,12 @@ function handleDocumentChange(event) {
     primary[key]=t.value||null;
     if(t.id==='primary-period-from'||t.id==='primary-period-to'){primary.periodPreset='custom';primary.periodBucket=null;primary.periodFocusPerson=null;primary.periodFocusArea=null;}
     if(t.id==='primary-period-person'){primary.periodBucket=null;primary.periodFocusPerson=null;primary.periodFocusArea=null;}
-    if(['primary-release-type','primary-release-year','primary-release-shape'].includes(t.id))primary.releasePage=0;
+    if(['primary-release-type','primary-release-year','primary-release-shape','primary-release-footprint'].includes(t.id))primary.releasePage=0;
     if(['primary-contributor-focus','primary-period-from','primary-period-to'].includes(t.id))routePushPending=true;
     if(t.id==='primary-contributor-focus'&&primary.compareB===primary.contributorFocus)primary.compareB=null;
     if(t.id==='primary-contributor-focus'&&primary.coReleasePartner===primary.contributorFocus)primary.coReleasePartner=null;
     renderPrimary();
-    if(['primary-together-partner','primary-together-sort','primary-release-shape'].includes(t.id))$(t.id)?.focus({preventScroll:true});
+    if(['primary-together-partner','primary-together-sort','primary-release-shape','primary-release-footprint'].includes(t.id))$(t.id)?.focus({preventScroll:true});
     return;
   }
   switch(t.id){

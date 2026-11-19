@@ -67,9 +67,9 @@ export function releaseAgeDistribution(ages, {waiting = [], undated = 0, weights
 
 /**
  * Descriptive release shapes from commit-count percentiles. They are relative
- * to this repository's typical incremental release, so a quarterly project and
- * a daily one each get meaningful labels. They describe how old the shipped
- * work was, not whether a release was good or urgent.
+ * to every commit shipped by this repository's incremental releases, pooled
+ * together, so a quarterly project and a daily one each get meaningful labels.
+ * They describe how old the shipped work was, not whether a release was good.
  */
 export const RELEASE_SHAPES = Object.freeze([
   {key:'hotfix', label:'Hotfix-shaped'},
@@ -83,12 +83,14 @@ export const RELEASE_SHAPES = Object.freeze([
 const FIXED_REFERENCE = Object.freeze({median:15, p90:30, relative:false});
 const MINIMUM_RELEASES = 5;
 
-/** The repository's typical release wait, from incremental releases' commit-count percentiles. */
-export function shapeReference(dists) {
-  const middle = values => {const list = values.filter(Number.isFinite).sort((a, b) => a - b);return list.length ? quantile(list, .5) : null;};
-  const measured = dists.filter(d => d?.released);
-  if (measured.length < MINIMUM_RELEASES) return {...FIXED_REFERENCE, releases:measured.length};
-  return {median:middle(measured.map(d => d.median)), p90:middle(measured.map(d => d.p90)), relative:true, releases:measured.length};
+/**
+ * The repository's release wait: the median and 90th percentile of all
+ * commits shipped by incremental releases, pooled (`pooled` is their
+ * releaseAgeDistribution; `releases` counts releases with measured commits).
+ */
+export function shapeReference(pooled, releases) {
+  if (releases < MINIMUM_RELEASES || !pooled?.released) return {...FIXED_REFERENCE, releases, commits:pooled?.released || 0};
+  return {median:pooled.median, p90:pooled.p90, relative:true, releases, commits:pooled.released};
 }
 
 export function releaseShape(dist, {baseline = false, reference = FIXED_REFERENCE} = {}) {
@@ -103,23 +105,26 @@ export function releaseShape(dist, {baseline = false, reference = FIXED_REFERENC
 const days = v => v < 1 ? `${Math.round(v * 24)} hours` : `${Math.round(v * 10) / 10} days`;
 /** Plain-language rule behind a shape, with this repository's thresholds. */
 export function shapeNote(key, reference = FIXED_REFERENCE) {
-  const basis = reference.relative ? `this repository's typical release` : 'fixed thresholds (fewer than five releases to compare)';
+  const basis = reference.relative ? 'all releases' : 'fixed thresholds (fewer than five releases to compare)';
   return {
-    hotfix:`90% of commits under ${days(reference.median / 2)} old: half ${basis}'s median wait`,
-    steady:`Close to ${basis}`,
-    'long-tail':`Mostly fresh, but its oldest 10% waited over ${days(reference.p90 * 2)}: twice ${basis}`,
-    backlog:`Median wait over ${days(reference.median * 2)}: twice ${basis}`,
+    hotfix:`90% of commits under ${days(reference.median / 2)} old: half the median wait across ${basis}`,
+    steady:`Close to the waits across ${basis}`,
+    'long-tail':`Mostly fresh, but its oldest 10% waited over ${days(reference.p90 * 2)}: twice the 90th percentile across ${basis}`,
+    backlog:`Median wait over ${days(reference.median * 2)}: twice the median across ${basis}`,
     initial:'First tag: ships everything authored before it',
     unmeasured:'No commits with a measurable age',
   }[key] || '';
 }
 
-/** The typical release: mean bucket shares across releases, so large releases do not dominate. */
-export function typicalReleaseShape(dists) {
+/**
+ * All releases together: bucket shares of every shipped commit (or line)
+ * pooled, plus each release's own median for ranking how fresh one release is.
+ */
+export function allReleasesShape(pooled, dists) {
   const measured = dists.filter(d => d?.total > 0);
   return {
-    releases: measured.length,
-    shares: RELEASE_AGE_BUCKETS.map((_, i) => measured.length ? measured.reduce((n, d) => n + d.buckets[i].share, 0) / measured.length : null),
+    releases: measured.length, pooled,
+    shares: pooled.buckets.map(b => b.share),
     medians: measured.map(d => d.median).filter(Number.isFinite).sort((a, b) => a - b),
   };
 }

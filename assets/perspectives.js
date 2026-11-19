@@ -6,7 +6,8 @@
  */
 import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=git-ingest-input-20261113-1';
 import { changeCategory, fileKind } from './impact.js?v=git-ingest-input-20261113-1';
-import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, typicalReleaseShape, shapeReference } from './release-latency.js?v=git-ingest-input-20261113-1';
+import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape } from './release-footprint.js?v=git-ingest-input-20261113-1';
+import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=git-ingest-input-20261113-1';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);
@@ -200,13 +201,41 @@ export function releaseFingerprints(index) {
   }
   // The first tag carries all earlier history, which would distort "typical".
   const incremental=index.releases.filter(r=>!r.baseline).map(r=>releases.get(r.hash));
-  const reference=shapeReference(incremental.map(f=>f.commits));
+  // Pool every commit shipped by an incremental release, so large releases count in proportion.
+  const pooledEntries=incremental.flatMap(f=>f.entries);
+  const pooled={commits:releaseAgeDistribution(pooledEntries.map(x=>x.age)),
+    lines:releaseAgeDistribution(pooledEntries.map(x=>x.age),{weights:pooledEntries.map(x=>x.lines)})};
+  const reference=shapeReference(pooled.commits,incremental.filter(f=>f.commits.released).length);
   for(const release of index.releases){
     const fp=releases.get(release.hash);
     fp.shape=releaseShape(fp.commits,{baseline:release.baseline,reference});
   }
-  const result={releases,reference,typical:{commits:typicalReleaseShape(incremental.map(f=>f.commits)),lines:typicalReleaseShape(incremental.map(f=>f.lines))}};
+  const result={releases,reference,typical:{commits:allReleasesShape(pooled.commits,incremental.map(f=>f.commits)),lines:allReleasesShape(pooled.lines,incremental.map(f=>f.lines))}};
   fingerprintCache.set(index,result);
+  return result;
+}
+
+const footprintCache=new WeakMap();
+/**
+ * Each release's codebase footprint on one shared two-level directory map,
+ * its relative footprint shape, and the typical incremental footprint.
+ * Computed once per evidence index.
+ */
+export function releaseFootprints(index) {
+  if(footprintCache.has(index))return footprintCache.get(index);
+  const byHash=new Map(index.activity.map(c=>[c.hash,c]));
+  const map=buildCodebaseMap(index.activity);
+  const releases=new Map();
+  for(const release of index.releases){
+    const fp=releaseFootprint(release.commits.map(h=>byHash.get(h)).filter(Boolean),map);
+    fp.baseline=release.baseline;
+    releases.set(release.hash,fp);
+  }
+  const typical=typicalFootprint(index.releases.filter(r=>!r.baseline).map(r=>releases.get(r.hash)));
+  const reference=footprintReference(typical);
+  for(const fp of releases.values())fp.shape=footprintShape(fp,{baseline:fp.baseline,reference});
+  const result={map,releases,typical,reference};
+  footprintCache.set(index,result);
   return result;
 }
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {releaseAgeDays,releaseAgeDistribution,firstReleaseByCommit,commitReleaseAges,RELEASE_AGE_BUCKETS,releaseShape,typicalReleaseShape,fresherThan,shapeReference,shapeNote} from '../assets/release-latency.js';
+import {releaseAgeDays,releaseAgeDistribution,firstReleaseByCommit,commitReleaseAges,RELEASE_AGE_BUCKETS,releaseShape,allReleasesShape,fresherThan,shapeReference,shapeNote} from '../assets/release-latency.js';
 import {parseGitHistory,buildAnalysis} from '../assets/domain.js';
 import {impactAnalysis} from '../assets/impact.js';
 import {buildEvidenceIndex,contributorPortrait,releaseDetails,releaseFingerprints} from '../assets/perspectives.js';
@@ -92,17 +92,18 @@ test('lines weighting moves shares and percentiles towards large changes; commit
   assert.equal(d.median,40,'half the lines had waited 40 days, though half the commits were fresh');
 });
 
-test('shapes are relative to the repository\'s typical release once there are enough releases',()=>{
-  const quarterly=[40,50,60,70,80].map(m=>releaseAgeDistribution([m-10,m,m+10]));
-  const reference=shapeReference(quarterly);
+test('shapes are relative to all shipped commits pooled, once there are enough releases',()=>{
+  const pooled=releaseAgeDistribution([40,50,60,70,80].flatMap(m=>[m-10,m,m+10]));
+  const reference=shapeReference(pooled,5);
   assert.equal(reference.relative,true);
   assert.equal(reference.median,60);
+  assert.equal(reference.commits,15);
   const shape=ages=>releaseShape(releaseAgeDistribution(ages),{reference});
   assert.equal(shape([35,45,55]),'steady','a month-old median is normal for a quarterly project');
   assert.equal(shape([1,5,10,20]),'hotfix');
   assert.equal(shape([130,150,170]),'backlog');
-  assert.match(shapeNote('backlog',reference),/120 days: twice this repository's typical release/);
-  const few=shapeReference(quarterly.slice(0,4));
+  assert.match(shapeNote('backlog',reference),/120 days: twice the median across all releases/);
+  const few=shapeReference(pooled,4);
   assert.equal(few.relative,false,'fewer than five releases fall back to fixed thresholds');
   assert.match(shapeNote('steady',few),/fixed thresholds/);
 });
@@ -117,15 +118,19 @@ test('release shapes describe the age of shipped work (fixed thresholds)',()=>{
   assert.equal(releaseShape(releaseAgeDistribution([1]),{baseline:true}),'initial');
 });
 
-test('typical release averages shapes so big releases do not dominate, and ranks freshness',()=>{
-  const typical=typicalReleaseShape([releaseAgeDistribution([0.5]),releaseAgeDistribution(Array(99).fill(40))]);
-  assert.equal(typical.shares[0],.5);
-  assert.equal(typical.shares[5],.5);
+test('pooled reference weights releases by size, unlike a median of release medians',()=>{
+  const small=releaseAgeDistribution([0.5]),big=releaseAgeDistribution(Array(99).fill(40));
+  const pooled=releaseAgeDistribution([0.5,...Array(99).fill(40)]);
+  const all=allReleasesShape(pooled,[small,big]);
+  assert.equal(all.shares[0],.01,'one of 100 shipped commits was fresh');
+  assert.equal(all.shares[5],.99);
+  assert.deepEqual(all.medians,[0.5,40],'each release keeps its own median for freshness ranking');
+  assert.equal(shapeReference(pooled,5).median,40);
   assert.equal(fresherThan(2,[1,3,5,8,13]),.8);
   assert.equal(fresherThan(2,[1,3]),null,'too few releases to compare');
 });
 
-test('fingerprints exclude the first tag from the typical release and drive the shape filter',()=>{
+test('fingerprints exclude the first tag from the all-releases reference and drive the shape filter',()=>{
   const fps=releaseFingerprints(index);
   assert.strictEqual(releaseFingerprints(index),fps,'cached per index');
   const [v1,v11]=['v1.0.0','v1.1.0'].map(tag=>index.releases.find(r=>r.tag===tag));
@@ -143,8 +148,9 @@ test('each fingerprint view renders, with lines weighting and the typical overla
   assert.match(view({fingerprintView:'arrival'}),/class="primary-arrival"[\s\S]*v1\.1\.0 released/);
   assert.match(view({fingerprintView:'arrival',fingerprintWeight:'lines'}),/weighted by lines added \+ deleted/);
   const histogram=view({fingerprintView:'histogram'});
-  assert.match(histogram,/Typical release/);
-  assert.match(histogram,/Hide typical release/);
+  assert.match(histogram,/All releases<\/span>/);
+  assert.match(histogram,/aria-pressed="true">Compare with all releases/);
+  assert.match(histogram,/Shapes (compare with all|use fixed thresholds)/);
   assert.doesNotMatch(view({fingerprintView:'histogram',fingerprintTypical:'off'}),/<u style/);
   const strip=view({fingerprintView:'strip',releaseShape:'steady'});
   assert.equal((strip.match(/data-action="primary-fingerprint-release"/g)||[]).length,2);
