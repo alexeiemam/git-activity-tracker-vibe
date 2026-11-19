@@ -112,3 +112,70 @@ export function extraDayColour(extra) {
   if(extra===2)return '#7fbad9';
   return '#397eaa';
 }
+
+/** Days off per calendar year: holiday entitlement (2 a month) and statutory bank holidays. */
+export const DEFAULT_LEAVE=Object.freeze({holidays:24,bankHolidays:8});
+/** Whole or half days from 0 to 366; anything else falls back to the default. */
+export function normalizeLeave(leave) {
+  const days=(value,fallback)=>{const n=Number(value);return value!==null&&value!==''&&Number.isFinite(n)&&n>=0&&n<=366?Math.round(n*2)/2:fallback;};
+  return {holidays:days(leave?.holidays,DEFAULT_LEAVE.holidays),bankHolidays:days(leave?.bankHolidays,DEFAULT_LEAVE.bankHolidays)};
+}
+
+const dayMs=86400000;
+const dayOf=date=>Date.parse(`${date}T00:00:00Z`)/dayMs;
+const dateOf=day=>new Date(day*dayMs).toISOString().slice(0,10);
+const round1=value=>Math.round(value*10)/10;
+
+/**
+ * Worked days against what each identity's schedule and leave lead you to
+ * expect, per calendar year and across the whole period. Each person is
+ * measured only between their first and last authored commit in the imported
+ * history, so years before they joined or after they left are not shortfalls.
+ * A year's expected days are its working days inside that span and the
+ * period, less that year's holidays and bank holidays scaled to the share of
+ * the year covered (leave can fall anywhere in the year, so no dates are
+ * assumed). Worked days are every date with an authored commit, on a working
+ * day or not, so no work is dropped. Git records changes, not attendance: a
+ * day of reviews, meetings or unpushed work looks the same as a day off.
+ */
+export function workedDaysBalance(index,contributors,window,{workingDaysById={},leaveById={}}={}) {
+  const bounds=index?.bounds||{};
+  const from=[window?.from,bounds.min].filter(Boolean).sort().pop(),to=[window?.to,bounds.max].filter(Boolean).sort()[0];
+  const active=new Map();
+  for(const c of index?.activity||[]){
+    if(c.groupId==null||!c.date)continue;
+    const id=String(c.groupId);if(!active.has(id))active.set(id,new Set());
+    active.get(id).add(c.date);
+  }
+  const years=[];
+  if(from&&to&&from<=to)for(let y=Number(from.slice(0,4));y<=Number(to.slice(0,4));y++){
+    const start=[from,`${y}-01-01`].sort().pop(),end=[to,`${y}-12-31`].sort()[0];
+    years.push({year:y,from:start,to:end});
+  }
+  const rows=(contributors||[]).map(person=>{
+    const id=String(person.id),schedule=scheduleById(workingDaysById,id,person.workingDays);
+    const leave=normalizeLeave(Object.hasOwn(leaveById,id)?leaveById[id]:person.leave);
+    const dates=active.get(id)||new Set(),sorted=[...dates].sort();
+    const first=sorted[0]||null,last=sorted[sorted.length-1]||null;
+    const perYear=years.map(y=>{
+      const start=[y.from,first].filter(Boolean).sort().pop(),end=[y.to,last].filter(Boolean).sort()[0];
+      if(!first||start>end)return {year:y.year,from:null,to:null,measured:false,share:0,scheduled:0,allowance:0,expected:0,worked:0,onSchedule:0,offSchedule:0,balance:0};
+      let scheduled=0,onSchedule=0,offSchedule=0;
+      for(let d=dayOf(start),stop=dayOf(end);d<=stop;d++){
+        const date=dateOf(d),working=schedule.isWorkingDay(date),worked=dates.has(date);
+        scheduled+=Number(working);onSchedule+=Number(working&&worked);offSchedule+=Number(!working&&worked);
+      }
+      const share=(dayOf(end)-dayOf(start)+1)/(dayOf(`${y.year}-12-31`)-dayOf(`${y.year}-01-01`)+1);
+      const allowance=(leave.holidays+leave.bankHolidays)*share;
+      const expected=Math.max(0,scheduled-allowance),worked=onSchedule+offSchedule;
+      return {year:y.year,from:start,to:end,measured:true,share,scheduled,allowance:round1(allowance),expected:round1(expected),worked,onSchedule,offSchedule,balance:round1(worked-expected)};
+    });
+    const measured=perYear.filter(y=>y.measured);
+    const total=key=>measured.reduce((n,y)=>n+y[key],0);
+    return {id,name:person.displayName,schedule,leave,first,last,years:perYear,
+      total:{measured:measured.length>0,from:measured[0]?.from||null,to:measured[measured.length-1]?.to||null,
+        scheduled:total('scheduled'),allowance:round1(total('allowance')),expected:round1(total('expected')),worked:total('worked'),
+        onSchedule:total('onSchedule'),offSchedule:total('offSchedule'),balance:round1(total('worked')-total('expected'))}};
+  });
+  return {from,to,years,rows};
+}

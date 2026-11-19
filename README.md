@@ -119,6 +119,20 @@ matching commits. Links that open a month, a year, a release's
 surrounding fortnight or a person's recent period set the scope's dates (and,
 for a person, its people).
 
+**Worked days against expectation** (People › Working patterns) compares
+each person's recorded work with what their working days and yearly leave
+lead you to expect, for every calendar year in the scope and for the whole
+period. Each identity sets its working days (for example Mon–Thu) and its
+leave: **holiday days a year** (default 24, two a month, taken whenever) and
+**bank holidays a year** (default 8), in the identity editor; both travel in
+sessions and identity exports. A year's expected days are its working days
+inside the scope dates, between the person's first and last authored commit
+in the imported history, less their leave scaled to the share of the year
+covered. Worked days are every date with an authored commit, including
+non-working days, so no work is dropped; the balance is worked minus
+expected. Git records changes, not attendance: reviews, meetings, pairing and
+unpushed work look like days off, so a shortfall is a question, not a finding.
+
 **Codebase** is a folder browser. It starts at the repository and follows one
 current folder; the path above it (**repository › app › services**) goes back
 up, and every folder or file name is an ordinary link, so links, Back and new

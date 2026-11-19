@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=offdays-20261119-1';
-import { generateDemoLog } from './demo-data.js?v=offdays-20261119-1';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=offdays-20261119-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=offdays-20261119-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=offdays-20261119-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=offdays-20261119-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=offdays-20261119-1';
-import { releaseScorecard } from './release-scorecard.js?v=offdays-20261119-1';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=offdays-20261119-1';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=offdays-20261119-1';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=offdays-20261119-1';
-import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=offdays-20261119-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=offdays-20261119-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=offdays-20261119-1';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=offdays-20261119-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=offdays-20261119-1';
-import { buildStoryAnalysis } from './stories.js?v=offdays-20261119-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=offdays-20261119-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=offdays-20261119-1';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=offdays-20261119-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=offdays-20261119-1';
-import { downloadFilename } from './download-names.js?v=offdays-20261119-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=offdays-20261119-1';
-import { buildDeploymentIndex } from './deployments.js?v=offdays-20261119-1';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=offdays-20261119-1';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=offdays-20261119-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=offdays-20261119-1';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=offdays-20261119-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=offdays-20261119-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=offdays-20261119-1';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=offdays-20261119-1';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=offdays-20261119-1';
+} from './domain.js?v=leave-20261119-1';
+import { generateDemoLog } from './demo-data.js?v=leave-20261119-1';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=leave-20261119-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=leave-20261119-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=leave-20261119-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=leave-20261119-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=leave-20261119-1';
+import { releaseScorecard } from './release-scorecard.js?v=leave-20261119-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=leave-20261119-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=leave-20261119-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=leave-20261119-1';
+import {WEEKDAY_LABELS,normalizeWorkingDays,normalizeLeave,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=leave-20261119-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=leave-20261119-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=leave-20261119-1';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=leave-20261119-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=leave-20261119-1';
+import { buildStoryAnalysis } from './stories.js?v=leave-20261119-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=leave-20261119-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=leave-20261119-1';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=leave-20261119-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=leave-20261119-1';
+import { downloadFilename } from './download-names.js?v=leave-20261119-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=leave-20261119-1';
+import { buildDeploymentIndex } from './deployments.js?v=leave-20261119-1';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=leave-20261119-1';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=leave-20261119-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=leave-20261119-1';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=leave-20261119-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=leave-20261119-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=leave-20261119-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=leave-20261119-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=leave-20261119-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=offdays-20261119-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=leave-20261119-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -479,11 +479,15 @@ function linkedOrderRows(group, index) {
   </div>`;
 }
 const WORKDAY_ORDER=[1,2,3,4,5,6,0];
+/** An identity's working days and yearly leave, always explicit so a default never changes under a saved session. */
+const leaveLabel=leave=>{const {holidays,bankHolidays}=normalizeLeave(leave);return `${number.format(holidays)} holiday + ${number.format(bankHolidays)} bank holiday days a year`;};
+const groupSettings=g=>({workingDays:normalizeWorkingDays(g.workingDays),leave:normalizeLeave(g.leave)});
 function patternControls(group,index) {
-  const days=normalizeWorkingDays(group.workingDays);
+  const days=normalizeWorkingDays(group.workingDays),leave=normalizeLeave(group.leave);
   return `<div class="pattern-controls" role="group" aria-label="Expected contribution weekdays for ${esc(group.displayName)}">
     <div class="pattern-weekdays">${WORKDAY_ORDER.map(day=>`<button type="button" class="pattern-day ${days.includes(day)?'is-scheduled':''}" data-action="toggle-pattern-day" data-group="${index}" data-weekday="${day}" aria-pressed="${days.includes(day)}" title="${esc(WEEKDAY_LABELS[day])}: ${days.includes(day)?'expected':'not scheduled'}">${WEEKDAY_LABELS[day]}</button>`).join('')}</div>
     <div class="pattern-presets"><button type="button" class="text-button" data-action="pattern-preset" data-group="${index}" data-pattern="four">Mon–Thu</button><button type="button" class="text-button" data-action="pattern-preset" data-group="${index}" data-pattern="five">Mon–Fri</button><button type="button" class="text-button" data-action="pattern-preset" data-group="${index}" data-pattern="none">None</button></div>
+    <div class="pattern-leave">${[['holidays','Holiday days / year'],['bankHolidays','Bank holidays / year']].map(([field,label])=>`<label>${label} <input type="number" min="0" max="366" step="0.5" inputmode="decimal" data-leave-field="${field}" data-group="${index}" value="${leave[field]}"></label>`).join('')}</div>
   </div>`;
 }
 function renderWorkingPatterns(view) {
@@ -491,10 +495,18 @@ function renderWorkingPatterns(view) {
   if(!editor)return;
   const shown=new Set((view?.contributors||[]).map(c=>String(c.id)));
   const rows=mergeGroups.map((group,index)=>({group,index})).filter(({index})=>shown.has(String(index)));
-  editor.innerHTML=rows.length?rows.map(({group,index})=>`<div class="continuity-pattern-row"><div><strong>${esc(group.displayName)}</strong><small>${esc(workingPatternLabel(group.workingDays))}</small></div>${patternControls(group,index)}</div>`).join(''):'<p>Select a contributor in the filters to set a working-day pattern.</p>';
+  editor.innerHTML=rows.length?rows.map(({group,index})=>`<div class="continuity-pattern-row"><div><strong>${esc(group.displayName)}</strong><small>${esc(workingPatternLabel(group.workingDays))} · ${esc(leaveLabel(group.leave))}</small></div>${patternControls(group,index)}</div>`).join(''):'<p>Select a contributor in the filters to set a working-day pattern.</p>';
 }
 /** Each identity's working days, keyed by contributor id, for every model that measures against them. */
 const workingDaysById=()=>Object.fromEntries(mergeGroups.map((g,i)=>[String(i),normalizeWorkingDays(g.workingDays)]));
+/** Yearly leave feeds the worked-days balance; the inputs re-render with the dashboard. */
+function updateLeave(input) {
+  const index=Number(input.dataset.group),group=mergeGroups[index];if(!group)return;
+  group.leave=normalizeLeave({...normalizeLeave(group.leave),[input.dataset.leaveField]:input.value});
+  if(mergeUndo)forgetUndo();
+  if(!$('merge-step').hidden)renderMergeUI();
+  if(analysis)renderDashboard();
+}
 function updateWorkingPattern(index,workingDays,origin) {
   const group=mergeGroups[index];if(!group)return;
   group.workingDays=normalizeWorkingDays(workingDays);
@@ -535,7 +547,7 @@ function renderMergeUI() {
           <div class="identity-chips">${group.emails.length ? group.emails.map(email => `<span class="chip"><span title="${esc(email)}">${esc(identityMeta.get(email)?.kind||'Git author')} · ${esc(identityMeta.get(email)?.name||email)}</span>${group.emails.length > 1 ? `<button type="button" data-action="split-email" data-group="${index}" data-email="${esc(email)}" aria-label="Separate ${esc(email)} from ${groupName}" title="Separate this identity">×</button>` : ''}</span>`).join('') : '<span class="merge-group-caption">No identities yet. Select author emails to build this contributor.</span>'}</div>
           <div class="merge-add"><button type="button" class="merge-add-trigger" data-action="toggle-identity-picker" data-group="${index}" aria-expanded="${open}" ${open ? `aria-controls="identity-picker-${index}"` : ''} ${!available ? 'disabled title="No other identities available"' : ''}><span class="merge-plus" aria-hidden="true">${open ? '−' : '+'}</span>${open ? 'Close selector' : 'Add identities'}<span class="merge-plus-chevron" aria-hidden="true">${open ? '⌃' : '⌄'}</span></button>${group.emails.length > 1 ? `<button type="button" class="mini-button identity-arrange-toggle" data-action="toggle-linked-order" data-group="${index}" aria-expanded="${orderOpen}" ${orderOpen ? `aria-controls="linked-order-${index}"` : ''}>${orderOpen ? 'Close ordering' : 'Arrange linked identities'}</button><button class="mini-button" type="button" data-action="split-group" data-group="${index}">Separate all</button>` : ''}</div>
           ${orderOpen && group.emails.length > 1 ? `<div id="linked-order-${index}">${linkedOrderRows(group,index)}</div>` : ''}
-          <details class="merge-working-pattern"><summary>Expected contribution days · ${normalizeWorkingDays(group.workingDays).length}/week</summary><p class="merge-group-caption">Choose the weekly reference used by Contribution Continuity. Unscheduled dates can still earn extra credit.</p>${patternControls(group,index)}</details>
+          <details class="merge-working-pattern"><summary>Expected contribution days · ${normalizeWorkingDays(group.workingDays).length}/week · ${leaveLabel(group.leave)}</summary><p class="merge-group-caption">Choose the weekly reference and yearly leave that working-day measures and the worked-days balance use. Work on other dates always counts.</p>${patternControls(group,index)}</details>
         </div>
       </div>
       ${open ? renderIdentityPicker(index) : ''}
@@ -642,7 +654,7 @@ function applyIdentityPicker() {
   if (!identityPicker?.selected.size) return;
   const {targetIndex, selected} = identityPicker;
   const target = mergeGroups[targetIndex];
-  const original = mergeGroups.map(g => ({displayName:g.displayName, emails:[...g.emails],workingDays:normalizeWorkingDays(g.workingDays)}));
+  const original = mergeGroups.map(g => ({displayName:g.displayName, emails:[...g.emails],...groupSettings(g)}));
   const moved = [...selected];
   // Reference the destination by email, not by its old array index: groups
   // before it may disappear as their final identities move.
@@ -680,7 +692,7 @@ function splitEmail(index, email) {
   group.emails = group.emails.filter(e => e !== email);
   state.storyDismissed.clear();state.storyTrail=[];state.storyFindingId=null;
   if (!group.emails.length) mergeGroups.splice(index, 1);
-  mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email],workingDays:normalizeWorkingDays(group.workingDays)});
+  mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email],...groupSettings(group)});
   renderMergeUI();
 }
 function splitGroup(index) {
@@ -691,7 +703,7 @@ function splitGroup(index) {
   const emails = [...group.emails];
   state.storyDismissed.clear();state.storyTrail=[];state.storyFindingId=null;
   mergeGroups.splice(index, 1);
-  for (const email of emails) mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email],workingDays:normalizeWorkingDays(group.workingDays)});
+  for (const email of emails) mergeGroups.push({displayName: identityMeta.get(email)?.name || email, emails:[email],...groupSettings(group)});
   renderMergeUI();
 }
 function skipMerge() {
@@ -2732,7 +2744,7 @@ async function renderDashboard() {
   const generation=++progressGeneration;
   const run=++renderGeneration;
   const scope=analysisScope();
-  const groups=mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails],workingDays:normalizeWorkingDays(g.workingDays)}));
+  const groups=mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails],...groupSettings(g)}));
   const impactOptions={metric:state.impactMetric,githubStatus,
     actorMap:{...state.impactActorMap},captureWarningsCount:githubWarnings.length};
   $('dashboard').setAttribute('aria-busy','true');
@@ -2769,7 +2781,7 @@ function sessionPayload() {
   const selectedEmails=mergeGroups.flatMap((g,i)=>state.selectedIds.has(String(i))?g.emails:[]);
   const emailForId = id => /^(0|[1-9]\d*)$/.test(String(id)) ? mergeGroups[Number(id)]?.emails[0]||null : null;
   const payload={version:3,exportedAt:new Date().toISOString(),rangeYears:Number($('range-select').value),rawLog:activeRawLog,
-    mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails],workingDays:normalizeWorkingDays(g.workingDays)})),
+    mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails],...groupSettings(g)})),
     scope:{selectedEmails,period:state.period,start:state.start,end:state.end,followsLatest:scopeFollowsLatest,metric:state.metric,mode:state.mode,denominator:state.denominator,
       includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode,
       pulseLens:state.pulseLens,pulseMetric:state.pulseMetric,motionViews:state.motionViews,motionWeeks:state.motionWeeks,motionStep:state.motionStep,motionTrail:state.motionTrail,motionLabels:state.motionLabels,motionLevelDisplay:state.motionLevelDisplay,pulseGapHorizon:state.pulseGapHorizon,pulseBusyDay:state.pulseBusyDay,pulseReleaseLines:state.pulseReleaseLines,pulseDailyChurn:state.pulseDailyChurn,pulseMomentumWorkdays:state.pulseMomentumWorkdays,pulseLevelWorkdays:state.pulseLevelWorkdays,pulseContinuityWeeks:state.pulseContinuityWeeks,continuityView:state.continuityView,pulseTemporalPeriod:state.pulseTemporalPeriod,pulseTemporalChurn:state.pulseTemporalChurn,pulseMeaningfulLines:state.pulseMeaningfulLines,
@@ -2789,7 +2801,7 @@ function sessionPayload() {
       storyMonth:state.storyMonth,storyDismissed:[...state.storyDismissed].slice(0,300),
       storyFindingId:state.storyFindingId,storyTrail:state.storyTrail.slice(-8),
       primary:primaryStateForExport(primary,mergeGroups)}};
-  if(identityReserve.length)payload.identityReserve=identityReserve.map(g=>({displayName:g.displayName,emails:[...g.emails],workingDays:g.workingDays}));
+  if(identityReserve.length)payload.identityReserve=identityReserve.map(g=>({displayName:g.displayName,emails:[...g.emails],workingDays:g.workingDays,leave:g.leave}));
   return payload;
 }
 function setSessionTransferBusy(busy) {
@@ -2862,7 +2874,7 @@ async function importSession(event) {
 function exportIdentities() {
   if(requireResolvedIdentitySelection())return;
   // Write schedules explicitly so a default here never inherits a different one on import.
-  const config=buildIdentityConfig(mergeGroups.map(g=>({...g,workingDays:normalizeWorkingDays(g.workingDays)})),identityReserve);
+  const config=buildIdentityConfig(mergeGroups.map(g=>({...g,...groupSettings(g)})),identityReserve);
   if(!config.groups.length)return renderMergeFeedback('There are no contributor identities to export yet.');
   const uri=URL.createObjectURL(new Blob([JSON.stringify(config,null,2)],{type:'application/json'}));
   const a=document.createElement('a');
@@ -2880,12 +2892,12 @@ async function importIdentities(event) {
   let config;
   try {config=parseIdentityConfig(await decodeSessionArchive(file));}
   catch(error){return renderMergeFeedback(`Could not import identities: ${error.message}`);}
-  const before=mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails],workingDays:normalizeWorkingDays(g.workingDays)}));
+  const before=mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails],...groupSettings(g)}));
   const previousReserve=identityReserve;
   const result=applyIdentityConfig(mergeGroups,config,new Set(identityMeta.keys()));
   identityPicker=null;linkedOrderEditors.clear();
   rebaseContributorViews(mergeGroups,result.groups);
-  mergeGroups=result.groups.map(g=>({...g,workingDays:normalizeWorkingDays(g.workingDays)}));
+  mergeGroups=result.groups.map(g=>({...g,...groupSettings(g)}));
   identityReserve=result.reserve;
   state.storyDismissed.clear();state.storyTrail=[];state.storyFindingId=null;
   mergeUndo=Object.assign(before,{reserve:previousReserve});
@@ -2924,7 +2936,7 @@ async function restoreSessionPayload(payload,filename='imported session') {
     const local=new Set();
     const valid=g.emails.filter(e=>{if(typeof e!=='string')return false;const key=e.toLowerCase();if(!emails.has(key)||used.has(key)||local.has(key))return false;local.add(key);return true;}).map(e=>e.toLowerCase());
     valid.forEach(e=>used.add(e));
-    return valid.length?[{displayName:String(g.displayName||valid[0]),emails:valid,workingDays:normalizeWorkingDays(g.workingDays)}]:[];
+    return valid.length?[{displayName:String(g.displayName||valid[0]),emails:valid,...groupSettings(g)}]:[];
   });
   // Preserve historical manual assignments; add provider accounts that were
   // introduced in a newer import or an older session format without duplication.
@@ -3181,6 +3193,7 @@ function handleDocumentClick(event) {
 }
 function handleDocumentChange(event) {
   const t=event.target;
+  if(t.dataset?.leaveField)return updateLeave(t);
   if(t.dataset.mergeName!==undefined) {
     const group=mergeGroups[Number(t.dataset.mergeName)];
     if (group) {

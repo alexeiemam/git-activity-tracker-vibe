@@ -1,12 +1,13 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=offdays-20261119-1';
-import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=offdays-20261119-1';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=offdays-20261119-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=offdays-20261119-1';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=offdays-20261119-1';
-import { targetUrl } from './route-state.js?v=offdays-20261119-1';
-import { markdownFrame } from './markdown.js?v=offdays-20261119-1';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=offdays-20261119-1';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=leave-20261119-1';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=leave-20261119-1';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=leave-20261119-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=leave-20261119-1';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=leave-20261119-1';
+import { targetUrl } from './route-state.js?v=leave-20261119-1';
+import { markdownFrame } from './markdown.js?v=leave-20261119-1';
+import { workedDaysBalance } from './working-patterns.js?v=leave-20261119-1';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=leave-20261119-1';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});
@@ -424,8 +425,33 @@ function peopleView(index,ui){
     ${slot('trend')}${slot('pulse')}
     ${sectionHeading('people-patterns','Working patterns','When in the week and the year work is recorded, and how steadily.')}
     ${slot('rhythm')}
+    ${workedDaysCard(index,ui)}
     ${sectionHeading('people-portrait','One person','A reconciled person\'s release portfolio, collaborators, focus and changing involvement.')}
     ${contributorView(index,ui)}`;
+}
+const WEEKDAY_SHORT=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+/** A working-day pattern as runs of days: Mon–Thu, Mon–Wed, Fri. */
+const patternText=days=>{
+  if(!days.length)return 'No working days set';
+  const order=[1,2,3,4,5,6,0].filter(d=>days.includes(d)),runs=[];
+  for(const d of order){const run=runs[runs.length-1],at=[1,2,3,4,5,6,0].indexOf(d);if(run&&run.end===at-1){run.end=at;run.last=d;}else runs.push({first:d,last:d,end:at});}
+  return runs.map(r=>r.first===r.last?WEEKDAY_SHORT[r.first]:`${WEEKDAY_SHORT[r.first]}–${WEEKDAY_SHORT[r.last]}`).join(', ');
+};
+const signed=v=>`${v>0?'+':v<0?'−':'±'}${f(Math.abs(v))}`;
+/**
+ * Worked days against each person's own schedule and yearly leave, per
+ * calendar year and across the scope dates. Over and under describe recorded
+ * Git activity against an expectation, not attendance or performance.
+ */
+function workedDaysCard(index,ui){
+  const {from,to,ids}=scopeOf(index,ui);
+  const inScope=id=>!ids||(ids.has?ids.has(id):ids.includes(id));
+  const model=workedDaysBalance(index,index.groups.filter(g=>inScope(g.id)),{from,to});
+  const rows=model.rows.filter(r=>r.total.worked>0).sort((a,b)=>b.total.worked-a.total.worked);
+  const cell=t=>!t.measured?'<td class="is-unmeasured"><span>—</span><small>before their first or after their last commit</small></td>':`<td class="${t.balance>0?'is-over':t.balance<0?'is-under':''}"><strong>${signed(t.balance)}</strong><small>${f(t.worked)} worked of ${f(t.expected)} expected${t.offSchedule?` · ${f(t.offSchedule)} on non-working days`:''}</small>${t.share<.999?`<small>${e(day(t.from))} – ${e(day(t.to))}</small>`:''}</td>`;
+  const yearHead=y=>`<th>${y.year}</th>`;
+  const table=`<div class="primary-table-wrap"><table class="primary-signal-table primary-worked-table"><thead><tr><th>Contributor</th><th>Working days · leave a year</th><th>Whole period</th>${model.years.map(yearHead).join('')}</tr></thead><tbody>${rows.map(r=>`<tr><th>${whoButton(index,r.id)}</th><td><span>${e(patternText(r.schedule.pattern))}</span><small>${f(r.leave.holidays)} holiday + ${f(r.leave.bankHolidays)} bank holidays</small></td>${cell({...r.total,share:r.total.from===model.from&&r.total.to===model.to?1:0})}${r.years.map(cell).join('')}</tr>`).join('')}</tbody></table></div>`;
+  return card('Worked days against expectation',`<p class="primary-muted">Expected days are each person's working days in ${e(day(model.from))} – ${e(day(model.to))}, between their first and last recorded commit, less their yearly holiday and bank-holiday allowance scaled to the part of each year covered. Worked days are every date with an authored commit, including non-working days. Set working days and leave per identity under Identities.</p>${rows.length?table:empty('No authored work in these dates','Widen the scope\'s dates or people.')}<p class="primary-muted">Git records changes, not attendance: reviews, meetings, pairing or unpushed work look the same as a day off, so a shortfall is a question to ask, not a finding.</p>`);
 }
 function contributorView(index,ui){
   const full={from:index.bounds.min,to:index.bounds.max};

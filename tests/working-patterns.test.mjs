@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {continuityMatrix} from '../assets/continuity.js';
 import {normalizeWorkingDays,workingPatternLabel,isScheduledDay,
-  continuityScheduleStatus,continuityCountBalance,missingDayColour,extraDayColour} from '../assets/working-patterns.js';
+  continuityScheduleStatus,continuityCountBalance,missingDayColour,extraDayColour,normalizeLeave,workedDaysBalance} from '../assets/working-patterns.js';
+import {buildIdentityConfig,parseIdentityConfig} from '../assets/identity-config.js';
 const person={id:'0',displayName:'Contributor'};
 const fullWeek={from:'2026-10-05',to:'2026-10-11'};
 const dates=['2026-10-05','2026-10-06','2026-10-07','2026-10-08','2026-10-09','2026-10-10','2026-10-11'];
@@ -169,8 +170,9 @@ test('UI, identity persistence and import contracts expose contributor-specific 
   const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
   const external=readFileSync(new URL('../assets/external-identities.js',import.meta.url),'utf8');
   assert.match(app,/const workingDaysById=\(\)=>Object.fromEntries\(mergeGroups/,'every model measures against the same identity working days');
-  assert.match(app,/workingDays:normalizeWorkingDays\(g\.workingDays\)/);
-  assert.match(app,/workingDays:normalizeWorkingDays\(group\.workingDays\)/);
+  assert.match(app,/const groupSettings=g=>\(\{workingDays:normalizeWorkingDays\(g\.workingDays\),leave:normalizeLeave\(g\.leave\)\}\)/,'working days and leave are saved together');
+  assert.match(app,/mergeGroups:mergeGroups\.map\(g=>\(\{displayName:g\.displayName,emails:\[\.\.\.g\.emails\],\.\.\.groupSettings\(g\)\}\)\)/,'sessions keep each identity\'s schedule and leave');
+  assert.match(app,/data-leave-field="\$\{field\}"/);
   assert.match(app,/renderWorkingPatterns\(view\)/);
   assert.match(app,/data-action="toggle-pattern-day"/);
   assert.match(app,/const continuityBandStyle=colour=>/,'continuity cell rendering helper must be defined');
@@ -191,4 +193,56 @@ test('non-working-day share follows each identity\'s working days and never coun
   assert.equal(c.offDayCommits,0,'nobody is "off" without working days set');
   assert.equal(offDayShare(view,view.selectedCommits),25,'1 of the 4 commits by people with working days set');
   assert.ok(structuredClone(view.byId.get('0')),'analysis stays plain data so the worker can post it');
+});
+
+test('leave defaults to 24 holiday and 8 bank-holiday days a year, in whole or half days',()=>{
+  assert.deepEqual(normalizeLeave(undefined),{holidays:24,bankHolidays:8});
+  assert.deepEqual(normalizeLeave({holidays:'25.5',bankHolidays:0}),{holidays:25.5,bankHolidays:0});
+  assert.deepEqual(normalizeLeave({holidays:-1,bankHolidays:'x'}),{holidays:24,bankHolidays:8});
+  assert.deepEqual(normalizeLeave({holidays:'',bankHolidays:400}),{holidays:24,bankHolidays:8});
+});
+
+test('worked days are measured per calendar year against working days less a share of yearly leave',()=>{
+  // A full 2025 and the first half of 2026, Mon–Thu, with work on every Monday plus one Saturday.
+  const activity=[];
+  for(let d=Date.parse('2025-01-01T00:00:00Z');d<=Date.parse('2026-06-30T00:00:00Z');d+=86400000){
+    const date=new Date(d).toISOString().slice(0,10),day=new Date(d).getUTCDay();
+    if(day===1)activity.push({groupId:'0',date});
+  }
+  activity.push({groupId:'0',date:'2025-03-08'},{groupId:'0',date:'2025-01-01'},{groupId:'0',date:'2026-06-30'});
+  const index={bounds:{min:'2025-01-01',max:'2026-06-30'},activity};
+  const model=workedDaysBalance(index,[{id:'0',displayName:'Ada',workingDays:[1,2,3,4]}],{from:'2024-06-01',to:'2026-12-31'});
+  assert.deepEqual(model.years.map(y=>y.year),[2025,2026],'dates outside imported history are left out');
+  const [y2025,y2026]=model.rows[0].years;
+  assert.equal(y2025.scheduled,209,'Mon–Thu days in 2025');
+  assert.equal(y2025.allowance,32,'a full year carries all 24 + 8 days of leave');
+  assert.equal(y2025.expected,177);
+  assert.equal(y2025.worked,54,'52 Mondays, New Year\'s Day and a Saturday: work on a non-working day counts');
+  assert.equal(y2025.offSchedule,1);
+  assert.equal(y2025.balance,-123);
+  assert.equal(y2026.allowance,15.9,'half a year carries half the leave');
+  const total=model.rows[0].total;
+  assert.equal(total.expected,Math.round((y2025.expected+y2026.expected)*10)/10);
+  assert.equal(total.balance,Math.round((total.worked-total.expected)*10)/10);
+});
+
+test('each identity has its own leave, and leave travels in identity configurations',()=>{
+  const index={bounds:{min:'2025-01-01',max:'2025-12-31'},activity:['0','1'].flatMap(groupId=>[{groupId,date:'2025-01-01'},{groupId,date:'2025-12-31'}])};
+  const people=[{id:'0',displayName:'A',workingDays:[1,2,3,4,5]},{id:'1',displayName:'B',workingDays:[1,2,3,4,5],leave:{holidays:30,bankHolidays:8}}];
+  const [a,b]=workedDaysBalance(index,people,{from:'2025-01-01',to:'2025-12-31'},{leaveById:{0:{holidays:0,bankHolidays:0}}}).rows;
+  assert.equal(a.years[0].expected,261,'no leave: every Mon–Fri day of 2025');
+  assert.equal(a.years[0].worked,2);
+  assert.equal(b.years[0].expected,261-38);
+  const config=buildIdentityConfig([{displayName:'B',emails:['b@x'],workingDays:[1,2,3,4],leave:{holidays:30,bankHolidays:8}}],[],'2026-01-01');
+  assert.deepEqual(config.groups[0].leave,{holidays:30,bankHolidays:8});
+  assert.deepEqual(parseIdentityConfig(config)[0].leave,{holidays:30,bankHolidays:8});
+});
+
+test('a person is only measured between their first and last recorded commit',()=>{
+  const index={bounds:{min:'2024-01-01',max:'2026-12-31'},activity:[{groupId:'0',date:'2025-07-01'},{groupId:'0',date:'2025-12-31'}]};
+  const row=workedDaysBalance(index,[{id:'0',displayName:'New',workingDays:[1,2,3,4,5]}],{from:'2024-01-01',to:'2026-12-31'}).rows[0];
+  assert.deepEqual(row.years.map(y=>y.measured),[false,true,false],'no shortfall before joining or after the last commit');
+  assert.equal(row.years[1].from,'2025-07-01');
+  assert.equal(row.total.allowance,16.1,'half a year of leave');
+  assert.equal(row.total.expected,row.years[1].expected);
 });

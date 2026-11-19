@@ -4,9 +4,9 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=offdays-20261119-1';
-import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=offdays-20261119-1';
-import { scheduleFor } from './working-patterns.js?v=offdays-20261119-1';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=leave-20261119-1';
+import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=leave-20261119-1';
+import { scheduleFor } from './working-patterns.js?v=leave-20261119-1';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },
@@ -437,6 +437,7 @@ export function buildAnalysis(rawCommits, groups, scope = {}) {
     displayName: String(g.displayName || g.emails?.[0] || 'Unknown'),
     emails: (g.emails || []).map(e => String(e).toLowerCase()),
     workingDays: g.workingDays,
+    leave: g.leave,
   })).filter(g => g.emails.length > 0);
   const emailToId = new Map();
   for (const group of groupDefs) {

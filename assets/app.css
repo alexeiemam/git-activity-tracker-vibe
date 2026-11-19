@@ -1678,3 +1678,14 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 /* Detailed sections now sit inside the view's grid. Wide content (the daily pulse, rhythm and
    contributor tables) scrolls inside its own box; it must never widen the page's single column. */
 .primary-explorer{grid-template-columns:minmax(0,1fr)}
+
+/* Worked days against expectation: over in blue, under in amber, each with its working. */
+.primary-worked-table td,.primary-worked-table th{white-space:nowrap}
+.primary-worked-table td small,.primary-worked-table th small{display:block;color:var(--muted);font:10px var(--mono);font-weight:400;text-transform:none;letter-spacing:0}
+.primary-worked-table td strong{font:600 14px var(--mono)}
+.primary-worked-table td.is-over strong{color:#1d5f86}
+.primary-worked-table td.is-under strong{color:#9a5212}
+.primary-worked-table td:nth-child(3){background:#f5f9f4}
+.pattern-leave{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font:11px var(--mono);color:var(--muted)}
+.pattern-leave label{display:inline-flex;align-items:center;gap:6px}
+.pattern-leave input{width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;font:12px var(--mono);background:var(--paper);color:var(--ink)}
