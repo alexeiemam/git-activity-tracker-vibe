@@ -1526,7 +1526,6 @@ button.primary-shape{cursor:pointer;line-height:1.4}button.primary-shape:hover{f
 .app-tab:hover{background:#eef5ef;color:#22563d}
 .app-tab.is-current,.app-tab[aria-current="page"]{background:#1d3b2e;border-color:#1d3b2e;color:#fff}
 .app-tab.is-current small,.app-tab[aria-current="page"] small{color:#c9e0d1}
-#impact-explorer[data-host="codebase"] .impact-block-heading,#impact-explorer[data-host="codebase"] #impact-timeline{display:none}
 @media(max-width:720px){.app-bar{margin-top:28px}.app-bar-title h2{font-size:23px}.app-tab{min-width:96px;padding:8px 11px}.app-tab small{display:none}}
 @media(forced-colors:active){.app-tab.is-current{outline:2px solid Highlight;outline-offset:2px}}
 
@@ -1579,3 +1578,9 @@ button.primary-shape{cursor:pointer;line-height:1.4}button.primary-shape:hover{f
 .scope-commits>summary{font:600 11px var(--mono);color:#2d6148;cursor:pointer}
 .scope-commits .table-scroll{margin-top:10px;background:var(--paper);border:1px solid var(--line);border-radius:9px}
 .scope-commits .helper{margin:6px 0 0}
+
+/* Codebase map as an area picker. */
+button.primary-map-cell{text-align:left;font:inherit;cursor:pointer;width:100%;color:inherit}
+button.primary-map-cell:hover{outline:2px solid #4f9a78;outline-offset:-2px}
+button.primary-map-cell:focus-visible,.primary-map-top:focus-visible{outline:3px solid #c2925d;outline-offset:-3px}
+.primary-map-cell.is-selected,.primary-map-top.is-selected{outline:3px solid #c2925d;outline-offset:-3px}

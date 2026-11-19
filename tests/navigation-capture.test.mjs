@@ -50,7 +50,7 @@ test('native deep links retain period context when following a person or codebas
   assert.equal(context.contributorFocus,'0');
   assert.equal(context.contributorRange,'period');
   const code=targetUrl('/index.html',state,groups,null,{view:'codebase',area:'app/services'});
-  assert.equal(applyRoute({mode:'observatory'},readRoute(code.split('?')[1]),groups).codebaseRange,'period');
+  assert.match(code,/from=2025-02-01&to=2025-02-14/,'following an area from Rhythm keeps the scope dates in the link');
 });
 
 test('rendering produces ordinary anchors for release, contributor and deployment evidence',async()=>{

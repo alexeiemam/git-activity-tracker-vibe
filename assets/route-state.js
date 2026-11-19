@@ -29,7 +29,7 @@ export function routeFromState(ui,groups=[],datasetId=null){
   if(mode==='rhythm'||mode==='contributors'&&ui.contributorRange==='period'){
     r.from=ui.periodFrom;r.to=ui.periodTo;
   }
-  if(mode==='codebase'){r.area=ui.codeArea;if(ui.codebaseRange==='period'){r.from=ui.periodFrom;r.to=ui.periodTo;}}
+  if(mode==='codebase')r.area=ui.codeArea;
   if(mode==='deployments'){
     r.environment=ui.deploymentEnv;r.event=ui.deploymentFocus;
   }
@@ -69,7 +69,6 @@ export function applyRoute(ui,route,groups=[]){
   else if(route.tab)next.contributorTab=route.tab;
   if(route.from&&route.to){next.periodFrom=route.from;next.periodTo=route.to;next.periodPreset='custom';
     if(next.mode==='contributors')next.contributorRange='period';
-    if(next.mode==='codebase')next.codebaseRange='period';
   }
   if(route.area){next.codeArea=route.area;}
   if(route.environment)next.deploymentEnv=route.environment;
@@ -95,7 +94,8 @@ export function targetUrl(path,ui,groups,datasetId,changes){
   // Avoid stale detail query parameters when navigating to another kind of object.
   const next={dataset:base.dataset,view};
   if(view==='rhythm'){next.from=base.from;next.to=base.to;}
-  if((view==='contributors'||view==='codebase')&&(ui?.mode==='rhythm'||(view==='contributors'&&ui?.mode==='contributors'&&ui?.contributorRange==='period')||(view==='codebase'&&ui?.mode==='codebase'&&ui?.codebaseRange==='period'))){next.from=ui?.periodFrom;next.to=ui?.periodTo;}
+  // Following a person or area from Rhythm carries the scope's dates into the link.
+  if((view==='contributors'||view==='codebase')&&(ui?.mode==='rhythm'||view==='contributors'&&ui?.mode==='contributors'&&ui?.contributorRange==='period')){next.from=ui?.periodFrom;next.to=ui?.periodTo;}
   return routeUrl(path,{...next,...changes});
 }
 export const routeKeys=keys;

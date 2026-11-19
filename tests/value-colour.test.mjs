@@ -152,7 +152,7 @@ test('every numeric heatmap is routed through the shared palette rather than opa
     assert.match(app,new RegExp(`function ${name}\\(`));
   }
   assert.ok((app.match(/intensityStyle\(/g)||[]).length>=4);
-  assert.ok((impact.match(/intensityStyle\(/g)||[]).length>=2);
+  assert.ok((impact.match(/intensityStyle\(/g)||[]).length>=1);
   assert.match(app,/intensityColour\(cell.count,scale\)/);
   assert.match(html,/id="pulse-key"/);
   assert.doesNotMatch(app,/data-level=/);

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {buildAnalysis,parseGitHistory,dayNumber,dateAtDay} from '../assets/domain.js';
 import {impactAnalysis} from '../assets/impact.js';
-import {buildEvidenceIndex,comparisonWindow,windowOf,periodDigest,contributorPortrait,releaseLandscape,releaseDetails,codebasePortrait,briefingText} from '../assets/perspectives.js';
+import {buildEvidenceIndex,comparisonWindow,windowOf,periodDigest,contributorPortrait,releaseLandscape,releaseDetails,codebaseCommits,areaPortrait,briefingText} from '../assets/perspectives.js';
 import {renderPrimaryExplorer,periodBriefingForUi,scopeHeadline} from '../assets/perspective-view.js';
 
 const h=ch=>ch.repeat(40);
@@ -35,7 +35,7 @@ const ui=(changes={})=>({mode:'observatory',releaseHash:index.releases.at(-1)?.h
  periodPreset:'14',periodFrom:'2025-02-16',periodTo:'2025-02-28',periodComparison:'previous',
  compareFrom:null,compareTo:null,periodBucket:null,periodFocusPerson:null,periodFocusArea:null,
  periodSelectedId:null,contributorFocus:'0',contributorTab:'delivery',contributorRange:'all',
- compareB:'1',compareC:null,codeArea:null,codebaseRange:'all',trail:[],...changes});
+ compareB:'1',compareC:null,codeArea:null,codebaseClock:'authored',trail:[],...changes});
 
 test('complete tagged release is independent of the authored-date window',()=>{
  const partial=buildAnalysis(history.commits,groups,{start:'2025-02-16',end:'2025-02-28',selectedIds:new Set(['0','1'])});
@@ -97,9 +97,11 @@ test('release cohorts and codebase are based on tagged contents, not per-person 
  const model=releaseLandscape(index);
  assert.equal(model.total,3);
  assert.ok(model.medianInterval>=0);
- const areas=codebasePortrait(index,{from:'2025-02-20',to:'2025-03-04'});
- assert.ok(areas.areas.some(a=>a.area==='app/'));
- assert.equal(areas.areas.find(a=>a.area==='app/').releases,2);
+ const released=codebaseCommits(index,{from:'2025-02-20',to:'2025-03-04',clock:'released'});
+ const app=areaPortrait(index,released,path=>path.startsWith('app/'));
+ assert.ok(app.touches>0);
+ assert.equal(app.releases,2,'released changes in app/ came from two tags');
+ assert.equal(new Set(released.map(c=>c.hash)).size,released.length,'a commit counts once however many releases ship it');
  const detail=releaseDetails(index,h('c'));
  assert.equal(detail.release.eligibleIntroduced,2);
  assert.equal(detail.commits.length,2);
@@ -200,14 +202,16 @@ test('release cohort controls offer lead and year compositions without productiv
  assert.doesNotMatch(driver,/productivity score:\s*\d+/);
 });
 
-test('codebase drill-down distinguishes authored work from missing period release events',()=>{
- const html=renderPrimaryExplorer(index,ui({mode:'codebase',codebaseRange:'period',
-   periodFrom:'2025-01-17',periodTo:'2025-01-19',codeArea:'app/'}));
- assert.match(html,/Authored work in the selected period/);
- assert.match(html,/Ben/);
- assert.match(html,/No matching tagged changes/);
- assert.match(html,/No released changes for this area/);
- assert.match(html,/1 authored commits/);
+test('codebase shows authored or released changes on one map, with an area portrait',()=>{
+ const scoped=changes=>renderPrimaryExplorer(index,ui({mode:'codebase',periodFrom:'2025-01-17',periodTo:'2025-01-19',codeArea:'app/',...changes}));
+ const authored=scoped({});
+ assert.match(authored,/The codebase map/);
+ assert.match(authored,/data-action="primary-select-area" data-area="app\/" aria-pressed="true"/,'the map is an area picker');
+ assert.match(authored,/Who works here[\s\S]*Ben/);
+ assert.match(authored,/Who works where/);
+ const released=scoped({codebaseClock:'released'});
+ assert.match(released,/aria-pressed="true">Released/);
+ assert.match(released,/No file changes in this scope/,'no release was published in these dates');
 });
 
 test('release list and anatomy stay coherent when applying a historical year filter',()=>{
@@ -252,7 +256,7 @@ test('scope people narrow the Rhythm timeline and the codebase who-changed-what 
  const scoped={...index,navigation:{...index.navigation,scope:{ids:['1']}}};
  const everyone=renderPrimaryExplorer(index,ui({mode:'codebase',periodFrom:'2025-01-09',periodTo:'2025-03-04'}));
  const one=renderPrimaryExplorer(scoped,ui({mode:'codebase',periodFrom:'2025-01-09',periodTo:'2025-03-04'}));
- assert.match(everyone,/Who changed what/);
+ assert.match(everyone,/Who works where/);
  assert.ok((everyone.match(/data-action="primary-period-cell"/g)||[]).length>(one.match(/data-action="primary-period-cell"/g)||[]).length);
  assert.match(one,/Everyone else/,'a narrowed scope keeps everyone else as context');
  assert.doesNotMatch(everyone,/Everyone else/);

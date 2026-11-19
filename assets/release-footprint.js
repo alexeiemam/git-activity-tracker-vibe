@@ -1,18 +1,18 @@
 /**
- * Codebase footprint: where a release's changes landed, at two directory
- * levels (e.g. `app/models/`). A single map is built from the whole history so
+ * Codebase footprint: where a release's changes landed, up to three
+ * directory levels (e.g. `app/models/concerns/`). A single map is built from the whole history so
  * every release is drawn on the same cells and footprints are comparable.
  * Footprints describe location and spread, never the value of a change.
  */
-export const FOOTPRINT_DEPTH = 2;
-const MAX_CELLS = 40;
+export const FOOTPRINT_DEPTH = 3;
+const MAX_CELLS = 60;
 
-/** `app/models/user.rb` → `app/models/`; `app/x.rb` → `app/`; `README.md` → `(root)`. */
+/** `app/models/concerns/a.rb` → `app/models/concerns/`; `app/x.rb` → `app/`; `README.md` → `(root)`. */
 export function footprintArea(path, depth = FOOTPRINT_DEPTH) {
   const dirs = String(path || '').replace(/^\/+/, '').split('/').slice(0, -1).filter(Boolean);
   return dirs.length ? `${dirs.slice(0, depth).join('/')}/` : '(root)';
 }
-const topOf = area => area === '(root)' ? '(root)' : `${area.split('/')[0]}/`;
+export const topOf = area => area === '(root)' ? '(root)' : `${area.split('/')[0]}/`;
 
 /**
  * Cells for the busiest areas across all history (by file touches), grouped

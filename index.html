@@ -324,7 +324,7 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
         </div>
       </section>
 
-      <section class="report-section" id="impact-explorer" data-tabs="observatory codebase" aria-labelledby="impact-heading">
+      <section class="report-section" id="impact-explorer" data-tabs="observatory" aria-labelledby="impact-heading">
         <div class="section-header"><div><h3 id="impact-heading">Impact, in context.</h3><p>Which changes reached tagged releases, which areas did they touch, who contributed, and what happened afterwards? Git evidence, not a productivity score.</p></div></div>
         <div class="report-card impact-report-card">
           <div id="impact-empty" role="status" aria-live="polite"><div class="impact-empty"><strong>Preparing release intelligence…</strong><p>If this remains visible after the dashboard loads, its JavaScript may not have initialised. Refresh the page to load the latest assets.</p></div></div>
@@ -337,11 +337,9 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
             <div class="impact-tabs" role="group" aria-label="Impact analysis perspective">
               <button type="button" class="impact-tab is-active" data-action="impact-tab" data-impact-tab="timeline" aria-pressed="true">Release detail</button>
               <button type="button" class="impact-tab" data-action="impact-tab" data-impact-tab="matrix" aria-pressed="false">People &amp; releases</button>
-              <button type="button" class="impact-tab" data-action="impact-tab" data-impact-tab="reach" aria-pressed="false">Codebase reach</button>
               <button type="button" class="impact-tab" data-action="impact-tab" data-impact-tab="durability" aria-pressed="false">Change evolution</button>
             </div>
             <div class="impact-content-head"><div><span class="eyebrow">02 / EXPLORE THE EVIDENCE</span><h5 id="impact-tab-title">A release, under the microscope.</h5></div>
-              <div class="impact-toolbar" id="impact-area-toolbar" hidden><span class="helper">SHOW AREA ACTIVITY AS</span><div class="segmented" role="group" aria-label="Codebase reach measure"><button type="button" class="segment active" data-action="impact-area-mode" data-impact-area-mode="touches" aria-pressed="true">File touches</button><button type="button" class="segment" data-action="impact-area-mode" data-impact-area-mode="within" aria-pressed="false">Within-person %</button></div></div>
             </div>
             <div id="impact-content" aria-live="polite"></div>
             <p class="impact-footnote">For GitHub-published releases, the publication timestamp locates the event and the publisher is an <em>assumed</em> release lead; the publisher is not proof of who deployed. Lightweight Git tags have no tagger identity. Publishers are automatically linked only when imported Git identities give an unambiguous exact match; manual assignments override inference. The date scope is shared: contribution counts use <strong>authored dates</strong>, while release events use <strong>GitHub publication dates when available</strong> (otherwise annotated-tag or tagged-commit dates). Tagged release contents are reconstructed from the Git ancestry graph, independent of merge commits or VERSION changes. File revisitation, test accompaniment, codebase breadth and commit-subject categories are <strong>proxies</strong>, not proof of value, production deployment, code quality or hours worked.</p>

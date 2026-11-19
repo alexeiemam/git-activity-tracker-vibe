@@ -324,24 +324,6 @@ export function impactReleaseMatrix(model, options={}) {
     <p class="impact-muted">${window.mode==='latest'?`Latest ${releases.length} of ${all.length}`:`Browsing all ${all.length} scoped releases · ${releases.length} rendered on this page`} to keep the dashboard responsive. Colour intensity uses <strong>one scale for the entire scoped release history</strong> regardless of page or year. L marks a verified/matched release lead independently of authored contribution. Unavailable shares are hatched, not zero. Matrix navigation changes only what is displayed, not the global data filters.</p>`;
 }
 
-export function impactReach(model, areaMode='touches') {
-  const areas=model.areas.slice(0,14), people=model.peopleAreas;
-  const denom=new Map(people.map(g=>[g.id,[...g.footprint.areaTouches.values()].reduce((a,b)=>a+b,0)]));
-  const valueFor=(g,a)=>{const touches=g.footprint.areaTouches.get(a)||0;return areaMode==='within' ? (denom.get(g.id)?100*touches/denom.get(g.id):null):touches;};
-  const scale=makeIntensityScale(people.flatMap(g=>areas.map(([a])=>valueFor(g,a))));
-  const kinds=Object.entries(model.overall.kindCounts).filter(([,v])=>v).sort((a,b)=>b[1]-a[1]);
-  return `<p class="impact-muted">Top-level file areas count file touches from authored commits introduced by displayed tagged releases, with the same global contributor/date/merge/revert scope. Path counts measure breadth, not complexity. ${model.areas.length>14?`Showing the 14 most frequently touched of ${model.areas.length} areas.`:''}</p>
-    <div class="impact-reach-legend">${areaMode==='touches'?'File touches · absolute':'Share of each contributor’s file touches · within-person %'}<span>Shared colour intensity scale</span></div>
-    <div class="impact-matrix-scroll"><table class="impact-matrix impact-reach-table"><thead><tr><th>CODEBASE AREA</th>${people.map(g=>`<th>${e(g.name)}<small>${amount(g.footprint.pathsCount)} paths</small></th>`).join('')}</tr></thead><tbody>
-    ${areas.map(([area,total])=>`<tr><th>${e(area)}<small>${amount(total)} touches</small></th>${people.map(g=>{const v=valueFor(g,area);return `<td><span class="impact-matrix-cell impact-reach-value" style="${intensityStyle(v,scale)}">${areaMode==='within'?p(v):amount(v)}</span></td>`;}).join('')}</tr>`).join('')}
-    </tbody></table></div>
-    <div class="impact-colour-key">${intensityLegend(scale,x=>areaMode==='within'?`${precise(x)}%`:precise(x),{missing:true})}</div>
-    <div class="impact-reach-bottom"><div><h6>Change classification <small>Commit-subject conventions or heuristics</small></h6>${kinds.map(([name,count])=>`<div class="impact-kind-row"><span>${e(name)}</span><div><i style="width:${100*count/(model.overall.commits||1)}%"></i></div><strong>${amount(count)}</strong></div>`).join('')||'No commits in scope'}</div>
-      <div><h6>Delivery supporting signals</h6><div class="impact-detail-facts compact"><div><span>CODE + TEST</span><strong>${p(model.overall.testAccompaniment)}</strong><small>Same-commit test accompaniment</small></div><div><span>DOC FILE TOUCHES</span><strong>${amount(model.overall.docTouches)}</strong></div><div><span>EXPLICIT REVERTS</span><strong>${amount(model.overall.reverts)}</strong></div><div><span>DISTINCT PATHS</span><strong>${amount(model.overall.pathsCount)}</strong></div></div><p class="impact-muted">Commit subjects are imperfect intent classifiers. Test accompaniment does not establish test quality or coverage.</p></div></div>
-    <div class="impact-cochange"><h6>Areas often changed together <small>Same authored commit · co-change is not proof of technical coupling</small></h6>
-    ${model.cochanges.length?model.cochanges.slice(0,8).map(([pair,count])=>`<div class="impact-cochange-row"><span>${e(pair)}</span><div><i style="width:${100*count/model.cochanges[0][1]}%"></i></div><strong>${amount(count)} commits</strong></div>`).join(''):'<p class="impact-muted">No commits touched multiple top-level areas in this selection.</p>'}</div>`;
-}
-
 export function impactDurability(model, selectedHash, expanded=false) {
   const releases=expanded?model.releases:model.releases.slice(-18);
   return `<p class="impact-muted">This is a <strong>file revisit</strong> cohort, not surviving-lines or quality analysis. A percentage counts distinct paths first touched by the selected contributors in the release, then touched again by the reference group on descendant commits. Windows are only reported after the imported history spans the full elapsed period. File renames are not followed.</p>

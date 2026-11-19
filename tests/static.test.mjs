@@ -77,11 +77,11 @@ test('Impact panel shows an actionable startup state rather than silent empty ma
   assert.match(app, /Impact Explorer rendering failed/);
 });
 
-test('Impact Explorer exposes labelled release, matrix, reach and evolution controls', () => {
+test('Impact Explorer exposes labelled release, matrix and evolution controls', () => {
   for (const id of ['impact-explorer','impact-summary','impact-scope','impact-timeline','impact-release-control','impact-content','impact-metric-select']) {
     assert.match(html, new RegExp(`id="${id}"`));
   }
-  for (const tab of ['timeline','matrix','reach','durability']) {
+  for (const tab of ['timeline','matrix','durability']) {
     assert.match(html, new RegExp(`data-impact-tab="${tab}"`));
   }
   assert.match(app, /renderImpact\(analysis\)/);

@@ -9,8 +9,10 @@ import {primaryDefaults,restorePrimaryState} from '../assets/perspective-state.j
 
 const commit=(...paths)=>({files:paths.map(p=>typeof p==='string'?{path:p,added:5,deleted:1}:p)});
 
-test('areas are two directories deep',()=>{
-  assert.equal(footprintArea('app/models/user/profile.rb'),'app/models/');
+test('areas are up to three directories deep',()=>{
+  assert.equal(footprintArea('app/models/user/profile/edit.rb'),'app/models/user/');
+  assert.equal(footprintArea('app/models/user/profile.rb'),'app/models/user/');
+  assert.equal(footprintArea('app/models/user.rb'),'app/models/');
   assert.equal(footprintArea('app/x.rb'),'app/');
   assert.equal(footprintArea('README.md'),'(root)');
 });

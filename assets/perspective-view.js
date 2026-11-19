@@ -1,7 +1,7 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, codebasePortrait, windowOf, briefingText, releaseFingerprints, releaseFootprints } from './perspectives.js?v=git-ingest-input-20261113-1';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait } from './perspectives.js?v=git-ingest-input-20261113-1';
 import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=git-ingest-input-20261113-1';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases } from './release-footprint.js?v=git-ingest-input-20261113-1';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, releaseFootprint, footprintArea } from './release-footprint.js?v=git-ingest-input-20261113-1';
 import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=git-ingest-input-20261113-1';
 import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=git-ingest-input-20261113-1';
 import { targetUrl } from './route-state.js?v=git-ingest-input-20261113-1';
@@ -111,19 +111,31 @@ const compareToggle=on=>`<button type="button" class="primary-preset ${on?'activ
 const shapeWeightControl=ui=>`<div class="primary-preset-row" role="group" aria-label="Weight by">${toggleButton('shapeWeight','count','Commits & files',ui.shapeWeight||'count')}${toggleButton('shapeWeight','lines','Lines changed',ui.shapeWeight||'count')}</div>`;
 const cellName=cell=>cell.key.endsWith('…')?'… other':cell.key===cell.top?'(top level)':cell.key.slice(cell.top.length);
 
-/** One fixed map for every release: top-level blocks, two-level cells sized by all-time activity. */
-function codebaseMap(map,shares,typical,{weightLabel}){
+/**
+ * One fixed map for every release and every scope: top-level blocks, cells
+ * (up to three levels deep) sized by all-time activity. With `selected`, the
+ * map is a picker: cells and blocks select an area instead of being a picture.
+ */
+function codebaseMap(map,shares,typical,{weightLabel,subject="this release's",selected=undefined}){
+  // `subject` is fixed wording chosen by the caller ("this release's", "the scope's authored"), never imported data.
+  const picker=selected!==undefined;
   const position=new Map(map.keys.map((key,i)=>[key,i]));
   const max=Math.max(...shares,.0001),maxTypical=typical?Math.max(...typical,.0001):1;
   const height=Math.max(190,Math.max(...map.groups.map(g=>g.cells.length))*20);
-  const groups=map.groups.map(g=>`<div class="primary-map-group" style="flex-grow:${g.touches}"><button type="button" class="primary-map-top" data-action="primary-open-area" data-area="${e(g.top)}" title="Open ${e(g.top)} in the codebase explorer">${e(g.top)}</button><div class="primary-map-cells" style="height:${height}px">${g.cells.map(cell=>{
+  const top=g=>picker?`<button type="button" class="primary-map-top${selected===g.top?' is-selected':''}" data-action="primary-select-area" data-area="${e(g.top)}" aria-pressed="${selected===g.top}" title="Select all of ${e(g.top)}">${e(g.top)}</button>`
+    :`<button type="button" class="primary-map-top" data-action="primary-open-area" data-area="${e(g.top)}" title="Open ${e(g.top)} in the codebase explorer">${e(g.top)}</button>`;
+  const groups=map.groups.map(g=>`<div class="primary-map-group" style="flex-grow:${g.touches}">${top(g)}<div class="primary-map-cells" style="height:${height}px">${g.cells.map(cell=>{
     const i=position.get(cell.key),share=shares[i]||0,alpha=share?0.08+0.92*share/max:0;
     const typicalShare=typical?typical[i]||0:null;
-    return `<div class="primary-map-cell${alpha>.55?' is-strong':''}" style="flex-grow:${cell.touches};background:rgba(31,106,73,${alpha.toFixed(2)})" title="${e(`${cell.label}: ${p(share)} of this release's ${weightLabel}${typicalShare!=null?` · all releases ${p(typicalShare)}`:''}`)}"><span>${e(cellName(cell))}</span>${typicalShare?`<b style="width:${clamp(typicalShare/maxTypical*100,4,100).toFixed(0)}%"></b>`:''}</div>`;
+    const title=`${cell.label}: ${p(share)} of ${subject} ${weightLabel}${typicalShare!=null?` · all releases ${p(typicalShare)}`:''}`;
+    const inner=`<span>${e(cellName(cell))}</span>${typicalShare?`<b style="width:${clamp(typicalShare/maxTypical*100,4,100).toFixed(0)}%"></b>`:''}`;
+    const style=`flex-grow:${cell.touches};background:rgba(31,106,73,${alpha.toFixed(2)})`,cls=`primary-map-cell${alpha>.55?' is-strong':''}`;
+    return picker?`<button type="button" class="${cls}${selected===cell.key?' is-selected':''}" style="${style}" data-action="primary-select-area" data-area="${e(cell.key)}" aria-pressed="${selected===cell.key}" title="${e(title)}">${inner}</button>`
+      :`<div class="${cls}" style="${style}" title="${e(title)}">${inner}</div>`;
   }).join('')}</div></div>`).join('');
   const ranked=map.keys.map((key,i)=>({key,share:shares[i],typical:typical?typical[i]:null})).filter(x=>x.share>0).sort((a,b)=>b.share-a.share).slice(0,5);
-  return `<div class="primary-map" role="img" aria-label="${e(`Codebase map: ${ranked.map(x=>`${x.key} ${p(x.share)}`).join(', ')}`)}">${groups}</div>
-    <p class="primary-legend-row"><span><i class="primary-age-key"></i> Darker = more of this release's ${e(weightLabel)}</span>${typical?'<span><i class="primary-age-key is-bar"></i> Bar = share across all releases</span>':''}<span>Cell size = all-time activity</span></p>
+  return `<div class="primary-map" ${picker?'role="group" aria-label="Codebase map: select an area"':`role="img" aria-label="${e(`Codebase map: ${ranked.map(x=>`${x.key} ${p(x.share)}`).join(', ')}`)}"`}>${groups}</div>
+    <p class="primary-legend-row"><span><i class="primary-age-key"></i> Darker = more of ${subject} ${e(weightLabel)}</span>${typical?'<span><i class="primary-age-key is-bar"></i> Bar = share across all releases</span>':''}<span>Cell size = all-time activity</span></p>
     ${ranked.length?`<p class="primary-muted primary-map-top-list">Most changed: ${ranked.map(x=>`<strong>${e(x.key)}</strong> ${p(x.share)}${x.typical!=null?` <small>(all releases ${p(x.typical)})</small>`:''}`).join(' · ')}</p>`:''}`;
 }
 
@@ -177,9 +189,9 @@ function releaseShapePanel(index,r,details,ui){
       ${r.baseline?'<p class="primary-warning">First tag in the imported history: it ships everything authored before it, so these ages include initial development.</p>':''}
     </section>
     <section class="primary-shape-part" aria-label="Codebase footprint">
-      <div class="primary-shape-part-head"><h5>Where they landed</h5><span class="primary-muted">Two directories deep</span></div>
+      <div class="primary-shape-part-head"><h5>Where they landed</h5><span class="primary-muted">Up to three directories deep</span></div>
       ${placeBody}
-      <div class="primary-facts">${stat(f(foot.touches),'File touches',placeTypical.touches!=null?`Average release ${f(placeTypical.touches)}`:'')}${stat(f(foot.lines),'Lines changed','Added + deleted')}${stat(f(foot.cells),'Areas touched','Two directories deep')}${stat(f(foot.topLevels),'Top-level directories',placeTypical.topLevels!=null?`Average release ${f(placeTypical.topLevels)}`:'')}</div>
+      <div class="primary-facts">${stat(f(foot.touches),'File touches',placeTypical.touches!=null?`Average release ${f(placeTypical.touches)}`:'')}${stat(f(foot.lines),'Lines changed','Added + deleted')}${stat(f(foot.cells),'Areas touched','Up to three directories deep')}${stat(f(foot.topLevels),'Top-level directories',placeTypical.topLevels!=null?`Average release ${f(placeTypical.topLevels)}`:'')}</div>
       <div class="primary-similar"><h5>Releases like this one</h5>${similar.length?similar.map(x=>{const other=byHash.get(x.hash);return `<div class="primary-similar-row">${tagButton(index,other)}<small>${e(day(other.date))}</small>${footprintBadge(footprints.releases.get(x.hash).shape,placeRef)}<span>${p(x.similarity)} similar</span></div>`;}).join(''):`<p class="primary-muted">${r.baseline?'The first tag is not compared with incremental releases.':'No other release changed a similar mix of areas.'}</p>`}</div>
       ${caption(`Similarity compares the share of ${weightLabel} in each area (cosine similarity). A footprint shows where changes landed, not their value or risk; renames and generated files can dominate lines changed.`)}
     </section>
@@ -193,7 +205,7 @@ const READING_GUIDE={
   observatory:['Tag ancestry defines what a release contains; release events are dated by GitHub publication, an annotated tag or the tagged commit.','The first tag is a baseline that ships all earlier history. Releases with incomplete ancestry, squashes and unmatched publishers need interpretation.','A release lead is the GitHub publisher or tagger, not a claim about who authored its code. Release shapes describe the age and location of shipped work, not its urgency, value or risk.','A GitHub release is not necessarily a production deployment. Environment events come from Heroku and are linked to tags by Git ancestry, not by dates or version numbers.'],
   contributors:['These are measures of recorded activity, not a ranking of performance.','Release participation and leadership are independent roles. A share of commits is not a share of effort, ownership or value.','The contributor table\'s first column follows the Measure above; copy it as CSV for your own analysis. Merge detection uses parent hashes when available (subject heuristics for older logs), and VERSION touches are a repository-specific proxy, not a verified release count.'],
   rhythm:['Times are as recorded by each commit\'s author, in their own time zone; they show when changes were recorded, not hours worked.','A gap means no matching authored records in this import, not absence from work. Working-day patterns are observations, not verified schedules.'],
-  codebase:['Areas are top-level folders (or two levels for release footprints). A file touched in several commits counts each time; binary changes count as touches but not lines.','Touching the same files does not establish ownership or direct collaboration.'],
+  codebase:['The map shows areas up to three directories deep; the people grid uses top-level folders. A file touched in several commits counts each time; binary changes count as touches but not lines.','Touching the same files does not establish ownership or direct collaboration.'],
 };
 export function readingGuide(index,tab){
   const general=index?[`${filterSentence(index)}.`,'Git records changes, not effort, difficulty, value, code quality or working hours. Only the imported, reachable history is visible; uncollected branches and missing dates are not counted.']:[];
@@ -331,19 +343,18 @@ function rhythmOverview(index,ui){
     ${card('The scope, unfolding',`<p class="primary-muted">${e(day(from))} – ${e(day(to))}, in ${e(timeline.granularity)} buckets. Select a bucket to inspect its commits and releases.</p>${timelineGrid(timeline.buckets.map(b=>({...b,count:b.commits,areas:b.releases.length})),[{label:'Authored commits',key:'commits'},{label:'Contributors',key:'people',className:'alt'},{label:'Release events',key:'areas',className:'gold'}],{action:'primary-period-bin',dateAttr:'data-bin',title:'Authored and release events in the scope'})}${bucket?`<div class="primary-inset"><div class="primary-row between"><h4>${e(bucket.key)} · ${f(bucket.commits)} authored commits · ${f(bucket.releases.length)} release events</h4><button class="primary-inline-link" data-action="primary-period-reset" type="button">Close</button></div><div class="primary-bucket-events">${bucketReleases.slice(0,12).map(r=>`<span>${tagButton(index,r)}</span>`).join('')}${bucketCommits.map(c=>`<div><code>${e(c.hash.slice(0,8))}</code> ${whoButton(index,c.groupId)} · ${e(c.subject)}</div>`).join('')||'<p>No authored commits in this bucket for the people in scope.</p>'}</div></div>`:''}`)}`;
 }
 
-/** Who changed what: authored-file touches per person and top-level area, in the scope. */
-function whoWhereCard(index,ui){
-  const digest=scopeDigest(index,ui);
-  if(!digest)return '';
-  const {summary:s}=digest,{from,to,ids}=scopeOf(index,ui);
-  const people=s.people.slice(0,10),areas=s.areas.slice(0,9);
-  // With a narrowed scope, everyone else's touches give the same context the old hotspots chart did.
-  const everyone=ids?scopeDigest(index,{...ui},{selectedIds:null}):null;
-  const others=everyone?new Map(areas.map(([area])=>[area,(everyone.summary.areas.find(([a])=>a===area)?.[1]||0)-(s.areas.find(([a])=>a===area)?.[1]||0)])):null;
-  const scale=makeIntensityScale(s.personAreas.flatMap(([,arr])=>arr.map(([,v])=>v)));
-  const touches=new Map(s.personAreas.map(([id,list])=>[id,new Map(list)]));
-  const focus=ui.periodFocusPerson&&ui.periodFocusArea?index.activity.filter(c=>c.groupId===ui.periodFocusPerson&&c.date>=from&&c.date<=to&&c.files.some(file=>file.area===ui.periodFocusArea)):[];
-  return card('Who changed what',`<p class="primary-muted">Authored-file touches per person and top-level area, ${e(day(from))} – ${e(day(to))}. Select a cell to list the commits behind it.</p>${people.length&&areas.length?`<div class="primary-matrix-scroll"><table class="primary-heat-table"><thead><tr><th>Contributor</th>${areas.map(([a])=>`<th><a href="${href(index,{view:'codebase',area:a})}" data-action="primary-open-area" data-area="${e(a)}">${e(a)}</a></th>`).join('')}</tr></thead><tbody>${people.map(([id])=>`<tr><th>${whoButton(index,id)}</th>${areas.map(([area])=>{const value=touches.get(id)?.get(area)||0;return `<td><button type="button" data-action="primary-period-cell" data-person="${e(id)}" data-area="${e(area)}" style="${intensityStyle(value,scale)}" title="${e(`${value} authored file touches in ${area}`)}">${f(value)}</button></td>`;}).join('')}</tr>`).join('')}${others?`<tr class="primary-heat-others"><th>Everyone else</th>${areas.map(([area])=>`<td><span title="${e(`${others.get(area)} authored file touches in ${area} by people outside the scope`)}">${f(others.get(area))}</span></td>`).join('')}</tr>`:''}</tbody></table></div><div class="primary-colour-legend">${intensityLegend(scale)}</div>`:empty('No comparable cells','No authored-file touches recorded in this scope.')}${ui.periodFocusPerson&&ui.periodFocusArea?`<div class="primary-selected-evidence" id="primary-who-where-detail"><h4>${e(index.groups.find(g=>g.id===ui.periodFocusPerson)?.displayName||'Contributor')} · ${e(ui.periodFocusArea)}</h4><p>${focus.length} matching commits · first 14 shown</p>${focus.slice(0,14).map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(c.date)}</span> ${e(c.subject)}</div>`).join('')||'<p>No matching commits.</p>'}</div>`:''}`);
+/**
+ * Who works where: file touches per person and top-level area, on the
+ * Codebase tab's clock. A narrowed scope adds everyone else as context.
+ */
+function whoWhereCard(index,ui,{commits,clock,from,to,ids}){
+  const grid=personAreaTouches(commits);
+  const people=grid.people.slice(0,10),areas=grid.areas.slice(0,9);
+  const scale=makeIntensityScale([...grid.cells.values()].flatMap(row=>[...row.values()]));
+  const everyone=ids?new Map(personAreaTouches(codebaseCommits(index,{from,to,clock})).areas):null;
+  const scoped=new Map(grid.areas);
+  const focus=ui.periodFocusPerson&&ui.periodFocusArea?commits.filter(c=>c.groupId===ui.periodFocusPerson&&c.files.some(file=>file.area===ui.periodFocusArea)):[];
+  return card('Who works where',`<p class="primary-muted">${clock==='released'?'Released':'Authored'} file touches per person and top-level area. Select a cell to list the commits behind it.</p>${people.length&&areas.length?`<div class="primary-matrix-scroll"><table class="primary-heat-table"><thead><tr><th>Contributor</th>${areas.map(([a])=>`<th><button type="button" class="primary-inline-link" data-action="primary-select-area" data-area="${e(a)}">${e(a)}</button></th>`).join('')}</tr></thead><tbody>${people.map(([id])=>`<tr><th>${whoButton(index,id)}</th>${areas.map(([area])=>{const value=grid.cells.get(id)?.get(area)||0;return `<td><button type="button" data-action="primary-period-cell" data-person="${e(id)}" data-area="${e(area)}" style="${intensityStyle(value,scale)}" title="${e(`${value} ${clock} file touches in ${area}`)}">${f(value)}</button></td>`;}).join('')}</tr>`).join('')}${everyone?`<tr class="primary-heat-others"><th>Everyone else</th>${areas.map(([area])=>{const value=(everyone.get(area)||0)-(scoped.get(area)||0);return `<td><span title="${e(`${value} ${clock} file touches in ${area} by people outside the scope`)}">${f(value)}</span></td>`;}).join('')}</tr>`:''}</tbody></table></div><div class="primary-colour-legend">${intensityLegend(scale)}</div>`:empty('No comparable cells','No file touches recorded in this scope.')}${ui.periodFocusPerson&&ui.periodFocusArea?`<div class="primary-selected-evidence" id="primary-who-where-detail"><h4>${e(index.groups.find(g=>g.id===ui.periodFocusPerson)?.displayName||'Contributor')} · ${e(ui.periodFocusArea)}</h4><p>${focus.length} matching commits · first 14 shown</p>${focus.slice(0,14).map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(c.date)}</span> ${e(c.subject)}</div>`).join('')||'<p>No matching commits.</p>'}</div>`:''}`);
 }
 
 function weekHeatmap(slots,options={shape:true}){
@@ -413,29 +424,26 @@ function contributorView(index,ui){
     ${card('Follow their contribution',`<p class="primary-muted">Move from this portrait into the same person's authored period, release anatomy or component history, preserving an investigation trail.</p><div class="primary-card-footer"><a class="button soft" href="${href(index,{view:'rhythm',from:windowOf(index,30).from,to:windowOf(index,30).to,person:index.groups.find(g=>g.id===focus)?.emails?.[0]})}" data-action="primary-person-period" data-person="${e(focus)}">Explore their recent period →</a><button class="button outline" type="button" data-action="primary-evidence-person" data-person="${e(focus)}">Inspect every activity chart ↗</button></div>`)}`;
 }
 
+/**
+ * Codebase: one map shared with release footprints, shaded by the scope's
+ * authored or released changes. Selecting an area shows who works there,
+ * the releases that shipped it and its newest commits.
+ */
 function codebaseView(index,ui){
-  const window=ui.codebaseRange==='period'?{from:ui.periodFrom,to:ui.periodTo}:{from:index.bounds.min,to:index.bounds.max};
-  const model=codebasePortrait(index,window,ui.codeArea);
-  const chosen=model.areas.find(a=>a.area===ui.codeArea)||(ui.codeArea?null:model.areas[0]);
-  const max=Math.max(1,...model.areas.map(a=>a.touches));
-  let authoredPanel='';
-  if(ui.codebaseRange==='period'){
-    const commits=index.activity.filter(c=>c.date>=window.from&&c.date<=window.to);
-    const counts=new Map();
-    for(const c of commits)for(const file of c.files)counts.set(file.area,(counts.get(file.area)||0)+1);
-    const areas=[...counts].sort((a,b)=>b[1]-a[1]);
-    const focus=ui.codeArea?commits.filter(c=>c.files.some(file=>file.area===ui.codeArea)):[];
-    const people=new Map();
-    for(const c of focus)for(const file of c.files)if(file.area===ui.codeArea)people.set(c.groupId,(people.get(c.groupId)||0)+1);
-    const contributors=[...people].sort((a,b)=>b[1]-a[1]);
-    authoredPanel=card('Authored work in the selected period',`<p class="primary-muted">${e(window.from)}–${e(window.to)} · Authored-date activity, including changes that are not part of a tagged release in this window. Select an area to investigate its authorship.</p><div class="primary-ranked">${areas.slice(0,15).map(([name,value])=>`<div class="primary-ranked-row"><button type="button" data-action="primary-select-area" data-area="${e(name)}" class="${name===ui.codeArea?'primary-emphasis':''}">${e(name)}</button>${bar(value,Math.max(1,...areas.map(x=>x[1])))}<strong>${f(value)} touches</strong></div>`).join('')||empty('No authored changes','No matching commit records in this interval.')}</div>${ui.codeArea?`<div class="primary-inset"><h4>${e(ui.codeArea)} · ${f(focus.length)} authored commits</h4><div class="primary-ranked">${contributors.slice(0,12).map(([id,touches])=>`<div class="primary-ranked-row">${whoButton(index,id)}${bar(touches,Math.max(1,...contributors.map(x=>x[1])))}<strong>${f(touches)} touches</strong></div>`).join('')||'<p>No recorded authorship in this area for these dates.</p>'}</div><details class="primary-notes"><summary>Inspect matching commits (${f(focus.length)} · latest 30)</summary><div class="primary-commit-list">${focus.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(c.date)}</span>${whoButton(index,c.groupId)}<span>${e(c.subject)}</span></div>`).join('')||'No matching commits.'}</div></details></div>`:''}`);
-  }
-  return `<p class="primary-lede">Explore released changes, their recorded contributors, and related commits. File co-occurrence does not establish ownership or direct collaboration.</p>
-    ${card('Set the observation clock',`<div class="primary-row"><label>Scope ${select('primary-codebase-range',[{value:'all',label:'All released history'},{value:'period',label:'The scope dates'}],ui.codebaseRange)}</label></div><p class="primary-muted">A release-event period means releases published in that window; authored changes in that window are displayed separately, not silently treated as shipped.</p>`)}
-    ${authoredPanel}
-    ${whoWhereCard(index,ui)}
-    ${card('Released codebase areas',`<div class="primary-ranked">${model.areas.slice(0,22).map(a=>`<div class="primary-ranked-row"><button type="button" class="${a.area===chosen?.area?'primary-emphasis':''}" data-action="primary-select-area" data-area="${e(a.area)}">${e(a.area)}</button>${bar(a.touches,max)}<strong>${f(a.touches)} touches</strong><small>${a.releases} releases</small></div>`).join('')||empty('No matching tagged changes','No release events containing file touches have been observed in this window. Authored work may still appear above.')}</div>`)}
-    ${chosen?card(`${chosen.area} · released area portrait`,`<div class="primary-facts">${stat(f(chosen.touches),'Released file touches')}${stat(f(chosen.releases),'Tagged releases')}${stat(f(chosen.people.length),'Contributors')}</div><div class="primary-two-col"><div class="primary-inset"><h4>People who touched this area</h4>${chosen.people.slice(0,12).map(([id,v])=>`<div class="primary-ranked-row">${whoButton(index,id)}${bar(v,Math.max(1,...chosen.people.map(x=>x[1])))}<strong>${f(v)}</strong></div>`).join('')}</div><div class="primary-inset"><h4>Recent releases containing this area</h4>${chosen.versions.slice(0,12).map(r=>`<div class="primary-release-brief">${tagButton(index,r)}</div>`).join('')}</div></div><p class="primary-muted">Area names come from top-level Git paths. Counts may overlap across authors and releases; no ownership is inferred.</p>`):ui.codeArea?empty('No released changes for this area','The selected area may have authored activity without a matching release event in this period. Look at its authored footprint above.'):''}`;
+  const {from,to,ids}=scopeOf(index,ui);
+  const clock=ui.codebaseClock==='released'?'released':'authored';
+  const commits=codebaseCommits(index,{from,to,ids,clock});
+  const {map}=releaseFootprints(index);
+  const fp=releaseFootprint(commits,map);
+  const selected=ui.codeArea||null;
+  const matches=path=>{const area=footprintArea(path);return area===selected||map.cellOf.get(area)===selected||selected!=='(root)'&&area.startsWith(selected);};
+  const portrait=selected?areaPortrait(index,commits,matches):null;
+  const clockSwitch=`<div class="primary-preset-row" role="group" aria-label="Count changes">${toggleButton('codebaseClock','authored','Authored',clock)}${toggleButton('codebaseClock','released','Released',clock)}</div>`;
+  const basis=clock==='released'?'commits shipped by releases published in the scope dates':'commits authored in the scope dates';
+  return `<p class="primary-lede">Where the scope's changes landed, and who works where.</p>
+    ${card('The codebase map',`<div class="primary-row between"><p class="primary-muted">${e(day(from))} – ${e(day(to))} · ${e(basis)}${ids?' by the people in scope':''}. Select an area to see who works there.</p>${clockSwitch}</div>${fp.touches?codebaseMap(map,fp.shares.files,null,{weightLabel:'file touches',subject:`the scope's ${clock}`,selected}):empty('No file changes in this scope','Widen the scope\'s dates or people, or switch between authored and released changes.')}`)}
+    ${portrait?card(selected,`<div class="primary-row between"><p class="primary-muted">${clock==='released'?'Released':'Authored'} changes in ${e(selected)} within the scope.</p><button type="button" class="primary-inline-link" data-action="primary-select-area" data-area="">Clear selection</button></div><div class="primary-facts">${stat(f(portrait.touches),'File touches')}${stat(f(portrait.commits),'Commits')}${stat(f(portrait.people.length),'People')}${stat(f(portrait.releases),'Releases shipping them')}</div><div class="primary-two-col"><div class="primary-inset"><h4>Who works here</h4>${portrait.people.slice(0,12).map(([id,v])=>`<div class="primary-ranked-row">${whoButton(index,id)}${bar(v,Math.max(1,...portrait.people.map(x=>x[1])))}<strong>${f(v)}</strong></div>`).join('')||'<p class="primary-muted">No matching changes.</p>'}</div><div class="primary-inset"><h4>Releases that shipped these changes</h4>${portrait.recentReleases.map(r=>`<div class="primary-release-brief">${tagButton(index,r)}<small>${e(day(r.date))}</small></div>`).join('')||'<p class="primary-muted">Not yet in a tagged release.</p>'}</div></div><details class="primary-notes"><summary>Newest commits here</summary><div class="primary-commit-list">${portrait.recent.map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(day(c.date))}</span>${whoButton(index,c.groupId)}<span class="primary-commit-subject">${e(c.subject)}</span></div>`).join('')||'<p>No matching commits.</p>'}</div></details>`):''}
+    ${whoWhereCard(index,ui,{commits,clock,from,to,ids})}`;
 }
 
 export function renderPrimaryExplorer(index,ui){

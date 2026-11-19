@@ -341,16 +341,48 @@ export function contributorPortrait(index,personId,window) {
   };
 }
 
-export function codebasePortrait(index,window,selectedArea=null) {
-  const releases=index.releases.filter(r=>r.date&&r.date>=window.from&&r.date<=window.to);
-  const areas=new Map();
-  for(const r of releases)for(const [area,touches] of r.areaTouches){
-    if(!areas.has(area))areas.set(area,{area,touches:0,releases:new Set(),people:new Map(),versions:[]});
-    const a=areas.get(area);a.touches+=touches;a.releases.add(r.hash);a.versions.push({hash:r.hash,tag:r.tag});
-    for(const m of r.members){const count=new Map(m.areaTouches).get(area)||0;if(count)appendMap(a.people,m.id,count);}
+/**
+ * The scope's changes in the codebase, on one of two clocks: `authored`
+ * counts commits authored in the dates; `released` counts the commits
+ * shipped by releases published in the dates (each commit once, however
+ * many releases ship it). `ids` narrows both to some people.
+ */
+export function codebaseCommits(index,{from,to,ids=null,clock='authored'}) {
+  const people=ids?new Set([...ids].map(String)):null;
+  let commits;
+  if(clock==='released'){
+    const byHash=new Map(index.activity.map(c=>[c.hash,c])),seen=new Set();
+    commits=[];
+    for(const r of index.releases)if(r.date&&r.date>=from&&r.date<=to)for(const hash of r.commits){
+      const commit=byHash.get(hash);
+      if(commit&&!seen.has(hash)){seen.add(hash);commits.push(commit);}
+    }
+  } else commits=index.activity.filter(c=>c.date>=from&&c.date<=to);
+  return people?commits.filter(c=>people.has(c.groupId)):commits;
+}
+
+/** File touches per person and top-level area, with each person's and area's total. */
+export function personAreaTouches(commits) {
+  const cells=new Map(),people=new Map(),areas=new Map();
+  for(const c of commits)for(const file of c.files){
+    const row=cells.get(c.groupId)||new Map();appendMap(row,file.area,1);cells.set(c.groupId,row);
+    appendMap(people,c.groupId,1);appendMap(areas,file.area,1);
   }
-  return {areas:[...areas.values()].sort((a,b)=>b.touches-a.touches).map(a=>({...a,releases:a.releases.size,people:sortCount(a.people),versions:a.versions.slice(-18).reverse()})),
-    selectedArea};
+  return {cells,people:sortCount(people),areas:sortCount(areas)};
+}
+
+/** One area's touches, people, releases and newest commits; `matches(path)` selects its files. */
+export function areaPortrait(index,commits,matches) {
+  const people=new Map(),hit=[];let touches=0;
+  for(const c of commits){
+    const n=c.files.filter(file=>matches(file.path)).length;
+    if(n){touches+=n;appendMap(people,c.groupId,n);hit.push(c);}
+  }
+  const hashes=new Set(hit.map(c=>c.hash));
+  const releases=index.releases.filter(r=>r.commits.some(hash=>hashes.has(hash)));
+  return {touches,commits:hit.length,people:sortCount(people),releases:releases.length,
+    recentReleases:releases.slice(-12).reverse(),
+    recent:hit.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10)};
 }
 
 export function briefingText(index,digest) {

@@ -1,6 +1,6 @@
 # git:signals — follow the releases, people and rhythms behind software delivery
 
-A local, zero-build Git evidence explorer with three connected ways into a repository: **the releases, a chosen period, or its contributors**. Tagged snapshots keep their complete code ancestry; authored activity remains a separate observation clock. Imported logs are processed locally in the browser, not uploaded to a service.
+A local, zero-build Git evidence explorer with four connected ways into a repository: **its releases, its people, its rhythm over time and its codebase**. Tagged snapshots keep their complete code ancestry; authored activity remains a separate observation clock. Imported logs are processed locally in the browser, not uploaded to a service.
 
 ## Reordering reconciled identities
 
@@ -88,7 +88,7 @@ underneath:
 | **Releases** | What shipped, and where did it go? | **Browse releases** (the list beside the selected release's anatomy), **Overview** (landscape, mix, cohorts, deployment evidence, release gaps, Impact › Release detail, People & releases and Change evolution) and, when deployment history was imported, **Environments** (Heroku STAG/BETA/PROD events and how they relate to tags) |
 | **People** | Who contributed? | Contributor portraits; summary, contribution side by side, momentum over time, every measure per person (copyable as CSV) and each person's mix of commit sizes |
 | **Rhythm** | When, and how steadily? | The scope unfolding over time; the activity pulse; weekly, yearly and seasonal rhythms |
-| **Codebase** | Where in the code? | Released areas; who changed what; Impact › Codebase reach |
+| **Codebase** | Where in the code? | The codebase map (up to three directory levels) with an area portrait, and who works where |
 
 Old links to `?view=periods` open the Rhythm tab, `?view=deployments` links open Releases › Environments, and `?view=evidence` links open People. Cards carry a single
 heading, and each tab ends with **How to read this tab**: the evidence's clocks
@@ -112,10 +112,19 @@ traceable plain-text summary of the scope's activity, releases, areas,
 comparison and limitations, and **Commits in this scope** lists the newest
 matching commits. Links that open a month, a year, a release's
 surrounding fortnight or a person's recent period set the scope's dates (and,
-for a person, its people). The **Codebase** tab adds **Who changed what**, a
-zero-aware person × top-level area grid for the scope (with an **Everyone
-else** row when the scope is narrowed, replacing the old hotspots chart);
-select a cell to list its commits.
+for a person, its people).
+
+**Codebase** is organised around a code area. **The codebase map** is the same
+map release footprints use (areas up to three directories deep, sized by
+all-time activity), shaded by the scope's changes on one of two clocks:
+**Authored** (commits authored in the scope dates) or **Released** (commits
+shipped by releases published in the scope dates, each commit counted once).
+Select a cell, or a top-level block, to open that area's portrait: file
+touches, commits, who works there, the releases that shipped its changes and
+its newest commits. **Who works where** is a zero-aware person × top-level area
+grid on the same clock, with an **Everyone else** row when the scope is
+narrowed; select a cell to list its commits. The scope bar is the only date
+control.
 
 - **Releases — start with releases.** The tab opens on **Browse releases**:
   the filterable list stays in view beside the release it opens (the wait and
@@ -259,12 +268,8 @@ The four connected perspectives are:
    globally selected contributors are rows. Percentages are scoped to the
    globally chosen reference group, not the whole repo unless requested.
    Clicking a cell opens that release's full evidence.
-3. **Codebase reach:** contributor × top-level area matrix with absolute file
-   touches or *within-person* percentages, heuristic commit categories, same-
-   commit test accompaniment and commonly co-changed areas. Uses a **deduplicated
-   union of matching commits introduced by displayed tagged releases**, not
-   unshipped commits or duplicate credit across branching tags. File co-change
-   suggests revisitation patterns, not architectural coupling or influence.
+3. Codebase reach moved to **Codebase › Who works where** on the **Released**
+   clock, which likewise counts each shipped commit once across branching tags.
 4. **Change evolution:** distinct paths touched by a release revisited in the
    next descendant tagged snapshot, plus 30/90/180-day file revisit cohorts
    where Git has enough subsequent reachable history. The later commits are
@@ -368,12 +373,13 @@ are not measured.
 ### Codebase footprint
 
 **Releases › Release anatomy › Release shape › Where they landed** shows where a release's
-changes landed, two directories deep (`app/models/`; files directly in a
-top-level directory count as that directory, and root files as `(root)`).
+changes landed, up to three directories deep (`app/models/concerns/`; files
+higher up count as their own directory, e.g. `app/models/`, and root files as
+`(root)`).
 
 - One **map** is built from the whole imported history, so every release is
-  drawn on the same cells: top-level directories are blocks, the busiest 40
-  two-level areas are cells sized by all-time activity, and quieter areas fold
+  drawn on the same cells: top-level directories are blocks, the busiest 60
+  areas are cells sized by all-time activity, and quieter areas fold
   into one "… other" cell per directory. Shading shows this release's share;
   **Compare with all releases** adds an orange bar per cell for the share of
   all incremental releases' changes, pooled. Select a directory name to open

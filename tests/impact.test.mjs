@@ -6,7 +6,7 @@ import {join} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {parseGitHistory,parseGitLog,buildAnalysis,getHistoryDateBounds,periodForPreset} from '../assets/domain.js';
 import {parseTagVersion,releaseKind,fileKind,changeFootprint,changeCategory,impactAnalysis} from '../assets/impact.js';
-import {impactTimeline,impactReleaseMatrix,impactReleaseDetail,impactReach,impactDurability} from '../assets/impact-view.js';
+import {impactTimeline,impactReleaseMatrix,impactReleaseDetail,impactDurability} from '../assets/impact-view.js';
 import {generateDemoLog} from '../assets/demo-data.js';
 
 const author=(day,month=1)=>`2026-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}T11:00:00+00:00`;
@@ -135,7 +135,6 @@ test('renderers encode Git-controlled content and keep percentages and censored 
   assert.match(impactTimeline(i,r.hash),/VERSION touched/);
   assert.match(impactReleaseMatrix(i),/—|100%/);
   assert.match(impactDurability(i,r.hash),/Not fully observed/);
-  assert.match(impactReach(i,'within'),/within-person/i);
   assert.match(impactReleaseDetail(r,i.referenceLabel,i.metric),/First tagged|Introduced after/);
   const malicious={...r,tag:'<img src=x onerror=alert(1)>'};
   const markup=impactReleaseDetail(malicious,i.referenceLabel,i.metric);
