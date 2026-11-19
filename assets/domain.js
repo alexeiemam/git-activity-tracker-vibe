@@ -4,8 +4,8 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=codebase-20261119-2';
-import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=codebase-20261119-2';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=layout-20261119-1';
+import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=layout-20261119-1';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },

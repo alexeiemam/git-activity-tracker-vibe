@@ -1664,3 +1664,7 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 .primary-spark-mid{stroke:#c9d6cb;stroke-dasharray:2 3}
 #codebase-area{scroll-margin-top:124px}
 @media(max-width:860px){.primary-signals{grid-template-columns:1fr}}
+
+/* Detailed sections now sit inside the view's grid. Wide content (the daily pulse, rhythm and
+   contributor tables) scrolls inside its own box; it must never widen the page's single column. */
+.primary-explorer{grid-template-columns:minmax(0,1fr)}
