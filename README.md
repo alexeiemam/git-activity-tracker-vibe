@@ -442,7 +442,9 @@ filtered to that shape.
   session.
 - **People › Delivery** shows the same histogram for commits the person
   authored in the observation window, followed to their first release even if
-  it ships after the window, against everyone's commits in the same window.
+  it ships after the window, against everyone's commits in the same window
+  (dark marker) and **everyone else's** (blue marker, the person excluded,
+  since for a heavy contributor "everyone" is mostly themselves).
   **Not yet released** counts commits no tag has shipped, with how long the
   oldest has waited as of the end of the imported history; these are still
   waiting, so they are excluded from the percentiles. **Compare** adds median

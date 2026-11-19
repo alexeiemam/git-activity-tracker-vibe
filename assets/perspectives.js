@@ -4,10 +4,10 @@
  * complete introduced Git ancestry (subject only to the explicitly declared
  * merge/revert policy); an authored period is a different observation clock.
  */
-import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=flight-20261119-1';
-import { changeCategory, fileKind } from './impact.js?v=flight-20261119-1';
-import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape, folderArea } from './release-footprint.js?v=flight-20261119-1';
-import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=flight-20261119-1';
+import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=everyoneelse-20261119-1';
+import { changeCategory, fileKind } from './impact.js?v=everyoneelse-20261119-1';
+import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape, folderArea } from './release-footprint.js?v=everyoneelse-20261119-1';
+import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=everyoneelse-20261119-1';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);
@@ -338,6 +338,8 @@ export function contributorPortrait(index,personId,window) {
     driverWithOthers:median(driven.map(r=>r.contributors)),
     releaseAge:commitReleaseAges(activity,firstRelease,asOf),
     teamReleaseAge:commitReleaseAges(windowActivity,firstRelease,asOf),
+    // Everyone includes this person; for a heavy contributor that is mostly themselves.
+    othersReleaseAge:commitReleaseAges(windowActivity.filter(c=>c.groupId!==personId),firstRelease,asOf),
   };
 }
 

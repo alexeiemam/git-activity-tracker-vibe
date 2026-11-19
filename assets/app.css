@@ -1721,3 +1721,5 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 .impact-timeline-legend i.impact-shared-key{width:14px;height:9px;border-radius:1.5px;background:#f3c9ae}
 @media (forced-colors:active){.impact-focus-line,.impact-focus-marks{stroke:CanvasText}.impact-shared-day,.impact-flight{fill:Highlight}.impact-partner-ring{stroke:Highlight}}
 .impact-flight.is-pinned{stroke:#173d2c;stroke-width:1.5}
+.primary-age-bar b.is-others,.primary-age-key.is-compare.is-others{background:#4d70a4}
+@media (forced-colors:active){.primary-age-bar b.is-others{background:Highlight}}
