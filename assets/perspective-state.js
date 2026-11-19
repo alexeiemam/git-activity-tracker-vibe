@@ -16,7 +16,7 @@ const accepted={
   releaseFootprint:['all','focused','spread','cross-cutting','broad-sweep','initial','unmeasured'],
   releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off'],
   periodComparison:['none','previous','year','custom'],
-  contributorTab:['delivery','together','focus','behaviour','evolution','compare'],
+  contributorTab:['delivery','together','focus','evolution','compare'],
   coReleaseSort:['shared','overlap'],
   contributorRange:['all','year','period'],codebaseRange:['all','period'],deploymentEnv:['all','STAG','BETA','PROD'],
 };

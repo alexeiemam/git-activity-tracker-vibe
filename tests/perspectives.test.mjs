@@ -251,5 +251,7 @@ test('scope people narrow the Rhythm timeline and the codebase who-changed-what 
  const one=renderPrimaryExplorer(scoped,ui({mode:'codebase',periodFrom:'2025-01-09',periodTo:'2025-03-04'}));
  assert.match(everyone,/Who changed what/);
  assert.ok((everyone.match(/data-action="primary-period-cell"/g)||[]).length>(one.match(/data-action="primary-period-cell"/g)||[]).length);
+ assert.match(one,/Everyone else/,'a narrowed scope keeps everyone else as context');
+ assert.doesNotMatch(everyone,/Everyone else/);
  assert.match(renderPrimaryExplorer(scoped,ui({mode:'rhythm'})),/The scope, unfolding/);
 });

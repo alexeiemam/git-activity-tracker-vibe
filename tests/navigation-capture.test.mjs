@@ -108,3 +108,10 @@ test('links and sessions from the Periods view open the Rhythm view',()=>{
   assert.equal(readRoute('view=periods&from=2025-02-01&to=2025-02-14').view,'rhythm');
   assert.match(routeUrl('/index.html',routeFromState({mode:'rhythm',periodFrom:'2025-02-01',periodTo:'2025-02-14'})),/view=rhythm&from=2025-02-01/);
 });
+
+test('old Behaviour links open the Rhythm tab for that person',()=>{
+  const route=readRoute('view=contributors&person=alias%40work.io&tab=behaviour');
+  const next=applyRoute({mode:'observatory'},route,groups);
+  assert.equal(next.mode,'rhythm');
+  assert.equal(next.contributorFocus,'0');
+});

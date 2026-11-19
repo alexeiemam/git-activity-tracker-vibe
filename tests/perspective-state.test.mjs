@@ -66,3 +66,7 @@ test('sessions saved in the Periods view restore into the Rhythm view',()=>{
   assert.equal(restored.mode,'rhythm');
   assert.equal(restored.trail[0].mode,'rhythm');
 });
+
+test('a saved Behaviour tab falls back to Delivery now that rhythm lives in its own tab',()=>{
+  assert.equal(restorePrimaryState({primary:{contributorTab:'behaviour'}}).contributorTab,'delivery');
+});

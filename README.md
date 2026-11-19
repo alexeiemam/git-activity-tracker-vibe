@@ -87,7 +87,7 @@ underneath:
 | **Releases** | What shipped? | Release landscape, cohorts, Browse releases, Release anatomy, Impact › Release detail and People & releases |
 | **People** | Who contributed? | Contributor portraits; summary, contribution side by side and momentum over time |
 | **Rhythm** | When, and how steadily? | The scope unfolding over time; the activity pulse; weekly, yearly and seasonal rhythms |
-| **Codebase** | Where in the code? | Released areas; who changed what; Impact › Codebase reach and Change evolution; change sizes; hotspots |
+| **Codebase** | Where in the code? | Released areas; who changed what; Impact › Codebase reach and Change evolution; change sizes |
 | **Deployments** | Where did it run? | Heroku environments and their relationship to tagged releases |
 | **Evidence** | The records | The contributor table (copyable as CSV) and recent commits |
 
@@ -110,8 +110,9 @@ traceable plain-text summary of the scope's activity, releases, areas,
 comparison and limitations. Links that open a month, a year, a release's
 surrounding fortnight or a person's recent period set the scope's dates (and,
 for a person, its people). The **Codebase** tab adds **Who changed what**, a
-zero-aware person × top-level area grid for the scope; select a cell to list
-its commits.
+zero-aware person × top-level area grid for the scope (with an **Everyone
+else** row when the scope is narrowed, replacing the old hotspots chart);
+select a cell to list its commits.
 
 - **Releases — start with releases.** A release landscape shows aligned
   calendar-bucket lanes for release counts, contributor appearances and codebase
@@ -129,10 +130,13 @@ its commits.
   authored commits, distinct contributors and tagged-release events at daily,
   weekly or monthly resolution. Select a time bucket to examine the exact
   recorded commits and releases. The activity pulse and weekly, yearly and
-  seasonal rhythms follow.
+  seasonal rhythms follow. The rhythm explorer's summary includes each person's typical
+  and longest **quiet interval** (days between authored dates); a gap means no
+  matching authored records, not absence from work.
 - **People — start with a person.** Select any **reconciled** contributor
   (all their merged author emails), then explore their **Delivery / Together / Focus /
-  Behaviour / Evolution / Compare** views. The release portfolio distinguishes
+  Evolution / Compare** views; **Working rhythm →** opens the Rhythm tab focused
+  on them (old `tab=behaviour` links do the same). The release portfolio distinguishes
   release participation (tagged releases they authored for), release leadership (releases they published or tagged), and both; rates use
   the same release-event population across compared people. **Together** shows
   which contributors authored changes in the same incremental tagged releases:
@@ -143,8 +147,7 @@ its commits.
   for the selected people. Initial baseline and incomplete-ancestry tags are
   excluded from these overlap denominators, and co-participation does **not**
   establish direct collaboration. Focus shows where
-  their authored files changed. Behaviour shows author-local 7×24 rhythms,
-  internal active-day gaps and sample counts. Evolution displays separate
+  their authored files changed. Evolution displays separate
   monthly lanes for authorship, participation and release driving, and annual
   summaries. Compare two or three people over the *same* imported-history,
   365-day or selected period window, using measured values and separately
@@ -415,7 +418,7 @@ Within the detailed charts, each chart is rendered from one shared `buildAnalysi
 4. **Metric and presentation** — choose commits, active days, line additions/deletions/churn, file touches, VERSION-file changes, revert or merge commits. Display absolute totals, share of a reference group, per active contributor-day, or per calendar week.
 5. **Reference** — entire imported cohort or only the selected people. This changes percentages and repository comparisons, never the selected commit set.
 
-The **ranking, trend and comparison table** use the chosen metric and mode. The **activity pulse** can show that metric as monthly totals or as a daily calendar, always using absolute values and one shared intensity scale across selected people. Daily hovers show the day’s complete filtered commit list, change metrics and share of the selected reference group; click/tap pins a scrollable detail panel. **Working rhythm** includes an individual-focused explorer with a seven-column weekday chart and switchable **7×24 heatmap (default), seven-ring circular clock, and 168-hour continuous bar chart**. All three encodings use identical authored-local **timed commit counts**, not the global change-volume metric, and clearly mark missing authored-hour coverage; changes to global people, dates and merge/revert policy apply to all three. Focus switches only among globally selected contributors (or their combined group), without silently changing other charts. **Change-size footprint** remains a purpose-specific distribution of *the same filtered commits* with a labelled within-person percentage scale; neither view silently changes global filters. **File hotspots** always count file touches in the same selected commits against the chosen reference. **Recent commits** contains only filtered records. Searching a name in the picker only narrows that picker, not the underlying selection.
+The **ranking, trend and comparison table** use the chosen metric and mode. The **activity pulse** shows its own **Colour by** measure as monthly totals or as a daily calendar, always using absolute values and one shared intensity scale across selected people. Daily hovers show the day’s complete filtered commit list, change metrics and share of the selected reference group; click/tap pins a scrollable detail panel. **Working rhythm** includes an individual-focused explorer with a seven-column weekday chart and switchable **7×24 heatmap (default), seven-ring circular clock, and 168-hour continuous bar chart**. All three encodings use identical authored-local **timed commit counts**, not the global change-volume metric, and clearly mark missing authored-hour coverage; changes to global people, dates and merge/revert policy apply to all three. Focus switches only among globally selected contributors (or their combined group), without silently changing other charts. **Change-size footprint** remains a purpose-specific distribution of *the same filtered commits* with a labelled within-person percentage scale; neither view silently changes global filters. **Recent commits** contains only filtered records. Searching a name in the picker only narrows that picker, not the underlying selection.
 
 ### Release gap × authored activity (Pulse)
 

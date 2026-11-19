@@ -341,6 +341,7 @@ function resetPrimaryOnLoad(){
     primary=applyRoute(primary,route,groups);
     state.viewMode=primary.mode;
     applyRouteScope(route);
+    if(route.tab==='behaviour')state.rhythmFocus=primary.contributorFocus;
   }
 }
 /** A link's dates and Rhythm person become the scope. Returns whether the scope changed. */
@@ -1934,6 +1935,14 @@ function renderRhythmDetail() {
     node.setAttribute('aria-pressed',String(Boolean(rhythmPinned && active)));
   });
 }
+/** Days between consecutive authored dates for one person, or for everyone in scope. */
+function quietIntervals(view,focus) {
+  const people=focus==='selection'?view.contributors:view.contributors.filter(c=>c.id===focus);
+  const dates=[...new Set(people.flatMap(c=>Object.entries(c.daily.commits).filter(([,n])=>n>0).map(([d])=>d)))].sort();
+  const gaps=dates.slice(1).map((d,i)=>dayNumber(d)-dayNumber(dates[i])-1).sort((a,b)=>a-b);
+  const median=gaps.length?(gaps.length%2?gaps[(gaps.length-1)/2]:(gaps[gaps.length/2-1]+gaps[gaps.length/2])/2):null;
+  return {activeDays:dates.length,median,longest:gaps.at(-1)??null};
+}
 function renderRhythmExplorer(view) {
   const target=$('rhythm-explorer');
   target.hidden = !view.contributors.length;
@@ -1952,11 +1961,14 @@ function renderRhythmExplorer(view) {
   setText('rhythm-focus-name',model.isGroup?'The selected group’s week':`${model.name}'s week`);
   setText('rhythm-focus-caption',`${view.start} to ${view.end} · ${view.includeMerges?'merges included':'merges excluded'} · ${view.includeReverts?'reverts included':'reverts excluded'} · ${model.isGroup?'all selected contributors':'one selected contributor'}. Changing this focus only affects this explorer.`);
   const peak=model.peakSlot;
+  const quiet=quietIntervals(view,focus);
   const mini=(label,value,desc)=>`<div class="rhythm-kpi"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(desc)}</small></div>`;
   $('rhythm-kpis').innerHTML=mini('TIMED COMMITS',number.format(model.timedCommits),`${number.format(model.totalCommits)} total · ${model.totalCommits?percent(model.timedCommits/model.totalCommits*100):'—'} recorded times`)+
     mini('BUSIEST WEEKDAY',model.peakDay?DAY_NAMES[model.peakDay.day]:'—',model.peakDay?`${number.format(model.peakDay.count)} commits · ${percent(model.peakDay.percentage)}`:'No authored hours recorded')+
     mini('BUSIEST WEEK-HOUR',peak?`${DAY_NAMES[peak.day]} ${String(peak.hour).padStart(2,'0')}:00`:'—',peak?`${number.format(peak.count)} commits across ${number.format(peak.dates)} dates`:'No authored hours recorded')+
-    mini('WEEKEND SHARE',model.weekendShare===null?'—':percent(model.weekendShare),'Of timed commits · Sat + Sun');
+    mini('WEEKEND SHARE',model.weekendShare===null?'—':percent(model.weekendShare),'Of timed commits · Sat + Sun')+
+    mini('TYPICAL QUIET INTERVAL',quiet.median==null?'—':`${number.format(quiet.median)} days`,`${number.format(quiet.activeDays)} active author dates · median gap between them`)+
+    mini('LONGEST QUIET INTERVAL',quiet.longest==null?'—':`${number.format(quiet.longest)} days`,'No matching authored records; not proof of absence from work');
   $('rhythm-weekday-columns').innerHTML=rhythmWeekdayColumns(model,accent);
   const captions={
     heatmap:'Day × hour · 7 rows × 24 hourly slots. Colour shows commit counts; scroll sideways for all hours on small screens.',
@@ -2373,30 +2385,6 @@ function renderFootprint(view) {
   $('footprint').innerHTML=`<div class="footprint-rows">${rows}</div><div class="footprint-legend">${legend}</div>`;
 }
 
-function renderAreas(view) {
-  if(!view.contributors.length) { $('areas').innerHTML=empty('No contributors selected.');return; }
-  const allAreaNames=new Set();
-  for(const c of view.referenceContributors) for(const name of c.areas.keys()) allAreaNames.add(name);
-  const selectedAreas=new Map();
-  const refAreas=new Map();
-  for(const name of allAreaNames){
-    const selected=sum(view.contributors.map(c=>c.areas.get(name)?.touches||0));
-    if(!selected) continue;
-    selectedAreas.set(name,selected);
-    refAreas.set(name,sum(view.referenceContributors.map(c=>c.areas.get(name)?.touches||0)));
-  }
-  const top=[...selectedAreas.keys()].sort((a,b)=>selectedAreas.get(b)-selectedAreas.get(a)||a.localeCompare(b)).slice(0,10);
-  if(!top.length){$('areas').innerHTML=empty('No file changes in this filtered set (some commits have no numstat records).');return;}
-  const mx=Math.max(...top.map(name=>refAreas.get(name)),1);
-  const rows=top.map(name=>{
-    const selected=selectedAreas.get(name), ref=refAreas.get(name);
-    const blocks=view.contributors.map(c=>({id:c.id,name:c.displayName,n:c.areas.get(name)?.touches||0})).filter(b=>b.n);
-    const others=Math.max(0,ref-selected);
-    return `<div class="area-row"><span class="area-name" title="${esc(name)}">${esc(name)}</span><div class="area-track" aria-label="${esc(name)}: ${selected} selected file touches of ${ref} reference"><div class="area-segment" style="width:${(ref/mx)*100}%;display:flex">${blocks.map(b=>`<div style="width:${b.n/ref*100}%;background:${color(b.id)}" title="${esc(b.name)}: ${b.n} touches"></div>`).join('')}${others?`<div class="area-segment other" style="width:${others/ref*100}%" title="Unselected contributors: ${others} touches"></div>`:''}</div></div><span class="area-value" title="Selected / reference file touches">${number.format(selected)}${view.denominator==='repository'?` / ${number.format(ref)}`:''}</span></div>`;
-  }).join('');
-  const legend=view.contributors.map(c=>`<span style="${style(c.id)}"><i></i>${esc(c.displayName)}</span>`).join('');
-  $('areas').innerHTML=`<div class="viz-top"><span class="eyebrow">FILE TOUCHES BY TOP-LEVEL AREA</span><span class="helper">${view.denominator==='repository'?'Selected / entire repository':'Selected contributor totals'}</span></div>${rows}<div class="area-legend">${legend}${view.denominator==='repository'&&view.referenceContributors.length>view.contributors.length?'<span><i style="background:#c6cdc6"></i>Other contributors</span>':''}</div>`;
-}
 function renderRecent(view) {
   const commits=[...view.selectedCommits].sort((a,b)=>(b.authoredAt??0)-(a.authoredAt??0)||b.date.localeCompare(a.date)).slice(0,18);
   if(!commits.length){$('recent-commits').innerHTML=empty('No commits in this scope.');return;}
@@ -2510,7 +2498,7 @@ const EVIDENCE_STAGES=[
   {key:'pulse',tabs:['rhythm','contributors','observatory'],label:'Rendering activity pulse',value:84,help:'Comparing authored dates',render:()=>renderPulse(analysis)},
   {key:'rhythm',tabs:['rhythm'],label:'Rendering weekly rhythms',value:89,help:'Weekdays, hours and seasonality',render:()=>renderRhythm(analysis)},
   {key:'impact',tabs:['observatory','codebase'],label:'Rendering impact evidence',value:94,help:'Tagged releases and contributor roles',render:()=>renderImpact(analysis)},
-  {key:'codebase',tabs:['codebase'],label:'Rendering the codebase',value:96,help:'Change sizes and codebase hotspots',render:()=>{renderFootprint(analysis);renderAreas(analysis);}},
+  {key:'codebase',tabs:['codebase'],label:'Rendering the codebase',value:96,help:'Change sizes',render:()=>renderFootprint(analysis)},
   {key:'records',tabs:['evidence'],label:'Listing the records',value:98,help:'Contributor table and commit history',render:()=>{renderTable(analysis);renderRecent(analysis);}},
 ];
 let evidenceRendered={run:-1,keys:new Set()};

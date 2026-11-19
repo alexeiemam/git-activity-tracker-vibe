@@ -160,7 +160,7 @@ function findingForChanges(subject,commits,windows) {
       title:'The codebase areas receiving authored changes have shifted',
       summary:`The share of file touches in ${shift.most.area} changed from ${Math.round(shift.most.prior*100)}% to ${Math.round(shift.most.recent*100)}% between comparable periods.`,
       evidence:[{label:'Largest area change',value:shift.most.area},{label:'Earlier share of file touches',value:`${Math.round(shift.most.prior*100)}%`},{label:'Recent share',value:`${Math.round(shift.most.recent*100)}%`},{label:'File touches',value:`${a.fileTouches} → ${b.fileTouches}`}],
-      score:shift.distance+0.45,link:'areas-heading',unit:'file touches',
+      score:shift.distance+0.45,link:'footprint-heading',unit:'file touches',
       limitations:['A file touch is not effort, ownership or a shipped change; top-level folders are imperfect component boundaries.'],
       why:'Shares within each author-period, not raw path counts.'}));
   }
@@ -316,7 +316,7 @@ function contextFindings(subject,commits,releases,from,to) {
     summary:`The selected authored commits touch ${paths.size} distinct file paths across ${areas.size} top-level codebase areas.${top?` ${top[0]} has the largest number of recorded touches.`:''}`,
     evidence:[{label:'Distinct file paths',value:paths.size},{label:'Top-level areas',value:areas.size},
       {label:'Most frequently touched area',value:top?.[0]||'—'},{label:'File touches in that area',value:top?.[1]||0}],
-    basis:'Author-scoped file numstat entries',unit:'file paths and file touches',link:'areas-heading',
+    basis:'Author-scoped file numstat entries',unit:'file paths and file touches',link:'footprint-heading',
     why:'A descriptive map of source files represented in this import; touches can overlap across contributors.'}));
   return findings;
 }

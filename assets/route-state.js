@@ -60,7 +60,9 @@ export function applyRoute(ui,route,groups=[]){
   if(route.partner){const id=idFor(route.partner,groups);if(id!=null)next.coReleasePartner=String(id);}
   if(route.personB){const id=idFor(route.personB,groups);if(id!=null)next.compareB=String(id);}
   if(route.personC){const id=idFor(route.personC,groups);if(id!=null)next.compareC=String(id);}
-  if(route.tab)next.contributorTab=route.tab;
+  // Behaviour moved into the Rhythm tab; old links open that person's rhythm there.
+  if(route.tab==='behaviour'&&next.mode==='contributors')next.mode='rhythm';
+  else if(route.tab)next.contributorTab=route.tab;
   if(route.from&&route.to){next.periodFrom=route.from;next.periodTo=route.to;next.periodPreset='custom';
     if(next.mode==='contributors')next.contributorRange='period';
     if(next.mode==='codebase')next.codebaseRange='period';
