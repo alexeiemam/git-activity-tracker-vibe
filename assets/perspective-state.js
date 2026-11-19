@@ -1,7 +1,7 @@
 /** Bounded, browser-independent navigation state for the three primary perspectives. */
 export const primaryDefaults=()=>({
   mode:'observatory',cohortBy:'type',releaseHash:null,releaseType:'all',releaseYear:'all',releaseQuery:'',releasePage:0,
-  releaseView:'browse',releaseShape:'all',releaseFootprint:'all',releaseBrowse:'list',fingerprintView:'arrival',shapeWeight:'count',shapeCompare:'on',
+  releaseView:'browse',releaseShape:'all',releaseFootprint:'all',releaseBrowse:'timeline',fingerprintView:'arrival',shapeWeight:'count',shapeCompare:'on',
   periodPreset:'14',periodFrom:null,periodTo:null,periodComparison:'previous',compareFrom:null,compareTo:null,
   periodBucket:null,periodSelectedId:null,periodFocusPerson:null,periodFocusArea:null,
   contributorFocus:null,contributorTab:'delivery',contributorRange:'all',compareB:null,compareC:null,

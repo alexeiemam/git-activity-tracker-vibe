@@ -200,7 +200,7 @@ test('missing Heroku metadata retains a working release-first dashboard',()=>{
   const gitOnly=buildDeploymentIndex([],history.commits,index,{STAG:'missing-cli',BETA:'missing-cli',PROD:'missing-cli'});
   assert.equal(gitOnly.available,false);
   index.deployments=gitOnly;
-  const ui={...primaryDefaults(),mode:'observatory'};
+  const ui={...primaryDefaults(),mode:'observatory',releaseBrowse:'list'};
   assert.doesNotMatch(renderPrimaryExplorer(index,ui),/primary-view-switch/,'Releases has only one view without deployment history');
   const environments=renderPrimaryExplorer(index,{...ui,releaseView:'environments'});
   assert.doesNotMatch(environments,/data-value="environments"/,'without deployment history there is no Environments view');

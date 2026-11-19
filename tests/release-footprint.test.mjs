@@ -102,7 +102,7 @@ test('release footprints share one map, are cached and drive the footprint filte
   assert.equal(fps.releases.get(hashOf('v1.0.0')).shape,'initial');
   assert.equal(fps.releases.get(hashOf('v1.1.0')).shape,'focused');
   assert.equal(fps.releases.get(hashOf('v1.2.0')).shape,'cross-cutting');
-  const html=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseFootprint:'cross-cutting'});
+  const html=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseBrowse:'list',releaseFootprint:'cross-cutting'});
   assert.match(html,/Cross-cutting \(1\)/);
   assert.match(html,new RegExp(`data-hash="${hashOf('v1.2.0')}" aria-current="true"`));
 });

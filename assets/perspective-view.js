@@ -1,11 +1,11 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait } from './perspectives.js?v=browse-releases-20261119-2';
-import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=browse-releases-20261119-2';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, releaseFootprint, footprintArea, topOf, OTHER_FOLDERS } from './release-footprint.js?v=browse-releases-20261119-2';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=browse-releases-20261119-2';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=browse-releases-20261119-2';
-import { targetUrl } from './route-state.js?v=browse-releases-20261119-2';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=browse-releases-20261119-2';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait } from './perspectives.js?v=timeline-20261119-1';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=timeline-20261119-1';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, releaseFootprint, footprintArea, topOf, OTHER_FOLDERS } from './release-footprint.js?v=timeline-20261119-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=timeline-20261119-1';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=timeline-20261119-1';
+import { targetUrl } from './route-state.js?v=timeline-20261119-1';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=timeline-20261119-1';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});
@@ -281,7 +281,7 @@ function observatory(index,ui){
   const footprints=releaseFootprints(index),footprintOf=r=>footprints.releases.get(r.hash)?.shape||'unmeasured';
   const footprintCounts=new Map();for(const r of all.releases)footprintCounts.set(footprintOf(r),(footprintCounts.get(footprintOf(r))||0)+1);
   const list=all.releases.filter(r=>(ui.releaseType==='all'||r.kind===ui.releaseType)&&(!ui.releaseShape||ui.releaseShape==='all'||shapeOf(r)===ui.releaseShape)&&(!ui.releaseFootprint||ui.releaseFootprint==='all'||footprintOf(r)===ui.releaseFootprint)&&(ui.releaseYear==='all'||r.date.startsWith(ui.releaseYear))&&(String(r.tag).toLowerCase().includes((ui.releaseQuery||'').toLowerCase()))).reverse();
-  const browse=BROWSE_MODES.some(m=>m.key===ui.releaseBrowse)?ui.releaseBrowse:'list';
+  const browse=BROWSE_MODES.some(m=>m.key===ui.releaseBrowse)?ui.releaseBrowse:'timeline';
   const filtered=list.length!==all.releases.length;
   const pages=Math.max(1,Math.ceil(list.length/24)),page=clamp(ui.releasePage||0,0,pages-1);
   const shown=list.slice(page*24,page*24+24);

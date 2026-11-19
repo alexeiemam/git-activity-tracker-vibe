@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=browse-releases-20261119-2';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=browse-releases-20261119-2';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=browse-releases-20261119-2';
+import { IMPACT_METRICS } from './impact.js?v=timeline-20261119-1';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=timeline-20261119-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=timeline-20261119-1';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -174,9 +174,9 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
         <label for="impact-timeline-to">TO <input id="impact-timeline-to" type="date" value="${windowDates.to}" min="${allDates.from}" max="${allDates.to}"></label>
       </div>
     </div>
-    <div class="impact-timeline-overview"><span class="impact-overview-label">HISTORY</span><div class="impact-overview-track" aria-hidden="true">${overviewTicks}<span class="impact-overview-window" style="left:${overviewStart}%;width:${overviewWidth}%"></span></div><label class="impact-overview-pan-label" for="impact-timeline-pan">PAN</label><input type="range" id="impact-timeline-pan" min="0" max="1000" value="${panProgress}" ${isAll?'disabled':''} aria-label="Pan timeline through full imported history" aria-valuetext="${e(windowDates.from)} to ${e(windowDates.to)}"></div>
-    <div class="impact-timeline-info"><span>${isAll?'Full timeline':isLatest?'Recent releases':'Custom time window'} · ${e(shortDate(windowDates.from))} – ${e(shortDate(windowDates.to))} · ${records.length} of ${all.length} releases in global scope</span><span>${isAll?'Zoom or set dates to explore':!records.length?'No tags in this range':'Select a tag to inspect · release dropdown locates it'}</span></div>
-    <div class="impact-timeline-scroll"><svg viewBox="0 0 ${width} ${height}" width="100%" role="img" aria-label="Tag-date release timeline from ${e(windowDates.from)} to ${e(windowDates.to)}. Interactive markers select a tagged release.">
+    <div class="impact-timeline-overview"><span class="impact-overview-label">HISTORY</span><div class="impact-overview-track" data-timeline-brush title="Click to jump here; drag the window to pan">${overviewTicks}<span class="impact-overview-window" style="left:${overviewStart}%;width:${overviewWidth}%" role="slider" tabindex="0" aria-label="Visible part of the release history. Arrow keys pan; plus and minus zoom" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="${panProgress}" aria-valuetext="${e(shortDate(windowDates.from))} to ${e(shortDate(windowDates.to))}"></span></div></div>
+    <div class="impact-timeline-info"><span>${isAll?'Full timeline':isLatest?'Recent releases':'Custom time window'} · ${e(shortDate(windowDates.from))} – ${e(shortDate(windowDates.to))} · ${records.length} of ${all.length} releases in global scope</span><span class="impact-timeline-hint">${!records.length?'No tags in this range · ':''}Drag to pan · pinch or Ctrl/⌘-scroll to zoom · double-click to zoom in</span></div>
+    <div class="impact-timeline-scroll" tabindex="0" aria-label="Release timeline. Arrow keys pan; plus and minus zoom; 0 shows all releases"><svg viewBox="0 0 ${width} ${height}" width="100%" data-timeline-plot data-start="${min}" data-end="${max}" data-plot-left="58" data-plot-width="${width-94}" data-view-width="${width}" role="img" aria-label="Tag-date release timeline from ${e(windowDates.from)} to ${e(windowDates.to)}. Interactive markers select a tagged release.">
       ${[0,.5,1].map(f=>`<line x1="48" y1="${y(f*hi)}" x2="${width-28}" y2="${y(f*hi)}" stroke="#e4ebe1" stroke-dasharray="2 4"/><text x="40" y="${y(f*hi)+4}" text-anchor="end" class="impact-axis">${humanMetric(f*hi,model.metric)}</text>`).join('')}
       <line x1="48" y1="170" x2="${width-28}" y2="170" stroke="#bbcfc0"/>
       ${stems}${caption}

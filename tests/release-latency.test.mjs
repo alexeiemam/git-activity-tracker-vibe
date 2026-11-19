@@ -137,7 +137,7 @@ test('fingerprints exclude the first tag from the all-releases reference and dri
   assert.equal(fps.releases.get(v1.hash).shape,'initial');
   assert.equal(fps.releases.get(v11.hash).shape,'steady');
   assert.equal(fps.typical.commits.releases,1);
-  const filtered=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseShape:'initial'});
+  const filtered=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseBrowse:'list',releaseShape:'initial'});
   assert.match(filtered,/Initial history \(1\)/);
   assert.match(filtered,new RegExp(`data-hash="${v1.hash}" aria-current="true"`),'filter narrows the release index');
 });
@@ -162,7 +162,7 @@ test('the release shape panel shares one weighting and comparison across both ha
 
 test('browse releases switches between the list and the strips, dimming releases outside the filters',()=>{
   const hash=index.releases.find(r=>r.tag==='v1.1.0').hash;
-  const browse=changes=>renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseHash:hash,...changes});
+  const browse=changes=>renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseBrowse:'list',releaseHash:hash,...changes});
   const list=browse({});
   assert.match(list,/class="primary-release-row selected"/);
   assert.doesNotMatch(list,/<a [^>]*class="primary-release-entry"[^>]*>(?:(?!<\/a>)[\s\S])*primary-open-shape/,'shape buttons sit outside the row link');
@@ -179,6 +179,6 @@ test('shape settings and filters persist and reject unknown values',()=>{
   assert.deepEqual([restored.releaseBrowse,restored.fingerprintView,restored.shapeWeight,restored.shapeCompare,restored.releaseShape],['wait','histogram','lines','off','backlog']);
   const bad=restorePrimaryState({primary:{fingerprintView:'strip',releaseBrowse:'grid',releaseShape:'urgent'}});
   assert.equal(bad.fingerprintView,'arrival');
-  assert.equal(bad.releaseBrowse,'list');
+  assert.equal(bad.releaseBrowse,'timeline','unknown views fall back to the default, Timeline');
   assert.equal(bad.releaseShape,'all');
 });

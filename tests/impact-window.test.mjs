@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { impactTimelineExtent,impactTimelineWindow,impactTimelineZoom,impactTimelineReveal,impactTimelineCustomRange,impactTimelinePan,impactTimelineDates } from '../assets/impact-window.js';
+import { impactTimelineZoomWindow,impactTimelineShiftWindow,impactTimelineCentreWindow,impactTimelinePreferenceFor,impactTimelineExtent,impactTimelineWindow,impactTimelineZoom,impactTimelineReveal,impactTimelineCustomRange,impactTimelinePan,impactTimelineDates } from '../assets/impact-window.js';
 import { impactTimeline } from '../assets/impact-view.js';
 
 const DAY=86400000;
@@ -76,7 +76,7 @@ test('custom dates validate, expose no fake zeros, and honour exact authored-day
   assert.ok(impactTimelineDates(impactTimelineWindow(m,options)).to==='2023-03-08');
   const noTags=impactTimeline(m,m.releases[20].hash,{mode:'custom',from:'2023-03-04',to:'2023-03-06'});
   assert.match(noTags,/No release tags fall within this timeline range/);
-  assert.match(noTags,/impact-timeline-pan/);
+  assert.match(noTags,/data-timeline-brush/,'the history brush still lets you pan to tags');
 });
 
 test('viewport works for a single tagged release and truncated history',()=>{
@@ -97,4 +97,26 @@ test('tag date selection uses the recorded tag local date, even when its UTC ins
   const visible=impactTimeline(m,m.releases[0].hash,range);
   assert.match(visible,/data-impact-hash="release-0"/);
   assert.match(visible,/aria-current="true"/);
+});
+
+test('exact windows zoom around a pointer, shift, centre and save as dates, always inside history',()=>{
+  const m=model(),extent=impactTimelineExtent(m),all=impactTimelineWindow(m);
+  const anchor=m.releases[10].timestamp;
+  const zoomed=impactTimelineZoomWindow(m,all,.5,anchor);
+  assert.ok(Math.abs((zoomed.end-zoomed.start)-(all.end-all.start)/2)<1,'half the span');
+  const before=(anchor-all.start)/(all.end-all.start),after=(anchor-zoomed.start)/(zoomed.end-zoomed.start);
+  assert.ok(Math.abs(before-after)<1e-9,'the time under the pointer stays under the pointer');
+  const day=impactTimelineZoomWindow(m,zoomed,1e-9,anchor);
+  assert.equal(day.end-day.start,86400000,'zoom stops at one day');
+  const shifted=impactTimelineShiftWindow(m,zoomed,-1e13);
+  assert.equal(shifted.start,extent.start,'panning stops at the start of history');
+  assert.equal(shifted.end-shifted.start,zoomed.end-zoomed.start,'and keeps the zoom');
+  const centred=impactTimelineCentreWindow(m,zoomed,anchor);
+  assert.ok(Math.abs((centred.start+centred.end)/2-anchor)<1||centred.start===extent.start||centred.end===extent.end);
+  assert.deepEqual(impactTimelinePreferenceFor(m,all),{mode:'all'});
+  const saved=impactTimelinePreferenceFor(m,zoomed);
+  assert.equal(saved.mode,'custom');
+  assert.match(saved.from,/^\d{4}-\d{2}-\d{2}$/);
+  const exact=impactTimelineWindow(m,{mode:'custom',start:zoomed.start,end:zoomed.end});
+  assert.deepEqual([exact.start,exact.end],[zoomed.start,zoomed.end],'an exact window is shown as given');
 });

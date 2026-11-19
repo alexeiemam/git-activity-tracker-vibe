@@ -49,6 +49,10 @@ export function impactTimelineWindow(model, options={}) {
     const bounds=keepWithin(extent,first-pad,last+pad);
     return {...bounds,mode:'latest'};
   }
+  if(mode==='custom'&&Number.isFinite(options.start)&&Number.isFinite(options.end)&&options.start<options.end) {
+    // An exact window, used while dragging, pinching or easing between views.
+    return {...keepWithin(extent,options.start,options.end),mode:'custom'};
+  }
   if(mode==='custom') {
     const from=dayStart(options.from),to=dayStart(options.to);
     if(from!==null&&to!==null&&from<=to) {
@@ -103,4 +107,38 @@ export function impactTimelinePan(model, options, progress) {
   if(available<=0) return {mode:'all'};
   const start=extent.start+available*clamp(Number(progress)/1000||0,0,1);
   return {mode:'custom',from:dateOf(start),to:dateOf(start+span-1)};
+}
+
+/** Narrowest window the timeline zooms to: one day. */
+const MIN_SPAN = DAY;
+
+/** `window` scaled by `factor` around `anchor` (a time; the centre by default), kept inside history. */
+export function impactTimelineZoomWindow(model, window, factor, anchor=null) {
+  const extent=impactTimelineExtent(model);
+  if(!extent||!window) return null;
+  const total=extent.end-extent.start;
+  const span=clamp((window.end-window.start)*factor,MIN_SPAN,total);
+  const pivot=Number.isFinite(anchor)?clamp(anchor,window.start,window.end):(window.start+window.end)/2;
+  const proportion=(pivot-window.start)/((window.end-window.start)||1);
+  return keepWithin(extent,pivot-span*proportion,pivot+span*(1-proportion));
+}
+
+/** `window` moved by `delta` milliseconds, kept inside history. */
+export function impactTimelineShiftWindow(model, window, delta) {
+  const extent=impactTimelineExtent(model);
+  if(!extent||!window) return null;
+  return keepWithin(extent,window.start+delta,window.end+delta);
+}
+
+/** `window` with its centre moved to `time`, kept inside history. */
+export function impactTimelineCentreWindow(model, window, time) {
+  if(!window) return null;
+  return impactTimelineShiftWindow(model,window,time-(window.start+window.end)/2);
+}
+
+/** The saved preference for an exact window: all of history, or its calendar dates. */
+export function impactTimelinePreferenceFor(model, window) {
+  const extent=impactTimelineExtent(model);
+  if(!extent||!window||window.end-window.start>=extent.end-extent.start-DAY) return {mode:'all'};
+  return {mode:'custom',from:dateOf(window.start),to:dateOf(Math.max(window.start,window.end-1))};
 }

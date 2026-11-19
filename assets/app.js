@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=browse-releases-20261119-2';
-import { generateDemoLog } from './demo-data.js?v=browse-releases-20261119-2';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=browse-releases-20261119-2';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=browse-releases-20261119-2';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=browse-releases-20261119-2';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=browse-releases-20261119-2';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=browse-releases-20261119-2';
-import { releaseScorecard } from './release-scorecard.js?v=browse-releases-20261119-2';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=browse-releases-20261119-2';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=browse-releases-20261119-2';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=browse-releases-20261119-2';
-import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=browse-releases-20261119-2';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=browse-releases-20261119-2';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=browse-releases-20261119-2';
-import { impactTimelineWindow, impactTimelineZoom, impactTimelineReveal, impactTimelineCustomRange, impactTimelinePan, impactReleasePosition } from './impact-window.js?v=browse-releases-20261119-2';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=browse-releases-20261119-2';
-import { buildStoryAnalysis } from './stories.js?v=browse-releases-20261119-2';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=browse-releases-20261119-2';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=browse-releases-20261119-2';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=browse-releases-20261119-2';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=browse-releases-20261119-2';
-import { downloadFilename } from './download-names.js?v=browse-releases-20261119-2';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=browse-releases-20261119-2';
-import { buildDeploymentIndex } from './deployments.js?v=browse-releases-20261119-2';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=browse-releases-20261119-2';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=browse-releases-20261119-2';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=browse-releases-20261119-2';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=browse-releases-20261119-2';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=browse-releases-20261119-2';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=browse-releases-20261119-2';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=browse-releases-20261119-2';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=browse-releases-20261119-2';
+} from './domain.js?v=timeline-20261119-1';
+import { generateDemoLog } from './demo-data.js?v=timeline-20261119-1';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=timeline-20261119-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=timeline-20261119-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=timeline-20261119-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=timeline-20261119-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=timeline-20261119-1';
+import { releaseScorecard } from './release-scorecard.js?v=timeline-20261119-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=timeline-20261119-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=timeline-20261119-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=timeline-20261119-1';
+import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=timeline-20261119-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=timeline-20261119-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=timeline-20261119-1';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=timeline-20261119-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=timeline-20261119-1';
+import { buildStoryAnalysis } from './stories.js?v=timeline-20261119-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=timeline-20261119-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=timeline-20261119-1';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=timeline-20261119-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=timeline-20261119-1';
+import { downloadFilename } from './download-names.js?v=timeline-20261119-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=timeline-20261119-1';
+import { buildDeploymentIndex } from './deployments.js?v=timeline-20261119-1';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=timeline-20261119-1';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=timeline-20261119-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=timeline-20261119-1';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=timeline-20261119-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=timeline-20261119-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=timeline-20261119-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=timeline-20261119-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=timeline-20261119-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=browse-releases-20261119-2', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=timeline-20261119-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -213,7 +213,7 @@ const state = {
   trend: 'rolling', pulseMode: 'monthly', pulseLens:'activity', pulseMetric:'commits',continuityView:DEFAULT_SIGNATURE_MODE, pulseGapHorizon:DEFAULT_GAP_HORIZON, pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES, pulseDailyChurn:DEFAULT_DAILY_CHURN, pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT, rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
   rhythmTab: 'weekly', seasonMode: 'rate', seasonYears: null, sortKey: 'lens', sortDesc: true,
   impactTab:'timeline',impactMetric:'commits',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
-  impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,
+  impactTimelineMode:'latest',impactTimelineFrom:null,impactTimelineTo:null,
   impactFocus:'selection', impactActorMap:{},
   viewMode:'observatory', storyPerspective:'team', storyFocus:'selection', storyTopic:'all', storyCategory:'noteworthy',
   storyShowAll:false, storyFindingId:null, storyMonth:null, storyDismissed:new Set(),storyTrail:[],
@@ -853,7 +853,7 @@ function syncScopeAfterLoad() {
   const initialStart = min > desiredStart ? min : desiredStart;
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
     ...defaultMotionState(),metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseMetric:'commits',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
-    impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{},
+    impactTimelineMode:'latest',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{},
     viewMode:'observatory',storyPerspective:'team',storyFocus:'selection',storyTopic:'all',storyCategory:'noteworthy',storyShowAll:false,
     storyFindingId:null,storyMonth:null,storyPairA:null,storyPairB:null,storyTrail:[],storyDismissed:new Set() });
   state.selectedIds = new Set(mergeGroups.map((_,i)=>String(i)));
@@ -995,7 +995,7 @@ function resetFilters() {
   scopeFollowsLatest=true;
   Object.assign(state,{ period:'all',start:sourceDateBounds().min,end:sourceDateBounds().max,
     ...defaultMotionState(),includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseMetric:'commits',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
-    impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
+    impactTimelineMode:'latest',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
   setText('scope-error','');
@@ -2247,8 +2247,151 @@ const SIZE_BANDS=[
 ];
 // Timeline viewport is a presentation preference, independent of the shared
 // author-date and release-date filters used to calculate Git evidence.
+/** While dragging, pinching or easing, the timeline shows an exact window instead of the saved one. */
+let timelineView=null,timelineFrame=0,timelineAnimation=0,timelineSettle=0;
 function timelinePreference() {
+  if(timelineView)return {mode:'custom',start:timelineView.start,end:timelineView.end};
   return {mode:state.impactTimelineMode,from:state.impactTimelineFrom,to:state.impactTimelineTo};
+}
+const currentTimelineWindow=()=>impactModel?impactTimelineWindow(impactModel,timelinePreference()):null;
+/** Redraw only the timeline (not the whole impact explorer), keeping keyboard focus on the same control. */
+function renderImpactTimeline() {
+  const root=$('impact-timeline');if(!root||!impactModel)return;
+  const focused=document.activeElement?.closest?.('.impact-timeline-scroll')?'.impact-timeline-scroll':document.activeElement?.closest?.('.impact-overview-window')?'.impact-overview-window':null;
+  root.innerHTML=impactTimeline(impactModel,state.impactReleaseHash,timelinePreference());
+  if(focused)root.querySelector(focused)?.focus({preventScroll:true});
+}
+/** Show an exact window on the next frame; many gesture events can arrive per frame. */
+function showTimelineWindow(window) {
+  if(!window)return;
+  timelineView={start:window.start,end:window.end};
+  if(!timelineFrame)timelineFrame=requestAnimationFrame(()=>{timelineFrame=0;renderImpactTimeline();});
+}
+/** End a gesture or animation: save the window (as dates, or a named mode) and redraw. */
+function commitTimelineWindow(window,preference=null) {
+  cancelAnimationFrame(timelineFrame);timelineFrame=0;timelineView=null;
+  if(window||preference)setTimelinePreference(preference||impactTimelinePreferenceFor(impactModel,window));
+  renderImpactTimeline();
+}
+/** Ease from the current window to `target`, unless the viewer prefers reduced motion. */
+function animateTimelineTo(target,preference=null) {
+  const from=currentTimelineWindow();
+  cancelAnimationFrame(timelineAnimation);timelineAnimation=0;
+  if(!target||!from)return;
+  if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){commitTimelineWindow(target,preference);return;}
+  const begin=performance.now(),duration=260;
+  const step=now=>{
+    const k=Math.min(1,(now-begin)/duration),ease=1-(1-k)**3;
+    timelineView={start:from.start+(target.start-from.start)*ease,end:from.end+(target.end-from.end)*ease};
+    renderImpactTimeline();
+    if(k<1)timelineAnimation=requestAnimationFrame(step);else{timelineAnimation=0;commitTimelineWindow(target,preference);}
+  };
+  timelineAnimation=requestAnimationFrame(step);
+}
+/** Save the window once a burst of wheel or key events settles. */
+function settleTimeline() {
+  clearTimeout(timelineSettle);
+  timelineSettle=setTimeout(()=>{if(timelineView)commitTimelineWindow(timelineView);},200);
+}
+/** Map a pointer position on the plot to a time, using the mapping the SVG records. */
+function timelineTimeAt(svg,clientX) {
+  const box=svg.getBoundingClientRect(),d=svg.dataset;
+  const viewX=(clientX-box.left)/box.width*Number(d.viewWidth);
+  return Number(d.start)+(viewX-Number(d.plotLeft))/Number(d.plotWidth)*(Number(d.end)-Number(d.start));
+}
+const timelineMsPerPixel=svg=>{const box=svg.getBoundingClientRect(),d=svg.dataset;return (Number(d.end)-Number(d.start))/(Number(d.plotWidth)*box.width/Number(d.viewWidth));};
+/** Zoom the current window by `factor` around a time (the selected release when visible, else the centre). */
+function zoomTimeline(factor,anchor=null) {
+  const window=currentTimelineWindow();if(!window)return;
+  if(anchor==null){const selected=impactModel.releases.find(r=>r.hash===state.impactReleaseHash),at=selected?impactReleasePosition(selected):null;anchor=at>=window.start&&at<=window.end?at:null;}
+  animateTimelineTo(impactTimelineZoomWindow(impactModel,window,factor,anchor));
+}
+function panTimeline(fraction) {
+  const window=currentTimelineWindow();if(!window)return;
+  animateTimelineTo(impactTimelineShiftWindow(impactModel,window,(window.end-window.start)*fraction));
+}
+/** Keys for the focused plot or history brush: arrows pan, +/− zoom, 0 shows everything, Home/End jump. */
+function timelineKey(event) {
+  if(!event.target.closest('.impact-timeline-scroll,.impact-overview-window')||event.target.closest('[data-impact-hash]'))return false;
+  const window=currentTimelineWindow(),extent=impactModel&&impactTimelineExtent(impactModel);if(!window||!extent)return false;
+  const span=window.end-window.start;
+  const keys={
+    ArrowLeft:()=>panTimeline(event.shiftKey?-.6:-.2),ArrowRight:()=>panTimeline(event.shiftKey?.6:.2),
+    '+':()=>zoomTimeline(.6),'=':()=>zoomTimeline(.6),'-':()=>zoomTimeline(1.7),'_':()=>zoomTimeline(1.7),
+    '0':()=>animateTimelineTo(extent,{mode:'all'}),
+    Home:()=>animateTimelineTo(impactTimelineShiftWindow(impactModel,window,extent.start-window.start)),
+    End:()=>animateTimelineTo(impactTimelineShiftWindow(impactModel,window,extent.end-span-window.start)),
+  };
+  if(!keys[event.key])return false;
+  event.preventDefault();keys[event.key]();return true;
+}
+/**
+ * Direct manipulation, as on a map: drag (or swipe sideways) to pan, pinch or
+ * Ctrl/⌘-scroll to zoom around the pointer, double-click to zoom in (Shift to
+ * zoom out). The history strip is a brush: drag its window, or click to jump.
+ * A plain vertical scroll still scrolls the page.
+ */
+function bindTimelineGestures() {
+  const root=$('impact-timeline'),pointers=new Map();
+  let gesture=null,suppressClick=false;
+  const end=event=>{
+    pointers.delete(event.pointerId);
+    if(!gesture||pointers.size)return;
+    if(gesture.moved){commitTimelineWindow(timelineView||gesture.window);suppressClick=true;setTimeout(()=>{suppressClick=false;},0);}
+    gesture=null;root.classList.remove('is-panning');
+    window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);
+  };
+  const move=event=>{
+    if(!gesture||!pointers.has(event.pointerId))return;
+    pointers.set(event.pointerId,event.clientX);
+    if(gesture.kind==='pinch'&&pointers.size>1){
+      const [a,b]=[...pointers.values()];
+      showTimelineWindow(impactTimelineZoomWindow(impactModel,gesture.window,gesture.distance/Math.max(8,Math.abs(a-b)),gesture.anchor));return;
+    }
+    const dx=event.clientX-gesture.x;
+    if(!gesture.moved&&Math.abs(dx)<4)return;
+    gesture.moved=true;root.classList.add('is-panning');
+    showTimelineWindow(impactTimelineShiftWindow(impactModel,gesture.window,gesture.direction*dx*gesture.perPixel));
+  };
+  root.addEventListener('pointerdown',event=>{
+    if(!impactModel||event.pointerType==='mouse'&&event.button!==0)return;
+    const svg=event.target.closest('[data-timeline-plot]'),track=event.target.closest('[data-timeline-brush]');
+    if(!svg&&!track)return;
+    cancelAnimationFrame(timelineAnimation);timelineAnimation=0;
+    const current=currentTimelineWindow(),extent=impactTimelineExtent(impactModel);
+    if(track&&!event.target.closest('.impact-overview-window')){
+      // A click on the strip outside the window jumps there.
+      const box=track.getBoundingClientRect();
+      animateTimelineTo(impactTimelineCentreWindow(impactModel,current,extent.start+(event.clientX-box.left)/box.width*(extent.end-extent.start)));return;
+    }
+    pointers.set(event.pointerId,event.clientX);
+    if(svg&&pointers.size===2){
+      const [a,b]=[...pointers.values()];
+      gesture={kind:'pinch',moved:true,window:current,distance:Math.max(8,Math.abs(a-b)),anchor:timelineTimeAt(svg,(a+b)/2)};return;
+    }
+    gesture=track?{kind:'pan',moved:false,window:current,x:event.clientX,direction:1,perPixel:(extent.end-extent.start)/track.getBoundingClientRect().width}
+      :{kind:'pan',moved:false,window:current,x:event.clientX,direction:-1,perPixel:timelineMsPerPixel(svg)};
+    window.addEventListener('pointermove',move);window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end);
+  });
+  // A drag that ends over a release marker must not also select it.
+  root.addEventListener('click',event=>{if(suppressClick){event.stopPropagation();event.preventDefault();suppressClick=false;}},true);
+  root.addEventListener('wheel',event=>{
+    const svg=event.target.closest('[data-timeline-plot]');
+    if(!svg||!impactModel)return;
+    const current=currentTimelineWindow(),unit=event.deltaMode===1?16:event.deltaMode===2?400:1;
+    if(event.ctrlKey||event.metaKey){
+      event.preventDefault();cancelAnimationFrame(timelineAnimation);timelineAnimation=0;
+      showTimelineWindow(impactTimelineZoomWindow(impactModel,current,Math.exp(event.deltaY*unit*.0035),timelineTimeAt(svg,event.clientX)));settleTimeline();
+    }else if(event.shiftKey||Math.abs(event.deltaX)>Math.abs(event.deltaY)){
+      event.preventDefault();cancelAnimationFrame(timelineAnimation);timelineAnimation=0;
+      showTimelineWindow(impactTimelineShiftWindow(impactModel,current,(event.shiftKey&&!event.deltaX?event.deltaY:event.deltaX)*unit*timelineMsPerPixel(svg)));settleTimeline();
+    }
+  },{passive:false});
+  root.addEventListener('dblclick',event=>{
+    const svg=event.target.closest('[data-timeline-plot]');
+    if(!svg||!impactModel||event.target.closest('[data-impact-hash]'))return;
+    event.preventDefault();zoomTimeline(event.shiftKey?2:.5,timelineTimeAt(svg,event.clientX));
+  });
 }
 function setTimelinePreference(next) {
   state.impactTimelineMode=next.mode;
@@ -2418,7 +2561,9 @@ function placeImpact() {
   impact.dataset.mode=slot.dataset.mode;
   if(impact.parentElement!==slot)slot.append(impact);
   impact.hidden=false;
-  if(state.impactTab!==tab){state.impactTab=tab;renderImpact(analysis);}
+  const synced=primary.releaseHash&&primary.releaseHash!==state.impactReleaseHash&&impactModel?.releases.some(r=>r.hash===primary.releaseHash);
+  if(synced){state.impactReleaseHash=primary.releaseHash;setTimelinePreference(impactTimelineReveal(impactModel,timelinePreference(),primary.releaseHash));}
+  if(state.impactTab!==tab||synced){state.impactTab=tab;renderImpact(analysis);}
 }
 /**
  * The activity pulse answers a different question on each tab: Rhythm shows
@@ -2988,16 +3133,10 @@ const ACTIONS={
     if(event.type!=='keydown')$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});
   },
   'impact-range-preset':(_event,t)=>{
-    setTimelinePreference({mode:t.dataset.impactRange});
-    selectImpactReleaseWithinWindow();renderImpact(analysis);
+    const mode=t.dataset.impactRange==='latest'?'latest':'all';
+    animateTimelineTo(impactTimelineWindow(impactModel,{mode}),{mode});
   },
-  'impact-zoom':(_event,t)=>{
-    const anchorRelease=impactModel?.releases.find(r=>r.hash===state.impactReleaseHash);
-    const anchor=anchorRelease?impactReleasePosition(anchorRelease):null;
-    setTimelinePreference(impactTimelineZoom(impactModel,timelinePreference(),t.dataset.impactZoom==='in'?0.6:1.7,anchor));
-    renderImpact(analysis);
-    scrollToImpactMarker(state.impactReleaseHash,{showTimeline:false});
-  },
+  'impact-zoom':(_event,t)=>zoomTimeline(t.dataset.impactZoom==='in'?0.6:1.7),
   'impact-toggle-all':()=>{state.impactShowAll=!state.impactShowAll;renderImpact(analysis);},
   'impact-matrix-mode':(_event,t)=>{state.impactMatrixMode=t.dataset.matrixMode==='latest'?'latest':'all';refreshImpactMatrix({focus:{kind:'mode',value:state.impactMatrixMode}});},
   'impact-matrix-page':(_event,t)=>{
@@ -3125,10 +3264,6 @@ function handleDocumentChange(event) {
       if(next){setTimelinePreference(next);selectImpactReleaseWithinWindow();}
       renderImpact(analysis);break;
     }
-    case 'impact-timeline-pan':{
-      setTimelinePreference(impactTimelinePan(impactModel,timelinePreference(),Number(t.value)));
-      selectImpactReleaseWithinWindow();renderImpact(analysis);break;
-    }
     case 'mode-select':state.mode=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;
     case 'denominator-select':state.denominator=t.value;renderDashboard();break;
   }
@@ -3187,7 +3322,9 @@ function init() {
     const matching=$('rhythm-week-chart').querySelector(`[data-rhythm-index="${next}"]`);
     if(matching){event.preventDefault();matching.focus();}
   });
+  bindTimelineGestures();
   $('impact-timeline').addEventListener('keydown',event=>{
+    if(timelineKey(event))return;
     const dot=event.target.closest('[data-impact-hash]');
     if(dot && (event.key==='Enter'||event.key===' ')) {event.preventDefault();ACTIONS['impact-release'](event,dot);return;}
     if(dot && (event.key==='ArrowLeft'||event.key==='ArrowRight')) {

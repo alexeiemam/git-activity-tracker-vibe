@@ -135,9 +135,10 @@ narrowed; select a cell to list its commits. The scope bar is the only date
 control.
 
 - **Releases — start with releases.** **Browse releases** opens with the
-  repository's release counts and cadence, then seven ways to pick a release:
-  **List** (kept in view beside the release it opens), **Timeline** (release
-  events with the scope's authored contributions), **Groups** (cohorts by
+  repository's release counts and cadence, then seven ways to pick a release,
+  starting on **Timeline** (release events with the scope's authored
+  contributions; select a marker to open the release): **List** (kept in view
+  beside the release it opens), **Groups** (cohorts by
   version transition, lead or year, each able to narrow the list), **People**
   (who led and authored each release), **Follow-up** (how many of a release's
   paths were revisited afterwards), **Wait shapes** and **Footprints**. Every
@@ -267,16 +268,22 @@ The four connected perspectives are:
    selectable measure: commits, within-reference commit share, line churn,
    distinct paths or top-level codebase areas. Shares have explicit reference
    denominators; paths/areas can overlap between contributors.
-   **Timeline navigation:** **All releases** is the default, fitted to the
-   entire available timeline; **Latest 18** focuses the time axis on those
-   18 tagged releases (not just their markers). Use **+ / −** to zoom,
-   **From / To** dates to choose a precise range, and the history navigator
-   slider to pan without altering any global filters. The small overview
-   indicates the current viewing window across all available history.
-   Choosing a release in the dropdown or a comparison table highlights its
-   marker and brings it into view, panning the timeline if it lies outside
-   the selected range; on narrow displays the timeline scrolls horizontally
-   to the selected marker. The current timeline view is saved in session
+   **Timeline navigation:** the timeline opens on **Latest 18**, which fits
+   the time axis to the 18 most recent tagged releases; **All releases** fits
+   the entire history. It works like a map: **drag** the chart to pan (mouse
+   or touch), **pinch** or **Ctrl/⌘-scroll** to zoom around the pointer,
+   swipe sideways (or **Shift-scroll**) to pan, and **double-click** to zoom
+   in there (**Shift-double-click** zooms out); a plain vertical scroll still
+   scrolls the page. The **History** strip is a brush showing the visible
+   window across all history: drag the window to pan, or click anywhere on
+   the strip to jump there. With the chart or the brush focused, **← / →**
+   pan (Shift for larger steps), **+ / −** zoom, **0** shows all releases and
+   **Home / End** jump to either end. Zooming and jumping ease into place
+   unless reduced motion is preferred; the **+ / −** buttons and **From / To**
+   dates remain for precise control, and none of this changes any global
+   filter. A drag that ends over a marker does not select it. Choosing a
+   release in the dropdown or another view highlights its marker and brings it
+   into view, keeping the zoom. The current timeline view is saved in session
    exports. Authored-activity bars are reaggregated from daily commits so
    partial-month zooms never show whole-month totals.
 2. **People & releases:** consistent contributor-by-release matrix. Only the

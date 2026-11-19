@@ -181,8 +181,8 @@ test('many releases retain a bounded DOM and navigate without dropping history',
  const model=releaseLandscape(large);
  assert.equal(model.total,428);
  assert.ok(model.bins.length<130,'long histories aggregate to monthly/quarterly overview');
- const first=renderPrimaryExplorer(large,ui({mode:'observatory',releasePage:0}));
- const last=renderPrimaryExplorer(large,ui({mode:'observatory',releasePage:17}));
+ const first=renderPrimaryExplorer(large,ui({mode:'observatory',releaseBrowse:'list',releasePage:0}));
+ const last=renderPrimaryExplorer(large,ui({mode:'observatory',releaseBrowse:'list',releasePage:17}));
  assert.equal((first.match(/class="primary-release-entry/g)||[]).length,24);
  assert.equal((last.match(/class="primary-release-entry/g)||[]).length,20);
  assert.match(first,/v2\.0\.427/);
@@ -220,7 +220,7 @@ test('codebase shows authored or released changes on one map, with an area portr
 
 test('release list and anatomy stay coherent when applying a historical year filter',()=>{
  const twoYear={...index,releases:[...index.releases,{...index.releases.at(-1),hash:'f'.repeat(40),date:'2026-08-18',tag:'v2.0.0'}]};
- const html=renderPrimaryExplorer(twoYear,ui({mode:'observatory',releaseYear:'2025',releaseHash:'f'.repeat(40)}));
+ const html=renderPrimaryExplorer(twoYear,ui({mode:'observatory',releaseBrowse:'list',releaseYear:'2025',releaseHash:'f'.repeat(40)}));
  assert.doesNotMatch(html,/<h3>v2\.0\.0<\/h3>/);
  assert.match(html,/v1\.1\.1/);
 });
@@ -277,8 +277,9 @@ test('each tab has one reading guide instead of caveats repeated under every cha
  assert.doesNotMatch(html,/class="primary-eyebrow">DELIVERED CONTRIBUTIONS/,'cards carry one heading, not an eyebrow and a title');
 });
 
-test('Releases opens on the list beside the selected release; every other view picks a release above it',()=>{
- const browse=renderPrimaryExplorer(index,ui({mode:'observatory'}));
+test('Releases opens on the timeline; the list sits beside the release it opens and other views pick one above it',()=>{
+ const browse=renderPrimaryExplorer(index,ui({mode:'observatory',releaseBrowse:'list'}));
+ assert.match(renderPrimaryExplorer(index,ui({mode:'observatory'})),/data-mode="timeline"/,'Releases opens on the timeline');
  assert.match(browse,/class="primary-release-browse"><div class="primary-release-sidebar"><div id="primary-browse-releases"/);
  assert.match(browse,/<div class="primary-release-detail"><section class="primary-anatomy/);
  assert.doesNotMatch(browse,/The release landscape/);
