@@ -186,3 +186,12 @@ test('shape settings and filters persist and reject unknown values',()=>{
   assert.equal(bad.releaseBrowse,'timeline','unknown views fall back to the default, Timeline');
   assert.equal(bad.releaseShape,'all');
 });
+
+test('the contribution journey months are links, and the stylesheet lays out links', async () => {
+  const html=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'contributors',contributorFocus:'0',contributorTab:'delivery'});
+  const track=html.match(/<div class="primary-journey-track">(.*?)<\/div><\/div>/s)?.[1]||'';
+  assert.match(track,/^<a href=/,'each month is a real link');
+  const css=await (await import('node:fs/promises')).readFile(new URL('../assets/app.css',import.meta.url),'utf8');
+  assert.match(css,/\.primary-journey-track>a\{display:grid/);
+  assert.match(css,/\.primary-journey-track>a small\{/);
+});
