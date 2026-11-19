@@ -1,13 +1,13 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=leave-20261119-1';
-import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=leave-20261119-1';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=leave-20261119-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=leave-20261119-1';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=leave-20261119-1';
-import { targetUrl } from './route-state.js?v=leave-20261119-1';
-import { markdownFrame } from './markdown.js?v=leave-20261119-1';
-import { workedDaysBalance } from './working-patterns.js?v=leave-20261119-1';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=leave-20261119-1';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=bankhols-20261119-1';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=bankhols-20261119-1';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=bankhols-20261119-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=bankhols-20261119-1';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=bankhols-20261119-1';
+import { targetUrl } from './route-state.js?v=bankhols-20261119-1';
+import { markdownFrame } from './markdown.js?v=bankhols-20261119-1';
+import { workedDaysBalance, daysOffText } from './working-patterns.js?v=bankhols-20261119-1';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=bankhols-20261119-1';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});
@@ -448,10 +448,10 @@ function workedDaysCard(index,ui){
   const inScope=id=>!ids||(ids.has?ids.has(id):ids.includes(id));
   const model=workedDaysBalance(index,index.groups.filter(g=>inScope(g.id)),{from,to});
   const rows=model.rows.filter(r=>r.total.worked>0).sort((a,b)=>b.total.worked-a.total.worked);
-  const cell=t=>!t.measured?'<td class="is-unmeasured"><span>—</span><small>before their first or after their last commit</small></td>':`<td class="${t.balance>0?'is-over':t.balance<0?'is-under':''}"><strong>${signed(t.balance)}</strong><small>${f(t.worked)} worked of ${f(t.expected)} expected${t.offSchedule?` · ${f(t.offSchedule)} on non-working days`:''}</small>${t.share<.999?`<small>${e(day(t.from))} – ${e(day(t.to))}</small>`:''}</td>`;
+  const cell=t=>!t.measured?'<td class="is-unmeasured"><span>—</span><small>before their first or after their last commit</small></td>':`<td class="${t.balance>0?'is-over':t.balance<0?'is-under':''}"><strong>${signed(t.balance)}</strong><small>${f(t.worked)} worked of ${f(t.expected)} expected${t.offSchedule?` · ${f(t.offSchedule)} on days off`:''}</small><small title="Working days, less bank holidays on those days, less holiday entitlement for the part of the year covered">${f(t.scheduled)} working − ${f(t.bankHolidays)} bank − ${f(t.holidays)} holiday</small>${t.share<.999?`<small>${e(day(t.from))} – ${e(day(t.to))}</small>`:''}</td>`;
   const yearHead=y=>`<th>${y.year}</th>`;
-  const table=`<div class="primary-table-wrap"><table class="primary-signal-table primary-worked-table"><thead><tr><th>Contributor</th><th>Working days · leave a year</th><th>Whole period</th>${model.years.map(yearHead).join('')}</tr></thead><tbody>${rows.map(r=>`<tr><th>${whoButton(index,r.id)}</th><td><span>${e(patternText(r.schedule.pattern))}</span><small>${f(r.leave.holidays)} holiday + ${f(r.leave.bankHolidays)} bank holidays</small></td>${cell({...r.total,share:r.total.from===model.from&&r.total.to===model.to?1:0})}${r.years.map(cell).join('')}</tr>`).join('')}</tbody></table></div>`;
-  return card('Worked days against expectation',`<p class="primary-muted">Expected days are each person's working days in ${e(day(model.from))} – ${e(day(model.to))}, between their first and last recorded commit, less their yearly holiday and bank-holiday allowance scaled to the part of each year covered. Worked days are every date with an authored commit, including non-working days. Set working days and leave per identity under Identities.</p>${rows.length?table:empty('No authored work in these dates','Widen the scope\'s dates or people.')}<p class="primary-muted">Git records changes, not attendance: reviews, meetings, pairing or unpushed work look the same as a day off, so a shortfall is a question to ask, not a finding.</p>`);
+  const table=`<div class="primary-table-wrap"><table class="primary-signal-table primary-worked-table"><thead><tr><th>Contributor</th><th>Working days · leave a year</th><th>Whole period</th>${model.years.map(yearHead).join('')}</tr></thead><tbody>${rows.map(r=>`<tr><th>${whoButton(index,r.id)}</th><td><span>${e(patternText(r.schedule.pattern))}</span><small>${f(r.leave.holidays)} holiday days a year</small><small>${e(daysOffText(r.leave))}</small></td>${cell({...r.total,share:r.total.from===model.from&&r.total.to===model.to?1:0})}${r.years.map(cell).join('')}</tr>`).join('')}</tbody></table></div>`;
+  return card('Worked days against expectation',`<p class="primary-muted">Expected days are each person's working days in ${e(day(model.from))} – ${e(day(model.to))}, between their first and last recorded commit, less the bank holidays that land on those days and their holiday entitlement scaled to the part of each year covered. Worked days are every date with an authored commit, including days off. Set working days and leave per identity under Identities.</p>${rows.length?table:empty('No authored work in these dates','Widen the scope\'s dates or people.')}<p class="primary-muted">Git records changes, not attendance: reviews, meetings, pairing or unpushed work look the same as a day off, so a shortfall is a question to ask, not a finding.</p>`);
 }
 function contributorView(index,ui){
   const full={from:index.bounds.min,to:index.bounds.max};

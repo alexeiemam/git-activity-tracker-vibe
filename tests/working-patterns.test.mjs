@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {continuityMatrix} from '../assets/continuity.js';
 import {normalizeWorkingDays,workingPatternLabel,isScheduledDay,
-  continuityScheduleStatus,continuityCountBalance,missingDayColour,extraDayColour,normalizeLeave,workedDaysBalance} from '../assets/working-patterns.js';
-import {buildIdentityConfig,parseIdentityConfig} from '../assets/identity-config.js';
+  continuityScheduleStatus,continuityCountBalance,missingDayColour,extraDayColour,normalizeLeave,bankHolidayDates,workedDaysBalance} from '../assets/working-patterns.js';
+import {buildIdentityConfig,parseIdentityConfig,applyIdentityConfig} from '../assets/identity-config.js';
 const person={id:'0',displayName:'Contributor'};
 const fullWeek={from:'2026-10-05',to:'2026-10-11'};
 const dates=['2026-10-05','2026-10-06','2026-10-07','2026-10-08','2026-10-09','2026-10-10','2026-10-11'];
@@ -172,7 +172,10 @@ test('UI, identity persistence and import contracts expose contributor-specific 
   assert.match(app,/const workingDaysById=\(\)=>Object.fromEntries\(mergeGroups/,'every model measures against the same identity working days');
   assert.match(app,/const groupSettings=g=>\(\{workingDays:normalizeWorkingDays\(g\.workingDays\),leave:normalizeLeave\(g\.leave\)\}\)/,'working days and leave are saved together');
   assert.match(app,/mergeGroups:mergeGroups\.map\(g=>\(\{displayName:g\.displayName,emails:\[\.\.\.g\.emails\],\.\.\.groupSettings\(g\)\}\)\)/,'sessions keep each identity\'s schedule and leave');
-  assert.match(app,/data-leave-field="\$\{field\}"/);
+  assert.match(app,/data-leave-field="holidays"/);
+  assert.match(app,/data-leave-field="bankHolidays" data-bank-holiday="\$\{h\.id\}"/);
+  assert.match(app,/data-leave-field="extraDays"/);
+  assert.match(app,/'leave-to-all':/);
   assert.match(app,/renderWorkingPatterns\(view\)/);
   assert.match(app,/data-action="toggle-pattern-day"/);
   assert.match(app,/const continuityBandStyle=colour=>/,'continuity cell rendering helper must be defined');
@@ -195,11 +198,22 @@ test('non-working-day share follows each identity\'s working days and never coun
   assert.ok(structuredClone(view.byId.get('0')),'analysis stays plain data so the worker can post it');
 });
 
-test('leave defaults to 24 holiday and 8 bank-holiday days a year, in whole or half days',()=>{
-  assert.deepEqual(normalizeLeave(undefined),{holidays:24,bankHolidays:8});
-  assert.deepEqual(normalizeLeave({holidays:'25.5',bankHolidays:0}),{holidays:25.5,bankHolidays:0});
-  assert.deepEqual(normalizeLeave({holidays:-1,bankHolidays:'x'}),{holidays:24,bankHolidays:8});
-  assert.deepEqual(normalizeLeave({holidays:'',bankHolidays:400}),{holidays:24,bankHolidays:8});
+const DEFAULT_BANK=['new-year','st-patrick','easter-monday','may-day','spring','august','christmas','boxing'];
+test('leave defaults to 24 holiday days and eight named bank holidays',()=>{
+  assert.deepEqual(normalizeLeave(undefined),{holidays:24,bankHolidays:DEFAULT_BANK,extraDays:[]});
+  assert.deepEqual(normalizeLeave({holidays:'25.5',bankHolidays:[]}),{holidays:25.5,bankHolidays:[],extraDays:[]});
+  assert.deepEqual(normalizeLeave({holidays:-1,bankHolidays:8}),{holidays:24,bankHolidays:DEFAULT_BANK,extraDays:[]},'an older plain count falls back to the named defaults');
+  assert.deepEqual(normalizeLeave({bankHolidays:['boxing','nope','new-year'],extraDays:'2023-05-08, 2023-02-30;x 2022-09-19'}),
+    {holidays:24,bankHolidays:['new-year','boxing'],extraDays:['2022-09-19','2023-05-08']},'known names in calendar order; only real dates');
+});
+
+test('bank holidays resolve to real dates, a weekend date moving to the next free weekday',()=>{
+  assert.deepEqual([...bankHolidayDates(2025)].sort(),['2025-01-01','2025-03-17','2025-04-21','2025-05-05','2025-05-26','2025-08-25','2025-12-25','2025-12-26']);
+  const y2021=bankHolidayDates(2021);
+  assert.ok(y2021.has('2021-12-27')&&y2021.has('2021-12-28'),'Christmas on Saturday and Boxing Day on Sunday move to Monday and Tuesday');
+  const y2022=bankHolidayDates(2022);
+  assert.ok(y2022.has('2022-01-03')&&y2022.has('2022-12-26')&&y2022.has('2022-12-27'),'Boxing Day keeps Monday, Christmas takes Tuesday');
+  assert.ok(bankHolidayDates(2024,['good-friday']).has('2024-03-29'));
 });
 
 test('worked days are measured per calendar year against working days less a share of yearly leave',()=>{
@@ -215,12 +229,14 @@ test('worked days are measured per calendar year against working days less a sha
   assert.deepEqual(model.years.map(y=>y.year),[2025,2026],'dates outside imported history are left out');
   const [y2025,y2026]=model.rows[0].years;
   assert.equal(y2025.scheduled,209,'Mon–Thu days in 2025');
-  assert.equal(y2025.allowance,32,'a full year carries all 24 + 8 days of leave');
-  assert.equal(y2025.expected,177);
-  assert.equal(y2025.worked,54,'52 Mondays, New Year\'s Day and a Saturday: work on a non-working day counts');
-  assert.equal(y2025.offSchedule,1);
-  assert.equal(y2025.balance,-123);
-  assert.equal(y2026.allowance,15.9,'half a year carries half the leave');
+  assert.equal(y2025.bankHolidays,7,'Boxing Day 2025 is a Friday, outside Mon–Thu');
+  assert.equal(y2025.allowance,31,'all 24 holiday days and the 7 bank holidays on working days');
+  assert.equal(y2025.expected,178);
+  assert.equal(y2025.worked,54,'52 Mondays, New Year\'s Day and a Saturday: work on any day counts');
+  assert.equal(y2025.offSchedule,7,'a Saturday plus New Year\'s Day and five bank-holiday Mondays');
+  assert.equal(y2025.balance,-124);
+  assert.equal(y2026.holidays,11.9,'half a year carries half the holiday');
+  assert.equal(y2026.bankHolidays,5,'New Year, St Patrick, Easter Monday, May Day and Spring by June');
   const total=model.rows[0].total;
   assert.equal(total.expected,Math.round((y2025.expected+y2026.expected)*10)/10);
   assert.equal(total.balance,Math.round((total.worked-total.expected)*10)/10);
@@ -228,14 +244,22 @@ test('worked days are measured per calendar year against working days less a sha
 
 test('each identity has its own leave, and leave travels in identity configurations',()=>{
   const index={bounds:{min:'2025-01-01',max:'2025-12-31'},activity:['0','1'].flatMap(groupId=>[{groupId,date:'2025-01-01'},{groupId,date:'2025-12-31'}])};
-  const people=[{id:'0',displayName:'A',workingDays:[1,2,3,4,5]},{id:'1',displayName:'B',workingDays:[1,2,3,4,5],leave:{holidays:30,bankHolidays:8}}];
-  const [a,b]=workedDaysBalance(index,people,{from:'2025-01-01',to:'2025-12-31'},{leaveById:{0:{holidays:0,bankHolidays:0}}}).rows;
+  const leave={holidays:30,bankHolidays:['christmas'],extraDays:['2025-06-02','2025-06-07']};
+  const people=[{id:'0',displayName:'A',workingDays:[1,2,3,4,5]},{id:'1',displayName:'B',workingDays:[1,2,3,4,5],leave}];
+  const [a,b]=workedDaysBalance(index,people,{from:'2025-01-01',to:'2025-12-31'},{leaveById:{0:{holidays:0,bankHolidays:[]}}}).rows;
   assert.equal(a.years[0].expected,261,'no leave: every Mon–Fri day of 2025');
   assert.equal(a.years[0].worked,2);
-  assert.equal(b.years[0].expected,261-38);
-  const config=buildIdentityConfig([{displayName:'B',emails:['b@x'],workingDays:[1,2,3,4],leave:{holidays:30,bankHolidays:8}}],[],'2026-01-01');
-  assert.deepEqual(config.groups[0].leave,{holidays:30,bankHolidays:8});
-  assert.deepEqual(parseIdentityConfig(config)[0].leave,{holidays:30,bankHolidays:8});
+  assert.equal(b.years[0].bankHolidays,2,'Christmas and the one-off Monday; the Saturday is not a working day');
+  assert.equal(b.years[0].expected,261-32);
+  const config=buildIdentityConfig([{displayName:'B',emails:['b@x'],workingDays:[1,2,3,4],leave}],[],'2026-01-01');
+  assert.deepEqual(config.groups[0].leave,leave);
+  assert.deepEqual(parseIdentityConfig(config)[0].leave,leave);
+  const restored=parseIdentityConfig({mergeGroups:[{displayName:'B',emails:['b@x'],workingDays:[1,2,3,4],leave}],identityReserve:[{displayName:'C',emails:['c@x'],workingDays:[2,3],leave:{...leave,holidays:12}}]});
+  assert.deepEqual(restored.map(g=>[g.workingDays,g.leave.holidays]),[[[1,2,3,4],30],[[2,3],12]],'a full session\'s identities and reserve keep schedules and leave');
+  const applied=applyIdentityConfig([{displayName:'b',emails:['b@x']}],restored,new Set(['b@x']));
+  assert.deepEqual(applied.groups[0].leave,leave,'importing identities applies leave');
+  assert.deepEqual(applied.reserve[0].leave,{...leave,holidays:12},'unseen identities keep their leave in reserve');
+  assert.deepEqual(buildIdentityConfig(applied.groups,applied.reserve,'2026-01-01').groups.map(g=>g.leave.holidays),[30,12],'and re-export it');
 });
 
 test('a person is only measured between their first and last recorded commit',()=>{
@@ -243,6 +267,7 @@ test('a person is only measured between their first and last recorded commit',()
   const row=workedDaysBalance(index,[{id:'0',displayName:'New',workingDays:[1,2,3,4,5]}],{from:'2024-01-01',to:'2026-12-31'}).rows[0];
   assert.deepEqual(row.years.map(y=>y.measured),[false,true,false],'no shortfall before joining or after the last commit');
   assert.equal(row.years[1].from,'2025-07-01');
-  assert.equal(row.total.allowance,16.1,'half a year of leave');
+  assert.equal(row.total.holidays,12.1,'half a year of holiday');
+  assert.equal(row.total.bankHolidays,3,'August Bank Holiday, Christmas and Boxing Day');
   assert.equal(row.total.expected,row.years[1].expected);
 });

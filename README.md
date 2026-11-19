@@ -120,18 +120,25 @@ surrounding fortnight or a person's recent period set the scope's dates (and,
 for a person, its people).
 
 **Worked days against expectation** (People › Working patterns) compares
-each person's recorded work with what their working days and yearly leave
-lead you to expect, for every calendar year in the scope and for the whole
-period. Each identity sets its working days (for example Mon–Thu) and its
-leave: **holiday days a year** (default 24, two a month, taken whenever) and
-**bank holidays a year** (default 8), in the identity editor; both travel in
-sessions and identity exports. A year's expected days are its working days
-inside the scope dates, between the person's first and last authored commit
-in the imported history, less their leave scaled to the share of the year
-covered. Worked days are every date with an authored commit, including
-non-working days, so no work is dropped; the balance is worked minus
-expected. Git records changes, not attendance: reviews, meetings, pairing and
-unpushed work look like days off, so a shortfall is a question, not a finding.
+each person's recorded work with what their working days and leave lead you
+to expect, for every calendar year in the scope and for the whole period.
+Each identity sets, in the identity editor, its working days (for example
+Mon–Thu), its **holiday days a year** (default 24, two a month, taken
+whenever), its **bank holidays** (picked by name from a list; the default is
+New Year's Day, St Patrick's Day, Easter Monday, May Day, Spring and August
+Bank Holidays, Christmas Day and Boxing Day) and any **other days off** (one-off
+dates, such as a moved or extra bank holiday). "Use this leave for every
+identity" copies one identity's leave to all. Bank holidays are resolved to
+real dates each year, a weekend date moving to the next free weekday, and
+only those landing on the person's working days are taken off. A year's
+expected days are its working days inside the scope dates, between the
+person's first and last authored commit in the imported history, less those
+bank holidays, less the holiday entitlement scaled to the share of the year
+covered. Worked days are every date with an authored commit, including days
+off, so no work is dropped; the balance is worked minus expected. All of this
+travels in sessions and identity exports. Git records changes, not
+attendance: reviews, meetings, pairing and unpushed work look like days off,
+so a shortfall is a question, not a finding.
 
 **Codebase** is a folder browser. It starts at the repository and follows one
 current folder; the path above it (**repository › app › services**) goes back

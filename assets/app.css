@@ -1689,3 +1689,10 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 .pattern-leave{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font:11px var(--mono);color:var(--muted)}
 .pattern-leave label{display:inline-flex;align-items:center;gap:6px}
 .pattern-leave input{width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;font:12px var(--mono);background:var(--paper);color:var(--ink)}
+.pattern-bank{flex-basis:100%}
+.pattern-bank summary{cursor:pointer;width:max-content}
+.pattern-bank p{margin:6px 0;font-size:11px}
+.pattern-bank-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:3px 12px;color:var(--ink)}
+.pattern-bank-list input{margin:0}
+.pattern-leave .pattern-extra{display:flex;margin:8px 0 6px}
+.pattern-leave .pattern-extra input{width:min(320px,100%)}

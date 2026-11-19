@@ -113,12 +113,72 @@ export function extraDayColour(extra) {
   return '#397eaa';
 }
 
-/** Days off per calendar year: holiday entitlement (2 a month) and statutory bank holidays. */
-export const DEFAULT_LEAVE=Object.freeze({holidays:24,bankHolidays:8});
-/** Whole or half days from 0 to 366; anything else falls back to the default. */
+/**
+ * Bank holidays by name, resolved to real dates each year. Fixed dates that
+ * fall on a weekend move to the next free weekday, as UK substitute days do.
+ * The defaults are the eight in the standard contract.
+ */
+export const BANK_HOLIDAYS=Object.freeze([
+  {id:'new-year',name:'New Year\'s Day',fixed:'01-01'},
+  {id:'second-january',name:'2 January',fixed:'01-02'},
+  {id:'st-patrick',name:'St Patrick\'s Day',fixed:'03-17'},
+  {id:'good-friday',name:'Good Friday',easter:-2},
+  {id:'easter-monday',name:'Easter Monday',easter:1},
+  {id:'may-day',name:'May Day',monday:[5,1]},
+  {id:'spring',name:'Spring Bank Holiday',monday:[5,-1]},
+  {id:'boyne',name:'Battle of the Boyne',fixed:'07-12'},
+  {id:'august-first',name:'Summer Bank Holiday (first Monday of August)',monday:[8,1]},
+  {id:'august',name:'August Bank Holiday',monday:[8,-1]},
+  {id:'st-andrew',name:'St Andrew\'s Day',fixed:'11-30'},
+  {id:'christmas',name:'Christmas Day',fixed:'12-25'},
+  {id:'boxing',name:'Boxing Day',fixed:'12-26'},
+].map(Object.freeze));
+const BANK_IDS=new Set(BANK_HOLIDAYS.map(h=>h.id));
+/** Days off: holiday entitlement (2 a month, taken whenever) on top of named bank holidays and any one-off days. */
+export const DEFAULT_LEAVE=Object.freeze({holidays:24,bankHolidays:Object.freeze(['new-year','st-patrick','easter-monday','may-day','spring','august','christmas','boxing']),extraDays:Object.freeze([])});
+const ISO_DATE=/^\d{4}-\d{2}-\d{2}$/;
+const realDate=value=>ISO_DATE.test(value)&&new Date(`${value}T00:00:00Z`).toISOString().startsWith(value);
+/**
+ * Holidays are whole or half days from 0 to 366; bank holidays are names from
+ * the list above (an older plain count falls back to the defaults); one-off
+ * days are real dates, given as a list or as text.
+ */
 export function normalizeLeave(leave) {
-  const days=(value,fallback)=>{const n=Number(value);return value!==null&&value!==''&&Number.isFinite(n)&&n>=0&&n<=366?Math.round(n*2)/2:fallback;};
-  return {holidays:days(leave?.holidays,DEFAULT_LEAVE.holidays),bankHolidays:days(leave?.bankHolidays,DEFAULT_LEAVE.bankHolidays)};
+  const n=Number(leave?.holidays);
+  const holidays=leave?.holidays!==null&&leave?.holidays!==''&&Number.isFinite(n)&&n>=0&&n<=366?Math.round(n*2)/2:DEFAULT_LEAVE.holidays;
+  const bankHolidays=Array.isArray(leave?.bankHolidays)?BANK_HOLIDAYS.map(h=>h.id).filter(id=>leave.bankHolidays.includes(id)):[...DEFAULT_LEAVE.bankHolidays];
+  const raw=typeof leave?.extraDays==='string'?leave.extraDays.split(/[\s,;]+/):Array.isArray(leave?.extraDays)?leave.extraDays:[];
+  const extraDays=[...new Set(raw.map(String).map(d=>d.trim()).filter(realDate))].sort().slice(0,500);
+  return {holidays,bankHolidays:bankHolidays.filter(id=>BANK_IDS.has(id)),extraDays};
+}
+/** "7 bank holidays + 1 other day off" */
+export function daysOffText(leave) {
+  const {bankHolidays,extraDays}=normalizeLeave(leave),n=bankHolidays.length,m=extraDays.length;
+  return `${n} bank holiday${n===1?'':'s'}${m?` + ${m} other day${m===1?'':'s'} off`:''}`;
+}
+const easterSunday=year=>{
+  const a=year%19,b=Math.floor(year/100),c=year%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3);
+  const h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);
+  const month=Math.floor((h+l-7*m+114)/31),day=(h+l-7*m+114)%31+1;
+  return Date.UTC(year,month-1,day)/86400000;
+};
+const nthMonday=(year,month,nth)=>{
+  if(nth>0){const first=Date.UTC(year,month-1,1)/86400000,dow=new Date(first*86400000).getUTCDay();return first+((8-dow)%7)+7*(nth-1);}
+  const last=Date.UTC(year,month,0)/86400000,dow=new Date(last*86400000).getUTCDay();return last-((dow+6)%7);
+};
+const bankDateCache=new Map();
+/** The dates a set of named bank holidays falls on in one year, with weekend substitutes. */
+export function bankHolidayDates(year,ids=DEFAULT_LEAVE.bankHolidays) {
+  const key=`${year}:${ids.join(',')}`;
+  if(bankDateCache.has(key))return bankDateCache.get(key);
+  const chosen=BANK_HOLIDAYS.filter(h=>ids.includes(h.id));
+  const day=h=>h.easter?easterSunday(year)+h.easter:h.monday?nthMonday(year,...h.monday):Date.parse(`${year}-${h.fixed}T00:00:00Z`)/86400000;
+  const weekend=d=>[0,6].includes(new Date(d*86400000).getUTCDay());
+  const taken=new Set(chosen.map(day).filter(d=>!weekend(d)));
+  for(const d of chosen.map(day).filter(weekend).sort((a,b)=>a-b)){let s=d+1;while(weekend(s)||taken.has(s))s++;taken.add(s);}
+  const dates=new Set([...taken].map(d=>new Date(d*86400000).toISOString().slice(0,10)));
+  bankDateCache.set(key,dates);
+  return dates;
 }
 
 const dayMs=86400000;
@@ -132,11 +192,12 @@ const round1=value=>Math.round(value*10)/10;
  * measured only between their first and last authored commit in the imported
  * history, so years before they joined or after they left are not shortfalls.
  * A year's expected days are its working days inside that span and the
- * period, less that year's holidays and bank holidays scaled to the share of
- * the year covered (leave can fall anywhere in the year, so no dates are
- * assumed). Worked days are every date with an authored commit, on a working
- * day or not, so no work is dropped. Git records changes, not attendance: a
- * day of reviews, meetings or unpushed work looks the same as a day off.
+ * period, less the bank holidays and one-off days that land on those working
+ * days, less the holiday entitlement scaled to the share of the year covered
+ * (holiday can be taken whenever, so no dates are assumed). Worked days are
+ * every date with an authored commit, on a working day or not, so no work is
+ * dropped. Git records changes, not attendance: a day of reviews, meetings or
+ * unpushed work looks the same as a day off.
  */
 export function workedDaysBalance(index,contributors,window,{workingDaysById={},leaveById={}}={}) {
   const bounds=index?.bounds||{};
@@ -159,22 +220,23 @@ export function workedDaysBalance(index,contributors,window,{workingDaysById={},
     const first=sorted[0]||null,last=sorted[sorted.length-1]||null;
     const perYear=years.map(y=>{
       const start=[y.from,first].filter(Boolean).sort().pop(),end=[y.to,last].filter(Boolean).sort()[0];
-      if(!first||start>end)return {year:y.year,from:null,to:null,measured:false,share:0,scheduled:0,allowance:0,expected:0,worked:0,onSchedule:0,offSchedule:0,balance:0};
-      let scheduled=0,onSchedule=0,offSchedule=0;
+      if(!first||start>end)return {year:y.year,from:null,to:null,measured:false,share:0,scheduled:0,bankHolidays:0,holidays:0,allowance:0,expected:0,worked:0,onSchedule:0,offSchedule:0,balance:0};
+      const closed=new Set([...bankHolidayDates(y.year,leave.bankHolidays),...leave.extraDays]);
+      let scheduled=0,bankHolidays=0,onSchedule=0,offSchedule=0;
       for(let d=dayOf(start),stop=dayOf(end);d<=stop;d++){
-        const date=dateOf(d),working=schedule.isWorkingDay(date),worked=dates.has(date);
-        scheduled+=Number(working);onSchedule+=Number(working&&worked);offSchedule+=Number(!working&&worked);
+        const date=dateOf(d),scheduledDay=schedule.isWorkingDay(date),closedDay=scheduledDay&&closed.has(date),working=scheduledDay&&!closedDay,worked=dates.has(date);
+        scheduled+=Number(scheduledDay);bankHolidays+=Number(closedDay);onSchedule+=Number(working&&worked);offSchedule+=Number(!working&&worked);
       }
       const share=(dayOf(end)-dayOf(start)+1)/(dayOf(`${y.year}-12-31`)-dayOf(`${y.year}-01-01`)+1);
-      const allowance=(leave.holidays+leave.bankHolidays)*share;
+      const holidays=leave.holidays*share,allowance=bankHolidays+holidays;
       const expected=Math.max(0,scheduled-allowance),worked=onSchedule+offSchedule;
-      return {year:y.year,from:start,to:end,measured:true,share,scheduled,allowance:round1(allowance),expected:round1(expected),worked,onSchedule,offSchedule,balance:round1(worked-expected)};
+      return {year:y.year,from:start,to:end,measured:true,share,scheduled,bankHolidays,holidays:round1(holidays),allowance:round1(allowance),expected:round1(expected),worked,onSchedule,offSchedule,balance:round1(worked-expected)};
     });
     const measured=perYear.filter(y=>y.measured);
     const total=key=>measured.reduce((n,y)=>n+y[key],0);
     return {id,name:person.displayName,schedule,leave,first,last,years:perYear,
       total:{measured:measured.length>0,from:measured[0]?.from||null,to:measured[measured.length-1]?.to||null,
-        scheduled:total('scheduled'),allowance:round1(total('allowance')),expected:round1(total('expected')),worked:total('worked'),
+        scheduled:total('scheduled'),bankHolidays:total('bankHolidays'),holidays:round1(total('holidays')),allowance:round1(total('allowance')),expected:round1(total('expected')),worked:total('worked'),
         onSchedule:total('onSchedule'),offSchedule:total('offSchedule'),balance:round1(total('worked')-total('expected'))}};
   });
   return {from,to,years,rows};
