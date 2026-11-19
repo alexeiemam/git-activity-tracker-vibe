@@ -85,10 +85,10 @@ underneath:
 
 | Tab | Question | Contents |
 | --- | --- | --- |
-| **Releases** | What shipped, and where did it go? | **Browse releases** (the list beside the selected release's anatomy), **Overview** (landscape, mix, cohorts, deployment evidence, release gaps, Impact › Release detail and People & releases) and, when deployment history was imported, **Environments** (Heroku STAG/BETA/PROD events and how they relate to tags) |
-| **People** | Who contributed? | Contributor portraits; summary, contribution side by side, momentum over time and every measure per person (copyable as CSV) |
+| **Releases** | What shipped, and where did it go? | **Browse releases** (the list beside the selected release's anatomy), **Overview** (landscape, mix, cohorts, deployment evidence, release gaps, Impact › Release detail, People & releases and Change evolution) and, when deployment history was imported, **Environments** (Heroku STAG/BETA/PROD events and how they relate to tags) |
+| **People** | Who contributed? | Contributor portraits; summary, contribution side by side, momentum over time, every measure per person (copyable as CSV) and each person's mix of commit sizes |
 | **Rhythm** | When, and how steadily? | The scope unfolding over time; the activity pulse; weekly, yearly and seasonal rhythms |
-| **Codebase** | Where in the code? | Released areas; who changed what; Impact › Codebase reach and Change evolution; change sizes |
+| **Codebase** | Where in the code? | Released areas; who changed what; Impact › Codebase reach |
 
 Old links to `?view=periods` open the Rhythm tab, `?view=deployments` links open Releases › Environments, and `?view=evidence` links open People. Cards carry a single
 heading, and each tab ends with **How to read this tab**: the evidence's clocks

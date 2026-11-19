@@ -280,3 +280,10 @@ test('Releases opens on the list beside the selected release; the overview holds
  assert.match(overview,/The release landscape/);
  assert.doesNotMatch(overview,/primary-anatomy/);
 });
+
+test('views sit with their subject: change evolution with releases, commit sizes with people',()=>{
+ const app=readFileSync(new URL('../assets/app.js',import.meta.url),'utf8');
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert.match(app,/observatory:\{tabs:\['timeline','matrix','durability'\]/);
+ assert.match(html,/aria-labelledby="footprint-heading" data-tabs="contributors"/);
+});

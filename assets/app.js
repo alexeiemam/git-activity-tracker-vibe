@@ -2406,7 +2406,7 @@ function storyPerson() {
     storyModel.people.find(p=>p.id!=='selection') || null;
 }
 /** The impact explorer is shared: Releases shows its release views, Codebase its codebase views. */
-const IMPACT_VIEWS={observatory:{tabs:['timeline','matrix'],title:'Impact, in context.'},codebase:{tabs:['reach','durability'],title:'Reach and change evolution.'}};
+const IMPACT_VIEWS={observatory:{tabs:['timeline','matrix','durability'],title:'Impact, in context.'},codebase:{tabs:['reach'],title:'Codebase reach.'}};
 function showImpactTabsFor(tab) {
   const host=IMPACT_VIEWS[tab];if(!host)return;
   $('impact-explorer').dataset.host=tab;
@@ -2502,7 +2502,7 @@ const EVIDENCE_STAGES=[
   {key:'pulse',tabs:['rhythm','contributors','observatory'],label:'Rendering activity pulse',value:84,help:'Comparing authored dates',render:()=>renderPulse(analysis)},
   {key:'rhythm',tabs:['rhythm'],label:'Rendering weekly rhythms',value:89,help:'Weekdays, hours and seasonality',render:()=>renderRhythm(analysis)},
   {key:'impact',tabs:['observatory','codebase'],label:'Rendering impact evidence',value:94,help:'Tagged releases and contributor roles',render:()=>renderImpact(analysis)},
-  {key:'codebase',tabs:['codebase'],label:'Rendering the codebase',value:96,help:'Change sizes',render:()=>renderFootprint(analysis)},
+  {key:'sizes',tabs:['contributors'],label:'Measuring change sizes',value:96,help:'Each person\'s mix of commit sizes',render:()=>renderFootprint(analysis)},
 ];
 let evidenceRendered={run:-1,keys:new Set()};
 const evidencePending=new Map();
