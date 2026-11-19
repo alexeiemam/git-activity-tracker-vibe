@@ -1,7 +1,7 @@
 /** Small, stable, non-sensitive navigation URLs. Never encode imported evidence. */
-const MODES=new Set(['observatory','rhythm','contributors','codebase','deployments']);
+const MODES=new Set(['observatory','contributors','codebase','deployments']);
 /** Views that were renamed; old links keep working. */
-const RENAMED={periods:'rhythm',evidence:'contributors'};
+const RENAMED={periods:'contributors',rhythm:'contributors',evidence:'contributors'};
 const modeOf=value=>RENAMED[value]||value;
 const TABS=new Set(['delivery','together','focus','behaviour','evolution','compare']);
 const DATE=/^\d{4}-\d{2}-\d{2}$/;
@@ -18,7 +18,6 @@ export function routeFromState(ui,groups=[],datasetId=null){
   const environments=ui?.mode==='deployments'||ui?.mode==='observatory'&&ui?.releaseView==='environments';
   const mode=environments?'deployments':ui?.mode||'observatory',r={view:MODES.has(mode)?mode:'observatory'};
   if(mode==='observatory')r.release=ui.releaseHash;
-  if(mode==='rhythm')r.person=emailFor(ui.periodSelectedId,groups);
   if(mode==='contributors'){
     r.person=emailFor(ui.contributorFocus,groups);
     r.tab=ui.contributorTab;
@@ -26,7 +25,7 @@ export function routeFromState(ui,groups=[],datasetId=null){
     r.personB=emailFor(ui.compareB,groups);
     r.personC=emailFor(ui.compareC,groups);
   }
-  if(mode==='rhythm'||mode==='contributors'&&ui.contributorRange==='period'){
+  if(mode==='contributors'&&ui.contributorRange==='period'){
     r.from=ui.periodFrom;r.to=ui.periodTo;
   }
   if(mode==='codebase')r.area=ui.codeArea;
@@ -58,15 +57,13 @@ export function applyRoute(ui,route,groups=[]){
   else if(next.mode==='observatory'&&next.releaseView==='environments')next.releaseView='browse';
   if(route.release)next.releaseHash=route.release;
   if(route.person){const id=idFor(route.person,groups);if(id!=null){
-    if(next.mode==='rhythm')next.periodSelectedId=String(id);
-    else next.contributorFocus=String(id);
+    next.contributorFocus=String(id);
   }}
   if(route.partner){const id=idFor(route.partner,groups);if(id!=null)next.coReleasePartner=String(id);}
   if(route.personB){const id=idFor(route.personB,groups);if(id!=null)next.compareB=String(id);}
   if(route.personC){const id=idFor(route.personC,groups);if(id!=null)next.compareC=String(id);}
-  // Behaviour moved into the Rhythm tab; old links open that person's rhythm there.
-  if(route.tab==='behaviour'&&next.mode==='contributors')next.mode='rhythm';
-  else if(route.tab)next.contributorTab=route.tab;
+  // Behaviour became People › Working patterns; app.js focuses that person's rhythm there.
+  if(route.tab&&route.tab!=='behaviour')next.contributorTab=route.tab;
   if(route.from&&route.to){next.periodFrom=route.from;next.periodTo=route.to;next.periodPreset='custom';
     if(next.mode==='contributors')next.contributorRange='period';
   }
@@ -93,9 +90,8 @@ export function targetUrl(path,ui,groups,datasetId,changes){
   const view=changes.view||base.view;
   // Avoid stale detail query parameters when navigating to another kind of object.
   const next={dataset:base.dataset,view};
-  if(view==='rhythm'){next.from=base.from;next.to=base.to;}
-  // Following a person or area from Rhythm carries the scope's dates into the link.
-  if((view==='contributors'||view==='codebase')&&(ui?.mode==='rhythm'||view==='contributors'&&ui?.mode==='contributors'&&ui?.contributorRange==='period')){next.from=ui?.periodFrom;next.to=ui?.periodTo;}
+  // Following a person within a period-scoped portrait keeps those dates in the link.
+  if(view==='contributors'&&ui?.mode==='contributors'&&ui?.contributorRange==='period'){next.from=ui?.periodFrom;next.to=ui?.periodTo;}
   return routeUrl(path,{...next,...changes});
 }
 export const routeKeys=keys;

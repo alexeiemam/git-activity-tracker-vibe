@@ -41,7 +41,7 @@ test('URL route safely rejects untrusted query values and does not manufacture c
 });
 
 test('native deep links retain period context when following a person or codebase area',()=>{
-  const state={mode:'rhythm',periodFrom:'2025-02-01',periodTo:'2025-02-14'};
+  const state={mode:'contributors',contributorRange:'period',periodFrom:'2025-02-01',periodTo:'2025-02-14'};
   const link=targetUrl('/index.html',state,groups,'local-123456789',{view:'contributors',person:'alias@work.io',tab:'delivery'});
   assert.match(link,/from=2025-02-01/);
   assert.match(link,/to=2025-02-14/);
@@ -50,7 +50,7 @@ test('native deep links retain period context when following a person or codebas
   assert.equal(context.contributorFocus,'0');
   assert.equal(context.contributorRange,'period');
   const code=targetUrl('/index.html',state,groups,null,{view:'codebase',area:'app/services'});
-  assert.match(code,/from=2025-02-01&to=2025-02-14/,'following an area from Rhythm keeps the scope dates in the link');
+  assert.match(code,/view=codebase&area=app%2Fservices/,'areas use the scope bar\'s dates rather than their own');
 });
 
 test('rendering produces ordinary anchors for release, contributor and deployment evidence',async()=>{
@@ -104,16 +104,19 @@ test('explicitly marked shallow boundaries cannot masquerade as complete root an
   assert.equal(result.historyEnrichment[0].status,'bounded');
 });
 
-test('links and sessions from the Periods view open the Rhythm view',()=>{
-  assert.equal(readRoute('view=periods&from=2025-02-01&to=2025-02-14').view,'rhythm');
-  assert.match(routeUrl('/index.html',routeFromState({mode:'rhythm',periodFrom:'2025-02-01',periodTo:'2025-02-14'})),/view=rhythm&from=2025-02-01/);
+test('links from the Periods and Rhythm views open People',()=>{
+  assert.equal(readRoute('view=periods&from=2025-02-01&to=2025-02-14').view,'contributors');
+  const route=readRoute('view=rhythm&from=2025-02-01&to=2025-02-14');
+  assert.equal(route.view,'contributors');
+  assert.deepEqual([route.from,route.to],['2025-02-01','2025-02-14'],'their dates still become the scope');
 });
 
-test('old Behaviour links open the Rhythm tab for that person',()=>{
+test('old Behaviour links open People for that person',()=>{
   const route=readRoute('view=contributors&person=alias%40work.io&tab=behaviour');
-  const next=applyRoute({mode:'observatory'},route,groups);
-  assert.equal(next.mode,'rhythm');
+  const next=applyRoute({mode:'observatory',contributorTab:'focus'},route,groups);
+  assert.equal(next.mode,'contributors');
   assert.equal(next.contributorFocus,'0');
+  assert.equal(next.contributorTab,'focus','Behaviour is no longer a portrait tab');
 });
 
 test('deployment links open the Environments view of Releases and round-trip',()=>{

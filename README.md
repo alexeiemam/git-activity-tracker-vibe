@@ -73,24 +73,25 @@ Open `http://localhost:8000` and choose **Explore demo dataset**, or use the gen
 
 No build, install, backend, API key, or CDN for the browser application is needed. The one third-party library, [marked](https://github.com/markedjs/marked) 12.0.2 (MIT), is vendored unmodified as `assets/vendor/marked.esm.js` to render release notes; it is served with the app, not fetched from a CDN. The optional Google Fonts request can fall back to local fonts offline. The **capture command** calls an authenticated local GitHub CLI when installed; credentials are handled by `gh`, not by git:signals.
 
-## Four subjects, one app
+## Three subjects, one app
 
 After importing history and confirming merged author identities, the app opens
 on **Releases**. An app bar holds the dataset summary and its actions (Back,
 **Add activity**, **Identities** and a **Links** menu for copying or opening the
 current view). Below it, one row of tabs organises everything by its subject,
-the thing you pick and drill into (a release, a person, a stretch of time or a
-code area), and each tab shows its overview first and its detailed charts
-underneath:
+the thing you pick and drill into (a release, a person or a code area). Time is
+not a tab: the scope bar chooses the dates and comparison window, and each
+subject has its own "over time" section. Each tab is one page with every
+section shown in order; a sticky **On this page** bar under the tabs jumps to a
+section and highlights the one you are reading:
 
 | Tab | Question | Contents |
 | --- | --- | --- |
 | **Releases** | What shipped, and where did it go? | **Browse releases** (seven ways to pick a release, with the selected release's anatomy) and, when deployment history was imported, **Environments** (published versus production, Heroku STAG/BETA/PROD events and how they relate to tags) |
-| **People** | Who contributed? | Contributor portraits; summary, contribution side by side, momentum over time, every measure per person (copyable as CSV) and each person's mix of commit sizes |
-| **Rhythm** | When, and how steadily? | The scope unfolding over time; the activity pulse; weekly, yearly and seasonal rhythms |
+| **People** | Who contributed, when, and how steadily? | **Contribution** (the measure, summary, contribution side by side, every measure per person — copyable as CSV — and commit sizes), **Over time** (momentum over time and the activity pulse with all five lenses), **Working patterns** (weekly, yearly and seasonal rhythms) and **One person** (the contributor portrait) |
 | **Codebase** | Where in the code? | The codebase map (up to three directory levels) with an area portrait, and who works where |
 
-Old links to `?view=periods` open the Rhythm tab, `?view=deployments` links open Releases › Environments, and `?view=evidence` links open People. Cards carry a single
+Old links to `?view=periods`, `?view=rhythm` and `?view=evidence` open People (with any dates becoming the scope), and `?view=deployments` links open Releases › Environments. Cards carry a single
 heading, and each tab ends with **How to read this tab**: the evidence's clocks
 and merge/revert policy, what Git can and cannot show, and the caveats that
 apply to that tab, gathered in one place instead of repeated under every chart.
@@ -155,17 +156,19 @@ control.
   baseline tag is labelled non-incremental; releases with missing ancestry
   warn that their evidence may be incomplete. "Led release" is a distinct
   GitHub publisher/tagger role, not a claim about who authored its code.
-- **Rhythm — start with time.** **The scope, unfolding** aligns the scope's
-  authored commits, distinct contributors and tagged-release events at daily,
-  weekly or monthly resolution. Select a time bucket to examine the exact
-  recorded commits and releases. The activity pulse and weekly, yearly and
-  seasonal rhythms follow. The rhythm explorer's summary includes each person's typical
-  and longest **quiet interval** (days between authored dates); a gap means no
-  matching authored records, not absence from work.
+- **Releases › The scope, unfolding** aligns the scope's authored commits,
+  distinct contributors and tagged-release events at daily, weekly or monthly
+  resolution. Select a time bucket to examine the exact recorded commits and
+  releases.
+- **People › Working patterns** holds the rhythm explorer, whose summary
+  includes each person's typical and longest **quiet interval** (days between
+  authored dates); a gap means no matching authored records, not absence from
+  work.
 - **People — start with a person.** Select any **reconciled** contributor
   (all their merged author emails), then explore their **Delivery / Together / Focus /
-  Evolution / Compare** views; **Working rhythm →** opens the Rhythm tab focused
-  on them (old `tab=behaviour` links do the same). The release portfolio distinguishes
+  Evolution / Compare** views in **People › One person**; **Working rhythm ↑**
+  jumps to Working patterns focused on them (old `tab=behaviour` links focus
+  them too). The release portfolio distinguishes
   release participation (tagged releases they authored for), release leadership (releases they published or tagged), and both; rates use
   the same release-event population across compared people. **Together** shows
   which contributors authored changes in the same incremental tagged releases:
@@ -461,10 +464,7 @@ The **ranking, trend and comparison table** use the chosen metric and mode. The 
 
 ### Release gap × authored activity (Pulse)
 
-The **activity pulse** offers five complementary lenses, each shown on the tab
-whose question it answers: **Rhythm** shows **Authored activity** and
-**Contribution continuity**, **People** shows **Contribution momentum**,
-**Absolute velocity** and **Release gap × activity**.
+The **activity pulse** (People › Over time) offers five complementary lenses:
 Authored activity has its own **Colour by** measure (any authored measure,
 independent of the People tab's measure). The lenses are: **Authored activity**
 (raw totals), **Release gap × activity** (a warm,
@@ -991,7 +991,7 @@ which is reported rather than silently implying the link can be reopened.
 
 ## Contribution Signature and two complementary quadrants
 
-The **Rhythm → Activity Pulse → Contribution Continuity**
+The **People → Activity Pulse → Contribution Continuity**
 now offers four subviews: **Combined signature** (the default when entering the
 continuity lens), **Delivery quadrant**, **Contribution quadrant**, and the
 original **Day counts**. These subviews share the selected contributors, the
@@ -1092,7 +1092,7 @@ Time Explorer by default; the other four Pulse lenses retain their familiar
 heatmaps as the default. The original numbered, hoverable quadrant snapshot and
 its full evidence inspector remain available without changing any scores.
 
-**Navigation:** Rhythm -> Activity Pulse -> choose a
+**Navigation:** People -> Activity Pulse -> choose a
 lens. For the existing quadrants, first choose Contribution continuity, then
 Delivery quadrant or Contribution quadrant. Use the conspicuous **Cells /
 Time explorer** (or **Snapshot / Time explorer**) control above the plot.

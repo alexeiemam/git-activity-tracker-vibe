@@ -61,10 +61,11 @@ test('co-release sorting, selected partner, and reconciled identity survive sess
   assert.equal(restorePrimaryState({primary:{coReleaseSort:'random',contributorTab:'evil'}},groups).coReleaseSort,'shared');
 });
 
-test('sessions saved in the Periods view restore into the Rhythm view',()=>{
-  const restored=restorePrimaryState({primary:{mode:'periods',trail:[{mode:'periods',periodFrom:'2025-01-01'}]}});
-  assert.equal(restored.mode,'rhythm');
-  assert.equal(restored.trail[0].mode,'rhythm');
+test('sessions saved in the Periods or Rhythm views restore into People',()=>{
+  const restored=restorePrimaryState({primary:{mode:'periods',trail:[{mode:'rhythm',periodFrom:'2025-01-01'}]}});
+  assert.equal(restored.mode,'contributors');
+  assert.equal(restored.trail[0].mode,'contributors');
+  assert.equal(restorePrimaryState({primary:{mode:'rhythm'}}).mode,'contributors');
 });
 
 test('a saved Behaviour tab falls back to Delivery now that rhythm lives in its own tab',()=>{

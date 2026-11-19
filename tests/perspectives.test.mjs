@@ -146,19 +146,14 @@ test('primary asset integration keeps release models in the analysis worker',()=
  assert.match(worker,/buildEvidenceIndex\(fullView,fullImpact,bounds\)/);
  assert.match(worker,/cachedPrimaryKey/);
  assert.match(app,/renderPrimaryExplorer\(perspectiveIndex,primary\)/);
- for(const name of ['observatory','rhythm','contributors','codebase'])assert.match(html,new RegExp(`data-experience="${name}"`));
- assert.doesNotMatch(html,/data-experience="evidence"/,'Evidence folded into People and the scope bar');
- assert.match(html,/aria-labelledby="table-heading" data-tabs="contributors"/);
+ for(const name of ['observatory','contributors','codebase'])assert.match(html,new RegExp(`data-experience="${name}"`));
+ assert.doesNotMatch(html,/data-experience="(evidence|rhythm)"/,'Evidence and Rhythm folded into People');
  assert.match(html,/<details id="scope-commits"[\s\S]*id="recent-commits"/,'the scope\'s commits sit in the scope bar');
  assert.match(html,/id="scope-bar"/);
  assert.match(html,/id="scope-comparison"/,'the comparison window is part of the scope');
- assert.match(html,/id="people-measure" class="people-measure" data-tabs="contributors"/,'the measure sits with the People charts it drives');
- // The pulse appears on exactly the tabs that have pulse lenses.
- const pulseTabs=html.match(/aria-labelledby="pulse-heading" data-tabs="([^"]+)"/)[1].split(' ').sort();
- const lensTabs=[...app.match(/const PULSE_VIEWS=\{([\s\S]*?)\n\};/)[1].matchAll(/^  ([a-z]+):\{lenses:/gm)].map(m=>m[1]).sort();
- assert.deepEqual(pulseTabs,lensTabs,'each tab with pulse lenses shows the pulse, and no other tab does');
+ assert.doesNotMatch(html,/data-tabs=/,'sections are placed by slot, not shown by tab');
  assert.match(html,/id="pulse-metric-select"/);
- assert.match(app,/rhythm:\{lenses:\['activity','continuity'\]/);
+ assert.doesNotMatch(app,/PULSE_VIEWS/,'all five pulse lenses sit together on People');
 });
 
 test('release landscape preserves empty intervals as true calendar gaps',()=>{
@@ -270,7 +265,7 @@ test('scope people narrow the Rhythm timeline and the codebase who-changed-what 
 test('each tab has one reading guide instead of caveats repeated under every chart',async()=>{
  const {readingGuide}=await import('../assets/perspective-view.js');
  assert.match(readingGuide(index,'contributors'),/not a ranking of performance/);
- assert.match(readingGuide(index,'rhythm'),/not hours worked/);
+ assert.match(readingGuide(index,'contributors'),/not hours worked/,'working-pattern caveats joined People');
  assert.match(readingGuide(index,'observatory'),/merges excluded/,'the evidence policy is part of every guide');
  const html=renderPrimaryExplorer(index,ui({mode:'contributors'}));
  assert.doesNotMatch(html,/primary-footnote|Not a productivity ranking/);
@@ -288,7 +283,7 @@ test('Releases opens on the timeline; the list sits beside the release it opens 
  assert.match(browse,/class="primary-browse-summary">3 tagged releases/,'the overview numbers lead the browse card');
  for(const mode of ['timeline','people','followup']){
   const html=renderPrimaryExplorer(index,ui({mode:'observatory',releaseBrowse:mode}));
-  assert.match(html,new RegExp(`id="primary-impact-slot" class="primary-impact-slot" data-mode="${mode}"`),'the impact explorer is placed here');
+  assert.match(html,new RegExp(`class="primary-slot" data-slot="impact" data-mode="${mode}"`),'the impact explorer is placed here');
   assert.match(html,/primary-anatomy/,'the release it picks opens below');
  }
  assert.equal(restorePrimaryState({primary:{releaseView:'overview'}}).releaseView,'browse','sessions saved on Overview open Browse');
@@ -298,7 +293,19 @@ test('views sit with their subject: change evolution with releases, commit sizes
  const app=readFileSync(new URL('../assets/app.js',import.meta.url),'utf8');
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
  assert.match(app,/const IMPACT_BROWSE=\{timeline:'timeline',people:'matrix',followup:'durability'\}/);
- assert.match(app,/contributors:\{lenses:\['momentum','level','release-gap'\]/,'release gaps sit with people');
- assert.match(html,/id="impact-explorer" data-tabs="hosted"/);
- assert.match(html,/aria-labelledby="footprint-heading" data-tabs="contributors"/);
+ assert.match(html,/id="impact-explorer" data-slot-section="impact"/);
+ assert.match(html,/aria-labelledby="footprint-heading" data-slot-section="sizes"/);
+});
+
+test('People is one page in reading order, and every slot a view renders has a section to fill it',()=>{
+ const html=renderPrimaryExplorer(index,ui({mode:'contributors'}));
+ const order=[...html.matchAll(/id="(people-[a-z-]+)" tabindex="-1"|data-slot="([a-z]+)"/g)].map(m=>m[1]||m[2]);
+ assert.deepEqual(order,['people-contribution','measure','stats','insight','ranking','table','sizes','people-over-time','trend','pulse','people-patterns','rhythm','people-portrait']);
+ assert.match(html,/class="primary-section-nav" aria-label="People: jump to a section"><a href="#people-contribution" data-action="primary-jump"/);
+ const page=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const sections=new Set([...page.matchAll(/data-slot-section="([a-z]+)"/g)].map(m=>m[1]));
+ const slots=new Set();
+ for(const mode of ['observatory','contributors','codebase'])for(const browse of ['timeline','list'])for(const m of renderPrimaryExplorer(index,ui({mode,releaseBrowse:browse})).matchAll(/data-slot="([a-z]+)"/g))slots.add(m[1]);
+ assert.deepEqual([...slots].sort(),[...sections].sort(),'no orphan slots and no unreachable sections');
+ assert.match(renderPrimaryExplorer(index,ui({mode:'observatory'})),/id="releases-over-time"[\s\S]*The scope, unfolding/,'the scope timeline is a Releases section');
 });

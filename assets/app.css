@@ -1614,3 +1614,19 @@ button.primary-map-cell:focus-visible,.primary-map-top:focus-visible{outline:3px
 
 /* Published release notes, rendered as Markdown inside a sandboxed frame that keeps their styles contained. */
 .markdown-frame{display:block;width:100%;height:240px;border:0;background:#fffefa}
+
+/* "On this page": every section is shown in order; the bar under the tabs jumps between them. */
+.primary-section-nav{position:sticky;top:64px;z-index:15;display:flex;gap:6px;flex-wrap:wrap;margin:-6px 0 4px;padding:8px 0 10px;background:var(--bg);border-bottom:1px solid #e3e9e1}
+.primary-section-nav a{padding:6px 12px;border-radius:999px;border:1px solid #d6e3d8;background:#fffefa;color:#2f5e45;font:600 11px var(--mono);text-decoration:none}
+.primary-section-nav a:hover{background:#e8f3eb}
+.primary-section-nav a[aria-current="location"]{background:#1d3b2e;border-color:#1d3b2e;color:#fff}
+.primary-section-nav a:focus-visible{outline:3px solid #4f9a78;outline-offset:2px}
+.primary-section-title{margin:30px 0 2px;font-size:26px;letter-spacing:-.02em;scroll-margin-top:124px}
+.primary-section-title:focus{outline:none}
+.primary-section-title+.primary-lede{margin-top:0}
+#releases-over-time,#primary-release-anatomy,[id^="people-"],[id^="releases-"],[id^="codebase-"]{scroll-margin-top:124px}
+.primary-slot{min-width:0}
+.primary-slot>.report-section{margin:14px 0 30px}
+.primary-slot>.stat-grid{margin:14px 0 10px}
+.primary-slot>.insight-strip{margin-bottom:24px}
+@media(max-width:720px){.primary-section-nav{top:56px;gap:4px}.primary-section-nav a{padding:5px 9px}}
