@@ -145,3 +145,70 @@ export function impactTimelinePreferenceFor(model, window) {
   if(!extent||!window||window.end-window.start>=extent.end-extent.start-DAY) return {mode:'all'};
   return {mode:'custom',from:dateOf(window.start),to:dateOf(Math.max(window.start,window.end-1))};
 }
+
+/**
+ * Where a commit sits on the release timeline: its authored calendar date at
+ * its authored time of day (midday when unknown), the same local-day space as
+ * release positions, so a tail always ends exactly under its release.
+ */
+export const impactCommitPosition = commit => {
+  const localDay = dayStart(commit?.date);
+  if (localDay===null) return Number.isFinite(commit?.authoredAt)?commit.authoredAt:null;
+  return localDay + (Number.isInteger(commit.hour)&&Number.isInteger(commit.minute) ? (commit.hour*60+commit.minute)*60000 : DAY/2);
+};
+
+/**
+ * A release's tail: when the work it shipped was written. Marks are commit
+ * positions (never after the release itself, whatever clocks or rebases say);
+ * carried counts the ones written before the previous release in its lineage
+ * shipped, i.e. work that ran across a release boundary.
+ */
+export function releaseTail(release, commits, previous=null) {
+  const to = impactReleasePosition(release);
+  if (to===null) return null;
+  const marks = (commits||[]).map(impactCommitPosition).filter(Number.isFinite).map(t=>Math.min(t,to)).sort((a,b)=>a-b);
+  if (!marks.length) return null;
+  const previousAt = previous ? impactReleasePosition(previous) : null;
+  return {from:marks[0], to, marks, previousAt, carried:previousAt===null?0:marks.filter(t=>t<previousAt).length};
+}
+
+const workDays = tail => new Set(tail.marks.map(t=>Math.floor(t/DAY)));
+
+/**
+ * Releases whose work was being written on the same days as this one's: the
+ * days on which both had commits authored. Spans alone would let one stray
+ * old commit claim overlap with everything in between, so commit days decide.
+ * The largest overlaps are kept, then ordered by release time.
+ */
+export function workPartners(release, releases, limit=5) {
+  if (!release?.tail) return [];
+  const own = workDays(release.tail);
+  const partners = [];
+  for (const other of releases) {
+    // Whole days, as the strip counts them: same-day work overlaps whatever the hour.
+    if (other===release || !other.tail || Math.floor(other.tail.to/DAY)<Math.floor(release.tail.from/DAY) || Math.floor(other.tail.from/DAY)>Math.floor(release.tail.to/DAY)) continue;
+    const days = [...workDays(other.tail)].filter(day=>own.has(day)).sort((a,b)=>a-b);
+    if (days.length) partners.push({hash:other.hash, tag:other.tag, days});
+  }
+  return partners.sort((a,b)=>b.days.length-a.days.length||a.tag.localeCompare(b.tag)).slice(0,limit)
+    .sort((a,b)=>releases.findIndex(r=>r.hash===a.hash)-releases.findIndex(r=>r.hash===b.hash));
+}
+
+/**
+ * How many releases had work being written in each stretch of `binDays` days
+ * between start and end: the overview strip. Only stretches with work.
+ */
+export function workInFlight(releases, start, end, binDays=1) {
+  const size = Math.max(1, Math.round(binDays)), bins = new Map();
+  for (const release of releases) {
+    if (!release.tail || release.tail.to<start || release.tail.from>end) continue;
+    for (const day of workDays(release.tail)) {
+      const at = day*DAY;
+      if (at+DAY<start || at>end) continue;
+      const key = Math.floor(day/size)*size;
+      if (!bins.has(key)) bins.set(key, {start:key*DAY, end:(key+size)*DAY, releases:new Set()});
+      bins.get(key).releases.add(release);
+    }
+  }
+  return [...bins.values()].sort((a,b)=>a.start-b.start).map(bin=>({...bin, releases:[...bin.releases]}));
+}

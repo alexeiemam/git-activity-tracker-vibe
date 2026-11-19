@@ -7,7 +7,8 @@
  * No line-level survival, deploy date, customer value, or team productivity is
  * inferred from numstat; file revisitation is explicitly a proxy.
  */
-import { fileArea } from './domain.js?v=releaseclock-20261119-2';
+import { fileArea } from './domain.js?v=tails-20261119-3';
+import { releaseTail, workPartners } from './impact-window.js?v=tails-20261119-3';
 
 export const IMPACT_METRICS = Object.freeze({
   commits: 'Commits', churn: 'Line churn', paths: 'Distinct paths', areas: 'Codebase areas', share: 'Commit share',
@@ -421,6 +422,7 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
       baseline:!previous, totalIntroduced:introduced.length, eligibleIntroduced:matched.length,
       selected,reference,cohorts,selectedFootprint,referenceFootprint,
       leadDays:leadTime(selected,release.timestamp),
+      tail:releaseTail(release,selected,previous),
       metricValue:releaseMetric(selectedFootprint,metric,referenceFootprint),
     });
     // Filtered windows and exclusions deliberately reduce eligibleIntroduced.
@@ -454,6 +456,7 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
       release.nextTagFootprint={ count:paths.size, share:selectedFootprint.pathsCount?100*paths.size/selectedFootprint.pathsCount:null };
     }
   }
+  for(const release of periodReleases)release.workPartners=workPartners(release,periodReleases);
   options.progress?.({phase:'release-analysis',current:periodReleases.length,total:periodReleases.length});
   // All Impact breakdowns share *released* contributor evidence. The authored
   // activity strip alone intentionally includes unreleased commits (labelled).

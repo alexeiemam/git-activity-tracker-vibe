@@ -6,10 +6,10 @@
  * The two are NOT a shipped/committed conversion rate. Scores are descriptive
  * indices, not worked hours, code quality, or employment assessments.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=releaseclock-20261119-2';
-import {dailyEvidence} from './momentum.js?v=releaseclock-20261119-2';
-import {temporalActivityByPerson,temporalOptions,emptyTemporalDay} from './temporal-activity.js?v=releaseclock-20261119-2';
-import {contributionLevelUnits} from './contribution-level.js?v=releaseclock-20261119-2';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=tails-20261119-3';
+import {dailyEvidence} from './momentum.js?v=tails-20261119-3';
+import {temporalActivityByPerson,temporalOptions,emptyTemporalDay} from './temporal-activity.js?v=tails-20261119-3';
+import {contributionLevelUnits} from './contribution-level.js?v=tails-20261119-3';
 
 export const SIGNATURE_MODES=Object.freeze(['days','signature','delivery','contribution']);
 export const DEFAULT_SIGNATURE_MODE='signature';

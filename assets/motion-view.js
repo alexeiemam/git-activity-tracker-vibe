@@ -1,5 +1,5 @@
 /** Accessible, shared time-window playback for the Observatory's spatial lenses. */
-import {MOTION_DESCRIPTORS,MOTION_TRAILS,MOTION_LABELS,motionPlotPosition,motionRegion} from './motion-explorer.js?v=releaseclock-20261119-2';
+import {MOTION_DESCRIPTORS,MOTION_TRAILS,MOTION_LABELS,motionPlotPosition,motionRegion} from './motion-explorer.js?v=tails-20261119-3';
 const esc=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const number=value=>Number.isFinite(value)?new Intl.NumberFormat('en-GB',{maximumFractionDigits:2}).format(value):'Unknown';
 const pct=value=>Number.isFinite(value)?`${Math.round(value*100)}%`:'Unknown';

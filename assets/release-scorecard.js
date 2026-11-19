@@ -7,7 +7,7 @@
  * Baseline snapshots never count as incremental releases. A publisher/tagger
  * alone is not credited with authored release involvement or deployed work.
  */
-import {validDate} from './domain.js?v=releaseclock-20261119-2';
+import {validDate} from './domain.js?v=tails-20261119-3';
 
 const number=value=>typeof value==='number'&&Number.isFinite(value)&&value>=0?value:null;
 

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { impactTimelineZoomWindow,impactTimelineShiftWindow,impactTimelineCentreWindow,impactTimelinePreferenceFor,impactTimelineExtent,impactTimelineWindow,impactTimelineZoom,impactTimelineReveal,impactTimelineCustomRange,impactTimelinePan,impactTimelineDates } from '../assets/impact-window.js';
 import { impactTimeline, dodgeReleases } from '../assets/impact-view.js';
-import { impactReleasePosition } from '../assets/impact-window.js';
+import { impactReleasePosition, releaseTail, impactCommitPosition, workPartners, workInFlight } from '../assets/impact-window.js';
 import { parseGitHistory } from '../assets/domain.js';
 
 const DAY=86400000;
@@ -148,4 +148,64 @@ test('overlapping release dots move right just enough, keep their height, and on
   const crowd=Array.from({length:8},(_,i)=>({hash:String(i),x:100,y:50}));
   assert.ok(dodgeReleases(crowd,r=>r.x,r=>r.y,1000).get('7').cx<=100+39,'never more than three dot widths');
   assert.equal(dodgeReleases(rows,r=>r.x,r=>r.y,1000,false).get('b').cx,103,'zoomed out: true time only');
+});
+
+test('release tails span when the shipped work was written, flagging work from before the previous release', () => {
+  const day = d => Date.parse(`${d}T00:00:00Z`);
+  const previous = { date:'2026-03-10', clock:9*3600000 };
+  const release = { date:'2026-03-20', clock:15*3600000 };
+  const commits = [
+    { date:'2026-03-02', hour:10, minute:30 },
+    { date:'2026-03-12', hour:null, minute:null },
+    { date:'2026-03-21', hour:8, minute:0 }, // authored after the tag (clock skew): never past the release
+  ];
+  assert.deepEqual(impactCommitPosition(commits[0]), day('2026-03-02') + 10.5*3600000);
+  assert.deepEqual(impactCommitPosition(commits[1]), day('2026-03-12') + 12*3600000);
+  const tail = releaseTail(release, commits, previous);
+  assert.deepEqual(tail.from, day('2026-03-02') + 10.5*3600000);
+  assert.deepEqual(tail.to, impactReleasePosition(release));
+  assert.deepEqual(tail.marks.at(-1), tail.to);
+  assert.deepEqual(tail.carried, 1);
+  assert.deepEqual(releaseTail(release, commits).carried, 0);
+  assert.deepEqual(releaseTail(release, []), null);
+});
+
+test('work overlap is decided by shared commit days, not by spans', () => {
+  const at = d => Date.parse(`${d}T12:00:00Z`);
+  const r = (hash, date, days) => ({ hash, tag:hash, date, clock:15*3600000, tail:{ from:at(days[0]), to:at(date)+3*3600000, marks:days.map(at) } });
+  const a = r('a', '2026-03-10', ['2026-03-01', '2026-03-05', '2026-03-09']);
+  const b = r('b', '2026-03-20', ['2026-03-05', '2026-03-09', '2026-03-15']);
+  const c = r('c', '2026-03-25', ['2026-02-01', '2026-03-22']); // a stray old commit spans a and b without sharing a day
+  const all = [a, b, c];
+  assert.deepEqual(workPartners(b, all).map(p => [p.tag, p.days.length]), [['a', 2]]);
+  assert.deepEqual(workPartners(c, all), []);
+  // Shipped that morning; another release's only commit was written that afternoon: same work day.
+  const morning = { hash:'m', tag:'m', tail:{ from:at('2026-04-01') - 6*3600000, to:at('2026-04-01') - 3*3600000, marks:[at('2026-04-01') - 6*3600000] } };
+  const afternoon = { hash:'n', tag:'n', tail:{ from:at('2026-04-01') + 3*3600000, to:at('2026-04-02'), marks:[at('2026-04-01') + 3*3600000] } };
+  assert.deepEqual(workPartners(afternoon, [morning, afternoon]).map(p => p.tag), ['m']);
+  const bins = workInFlight(all, at('2026-03-01') - 86400000, at('2026-03-31'));
+  assert.deepEqual(bins.filter(bin => bin.releases.length > 1).length, 2);
+  assert.equal(workInFlight(all, at('2026-03-01'), at('2026-03-31'), 7).every(bin => (bin.end - bin.start) === 7*86400000), true);
+});
+
+test('the timeline shows a work strip, and only the selected release and its overlapping releases as tails', () => {
+  const at = d => Date.parse(`${d}T12:00:00Z`);
+  const release = (tag, date, days, partners=[]) => ({
+    hash: tag, tag, date, clock: 12*3600000, timestamp: at(date), transition: 'minor', previousTag: 'v0',
+    metricValue: 1, selectedFootprint: { pathsCount: 1 }, driver: { source: 'unknown' }, workPartners: partners,
+    tail: { from: at(days[0]), to: at(date), marks: days.map(at), carried: 0 },
+  });
+  const v1 = release('v1', '2026-03-10', ['2026-03-09', '2026-03-10']);
+  const v2 = release('v2', '2026-03-20', ['2026-03-09', '2026-03-12'], [{ hash:'v1', tag:'v1', days:[Math.floor(at('2026-03-09')/86400000)] }]);
+  const v3 = release('v3', '2026-03-28', ['2026-03-25']);
+  const model = { releases: [v1, v2, v3], activityMonths: [], activityDays: [], versionEvents: [], metric: 'commits' };
+  const html = impactTimeline(model, 'v2', { mode: 'all' });
+  assert.ok(html.includes('data-flight="v1 v2"'), 'the shared day lists both releases');
+  assert.equal((html.match(/class="impact-focus-tail[ "]/g) || []).length, 2, 'v3 shared nothing, so it has no tail');
+  assert.ok(html.includes('class="impact-focus-tail" data-action="impact-release" data-impact-hash="v1"'));
+  assert.ok(html.includes('impact-partner-ring'));
+  assert.ok(html.includes('1 day of work shared with v2'));
+  assert.equal((html.match(/impact-focus-leader/g) || []).length, 2);
+  const none = impactTimeline(model, 'v3', { mode: 'all' });
+  assert.equal((none.match(/class="impact-focus-tail[ "]/g) || []).length, 1);
 });

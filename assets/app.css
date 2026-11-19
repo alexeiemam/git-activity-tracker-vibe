@@ -1700,3 +1700,23 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 .pattern-bank-list input{margin:0}
 .pattern-leave .pattern-extra{display:flex;margin:8px 0 6px}
 .pattern-leave .pattern-extra input{width:min(320px,100%)}
+/* Work under the axis: an in-flight strip, then the selected release's tail and those it shared work days with. */
+.impact-flight{cursor:pointer;transition:opacity .12s}
+.impact-flight:hover{stroke:#173d2c;stroke-width:1}
+.impact-focus-tail{opacity:.82}
+.impact-focus-tail[data-action]{cursor:pointer}
+.impact-focus-tail:hover,.impact-focus-tail.is-active{opacity:1}
+.impact-focus-line{stroke:#9fb7a6;stroke-width:1}
+.impact-focus-marks{stroke:#5f8d72;stroke-width:1.3}
+.impact-focus-tail.is-active .impact-focus-line{stroke:#254e35;stroke-width:1.5}
+.impact-focus-tail.is-active .impact-focus-marks{stroke:#173d2c}
+.impact-focus-leader{stroke-width:1;stroke-dasharray:2 3;opacity:.6}
+.impact-focus-label{font:9.5px var(--mono);fill:#4d6656}
+.impact-focus-tail.is-active .impact-focus-label{fill:#173d2c;font-weight:600}
+.impact-shared-day{fill:#f3c9ae}
+.impact-partner-ring{fill:none;stroke:var(--orange);stroke-width:1.5;stroke-dasharray:2.5 2;pointer-events:none}
+.impact-timeline-dot.is-in-flight{stroke:var(--orange);stroke-width:3px}
+#impact-timeline.is-panning .impact-flight,#impact-timeline.is-panning .impact-focus-tail{pointer-events:none}
+.impact-flight-key{gap:2px!important}.impact-flight-key i{width:12px!important;height:8px!important;border-radius:1px!important}.impact-flight-key i:first-child{margin-left:4px}
+.impact-timeline-legend i.impact-shared-key{width:14px;height:9px;border-radius:1.5px;background:#f3c9ae}
+@media (forced-colors:active){.impact-focus-line,.impact-focus-marks{stroke:CanvasText}.impact-shared-day,.impact-flight{fill:Highlight}.impact-partner-ring{stroke:Highlight}}

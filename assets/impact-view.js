@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=releaseclock-20261119-2';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=releaseclock-20261119-2';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=releaseclock-20261119-2';
+import { IMPACT_METRICS } from './impact.js?v=tails-20261119-3';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=tails-20261119-3';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=tails-20261119-3';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -115,6 +115,67 @@ export function impactIndividualProfiles(model, focus='selection') {
 }
 
 /** The viewport changes presentation only: no Git selection, contribution or date filters. */
+/**
+ * Work under the axis, in two parts. A strip shades each stretch of days by
+ * how many releases had commits written in it: pale for one, warming as work
+ * for several releases ran at once. Below it, only the selected release's
+ * tail and the tails of the releases it shared work days with, each joined to
+ * its own dot by a leader, with the shared days shaded on both.
+ */
+const STRIP_Y=180,STRIP_H=8,FOCUS_TOP=206,FOCUS_LANE=13,DAY_MS=86400000;
+const FLIGHT_COLOURS=['#dbe7de','#f3c9ae','#e8996f','#cf6340'];
+const flightColour=count=>FLIGHT_COLOURS[Math.min(count,4)-1];
+const isoDay=t=>new Date(t).toISOString().slice(0,10);
+const tagList=tags=>tags.length>6?`${tags.slice(0,6).join(', ')} and ${tags.length-6} more`:tags.join(', ');
+function releaseWork(all,min,max,x,left,right,selectedHash) {
+  const dayWidth=x(min+DAY_MS)-x(min);
+  const bins=workInFlight(all,min,max,Math.ceil(3/Math.max(dayWidth,.01)));
+  if(!bins.length)return {svg:'',height:0,partners:new Set()};
+  const strip=bins.map(bin=>{
+    const a=Math.max(left,x(bin.start)),b=Math.min(right,x(bin.end)-(dayWidth>4?.75:0));
+    if(b<=a)return '';
+    const ordered=[...bin.releases].sort((p,q)=>impactReleasePosition(p)-impactReleasePosition(q));
+    const count=ordered.length,days=Math.round((bin.end-bin.start)/DAY_MS);
+    const when=days>1?`${shortDate(isoDay(bin.start))} – ${shortDate(isoDay(bin.end-DAY_MS))}`:shortDate(isoDay(bin.start));
+    const msg=`${when} · work for ${count} ${count===1?'release':'releases'}: ${tagList(ordered.map(r=>r.tag))}`;
+    return `<rect x="${a}" y="${STRIP_Y}" width="${b-a}" height="${STRIP_H}" fill="${flightColour(count)}" class="impact-flight" data-action="impact-release" data-impact-hash="${e(ordered.at(-1).hash)}" data-flight="${e(ordered.map(r=>r.hash).join(' '))}"><title>${e(msg)}</title></rect>`;
+  }).join('');
+  const selected=all.find(r=>r.hash===selectedHash&&r.tail);
+  const partners=(selected?.workPartners||[]).map(p=>({...p,release:all.find(r=>r.hash===p.hash)})).filter(p=>p.release?.tail);
+  const sharedDays=new Set(partners.flatMap(p=>p.days));
+  const lane=(r,i,days,active)=>{
+    const {from,to,marks,carried}=r.tail,y=FOCUS_TOP+i*FOCUS_LANE;
+    const a=Math.max(left,x(from)),b=Math.min(right,x(to)),end=x(to),visible=end>=left&&end<=right;
+    const span=Math.round((to-from)/DAY_MS);
+    const written=`${amount(marks.length)} ${marks.length===1?'commit':'commits'} written ${shortDate(isoDay(from))} – ${shortDate(r.date)}${span?` (${amount(span)} ${span===1?'day':'days'})`:''}`;
+    const msg=active
+      ?`${r.tag} · ${written}${carried?` · ${amount(carried)} written before ${r.previousTag} shipped`:''}${partners.length?` · shares work days with ${partners.map(p=>`${p.tag} (${p.days.length})`).join(', ')}`:''}`
+      :`${r.tag} · ${written} · ${amount(days.length)} ${days.length===1?'day':'days'} of work shared with ${selected.tag}`;
+    let ticks='',last=-1;
+    for(const t of marks){
+      const at=Math.round(x(t)*2)/2;
+      if(at<left||at>right||at===last)continue;
+      ticks+=`M${at} ${y-3}v6`;last=at;
+    }
+    const shade=[...days].map(day=>{
+      const s0=Math.max(left,x(day*DAY_MS)),s1=Math.min(right,x((day+1)*DAY_MS));
+      return s1>s0?`<rect x="${s0}" y="${y-5}" width="${Math.max(1.5,s1-s0)}" height="10" rx="1.5" class="impact-shared-day"/>`:'';
+    }).join('');
+    const labelRight=end+8<right-60;
+    const label=`<text x="${labelRight?Math.max(left,end)+8:a-6}" y="${y+3.5}" text-anchor="${labelRight?'start':'end'}" class="impact-focus-label">${e(r.tag.length>18?r.tag.slice(0,17)+'…':r.tag)}</text>`;
+    return `<g class="impact-focus-tail${active?' is-active':''}"${active?'':` data-action="impact-release" data-impact-hash="${e(r.hash)}"`}><title>${e(msg)}</title>
+      ${visible?`<line x1="${end}" y1="${y}" x2="${end}" y2="170" stroke="${color(r.transition)}" class="impact-focus-leader"/>`:''}
+      <rect x="${a-2}" y="${y-FOCUS_LANE/2}" width="${Math.max(4,b-a+4)}" height="${FOCUS_LANE}" fill="transparent"/>
+      ${shade}<line x1="${a}" y1="${y}" x2="${b}" y2="${y}" class="impact-focus-line"/><path d="${ticks}" class="impact-focus-marks"/>
+      ${visible?`<circle cx="${end}" cy="${y}" r="2.8" fill="${color(r.transition)}"/>`:''}${label}</g>`;
+  };
+  const focus=selected?[lane(selected,0,sharedDays,true),...partners.map((p,i)=>lane(p.release,i+1,p.days,false))].join(''):'';
+  const lanes=selected?1+partners.length:0;
+  return {svg:`<text x="40" y="${STRIP_Y+7}" text-anchor="end" class="impact-axis">WORK</text>${strip}${focus}`,
+    // Room below the axis down to the last drawn row; the authored bars follow.
+    height:(lanes?FOCUS_TOP+(lanes-.5)*FOCUS_LANE:STRIP_Y+STRIP_H)-170+4,
+    partners:new Set(partners.map(p=>p.hash))};
+}
 export function impactTimeline(model, selectedHash, options={mode:'all'}) {
   if(!model.releases.length)return '';
   const extent=impactTimelineExtent(model);
@@ -123,8 +184,10 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
   const {start:min,end:max}=window;
   const all=model.releases;
   const records=all.filter(r=>impactReleasePosition(r)>=min&&impactReleasePosition(r)<=max);
-  const width=1100,height=288;
+  const width=1100;
   const x=date=>58+(date-min)/(max-min||1)*(width-94);
+  const work=releaseWork(all,min,max,x,48,width-28,selectedHash);
+  const o=work.height,height=288+o;
   const hi=Math.max(1,...records.map(r=>r.metricValue??0));
   const y=value=>160-value/hi*108;
   const windowDates=impactTimelineDates(window), allDates=impactTimelineDates(extent);
@@ -147,11 +210,11 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
     const end=weekly?b.start+7*86400000:Date.UTC(new Date(b.start).getUTCFullYear(),new Date(b.start).getUTCMonth()+1,1);
     const left=x(Math.max(min,b.start)),barW=Math.max(1,x(Math.min(max,end))-left-2);
     const h=34*b.count/barMax;
-    return `<rect x="${left}" y="${246-h}" width="${barW}" height="${h}" rx="1" fill="#9dbfac" opacity=".85"><title>${e(b.label)} · ${amount(b.count)} authored commits · ${amount(b.version)} VERSION touches (within shown range)</title></rect>`;
+    return `<rect x="${left}" y="${246+o-h}" width="${barW}" height="${h}" rx="1" fill="#9dbfac" opacity=".85"><title>${e(b.label)} · ${amount(b.count)} authored commits · ${amount(b.version)} VERSION touches (within shown range)</title></rect>`;
   }).join('');
   const versionMarkers=model.versionEvents.filter(c=>c.authoredAt!=null&&Date.parse(`${c.date}T12:00:00Z`)>=min&&Date.parse(`${c.date}T12:00:00Z`)<=max).map(c=>{
     const pos=x(Date.parse(`${c.date}T12:00:00Z`));
-    return `<path d="M ${pos} 195 l 4 4 l -4 4 l -4 -4 z" fill="#ad7d3c" stroke="#fff" stroke-width=".8"><title>${e(c.date)} · VERSION edit · ${e(c.subject)} · ${e(c.name)}</title></path>`;
+    return `<path d="M ${pos} ${195+o} l 4 4 l -4 4 l -4 -4 z" fill="#ad7d3c" stroke="#fff" stroke-width=".8"><title>${e(c.date)} · VERSION edit · ${e(c.subject)} · ${e(c.name)}</title></path>`;
   }).join('');
   const ticks=[];
   const startDate=new Date(min),endDate=new Date(max);
@@ -175,7 +238,7 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
     const {at,cx,cy}=layout.get(r.hash),active=r.hash===selectedHash;
     const msg=`${r.tag} · ${shortDate(r.date)}${clockText(r)} · ${typeLabel(r.transition)} · ${humanMetric(r.metricValue,model.metric)} ${IMPACT_METRICS[model.metric]} · ${driverText(r)} · ${amount(r.selectedFootprint.pathsCount)} paths`;
     return `<line x1="${at}" y1="170" x2="${cx}" y2="${cy}" stroke="${color(r.transition)}" stroke-opacity="${active?'.8':'.34'}" stroke-width="${active?3:2}"/>
-      ${active?`<circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="#152f21" stroke-width="2" opacity=".5"/>`:''}
+      ${active?`<circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="#152f21" stroke-width="2" opacity=".5"/>`:''}${work.partners.has(r.hash)?`<circle cx="${cx}" cy="${cy}" r="10" class="impact-partner-ring"/>`:''}
       <circle cx="${cx}" cy="${cy}" r="${active?8:5.5}" fill="${undefinedMetric?'#fff':color(r.transition)}" stroke="${active?'#152f21':undefinedMetric?'#8d9f91':'#fff'}" stroke-width="${active?3:2}" role="button" tabindex="0" aria-current="${active?'true':'false'}" aria-label="${e(msg)}. Select release" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-timeline-dot"><title>${e(msg)}</title></circle>`;
   }).join('');
   const selected=records.find(r=>r.hash===selectedHash);
@@ -183,7 +246,7 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
   const selectedText=selected?.tag.length>24?selected.tag.slice(0,21)+'…':selected?.tag||'';
   const captionW=Math.max(110,Math.min(230,selectedText.length*7+70));
   const captionLeft=Math.max(50,Math.min(width-captionW-23,selectedX-captionW/2));
-  const caption=selected?`<line x1="${selectedX}" y1="35" x2="${selectedX}" y2="260" stroke="#254e35" stroke-width="1" stroke-dasharray="4 6" opacity=".44" pointer-events="none"/><rect x="${captionLeft}" y="8" width="${captionW}" height="25" rx="5" fill="#244c37" pointer-events="none"/><text x="${captionLeft+10}" y="24.5" font-size="11" font-family="sans-serif" fill="#fff" pointer-events="none">Selected · ${e(selectedText)}</text>`:'';
+  const caption=selected?`<line x1="${selectedX}" y1="35" x2="${selectedX}" y2="${260+o}" stroke="#254e35" stroke-width="1" stroke-dasharray="4 6" opacity=".44" pointer-events="none"/><rect x="${captionLeft}" y="8" width="${captionW}" height="25" rx="5" fill="#244c37" pointer-events="none"/><text x="${captionLeft+10}" y="24.5" font-size="11" font-family="sans-serif" fill="#fff" pointer-events="none">Selected · ${e(selectedText)}</text>`:'';
   const panSpan=extent.end-extent.start-(max-min);
   const panProgress=panSpan>0?Math.round(1000*(min-extent.start)/panSpan):0;
   const overviewStart=100*(min-extent.start)/(extent.end-extent.start);
@@ -209,15 +272,16 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
     <div class="impact-timeline-scroll" tabindex="0" aria-label="Release timeline. Arrow keys pan; plus and minus zoom; 0 shows all releases"><svg viewBox="0 0 ${width} ${height}" width="100%" data-timeline-plot data-start="${min}" data-end="${max}" data-plot-left="58" data-plot-width="${width-94}" data-view-width="${width}" role="img" aria-label="Tag-date release timeline from ${e(windowDates.from)} to ${e(windowDates.to)}. Interactive markers select a tagged release.">
       ${[0,.5,1].map(f=>`<line x1="48" y1="${y(f*hi)}" x2="${width-28}" y2="${y(f*hi)}" stroke="#e4ebe1" stroke-dasharray="2 4"/><text x="40" y="${y(f*hi)+4}" text-anchor="end" class="impact-axis">${humanMetric(f*hi,model.metric)}</text>`).join('')}
       <line x1="48" y1="170" x2="${width-28}" y2="170" stroke="#bbcfc0"/>
+      ${work.svg}
       ${stems}${caption}
-      <text x="14" y="235" class="impact-axis" transform="rotate(-90,14,235)">AUTHORED</text>
-      <line x1="48" y1="246" x2="${width-28}" y2="246" stroke="#d6e6d6"/>
+      <text x="14" y="${235+o}" class="impact-axis" transform="rotate(-90,14,${235+o})">AUTHORED</text>
+      <line x1="48" y1="${246+o}" x2="${width-28}" y2="${246+o}" stroke="#d6e6d6"/>
       ${bars}${versionMarkers}
-      ${ticks.filter((_,i)=>i%skip===0).map(t=>`<line x1="${x(t.time)}" y1="249" x2="${x(t.time)}" y2="254" stroke="#9aae9c"/><text x="${x(t.time)}" y="273" text-anchor="middle" class="impact-axis">${e(t.label)}</text>`).join('')}
+      ${ticks.filter((_,i)=>i%skip===0).map(t=>`<line x1="${x(t.time)}" y1="${249+o}" x2="${x(t.time)}" y2="${254+o}" stroke="#9aae9c"/><text x="${x(t.time)}" y="${273+o}" text-anchor="middle" class="impact-axis">${e(t.label)}</text>`).join('')}
     </svg></div>
     ${!records.length?'<p class="impact-muted" role="status">No release tags fall within this timeline range. Adjust the dates or choose a release from the dropdown to locate it.</p>':''}
     <div class="impact-timeline-legend">${['major','minor','patch','prerelease','baseline','unclassified'].map(kind=>`<span><i style="background:${color(kind)}"></i>${typeLabel(kind)}</span>`).join('')}
-      <span><i style="background:#9dbfac;border-radius:1px"></i>Authored commits (including unreleased)</span><span><i style="background:#ad7d3c;transform:rotate(45deg);border-radius:0"></i>VERSION touched (author date)</span><span><i style="background:#fff;border:2px solid #8d9f91"></i>Undefined measure</span></div>`;
+      <span><i style="background:#9dbfac;border-radius:1px"></i>Authored commits (including unreleased)</span><span><i style="background:#ad7d3c;transform:rotate(45deg);border-radius:0"></i>VERSION touched (author date)</span><span><i style="background:#fff;border:2px solid #8d9f91"></i>Undefined measure</span><span class="impact-flight-key">Work in flight ${FLIGHT_COLOURS.map((c,i)=>`<i style="background:${c}" title="${i+1}${i===3?'+':''} releases"></i>`).join('')}&nbsp;1 → 4+ releases</span><span><i class="impact-shared-key"></i>Work days shared with the selected release</span></div>`;
 }
 
 export function impactReleasePicker(model, hash) {
