@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=bankhols-20261119-1';
-import { generateDemoLog } from './demo-data.js?v=bankhols-20261119-1';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=bankhols-20261119-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=bankhols-20261119-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=bankhols-20261119-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=bankhols-20261119-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=bankhols-20261119-1';
-import { releaseScorecard } from './release-scorecard.js?v=bankhols-20261119-1';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=bankhols-20261119-1';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=bankhols-20261119-1';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=bankhols-20261119-1';
-import {WEEKDAY_LABELS,BANK_HOLIDAYS,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=bankhols-20261119-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=bankhols-20261119-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=bankhols-20261119-1';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=bankhols-20261119-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=bankhols-20261119-1';
-import { buildStoryAnalysis } from './stories.js?v=bankhols-20261119-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=bankhols-20261119-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=bankhols-20261119-1';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=bankhols-20261119-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=bankhols-20261119-1';
-import { downloadFilename } from './download-names.js?v=bankhols-20261119-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=bankhols-20261119-1';
-import { buildDeploymentIndex } from './deployments.js?v=bankhols-20261119-1';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=bankhols-20261119-1';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=bankhols-20261119-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=bankhols-20261119-1';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=bankhols-20261119-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=bankhols-20261119-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=bankhols-20261119-1';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=bankhols-20261119-1';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=bankhols-20261119-1';
+} from './domain.js?v=recede-20261119-1';
+import { generateDemoLog } from './demo-data.js?v=recede-20261119-1';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=recede-20261119-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=recede-20261119-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=recede-20261119-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=recede-20261119-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=recede-20261119-1';
+import { releaseScorecard } from './release-scorecard.js?v=recede-20261119-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=recede-20261119-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=recede-20261119-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=recede-20261119-1';
+import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=recede-20261119-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=recede-20261119-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=recede-20261119-1';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=recede-20261119-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=recede-20261119-1';
+import { buildStoryAnalysis } from './stories.js?v=recede-20261119-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=recede-20261119-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=recede-20261119-1';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=recede-20261119-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=recede-20261119-1';
+import { downloadFilename } from './download-names.js?v=recede-20261119-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=recede-20261119-1';
+import { buildDeploymentIndex } from './deployments.js?v=recede-20261119-1';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=recede-20261119-1';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=recede-20261119-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=recede-20261119-1';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=recede-20261119-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=recede-20261119-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=recede-20261119-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=recede-20261119-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=recede-20261119-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=bankhols-20261119-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=recede-20261119-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -1343,7 +1343,7 @@ function pulseMomentumCellStyle(score) {
   return `background:${fill};border-color:${fill};color:${t>.65?'#fff':'#2a3933'}`;
 }
 function pulseMomentumLegend() {
-  return `<div class="pulse-gap-legend" role="group" aria-label="Contribution momentum: negative scores indicate cooling, zero is unchanged, positive scores indicate building. Unknown dates are hatched. Non-working days are unscored, and any work on them shows as a dot and still counts."><span>−100 · cooling</span><span class="pulse-gap-swatches">${[-100,-50,0,50,100].map(score=>`<i style="${pulseMomentumCellStyle(score)}" title="${momentumNumber(score)}" aria-hidden="true"></i>`).join('')}</span><span>+100 · building</span><span class="pulse-gap-missing">▨ · not scored</span><span class="pulse-gap-missing"><i class="pulse-offday has-work" aria-hidden="true"><i class="pulse-offday-work"></i></i> work on a non-working day · counted, not scored</span></div>`;
+  return `<div class="pulse-gap-legend" role="group" aria-label="Contribution momentum: negative scores indicate cooling, zero is unchanged, positive scores indicate building. Unknown dates are hatched. Non-working days are unscored, and any work on them shows full size with a warm ring and still counts."><span>−100 · cooling</span><span class="pulse-gap-swatches">${[-100,-50,0,50,100].map(score=>`<i style="${pulseMomentumCellStyle(score)}" title="${momentumNumber(score)}" aria-hidden="true"></i>`).join('')}</span><span>+100 · building</span><span class="pulse-gap-missing">▨ · not scored</span>${pulseOffdayKey(true)}</div>`;
 }
 function pulseActivitySummary(model) {
   return `<div class="pulse-gap-summary-head"><strong>How the contribution is distributed</strong><span>Clock span, substantive activity windows and consistency are descriptive evidence—not hours worked.</span></div>
@@ -1438,7 +1438,7 @@ function pulseGapCellStyle(score) {
   return `background:${fill};border-color:${fill};color:${t>.59?'#fff':'#493024'}`;
 }
 function pulseGapLegend() {
-  return `<div class="pulse-gap-legend" role="group" aria-label="Combined signal from zero to one hundred, fixed across contributors and date ranges. Unavailable dates are hatched. Non-working days are unscored, and any work on them shows as a dot and still counts."><span>0 · neutral</span><span class="pulse-gap-swatches">${[0,25,50,75,100].map(score=>`<i style="${pulseGapCellStyle(score)}" title="${score} of 100" aria-hidden="true"></i>`).join('')}</span><span>100 · high signal</span><span class="pulse-gap-missing">▨ · not scored</span><span class="pulse-gap-missing"><i class="pulse-offday has-work" aria-hidden="true"><i class="pulse-offday-work"></i></i> work on a non-working day · counted, not scored</span></div>`;
+  return `<div class="pulse-gap-legend" role="group" aria-label="Combined signal from zero to one hundred, fixed across contributors and date ranges. Unavailable dates are hatched. Non-working days are unscored, and any work on them shows full size with a warm ring and still counts."><span>0 · neutral</span><span class="pulse-gap-swatches">${[0,25,50,75,100].map(score=>`<i style="${pulseGapCellStyle(score)}" title="${score} of 100" aria-hidden="true"></i>`).join('')}</span><span>100 · high signal</span><span class="pulse-gap-missing">▨ · not scored</span>${pulseOffdayKey(true)}</div>`;
 }
 function pulseGapDailyLabel(person,cell) {
   const base=`${person}, ${formatDate(cell.date)}: ${number.format(cell.commits)} authored commits and ${number.format(cell.churn)} non-VERSION changed lines`;
@@ -1639,6 +1639,8 @@ function dailyPulseMonths(view) {
   return markers;
 }
 
+/** One key for every daily lens: each person's days off recede; work on them is ringed. */
+const pulseOffdayKey=(unscored=false)=>`<span class="pulse-offday-key"><span><i class="pulse-offday" aria-hidden="true"></i>day off</span><span><i class="pulse-offday has-work" aria-hidden="true"></i>worked on a day off${unscored?' · counted, not scored':''}</span></span>`;
 function renderDailyPulse(view) {
   const weeks=view.weeks;
   const gapMode=!!pulseReleaseGap,momentumMode=!!pulseMomentum,levelMode=state.pulseLens==='level',signalMode=gapMode||momentumMode||levelMode;
@@ -1648,8 +1650,10 @@ function renderDailyPulse(view) {
   const weekColumns=`repeat(${weeks.length}, var(--pulse-week-size))`;
   const months=dailyPulseMonths(view).map(m=>`<span class="pulse-daily-month" style="grid-column:${m.index+1}">${esc(m.label)}</span>`).join('');
   const weekdays=DAY_NAMES.map((day,i)=>`<span aria-hidden="true">${i%2===0?esc(day):''}</span>`).join('');
+  const workingDays=workingDaysById();
   const rows=view.contributors.map(c=>{
     const record=signalMode?signal.byId.get(c.id):null;
+    const schedule=scheduleById(workingDays,c.id);
     const cells=weeks.flatMap(week=>Array.from({length:7},(_,i)=>{
       const day=dateAtDay(dayNumber(week)+i);
       if(day<view.start||day>view.end)return '<span class="pulse-daily-outside" aria-hidden="true"></span>';
@@ -1657,10 +1661,11 @@ function renderDailyPulse(view) {
       const value=signalMode?(levelMode?(cell?.level??null):(cell?.score??null)):(c.daily[state.pulseMetric][day]||0);
       const label=gapMode ? pulseGapDailyLabel(c.displayName,cell) : momentumMode ? `${pulseMomentumDailyLabel(c.displayName,cell)}; ${pulseLevelDailyLabel(c.displayName,pulseLevel?.byId.get(c.id)?.daily.get(day))}` : levelMode?pulseLevelDailyLabel(c.displayName,cell) :
         `${c.displayName}, ${formatDate(day)}: ${number.format(value)} ${METRICS[state.pulseMetric].unit}; ${pulseTemporalDailyLabel(pulseTemporal?.byId.get(c.id)?.daily.get(day)||emptyTemporalDay(pulseTimeSettings()))}. View day activity.`;
-      // A non-working day is unscored but never blank: its work shows as a dot, darker for more commits.
-      const offDay=signalMode&&cell?.reason==='non-working-day';
-      const work=offDay&&cell.commits?`<i class="pulse-offday-work" style="opacity:${Math.min(1,.35+.65*cell.commits/state.pulseBusyDay).toFixed(2)}" aria-hidden="true"></i>`:'';
-      return `<button type="button" class="pulse-cell pulse-daily-cell ${offDay?`pulse-offday${cell.commits?' has-work':''}`:''} ${levelMode?'pulse-velocity-cell pulse-velocity-day':''}" style="${offDay?'':signalStyle?signalStyle(value):intensityStyle(value,scale)}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(label)}" aria-label="${esc(label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${work}${levelMode?`<span aria-hidden="true">${esc(velocityCellText(value))}</span>`:''}</button>`;
+      // Each person's days off recede to a small dot; work on one returns to full size with a warm ring, so it is never lost.
+      const offDay=signalMode?cell?.reason==='non-working-day':!schedule.isWorkingDay(day);
+      const offWork=offDay&&(signalMode?cell.commits>0:value>0);
+      const cellStyle=offDay?(offWork?(signalMode?`--offday-work:${Math.round(100*Math.min(1,.3+.7*cell.commits/state.pulseBusyDay))}%`:intensityStyle(value,scale)):''):signalStyle?signalStyle(value):intensityStyle(value,scale);
+      return `<button type="button" class="pulse-cell pulse-daily-cell ${offDay?`pulse-offday${offWork?' has-work':''}${offWork&&signalMode?' is-unscored':''}`:''} ${levelMode?'pulse-velocity-cell pulse-velocity-day':''}" style="${cellStyle}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(offDay&&!signalMode?`${label} Not one of ${c.displayName}'s working days.`:label)}" aria-label="${esc(offDay&&!signalMode?`${label} Not one of ${c.displayName}'s working days`:label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${levelMode&&!offDay?`<span aria-hidden="true">${esc(velocityCellText(value))}</span>`:''}</button>`;
     })).join('');
     return `<div class="pulse-daily-contributor"><div class="pulse-daily-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div><div class="pulse-weekdays">${weekdays}</div><div class="pulse-day-cells" style="grid-template-columns:${weekColumns}">${cells}</div></div>`;
   }).join('');
@@ -1744,9 +1749,9 @@ function renderPulse(view) {
     :levelMode
     ? `Absolute recorded velocity is a fixed-scale, uncapped composite of authored commits, non-VERSION changed lines, authored changes included in releases, and temporal distribution. Daily and monthly cells show their actual numeric values: monthly values are averages per covered calendar day, including quiet days. The colour thresholds never adapt to peers or filtered maxima. The table below shows selected-period averages and a separate trailing ${state.pulseLevelWorkdays}-working-day view. One reference index unit corresponds to the weighted model’s reference inputs; this is not a work quota, measure of hours or quality.`
     :gapMode
-    ? `Signal (0–100) = 100 × weighted release gap × max(1 − daily commits / ${state.pulseBusyDay}, 0) × max(1 − daily non-VERSION changed lines / ${state.pulseDailyChurn}, 0) × (1 − 0.15 × churn-weighted time distribution). The gap grows to 100% in ${state.pulseGapHorizon} days; incremental tagged releases reduce it by min(your shipped changed lines / ${state.pulseReleaseLines}, 1). A busy commit day or substantial churn can neutralise the signal; meaningful changes spread across distinct ${state.pulseTemporalPeriod}-minute windows can modestly soften any remainder (max 15%). ${daily?'Each square is one date; open a cell for its evidence.':'Each monthly square averages eligible working-day signals.'} Each person's non-working days (set per identity; Mon–Fri unless changed) are not scored, but work on them shows as a dot and still counts. Unobserved dates and days before measurable release credit are not scored.`
+    ? `Signal (0–100) = 100 × weighted release gap × max(1 − daily commits / ${state.pulseBusyDay}, 0) × max(1 − daily non-VERSION changed lines / ${state.pulseDailyChurn}, 0) × (1 − 0.15 × churn-weighted time distribution). The gap grows to 100% in ${state.pulseGapHorizon} days; incremental tagged releases reduce it by min(your shipped changed lines / ${state.pulseReleaseLines}, 1). A busy commit day or substantial churn can neutralise the signal; meaningful changes spread across distinct ${state.pulseTemporalPeriod}-minute windows can modestly soften any remainder (max 15%). ${daily?'Each square is one date; open a cell for its evidence.':'Each monthly square averages eligible working-day signals.'} Each person's non-working days (set per identity; Mon–Fri unless changed) are not scored, but they recede to a small dot, and work on them shows full size with a warm ring and still counts. Unobserved dates and days before measurable release credit are not scored.`
     :momentumMode
-    ? `Direction (−100 to +100): compare the latest ${state.pulseMomentumWorkdays} workdays with the prior ${state.pulseMomentumWorkdays} workdays for the same person. Daily contribution units blend 25% commits, 45% non-VERSION changed lines, 15% churn-weighted distribution, and 15% authored lines shipped in tagged releases. Window pace = 75% average units + 25% consistency (share of workdays with ≥ ${state.pulseMeaningfulLines} changed lines). Momentum = 100 × (recent pace − previous pace) / (recent pace + previous pace + 0.1). Positive is building; negative is cooling; zero can also mean no observed activity. The summary below separately shows absolute recent recorded contribution level. ${daily?'Open a date for both windows and today’s evidence.':'Monthly cells average scored working days, so opposing directions can cancel.'} At least ${2*state.pulseMomentumWorkdays} imported working days are required. Each person's non-working days (set per identity; Mon–Fri unless changed) are not scored, but work on them shows as a dot and counts in the window that spans it.`
+    ? `Direction (−100 to +100): compare the latest ${state.pulseMomentumWorkdays} workdays with the prior ${state.pulseMomentumWorkdays} workdays for the same person. Daily contribution units blend 25% commits, 45% non-VERSION changed lines, 15% churn-weighted distribution, and 15% authored lines shipped in tagged releases. Window pace = 75% average units + 25% consistency (share of workdays with ≥ ${state.pulseMeaningfulLines} changed lines). Momentum = 100 × (recent pace − previous pace) / (recent pace + previous pace + 0.1). Positive is building; negative is cooling; zero can also mean no observed activity. The summary below separately shows absolute recent recorded contribution level. ${daily?'Open a date for both windows and today’s evidence.':'Monthly cells average scored working days, so opposing directions can cancel.'} At least ${2*state.pulseMomentumWorkdays} imported working days are required. Each person's non-working days (set per identity; Mon–Fri unless changed) are not scored, but they recede to a small dot, and work on them shows full size with a warm ring and counts in the window that spans it.`
     :daily
     ? `Each square is one authored day (Mon–Sun). Open a cell to see its first/last commit, span, active ${state.pulseTemporalPeriod}-minute windows and churn-weighted distribution. A single commit has unknown spread, not zero contribution. Scroll sideways for older weeks.`
     : 'One square per person and calendar month. Intensity shows the chosen colour-by measure. The distribution summary underneath adds meaningful-day consistency, recorded clock span and timed-window coverage.');
@@ -1785,7 +1790,7 @@ function renderPulse(view) {
     }
     $('pulse-key').innerHTML=motionVisible?'<span class="signature-axis-note">Shared plot scale across frames / observed Git evidence, not performance</span>':signatureMode?(state.continuityView==='signature'?renderSignatureLegend():
       '<span class="signature-axis-note">Fixed reference lines · no contributor rankings or inferred work hours</span>'):
-      legend||(levelMode?velocityLegend():intensityLegend(scale,n=>number.format(n)));
+      legend||`${levelMode?velocityLegend():intensityLegend(scale,n=>number.format(n))}${daily?pulseOffdayKey(levelMode):''}`;
     setText('pulse-context',motionVisible?`TIME EXPLORER / ${motionLens.toUpperCase()} / ${state.motionWeeks}-WEEK WINDOWS`:signatureMode?`CONTRIBUTION ${state.continuityView==='signature'?'SIGNATURE · THREE WEEKLY TRACKS':state.continuityView.toUpperCase()+' QUADRANT · SELECTED PERIOD'}`:signalMode?`${caption} / ${daily?'DAILY':weekly?'WEEKLY':'MONTHLY'} · ${continuityMode?'TWO SEPARATE OBSERVATION TRACKS':levelMode?'FIXED ABSOLUTE INDEX · INDEPENDENT OF COHORT':`FIXED ${momentumMode?'DIVERGING −100 TO +100':'0–100'} SCALE`}`:`${caption} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(scale.max)} SCALE`);
     container.scrollLeft=motionVisible?0:(scrollToLatest?container.scrollWidth:oldScroll);
   }

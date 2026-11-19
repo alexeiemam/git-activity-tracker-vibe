@@ -1,11 +1,11 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=bankhols-20261119-1';
-import { mergeGitHistories, isCompleteRecapture, hasImportableEvidence } from './history-merge.js?v=bankhols-20261119-1';
-import { impactAnalysis, applyReleaseMeasures } from './impact.js?v=bankhols-20261119-1';
-import { buildStoryAnalysis } from './stories.js?v=bankhols-20261119-1';
-import { buildEvidenceIndex } from './perspectives.js?v=bankhols-20261119-1';
-import { buildDeploymentIndex } from './deployments.js?v=bankhols-20261119-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=bankhols-20261119-1';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=recede-20261119-1';
+import { mergeGitHistories, isCompleteRecapture, hasImportableEvidence } from './history-merge.js?v=recede-20261119-1';
+import { impactAnalysis, applyReleaseMeasures } from './impact.js?v=recede-20261119-1';
+import { buildStoryAnalysis } from './stories.js?v=recede-20261119-1';
+import { buildEvidenceIndex } from './perspectives.js?v=recede-20261119-1';
+import { buildDeploymentIndex } from './deployments.js?v=recede-20261119-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=recede-20261119-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;

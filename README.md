@@ -522,6 +522,12 @@ trend against the same contributor's recent history), plus **Absolute velocity**
 **Daily / Monthly** cells; Continuity additionally supports **Weekly** cells
 without changing the globally filtered commit policy.
 
+In every daily lens each person's own days off (from their working days, so a
+Mon–Thu identity's Fridays too) recede to a small dot, so a working week
+reads as a solid band and an empty day off reads as expected rather than as a
+gap. Work on a day off returns to full size with a warm inner ring: the eye
+goes straight to it, and it always counts.
+
 The release-gap factor is no longer a binary "last release resets everything"
 clock: **the contributor's absolute authored text-line changes in each
 incremental tagged release provide a partial or full reset.** Count additions
@@ -590,7 +596,8 @@ Monthly cells contain the arithmetic mean of
 outside imported history and days without a prior measurable release
 contribution are unscored (hatched), not zero. Each person's non-working days
 (set per identity; Mon–Fri unless changed) are unscored too, but never blank:
-work on them shows as a green dot, darker for more commits, and still counts. Filtering the visible
+they recede to a small dot, and work on them returns to full size, shaded
+greener for more commits with a warm ring, and still counts. Filtering the visible
 authored dates does not erase release credits: releases always come from the
 full imported, policy-filtered release index. The release and shared temporal settings, lens and granularity persist across
 session export/import; older sessions restore missing settings to their
@@ -855,8 +862,8 @@ the *other* lens do not silently change this one.
 A day is scored only with **2N in-coverage working days** in the full
 imported history. Narrowing the displayed date filter does not erase either
 comparison period. Outside-history days and incomplete warm-up periods are
-hatched as *unscored*; non-working days are unscored, but their work shows as
-a green dot and counts in the window that spans it. Monthly cells average the **signed daily
+hatched as *unscored*; non-working days are unscored and recede to a dot, but their work
+shows full size with a warm ring and counts in the window that spans it. Monthly cells average the **signed daily
 scores**, so a month with building and cooling phases may average near zero;
 hover text reports both counts. Daily hover/focus/click evidence includes both
 windows' commits, churn, shipped lines, normalised units and that day's Git
