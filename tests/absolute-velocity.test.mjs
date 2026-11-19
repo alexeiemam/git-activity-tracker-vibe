@@ -8,11 +8,14 @@ const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
 
 test('velocity uses fixed numeric references, regardless of cohort or selected period',()=>{
   assert.ok(Math.abs(contributionLevelUnits({commits:4,churn:200,releaseLines:200,distribution:1})-1)<1e-10);
-  assert.equal(VELOCITY_MARKS.at(-1),3);
+  assert.deepEqual(VELOCITY_MARKS,[0,.25,.5,.75,1,1.5,2],'bands where real days sit; 1 is a reference day');
   assert.equal(velocityPosition(0),null);
   assert.ok(velocityPosition(.5)<velocityPosition(1));
   assert.ok(velocityPosition(1)<velocityPosition(2));
-  assert.equal(velocityColour(3),velocityColour(300),'colour caps, observable index does not');
+  assert.equal(velocityColour(2),velocityColour(300),'colour caps, observable index does not');
+  assert.equal(velocityColour(.8),velocityColour(.95),'one band, one colour');
+  const bands=[.1,.3,.6,.8,1.2,1.7,2.5].map(velocityColour);
+  assert.equal(new Set(bands).size,bands.length,'every band is a distinct step');
   assert.notEqual(velocityColour(.5),velocityColour(1));
   assert.notEqual(velocityColour(1),velocityColour(2));
   assert.notEqual(velocityColour(0),velocityColour(null));
@@ -35,7 +38,7 @@ test('absolute velocity cells show real values without peer bars, honours origin
   assert.match(app,/levelMode\?velocityStyle:null/); // module import / usage for fixed lens
   assert.match(app,/pulse-velocity-cell pulse-velocity-month/);
   assert.match(app,/pulse-velocity-cell pulse-velocity-day/);
-  assert.match(app,/velocityCellText\(value\)/);
+  assert.doesNotMatch(app,/velocityCellText\(value\)/,'daily cells carry no numbers; hover and evidence give the value');
   assert.match(app,/velocityCellText\(v\)/);
   assert.match(app,/velocityLegend\(\)/);
   assert.match(app,/pulseLevelWorkdays:state\.pulseLevelWorkdays/);

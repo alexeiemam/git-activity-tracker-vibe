@@ -628,15 +628,20 @@ unit-calibration example, **not a quota or performance target**. Values above
 1.0 remain uncapped and retain diminishing logarithmic returns. Lines can be
 inflated by generated changes or rework and do not establish delivery quality.
 
-- **Daily cells:** numeric index directly in each cell; the colour at 0.5,
-  1.0 or 2.0 is identical for every contributor, date range and selection.
-  One substantial commit retains its ordinary churn credit even without
-  measurable activity spread. Weekends with authored activity are included.
+- **Daily cells:** colour only, no numbers (the exact index is in the hover
+  text and the day's evidence); the colour for a value is identical for every
+  contributor, date range and selection. One substantial commit retains its
+  ordinary churn credit even without measurable activity spread. Each
+  person's days off recede to a dot; work on one keeps its velocity colour
+  with a warm ring, and counts.
 - **Monthly cells:** average daily index over *covered calendar days*,
   including zero-activity days. Numeric value printed in each wider cell;
   partial months use only covered dates.
-- **Fixed legend:** reference marks 0, 0.25, 0.5, 1, 1.5, 2 and 3+;
-  exact scores above 3 are still shown, not capped.
+- **Fixed bands:** 1 is a reference day (4 commits, 200 changed and 200
+  shipped lines, spread across the day). Seven stepped shades, evenly spaced
+  from pale mint to deep green, mark under 0.25, 0.25, 0.5, 0.75, 1, 1.5 and
+  2+, where real days sit, so neighbouring bands stay distinct. Exact scores
+  above 2 are still reported, not capped.
 - **Recent velocity table:** selected-period mean plus separate trailing
   5/10/20-workday pace with authored commits, non-VERSION churn,
   release-included line changes and consistency as transparent evidence.

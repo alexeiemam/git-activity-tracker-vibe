@@ -1095,8 +1095,8 @@ button.primary-shape{cursor:pointer;line-height:1.4}button.primary-shape:hover{f
 .pulse-offday:not(.has-work)::before{content:'';width:30%;aspect-ratio:1;border-radius:50%;background:#cbd5c8}
 .pulse-offday.has-work{border-color:transparent;box-shadow:inset 0 0 0 1.5px var(--orange)}
 .pulse-offday.has-work.is-unscored{background:color-mix(in srgb,#1f6a49 var(--offday-work,60%),#eef2ec)}
-.pulse-gap-legend i.pulse-offday,.pulse-key i.pulse-offday{display:inline-grid;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
-.pulse-key i.pulse-offday.has-work,.pulse-gap-legend i.pulse-offday.has-work{background:#5e9b7d}
+.pulse-offday-key i.pulse-offday{display:inline-grid;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+.pulse-offday-key i.pulse-offday.has-work{background:#5e9b7d}
 .pulse-offday-key{display:inline-flex;align-items:center;gap:12px;flex-wrap:wrap;font:10px var(--mono);color:var(--muted)}
 .pulse-gap-month{min-width:22px}
 .pulse-gap-summary{margin-top:21px;padding-top:18px;border-top:1px solid var(--line-soft)}

@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=recede-20261119-1';
-import { generateDemoLog } from './demo-data.js?v=recede-20261119-1';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=recede-20261119-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=recede-20261119-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=recede-20261119-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=recede-20261119-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=recede-20261119-1';
-import { releaseScorecard } from './release-scorecard.js?v=recede-20261119-1';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=recede-20261119-1';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=recede-20261119-1';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=recede-20261119-1';
-import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=recede-20261119-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=recede-20261119-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=recede-20261119-1';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=recede-20261119-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=recede-20261119-1';
-import { buildStoryAnalysis } from './stories.js?v=recede-20261119-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=recede-20261119-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=recede-20261119-1';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=recede-20261119-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=recede-20261119-1';
-import { downloadFilename } from './download-names.js?v=recede-20261119-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=recede-20261119-1';
-import { buildDeploymentIndex } from './deployments.js?v=recede-20261119-1';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=recede-20261119-1';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=recede-20261119-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=recede-20261119-1';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=recede-20261119-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=recede-20261119-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=recede-20261119-1';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=recede-20261119-1';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=recede-20261119-1';
+} from './domain.js?v=velocity-20261119-1';
+import { generateDemoLog } from './demo-data.js?v=velocity-20261119-1';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=velocity-20261119-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=velocity-20261119-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=velocity-20261119-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=velocity-20261119-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=velocity-20261119-1';
+import { releaseScorecard } from './release-scorecard.js?v=velocity-20261119-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=velocity-20261119-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=velocity-20261119-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=velocity-20261119-1';
+import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=velocity-20261119-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=velocity-20261119-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=velocity-20261119-1';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=velocity-20261119-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=velocity-20261119-1';
+import { buildStoryAnalysis } from './stories.js?v=velocity-20261119-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=velocity-20261119-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=velocity-20261119-1';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=velocity-20261119-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=velocity-20261119-1';
+import { downloadFilename } from './download-names.js?v=velocity-20261119-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=velocity-20261119-1';
+import { buildDeploymentIndex } from './deployments.js?v=velocity-20261119-1';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=velocity-20261119-1';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=velocity-20261119-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=velocity-20261119-1';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=velocity-20261119-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=velocity-20261119-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=velocity-20261119-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=velocity-20261119-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=velocity-20261119-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=recede-20261119-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=velocity-20261119-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -1662,10 +1662,12 @@ function renderDailyPulse(view) {
       const label=gapMode ? pulseGapDailyLabel(c.displayName,cell) : momentumMode ? `${pulseMomentumDailyLabel(c.displayName,cell)}; ${pulseLevelDailyLabel(c.displayName,pulseLevel?.byId.get(c.id)?.daily.get(day))}` : levelMode?pulseLevelDailyLabel(c.displayName,cell) :
         `${c.displayName}, ${formatDate(day)}: ${number.format(value)} ${METRICS[state.pulseMetric].unit}; ${pulseTemporalDailyLabel(pulseTemporal?.byId.get(c.id)?.daily.get(day)||emptyTemporalDay(pulseTimeSettings()))}. View day activity.`;
       // Each person's days off recede to a small dot; work on one returns to full size with a warm ring, so it is never lost.
-      const offDay=signalMode?cell?.reason==='non-working-day':!schedule.isWorkingDay(day);
-      const offWork=offDay&&(signalMode?cell.commits>0:value>0);
-      const cellStyle=offDay?(offWork?(signalMode?`--offday-work:${Math.round(100*Math.min(1,.3+.7*cell.commits/state.pulseBusyDay))}%`:intensityStyle(value,scale)):''):signalStyle?signalStyle(value):intensityStyle(value,scale);
-      return `<button type="button" class="pulse-cell pulse-daily-cell ${offDay?`pulse-offday${offWork?' has-work':''}${offWork&&signalMode?' is-unscored':''}`:''} ${levelMode?'pulse-velocity-cell pulse-velocity-day':''}" style="${cellStyle}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(offDay&&!signalMode?`${label} Not one of ${c.displayName}'s working days.`:label)}" aria-label="${esc(offDay&&!signalMode?`${label} Not one of ${c.displayName}'s working days`:label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${levelMode&&!offDay?`<span aria-hidden="true">${esc(velocityCellText(value))}</span>`:''}</button>`;
+      // Velocity scores every day, so its days off come from the schedule and keep their own colour when worked.
+      const scoredOff=!signalMode||levelMode;
+      const offDay=levelMode?cell?.reason==='scored'&&cell.weekday===false:signalMode?cell?.reason==='non-working-day':!schedule.isWorkingDay(day);
+      const offWork=offDay&&(scoredOff?value>0:cell.commits>0);
+      const cellStyle=offDay?(offWork?(!scoredOff?`--offday-work:${Math.round(100*Math.min(1,.3+.7*cell.commits/state.pulseBusyDay))}%`:(signalStyle||((v)=>intensityStyle(v,scale)))(value)):''):signalStyle?signalStyle(value):intensityStyle(value,scale);
+      return `<button type="button" class="pulse-cell pulse-daily-cell ${offDay?`pulse-offday${offWork?' has-work':''}${offWork&&!scoredOff?' is-unscored':''}`:''} ${levelMode?'pulse-velocity-cell pulse-velocity-day':''}" style="${cellStyle}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(offDay&&scoredOff?`${label} Not one of ${c.displayName}'s working days.`:label)}" aria-label="${esc(offDay&&scoredOff?`${label} Not one of ${c.displayName}'s working days`:label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover"></button>`;
     })).join('');
     return `<div class="pulse-daily-contributor"><div class="pulse-daily-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div><div class="pulse-weekdays">${weekdays}</div><div class="pulse-day-cells" style="grid-template-columns:${weekColumns}">${cells}</div></div>`;
   }).join('');
@@ -1747,7 +1749,7 @@ function renderPulse(view) {
     :continuityMode
     ? `Continuity is measured against the weekday pattern selected for each contributor, not a fixed five-day week. ${weekly?'Weekly cells display count shortfalls (−) and additional qualifying dates (+). An equals sign means the total number of qualifying dates met the reference, including substitute dates.':'Daily and monthly cells preserve the same expected-versus-extra distinction.'} The lower band represents tagged-release inclusion; “r” counts distinct releases. A meaningful recorded date requires ≥ ${state.pulseMeaningfulLines} non-VERSION changed lines. A qualifying off-pattern date may substitute for a named scheduled date in the same week, but a surplus in another week cannot erase a shortfall. The rolling ${state.pulseContinuityWeeks}-week view uses complete imported history, and a zero-day reference has no percentage denominator. Click any cell for the underlying dates and release evidence. This is a Git observation, not a claim about attendance or work hours.`
     :levelMode
-    ? `Absolute recorded velocity is a fixed-scale, uncapped composite of authored commits, non-VERSION changed lines, authored changes included in releases, and temporal distribution. Daily and monthly cells show their actual numeric values: monthly values are averages per covered calendar day, including quiet days. The colour thresholds never adapt to peers or filtered maxima. The table below shows selected-period averages and a separate trailing ${state.pulseLevelWorkdays}-working-day view. One reference index unit corresponds to the weighted model’s reference inputs; this is not a work quota, measure of hours or quality.`
+    ? `Absolute recorded velocity is a fixed-scale, uncapped composite of authored commits, non-VERSION changed lines, authored changes included in releases, and temporal distribution. Colour bands are fixed: 1 is a reference day (4 commits, 200 changed and 200 shipped lines, spread across the day). Daily cells give the exact value on hover; monthly cells print it, averaged per covered calendar day, including quiet days. The colour thresholds never adapt to peers or filtered maxima. The table below shows selected-period averages and a separate trailing ${state.pulseLevelWorkdays}-working-day view. One reference index unit corresponds to the weighted model’s reference inputs; this is not a work quota, measure of hours or quality.`
     :gapMode
     ? `Signal (0–100) = 100 × weighted release gap × max(1 − daily commits / ${state.pulseBusyDay}, 0) × max(1 − daily non-VERSION changed lines / ${state.pulseDailyChurn}, 0) × (1 − 0.15 × churn-weighted time distribution). The gap grows to 100% in ${state.pulseGapHorizon} days; incremental tagged releases reduce it by min(your shipped changed lines / ${state.pulseReleaseLines}, 1). A busy commit day or substantial churn can neutralise the signal; meaningful changes spread across distinct ${state.pulseTemporalPeriod}-minute windows can modestly soften any remainder (max 15%). ${daily?'Each square is one date; open a cell for its evidence.':'Each monthly square averages eligible working-day signals.'} Each person's non-working days (set per identity; Mon–Fri unless changed) are not scored, but they recede to a small dot, and work on them shows full size with a warm ring and still counts. Unobserved dates and days before measurable release credit are not scored.`
     :momentumMode
@@ -1790,7 +1792,7 @@ function renderPulse(view) {
     }
     $('pulse-key').innerHTML=motionVisible?'<span class="signature-axis-note">Shared plot scale across frames / observed Git evidence, not performance</span>':signatureMode?(state.continuityView==='signature'?renderSignatureLegend():
       '<span class="signature-axis-note">Fixed reference lines · no contributor rankings or inferred work hours</span>'):
-      legend||`${levelMode?velocityLegend():intensityLegend(scale,n=>number.format(n))}${daily?pulseOffdayKey(levelMode):''}`;
+      legend||`${levelMode?velocityLegend():intensityLegend(scale,n=>number.format(n))}${daily?pulseOffdayKey():''}`;
     setText('pulse-context',motionVisible?`TIME EXPLORER / ${motionLens.toUpperCase()} / ${state.motionWeeks}-WEEK WINDOWS`:signatureMode?`CONTRIBUTION ${state.continuityView==='signature'?'SIGNATURE · THREE WEEKLY TRACKS':state.continuityView.toUpperCase()+' QUADRANT · SELECTED PERIOD'}`:signalMode?`${caption} / ${daily?'DAILY':weekly?'WEEKLY':'MONTHLY'} · ${continuityMode?'TWO SEPARATE OBSERVATION TRACKS':levelMode?'FIXED ABSOLUTE INDEX · INDEPENDENT OF COHORT':`FIXED ${momentumMode?'DIVERGING −100 TO +100':'0–100'} SCALE`}`:`${caption} / ${daily?'DAILY':'MONTHLY'} ABSOLUTE TOTALS · SHARED 0–${number.format(scale.max)} SCALE`);
     container.scrollLeft=motionVisible?0:(scrollToLatest?container.scrollWidth:oldScroll);
   }
