@@ -64,7 +64,7 @@ export function buildEvidenceIndex(fullView, fullImpact, bounds) {
     dateSource:r.timeSource,kind:r.transition,previousTag:r.previousTag,
     baseline:r.baseline,lineageComplete:r.lineageComplete,
     published:r.published,driver:r.driver,
-    github:r.github?{title:r.github.name||r.tag,url:r.github.url||'',body:(r.github.body||'').slice(0,30000),publisher:r.github.publisher||''}:null,
+    github:r.github?{title:r.github.title||r.tag,url:r.github.url||'',body:(r.github.notes||'').slice(0,30000),publisher:r.github.publisher||''}:null,
     introduced:r.totalIntroduced,eligibleIntroduced:r.eligibleIntroduced,
     commits:r.reference.map(c=>c.hash),
     contributors:r.referenceFootprint.contributors.size,

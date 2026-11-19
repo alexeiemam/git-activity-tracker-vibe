@@ -7,6 +7,9 @@ import {join} from 'node:path';
 import {parseGitHistory,decodeGithubRelease,buildAnalysis,getHistoryDateBounds} from '../assets/domain.js';
 import {impactAnalysis} from '../assets/impact.js';
 import {impactReleaseDetail,impactReleaseMatrix,impactGithubStatus,impactIndividualProfiles} from '../assets/impact-view.js';
+import {buildEvidenceIndex} from '../assets/perspectives.js';
+import {renderPrimaryExplorer} from '../assets/perspective-view.js';
+import {primaryDefaults} from '../assets/perspective-state.js';
 
 const hashes={base:'a000001',next:'b000002',late:'c000003'};
 const tag=(name,hash,date,who='',email='')=>`TAG|${name}|${hash}|${hash}|tag|${date}|${who}|${email}`;
@@ -166,4 +169,15 @@ test('individual release profile reconciles yearly role counts and contextual me
   assert.equal(c.medianCoordination,1);
   assert.match(impactIndividualProfiles(i,c.id),/Release involvement by year/);
   assert.match(impactIndividualProfiles(i,c.id),/Median non-negative elapsed time/);
+});
+
+test('release notes and titles reach the Observatory release anatomy, not only the evidence inspector',()=>{
+  const {v,i}=model(input([github('v1.0.1','casey-gh','2026-02-06T10:00:00Z')]));
+  const index=buildEvidenceIndex(v,i,{min:'2026-01-01',max:'2026-05-01'});
+  const release=index.releases.find(r=>r.tag==='v1.0.1');
+  assert.equal(release.github.title,'Release v1.0.1');
+  assert.match(release.github.body,/Mostly API \| UI 🚀/);
+  const html=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseHash:release.hash});
+  assert.match(html,/Read published release notes/);
+  assert.match(html,/Ship reliable changes/);
 });
