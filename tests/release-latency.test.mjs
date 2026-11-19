@@ -79,7 +79,7 @@ test('release anatomy shows how long its included commits waited',()=>{
   assert.equal(details.releaseAge.unreleased,0);
   assert.equal(details.releaseAge.median,8,'c waited 14 days, d waited 2 days');
   const html=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseHash:release.hash});
-  assert.match(html,/Release fingerprint/);
+  assert.match(html,/Release shape/);
   assert.match(html,/Median time to release/);
 });
 
@@ -142,26 +142,43 @@ test('fingerprints exclude the first tag from the all-releases reference and dri
   assert.match(filtered,new RegExp(`data-hash="${v1.hash}" aria-current="true"`),'filter narrows the release index');
 });
 
-test('each fingerprint view renders, with lines weighting and the typical overlay',()=>{
+test('the release shape panel shares one weighting and comparison across both halves',()=>{
   const hash=index.releases.find(r=>r.tag==='v1.1.0').hash;
   const view=changes=>renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseHash:hash,...changes});
-  assert.match(view({fingerprintView:'arrival'}),/class="primary-arrival"[\s\S]*v1\.1\.0 released/);
-  assert.match(view({fingerprintView:'arrival',fingerprintWeight:'lines'}),/weighted by lines added \+ deleted/);
+  const arrival=view({});
+  assert.match(arrival,/Release shape/);
+  assert.match(arrival,/class="primary-arrival"[\s\S]*v1\.1\.0 released/);
+  assert.match(arrival,/When its changes were written[\s\S]*Where they landed/);
+  assert.equal((arrival.match(/aria-label="Weight by"/g)||[]).length,1,'one weighting control for the whole panel');
+  assert.match(view({shapeWeight:'lines'}),/weighted by lines added \+ deleted[\s\S]*of this release's lines changed/);
   const histogram=view({fingerprintView:'histogram'});
   assert.match(histogram,/All releases<\/span>/);
   assert.match(histogram,/aria-pressed="true">Compare with all releases/);
-  assert.match(histogram,/Shapes (compare with all|use fixed thresholds)/);
-  assert.doesNotMatch(view({fingerprintView:'histogram',fingerprintTypical:'off'}),/<u style/);
-  const strip=view({fingerprintView:'strip',releaseShape:'steady'});
-  assert.equal((strip.match(/data-action="primary-fingerprint-release"/g)||[]).length,2);
-  assert.match(strip,/primary-fp-col selected/);
-  assert.match(strip,/primary-fp-col is-dim/,'releases outside the shape filter are dimmed');
+  assert.match(histogram,/Wait shapes (compare with all|use fixed thresholds)/);
+  assert.doesNotMatch(view({fingerprintView:'histogram',shapeCompare:'off'}),/<u style/);
+  assert.match(arrival,/data-action="primary-open-shape" data-browse="wait" data-shape="steady"/,'the wait shape opens the matching strip');
+  assert.match(arrival,/data-action="primary-open-shape" data-browse="footprint"/);
 });
 
-test('fingerprint settings and shape filter persist and reject unknown values',()=>{
-  const restored=restorePrimaryState({primary:{fingerprintView:'strip',fingerprintWeight:'lines',fingerprintTypical:'off',releaseShape:'backlog'}});
-  assert.deepEqual([restored.fingerprintView,restored.fingerprintWeight,restored.fingerprintTypical,restored.releaseShape],['strip','lines','off','backlog']);
-  const bad=restorePrimaryState({primary:{fingerprintView:'pie',releaseShape:'urgent'}});
+test('browse releases switches between the list and the strips, dimming releases outside the filters',()=>{
+  const hash=index.releases.find(r=>r.tag==='v1.1.0').hash;
+  const browse=changes=>renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseHash:hash,...changes});
+  const list=browse({});
+  assert.match(list,/class="primary-release-row selected"/);
+  assert.doesNotMatch(list,/<a [^>]*class="primary-release-entry"[^>]*>(?:(?!<\/a>)[\s\S])*primary-open-shape/,'shape buttons sit outside the row link');
+  const strip=browse({releaseBrowse:'wait',releaseShape:'steady'});
+  assert.equal((strip.match(/data-action="primary-strip-release"/g)||[]).length,2);
+  assert.match(strip,/primary-fp-col selected/);
+  assert.match(strip,/primary-fp-col is-dim[^>]*data-match="false"/,'releases outside the filter are dimmed');
+  assert.doesNotMatch(strip,/primary-release-list/);
+  assert.match(browse({releaseBrowse:'footprint'}),/primary-fp-tall/);
+});
+
+test('shape settings and filters persist and reject unknown values',()=>{
+  const restored=restorePrimaryState({primary:{releaseBrowse:'wait',fingerprintView:'histogram',shapeWeight:'lines',shapeCompare:'off',releaseShape:'backlog'}});
+  assert.deepEqual([restored.releaseBrowse,restored.fingerprintView,restored.shapeWeight,restored.shapeCompare,restored.releaseShape],['wait','histogram','lines','off','backlog']);
+  const bad=restorePrimaryState({primary:{fingerprintView:'strip',releaseBrowse:'grid',releaseShape:'urgent'}});
   assert.equal(bad.fingerprintView,'arrival');
+  assert.equal(bad.releaseBrowse,'list');
   assert.equal(bad.releaseShape,'all');
 });

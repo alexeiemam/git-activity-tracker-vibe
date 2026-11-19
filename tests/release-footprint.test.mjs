@@ -93,20 +93,20 @@ test('release footprints share one map, are cached and drive the footprint filte
   assert.match(html,new RegExp(`data-hash="${hashOf('v1.2.0')}" aria-current="true"`));
 });
 
-test('the footprint panel renders map and strip views with weighting and the typical overlay',()=>{
+test('the footprint half renders the map, similar releases and lines weighting',()=>{
   const render=changes=>renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseHash:hashOf('v1.2.0'),...changes});
   const map=render({});
-  assert.match(map,/Codebase footprint/);
+  assert.match(map,/Where they landed/);
   assert.match(map,/class="primary-map"/);
   assert.match(map,/data-action="primary-open-area" data-area="app\/"/);
   assert.match(map,/Releases like this one/);
-  assert.match(render({footprintWeight:'lines'}),/of this release's lines changed/);
-  const strip=render({footprintView:'strip'});
-  assert.equal((strip.match(/data-filter-key="releaseFootprint"/g)||[]).length,3);
+  assert.match(render({shapeWeight:'lines'}),/of this release's lines changed/);
+  assert.match(map,/data-browse="footprint" data-shape="cross-cutting"/);
+  const strip=render({releaseBrowse:'footprint'});
+  assert.equal((strip.match(/data-action="primary-strip-release"/g)||[]).length,3);
 });
 
-test('footprint settings persist and reject unknown values',()=>{
-  const restored=restorePrimaryState({primary:{footprintView:'strip',footprintWeight:'lines',footprintTypical:'off',releaseFootprint:'focused'}});
-  assert.deepEqual([restored.footprintView,restored.footprintWeight,restored.footprintTypical,restored.releaseFootprint],['strip','lines','off','focused']);
+test('footprint filter persists and rejects unknown values',()=>{
+  assert.equal(restorePrimaryState({primary:{releaseFootprint:'focused'}}).releaseFootprint,'focused');
   assert.equal(restorePrimaryState({primary:{releaseFootprint:'huge'}}).releaseFootprint,'all');
 });

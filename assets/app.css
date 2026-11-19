@@ -165,7 +165,7 @@
 .identity-picker-buttons{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
 .identity-picker-buttons .button{min-height:38px;font-size:11px}
 .identity-picker-buttons .button.primary:disabled{opacity:.46}
-@media(max-width:760px){.primary-release-entry.has-shape{grid-template-columns:18px minmax(95px,1fr) auto}.primary-release-entry .primary-shape-stack{display:none}.primary-fp-controls{justify-items:start}
+@media(max-width:760px){.primary-release-row{grid-template-columns:minmax(0,1fr)}.primary-release-row .primary-shape-stack{display:none}.primary-shape-summary{flex-direction:column;gap:8px}.primary-fp-controls{justify-items:start}
   .merge-group-main{grid-template-columns:1fr;gap:17px;padding:17px}
   .merge-group-name{padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
   .identity-picker{padding:16px}
@@ -872,7 +872,7 @@
 .primary-journey-volume i{background:linear-gradient(180deg,#74b998,#226747);width:15px;border-radius:3px 3px 0 0}
 .primary-journey-mark{color:#3b9971;font-size:15px}.primary-journey-mark.driven{color:#bc9456}
 .primary-journey-track button small{font:9px var(--mono);color:#6c7f6e;white-space:nowrap;transform:rotate(-30deg);align-self:center}
-.primary-legend-row{font:11px var(--mono);color:#637c68;margin:5px 0 15px}
+.primary-legend-row{font:11px var(--mono);color:#637c68;margin:5px 0 15px;column-gap:18px}
 .primary-age-panel{margin-top:16px}.primary-age-panel h4{margin:0 0 12px}
 .primary-age-chart{display:grid;grid-template-columns:repeat(auto-fit,minmax(54px,1fr));gap:8px;align-items:end;margin:6px 0 12px;overflow-x:auto}
 .primary-age-col{display:grid;gap:4px;justify-items:center;text-align:center;min-width:0}
@@ -888,7 +888,13 @@
 .primary-fp-controls{display:grid;gap:6px;justify-items:end}.primary-fp-controls .primary-preset{padding:7px 10px}
 .primary-shape{display:inline-block;padding:2px 7px;border-radius:20px;font:600 10px var(--mono);white-space:nowrap;background:#e7efe8;color:#2f5e45;border:1px solid #cfdfd2}
 .primary-shape-hotfix{background:#fbe9dd;color:#8a4316;border-color:#efcdb5}.primary-shape-backlog{background:#ece6f6;color:#4f3a7a;border-color:#d8cdec}.primary-shape-long-tail{background:#fbf3d9;color:#7a5d12;border-color:#ecdfa9}.primary-shape-initial,.primary-shape-unmeasured{background:#eef0ee;color:#5d6a60;border-color:#d9dfd9}
-.primary-release-entry.has-shape{grid-template-columns:21px minmax(125px,1.1fr) minmax(80px,1fr) minmax(80px,.8fr) minmax(75px,.8fr) minmax(96px,auto) minmax(80px,.9fr)}
+.primary-release-row{display:grid;grid-template-columns:minmax(0,1fr) 116px;align-items:center;background:#fff;border-bottom:1px solid #ecf0e8}
+.primary-release-row:last-child{border-bottom:0}.primary-release-row:hover,.primary-release-row.selected{background:#eaf5ed}
+.primary-release-row .primary-release-entry{background:transparent;border-bottom:0;text-decoration:none;color:inherit}.primary-release-row .primary-release-entry:hover strong{text-decoration:underline}.primary-release-row .primary-shape-stack{padding:6px 14px 6px 0}
+button.primary-shape{cursor:pointer;line-height:1.4}button.primary-shape:hover{filter:brightness(.95);text-decoration:underline}button.primary-shape:focus-visible{outline:2px solid #275e46;outline-offset:2px}
+.primary-shape-summary{display:flex;gap:10px 28px;flex-wrap:wrap;margin:0 0 14px;font:600 11px var(--mono);color:#476a56}.primary-shape-summary>span{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.primary-shape-summary small{font:400 12px var(--font);color:#587264}
+.primary-shape-part{border-top:1px solid #e3e9e1;padding-top:14px;margin-top:14px}.primary-shape-part-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.primary-shape-part-head h5{margin:0;font-size:14px}.primary-shape-part-head .primary-preset{padding:7px 10px}
+.primary-browse-head{margin-bottom:12px;gap:10px;flex-wrap:wrap}.primary-browse-head .primary-preset{padding:7px 10px}.primary-browse-strip{margin:16px 0 8px}#primary-browse-releases:focus{outline:none}
 .primary-arrival-wrap{overflow-x:auto}.primary-arrival{display:block;width:100%;min-width:560px;height:auto}
 .primary-arrival text{font:10px var(--mono);fill:#5f7565}.primary-arrival text.lane{font:600 11px var(--font);fill:#2e4a39}
 .primary-arrival .lane-rule{stroke:#e3ebe2}.primary-arrival .tick{stroke:#e3ebe2;stroke-dasharray:2 3}

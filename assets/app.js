@@ -1029,7 +1029,6 @@ function renderStats(view) {
   const first=ranked[0];
   const second=ranked[1];
   const refMetric=view.referenceTotal;
-  const figure=refMetric ? percent(metricValue(first,view.metric)/refMetric*100) : '0%';
   // Release roles are rates over releases in scope, not portions of an additive total.
   if (METRICS[view.metric].unit==='releases') {
     const role=view.metric==='release_leadership'?'led':'shipped work in';
@@ -1037,7 +1036,9 @@ function renderStats(view) {
     $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> ${role} ${releases(first)} of the ${esc(number.format(refMetric))} tagged releases in scope${second?`; <strong>${esc(second.displayName)}</strong> follows with ${releases(second)}.`:'.'} These are measures of recorded activity, not a ranking of performance.`;
     return;
   }
-  $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> accounts for <strong>${esc(figure)}</strong> of ${esc(METRICS[view.metric].label.toLowerCase())} in the ${view.denominator==='repository'?'repository':'selected cohort'}${second?`; <strong>${esc(second.displayName)}</strong> follows at <strong>${esc(number.format(metricValue(second,view.metric)))}</strong>.`:'.'} These are measures of recorded activity, not a ranking of performance.`;
+  // Same units for both people: the recorded amount, then its share of the reference total.
+  const amount=c=>`<strong>${esc(number.format(metricValue(c,view.metric)))}</strong> (${esc(refMetric?percent(metricValue(c,view.metric)/refMetric*100):'0%')})`;
+  $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> accounts for ${amount(first)} of ${esc(METRICS[view.metric].label.toLowerCase())} in the ${view.denominator==='repository'?'repository':'selected cohort'}${second?`; <strong>${esc(second.displayName)}</strong> follows with ${amount(second)}.`:'.'} These are measures of recorded activity, not a ranking of performance.`;
 }
 function renderRanking(view) {
   const label=METRICS[view.metric].label;
@@ -2731,24 +2732,27 @@ const ACTIONS={
   'primary-select-area':(_e,t)=>{primary.codeArea=t.dataset.area;routePushPending=true;renderPrimary();},
   'primary-release-page':(_e,t)=>{primary.releasePage=Math.max(0,Number(t.dataset.page)||0);renderPrimary();},
   'primary-reset-release-search':()=>{Object.assign(primary,{releaseBin:null,releaseYear:'all',releaseType:'all',releaseShape:'all',releaseFootprint:'all',releaseQuery:'',releasePage:0});renderPrimary();},
-  'primary-fingerprint':(_e,t)=>{
-    const options={fingerprintView:['arrival','histogram','strip'],fingerprintWeight:['commits','lines'],fingerprintTypical:['on','off'],
-      footprintView:['map','strip'],footprintWeight:['files','lines'],footprintTypical:['on','off']};
+  'primary-shape-control':(_e,t)=>{
+    const options={releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off']};
     if(!options[t.dataset.key]?.includes(t.dataset.value))return;
     primary[t.dataset.key]=t.dataset.value;renderPrimary();
-    // Re-rendering replaces the control; keep keyboard focus on the same choice (the typical toggle flips its value).
-    const same=`[data-action="primary-fingerprint"][data-key="${t.dataset.key}"]`;
+    // Re-rendering replaces the control; keep keyboard focus on the same choice (the compare switch flips its value).
+    const same=`[data-action="primary-shape-control"][data-key="${t.dataset.key}"]`;
     (document.querySelector(`${same}[data-value="${t.dataset.value}"]`)||document.querySelector(same))?.focus({preventScroll:true});
   },
-  'primary-fingerprint-release':(_e,t)=>{
-    // Choosing a release outside the strip's shape filter clears that filter so the anatomy can show it.
-    const filter=t.dataset.filterKey==='releaseFootprint'?'releaseFootprint':'releaseShape';
-    if(primary[filter]&&primary[filter]!=='all'&&t.dataset.shape!==primary[filter])primary[filter]='all';
-    const other=filter==='releaseShape'?'releaseFootprint':'releaseShape';
-    Object.assign(primary,{releaseHash:t.dataset.hash,[other]:'all',releaseType:'all',releaseYear:'all',releaseBin:null,releaseQuery:'',releasePage:0});
-    routePushPending=true;renderPrimary();
-    const strip=filter==='releaseFootprint'?'[data-filter-key="releaseFootprint"]':':not([data-filter-key])';
-    document.querySelector(`[data-action="primary-fingerprint-release"][data-hash="${t.dataset.hash}"]${strip}`)?.focus({preventScroll:true});
+  'primary-open-shape':(_e,t)=>{
+    // A shape badge opens every release side by side, filtered to that shape.
+    const [filter,other]=t.dataset.browse==='footprint'?['releaseFootprint','releaseShape']:['releaseShape','releaseFootprint'];
+    Object.assign(primary,{releaseBrowse:t.dataset.browse==='footprint'?'footprint':'wait',[filter]:t.dataset.shape,[other]:'all',
+      releaseType:'all',releaseYear:'all',releaseBin:null,releaseQuery:'',releasePage:0});
+    renderPrimary();
+    const target=$('primary-browse-releases');target?.scrollIntoView({behavior:'smooth',block:'start'});target?.focus({preventScroll:true});
+  },
+  'primary-strip-release':(_e,t)=>{
+    // Choosing a release outside the filters clears them so the anatomy can show it.
+    if(t.dataset.match==='false')Object.assign(primary,{releaseShape:'all',releaseFootprint:'all',releaseType:'all',releaseYear:'all',releaseBin:null,releaseQuery:'',releasePage:0});
+    primary.releaseHash=t.dataset.hash;routePushPending=true;renderPrimary();
+    document.querySelector(`[data-action="primary-strip-release"][data-hash="${t.dataset.hash}"]`)?.focus({preventScroll:true});
   },
   'primary-reset-release-bin':()=>{primary.releaseBin=null;renderPrimary();},
   'primary-filter-release-type':(_e,t)=>{primary.releaseType=t.dataset.type;primary.releasePage=0;renderPrimary();},

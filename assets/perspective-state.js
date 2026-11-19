@@ -1,8 +1,7 @@
 /** Bounded, browser-independent navigation state for the three primary perspectives. */
 export const primaryDefaults=()=>({
   mode:'observatory',cohortBy:'type',releaseHash:null,releaseType:'all',releaseYear:'all',releaseQuery:'',releasePage:0,releaseBin:null,
-  releaseShape:'all',fingerprintView:'arrival',fingerprintWeight:'commits',fingerprintTypical:'on',
-  releaseFootprint:'all',footprintView:'map',footprintWeight:'files',footprintTypical:'on',
+  releaseShape:'all',releaseFootprint:'all',releaseBrowse:'list',fingerprintView:'arrival',shapeWeight:'count',shapeCompare:'on',
   periodPreset:'14',periodFrom:null,periodTo:null,periodComparison:'previous',compareFrom:null,compareTo:null,
   periodBucket:null,periodSelectedId:null,periodFocusPerson:null,periodFocusArea:null,
   contributorFocus:null,contributorTab:'delivery',contributorRange:'all',compareB:null,compareC:null,
@@ -14,9 +13,8 @@ const accepted={
   mode:['observatory','periods','contributors','codebase','deployments'],cohortBy:['type','driver','year'],
   releaseType:['all','major','minor','patch','prerelease','unclassified','divergent','baseline','same-version'],
   releaseShape:['all','hotfix','steady','long-tail','backlog','initial','unmeasured'],
-  fingerprintView:['arrival','histogram','strip'],fingerprintWeight:['commits','lines'],fingerprintTypical:['on','off'],
   releaseFootprint:['all','focused','spread','cross-cutting','broad-sweep','initial','unmeasured'],
-  footprintView:['map','strip'],footprintWeight:['files','lines'],footprintTypical:['on','off'],
+  releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off'],
   periodComparison:['none','previous','year','custom'],
   contributorTab:['delivery','together','focus','behaviour','evolution','compare'],
   coReleaseSort:['shared','overlap'],

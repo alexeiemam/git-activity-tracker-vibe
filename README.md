@@ -281,17 +281,22 @@ production adoption, review effort or engineering correctness.
 the publication/tag time of the first tagged release that shipped it (across
 all tag lineages). It is not effort, review or delivery lead time.
 
-- **Observatory › Release anatomy › Release fingerprint** shows how long the
+**Observatory › Release anatomy › Release shape** has two halves, **When its
+changes were written** (time to release) and **Where they landed** (codebase
+footprint, below). One **Weight by** switch (commits & files, or lines changed)
+and one **Compare with all releases** switch apply to both. Each half's shape
+is a button: selecting it opens **Browse releases** as a strip of every release,
+filtered to that shape.
+
+- **When its changes were written** shows how long the
   release's included commits had waited, with the median, 75th/90th
   percentiles and how many releases had a longer median wait ("fresher than").
   Choose a view:
   - **Arrival**: each commit placed by how long before the release it was
     authored (log scale), in contributor lanes, with the median marked.
   - **Age histogram**: commits per age bucket (< 1 day … 6+ months). **Compare
-    with all releases** adds a dashed outline of every commit shipped by
+    with all releases** adds an outline of every commit shipped by
     incremental releases, pooled, so larger releases count in proportion.
-  - **Across releases**: every release as one column of age buckets in time
-    order (darker = more work of that age); select a column to open it.
   **Weight by** switches between commits and lines changed (added + deleted),
   so one large old change is not equal to one small fresh fix. The first tag
   ships all earlier history, so its ages include initial development, it is
@@ -308,9 +313,13 @@ all tag lineages). It is not effort, review or delivery lead time.
   incremental releases, fixed thresholds (median 15 days, 90th percentile 30
   days) are used instead. Each badge's tooltip states the actual thresholds. Shapes are descriptions, not
   judgements of urgency or quality. Each release in
-  the index shows its shape, and **Browse releases › Shape** filters by it (the
-  Across releases view dims the rest). View, weighting, overlay and shape
-  filter are saved with the session.
+  the index shows its shape, and **Browse releases › Wait shape** filters by it.
+- **Browse releases** switches between **List**, **Wait shapes** (every release
+  as one column of age buckets in time order; darker = more work of that age)
+  and **Footprints** (every release as a column of the codebase map's cells).
+  Releases outside the current filters are dimmed; select a column to open that
+  release. The view, weighting, comparison and filters are saved with the
+  session.
 - **Contributors › Delivery** shows the same histogram for commits the person
   authored in the observation window, followed to their first release even if
   it ships after the window, against everyone's commits in the same window.
@@ -324,7 +333,7 @@ are not measured.
 
 ### Codebase footprint
 
-**Observatory › Release anatomy › Codebase footprint** shows where a release's
+**Observatory › Release anatomy › Release shape › Where they landed** shows where a release's
 changes landed, two directories deep (`app/models/`; files directly in a
 top-level directory count as that directory, and root files as `(root)`).
 
@@ -335,9 +344,8 @@ top-level directory count as that directory, and root files as `(root)`).
   **Compare with all releases** adds an orange bar per cell for the share of
   all incremental releases' changes, pooled. Select a directory name to open
   it in the codebase explorer.
-- **Across releases** shows every release as a column of the same cells in
-  time order; select a column to open that release.
-- **Weight by** files touched or lines changed.
+- **Browse releases › Footprints** shows every release as a column of the same
+  cells in time order; select a column to open that release.
 - **Footprint shapes**, relative to the average incremental release (fixed
   values until there are five): **Broad sweep** (twice the file touches at
   half the lines per file, often renames or reformatting), **Cross-cutting**
