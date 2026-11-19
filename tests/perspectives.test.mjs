@@ -183,11 +183,11 @@ test('period inspection works when release events exist but no commits were auth
  assert.match(html,/v1\.1\.0/);
 });
 
-test('release cohort controls offer driver and year compositions without productivity scoring',()=>{
+test('release cohort controls offer lead and year compositions without productivity scoring',()=>{
  const driver=renderPrimaryExplorer(index,ui({mode:'observatory',cohortBy:'driver'}));
  const years=renderPrimaryExplorer(index,ui({mode:'observatory',cohortBy:'year'}));
  assert.match(driver,/Group by/);
- assert.match(driver,/Driver unknown|Unmatched:/);
+ assert.match(driver,/Lead unknown|Unmatched:/);
  assert.match(years,/2025/);
  assert.doesNotMatch(driver,/productivity score:\s*\d+/);
 });

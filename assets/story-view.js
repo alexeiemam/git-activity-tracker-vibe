@@ -56,7 +56,7 @@ function comparisonTable(finding,person){
     ['Commits per active day',unit(p.commitsPerActiveDay),unit(r.commitsPerActiveDay)],
     ['Authored commits',unit(p.commits),unit(r.commits)],
     ['Release participation',a?.eligible?`${a.participated} / ${a.eligible}`:'—',b?.eligible?`${b.participated} / ${b.eligible}`:'—'],
-    ['Published/tagged releases driven',unit(a?.driven),unit(b?.driven)],
+    ['Release leadership (published/tagged)',unit(a?.driven),unit(b?.driven)],
     ['Touched codebase paths (file touches)',unit(p.fileTouches),unit(r.fileTouches)],
   ];
   const summaries=[
@@ -120,8 +120,8 @@ function yearTimeline(person,selectedMonth) {
       <small>${m.month.slice(5)==='01'?esc(year):isYearEnd?'·':''}</small>
     </button>`;
   }).join('');
-  return `<div class="story-journey-legend"><span><i class="story-dot author"></i> Authored commits</span><span><i class="story-dot release"></i> Contributed to release</span><span><i class="story-dot driver"></i> Drove release</span></div>
-    <div class="story-journey-outer"><div class="story-lane-labels" aria-hidden="true"><span>Authored</span><span>Shipped</span><span>Driven</span></div>
+  return `<div class="story-journey-legend"><span><i class="story-dot author"></i> Authored commits</span><span><i class="story-dot release"></i> Participated in release</span><span><i class="story-dot driver"></i> Led release</span></div>
+    <div class="story-journey-outer"><div class="story-lane-labels" aria-hidden="true"><span>Authored</span><span>Shipped</span><span>Led</span></div>
     <div class="story-journey-scroll" id="story-journey-scroll" tabindex="0" aria-label="Scrollable contributor journey, use the slider or arrow keys to navigate months">
     <div class="story-months" style="--story-cols:${items.length};min-width:${Math.max(610,items.length*31)}px">${cells}</div></div></div>
     <div class="story-journey-bottom"><label for="story-journey-pan">Explore the timeline</label><input id="story-journey-pan" type="range" min="0" max="${Math.max(0,items.length-1)}" step="1" value="${Math.max(0,items.findIndex(m=>m.month===selectedMonth))}" aria-label="Move to a month of the contributor journey"><span>${esc(items[0].month)} — ${esc(items.at(-1).month)}</span></div>`;
@@ -151,7 +151,7 @@ function journey(person,selectedMonth){
     <div class="story-subheading"><div><span class="story-section-index">THE CONTRIBUTION JOURNEY</span><h4>${esc(person.name)} · an observable history</h4></div><span class="story-helper">Click a month to inspect; scroll for the full span</span></div>
     <p class="story-muted">Author time, release contributions and release-driving roles are aligned but remain separate measurements. The first observed commit is <em>not</em> necessarily someone's first day of work.</p>
     ${yearTimeline(person,month?.month)}
-    ${month?`<div class="story-month-detail" id="story-month-detail" aria-live="polite"><div><strong>${esc(month.month)}</strong><span>${month.commits} authored commits · ${month.activeDays} active days · ${month.releases} releases contributed to · ${month.driven} releases driven</span><small class="story-month-reading">${esc(monthInterpretation)}</small>${monthFindings.length?`<div class="story-month-links"><span>RELATED OBSERVATIONS</span>${monthFindings.map(f=>`<button type="button" data-action="story-inspect" data-story-id="${safeId(f.id)}">${esc(f.title)} ↗</button>`).join('')}</div>`:''}</div>${month.tags?.length?`<div class="story-tags">${month.tags.slice(0,8).map(t=>`<button type="button" data-action="story-release" data-story-release="${esc(t.hash)}" title="${esc(t.role)}: ${esc(t.tag)}">${esc(t.tag)} <span aria-hidden="true">↗</span></button>`).join('')}${month.tags.length>8?`<span>+${month.tags.length-8} more</span>`:''}</div>`:''}</div>`:''}
+    ${month?`<div class="story-month-detail" id="story-month-detail" aria-live="polite"><div><strong>${esc(month.month)}</strong><span>${month.commits} authored commits · ${month.activeDays} active days · ${month.releases} releases participated in · ${month.driven} releases led</span><small class="story-month-reading">${esc(monthInterpretation)}</small>${monthFindings.length?`<div class="story-month-links"><span>RELATED OBSERVATIONS</span>${monthFindings.map(f=>`<button type="button" data-action="story-inspect" data-story-id="${safeId(f.id)}">${esc(f.title)} ↗</button>`).join('')}</div>`:''}</div>${month.tags?.length?`<div class="story-tags">${month.tags.slice(0,8).map(t=>`<button type="button" data-action="story-release" data-story-release="${esc(t.hash)}" title="${esc(t.role)}: ${esc(t.tag)}">${esc(t.tag)} <span aria-hidden="true">↗</span></button>`).join('')}${month.tags.length>8?`<span>+${month.tags.length-8} more</span>`:''}</div>`:''}</div>`:''}
     <div class="story-chapters"><div class="story-subheading"><h5>Chapters in the observed history</h5><span>${person.years.length} calendar years</span></div>${chapters}</div>
     ${matchingFindings.length?`<div class="story-journey-discover"><strong>Possible turning points</strong><div>${matchingFindings.map(f=>`<button type="button" data-action="story-inspect" data-story-id="${safeId(f.id)}">${esc(f.title)} <span aria-hidden="true">↗</span></button>`).join('')}</div></div>`:''}
   </section>`;
@@ -215,7 +215,7 @@ function compare(model,first,second) {
     <div class="story-comparison-observation"><span class="story-section-index">A COMPARISON WORTH EXPLORING</span><p>${esc(comparisonText)}</p></div>
     ${pairRhythms(model,a,b)}
     <div class="story-subheading"><h5>Same global filters, different personal patterns</h5><span>${rows.length} selected people</span></div>
-    <div class="story-table-wrap"><table class="story-compare-table story-people-table"><thead><tr><th>Contributor</th><th>Active days / calendar week</th><th>Typical internal gap</th><th>Tagged releases included in</th><th>Driven</th><th>Recent top area</th></tr></thead><tbody>${items}</tbody></table></div>
+    <div class="story-table-wrap"><table class="story-compare-table story-people-table"><thead><tr><th>Contributor</th><th>Active days / calendar week</th><th>Typical internal gap</th><th>Tagged releases included in</th><th>Led</th><th>Recent top area</th></tr></thead><tbody>${items}</tbody></table></div>
     <p class="story-note">Active-day frequency is measured from each person's first observed authored commit within the global scope, not an assumed joining date. Release fractions use ancestry-complete non-baseline tagged snapshots and author-scoped attribution. A contributor with fewer observed years is not necessarily less involved. The coloured bar represents only authored-active-day frequency.</p>
   </section>`;
 }
@@ -266,7 +266,7 @@ export function renderStoryExplorer(model,ui) {
     ${perspective==='compare'?compare(model,ui.pairA,ui.pairB):journey(person,currentMonth)}
     <aside class="story-coverage"><div><strong>Reading the evidence fairly</strong><p>Why findings may be absent—and what the imported data cannot tell us.</p></div><ul>
       <li>${esc(restricted[0])}</li><li>${esc(restricted[1])}</li><li>${esc(restricted[2])}</li>
-      <li>${unit(model.coverage.incompleteReleases)} release snapshots have incomplete ancestry; ${unit(model.coverage.driversMapped)} of ${unit(model.coverage.releasesInScope)} release events have matched driver identities in this scope.</li></ul>
+      <li>${unit(model.coverage.incompleteReleases)} release snapshots have incomplete ancestry; ${unit(model.coverage.driversMapped)} of ${unit(model.coverage.releasesInScope)} release events have matched release-lead identities in this scope.</li></ul>
       <button type="button" class="story-link" data-action="story-evidence-general">Explore the raw evidence <span aria-hidden="true">↗</span></button></aside>
   </div>`;
 }

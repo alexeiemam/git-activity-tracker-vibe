@@ -1,7 +1,7 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
 import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-ingest-input-20261113-1';
 import { mergeGitHistories, isCompleteRecapture, hasImportableEvidence } from './history-merge.js?v=git-ingest-input-20261113-1';
-import { impactAnalysis } from './impact.js?v=git-ingest-input-20261113-1';
+import { impactAnalysis, applyReleaseMeasures } from './impact.js?v=git-ingest-input-20261113-1';
 import { buildStoryAnalysis } from './stories.js?v=git-ingest-input-20261113-1';
 import { buildEvidenceIndex } from './perspectives.js?v=git-ingest-input-20261113-1';
 import { buildDeploymentIndex } from './deployments.js?v=git-ingest-input-20261113-1';
@@ -51,6 +51,7 @@ self.onmessage = async ({data}) => {
         progress: ({current,total}) => progress(id,'Reconstructing releases',25+Math.round(68*current/Math.max(1,total)),
           `${current.toLocaleString()} / ${total.toLocaleString()} scoped release snapshots analysed`),
       });
+      applyReleaseMeasures(view,impact);
       progress(id,'Finding stories',95,'Detecting noteworthy changes with evidence thresholds');
       const stories = buildStoryAnalysis(view,impact);
       // Independently reconstruct the complete tag-defined release ledger.

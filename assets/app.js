@@ -5,7 +5,7 @@ import {
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
 } from './domain.js?v=git-ingest-input-20261113-1';
 import { generateDemoLog } from './demo-data.js?v=git-ingest-input-20261113-1';
-import { impactAnalysis, IMPACT_METRICS } from './impact.js?v=git-ingest-input-20261113-1';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=git-ingest-input-20261113-1';
 import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=git-ingest-input-20261113-1';
 import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=git-ingest-input-20261113-1';
 import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=git-ingest-input-20261113-1';
@@ -147,6 +147,7 @@ async function computeViewAndImpact(groups,scope,impactOptions,generation) {
     showProgress('Reconstructing releases',32,'Calculating tagged-release evidence',generation);
     await yieldToUI();
     const impact=impactAnalysis(view,rawCommits,rawTags,{...impactOptions,githubReleases:rawGithubReleases});
+    applyReleaseMeasures(view,impact);
     const stories=buildStoryAnalysis(view,impact);
     const bounds=sourceDateBounds();
     const fullView=buildAnalysis(rawCommits,groups,{
@@ -926,7 +927,9 @@ function buildDashboard() {
 function configureOptions() {
   const years=[...new Set([...rawCommits.map(c=>c.date?.slice(0,4)),...rawTags.map(t=>t.taggedDate?.slice(0,4)),...rawGithubReleases.filter(r=>!r.draft).map(r=>r.publishedDate?.slice(0,4)),...rawHerokuReleases.map(r=>r.date?.slice(0,4))].filter(Boolean))].sort().reverse();
   $('period-select').innerHTML=`<option value="all">All imported dates</option><option value="90d">Latest 90 days</option><option value="365d">Latest 365 days</option><option value="730d">Latest 730 days</option>${years.map(y=>`<option value="year-${y}">Calendar year ${y}</option>`).join('')}<option value="custom">Custom date range</option>`;
-  $('metric-select').innerHTML=Object.entries(METRICS).map(([key,m])=>`<option value="${key}">${esc(m.label)}</option>`).join('');
+  const options=entries=>entries.map(([key,m])=>`<option value="${key}">${esc(m.label)}</option>`).join('');
+  const measures=Object.entries(METRICS);
+  $('metric-select').innerHTML=`<optgroup label="Authored activity">${options(measures.filter(([,m])=>m.source!=='releases'))}</optgroup><optgroup label="Release delivery">${options(measures.filter(([,m])=>m.source==='releases'))}</optgroup>`;
 }
 function updatePeriod(preset) {
   state.period=preset;scopeFollowsLatest=preset!=='custom';
@@ -1027,6 +1030,12 @@ function renderStats(view) {
   const second=ranked[1];
   const refMetric=view.referenceTotal;
   const figure=refMetric ? percent(metricValue(first,view.metric)/refMetric*100) : '0%';
+  // Release roles are rates over releases in scope, not portions of an additive total.
+  if (METRICS[view.metric].unit==='releases') {
+    const role=view.metric==='release_leadership'?'led':'shipped work in';
+    $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> ${role} <strong>${esc(figure)}</strong> of the ${esc(number.format(refMetric))} tagged releases in scope${second?`; <strong>${esc(second.displayName)}</strong> follows with <strong>${esc(number.format(metricValue(second,view.metric)))}</strong>.`:'.'} These are measures of recorded activity, not a ranking of performance.`;
+    return;
+  }
   $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> accounts for <strong>${esc(figure)}</strong> of ${esc(METRICS[view.metric].label.toLowerCase())} in the ${view.denominator==='repository'?'repository':'selected cohort'}${second?`; <strong>${esc(second.displayName)}</strong> follows at <strong>${esc(number.format(metricValue(second,view.metric)))}</strong>.`:'.'} These are measures of recorded activity, not a ranking of performance.`;
 }
 function renderRanking(view) {
@@ -1346,7 +1355,7 @@ function pulseGapSummary(model) {
   return `${!model.rows.some(row=>row.scoredDays)?'<p class="pulse-gap-unavailable">No eligible weekdays have a measurable authored contribution to an incremental tagged release in this date range. Hatched cells are unknown, not zero.</p>':''}<div class="pulse-gap-summary-head"><strong>Individual release-gap context</strong><span>Absolute contribution credit, not a measure of performance or a contributor ranking.</span></div>
     <div class="table-scroll"><table class="pulse-gap-table"><thead><tr><th>Contributor</th><th>Latest credited release</th><th>Author's lines / credit</th><th>Calendar gap</th><th>Weighted gap</th><th>Mean daily signal</th><th>Days ≥ ${ATTENTION_THRESHOLD}</th><th>Weekdays scored</th></tr></thead><tbody>
     ${model.rows.map(row=>`<tr><th>${esc(row.name)}</th><td>${latest(row)}</td><td>${credit(row)}</td><td>${row.latestGap===null?'—':`${row.latestGap} days`}</td><td>${row.latestEffectiveGap===null?'—':`${pulseScore(row.latestEffectiveGap)} / ${model.horizon} days`}</td><td>${pulseScore(row.averageScore)}${row.averageScore===null?'':' / 100'}</td><td>${number.format(row.attentionDays)}</td><td>${number.format(row.scoredDays)}</td></tr>`).join('')}</tbody></table></div>
-    <p class="pulse-gap-caution">A release reduces the accumulated gap by min(your recorded changed text lines / ${model.fullCreditLines}, 100%). Additions and deletions count; VERSION-only, zero-line and driver-only events earn no reset credit. Release ancestry is computed before the selected date window; line counts can be inflated by generated files or miss binary and unrecorded work. Daily authored churn also softens the score: the quiet-day factor multiplies max(1 − commits / ${model.busyDay}, 0) by max(1 − non-VERSION daily changed lines / ${model.busyChurn}, 0). Additionally, distributed substantive authored activity can soften at most ${Math.round(MAX_GAP_DISTRIBUTION_RELIEF*100)}% of the remaining daily signal; it cannot reset release credit, and unknown timestamps earn no extra relief. The first observed measurable release starts from an unknown earlier history, conservatively treated as a full gap before credit. A missing or quiet Git day is <em>not</em> evidence of inactivity, delivery responsibility, availability, or quality.</p>`;
+    <p class="pulse-gap-caution">A release reduces the accumulated gap by min(your recorded changed text lines / ${model.fullCreditLines}, 100%). Additions and deletions count; VERSION-only, zero-line and lead-only events earn no reset credit. Release ancestry is computed before the selected date window; line counts can be inflated by generated files or miss binary and unrecorded work. Daily authored churn also softens the score: the quiet-day factor multiplies max(1 − commits / ${model.busyDay}, 0) by max(1 − non-VERSION daily changed lines / ${model.busyChurn}, 0). Additionally, distributed substantive authored activity can soften at most ${Math.round(MAX_GAP_DISTRIBUTION_RELIEF*100)}% of the remaining daily signal; it cannot reset release credit, and unknown timestamps earn no extra relief. The first observed measurable release starts from an unknown earlier history, conservatively treated as a full gap before credit. A missing or quiet Git day is <em>not</em> evidence of inactivity, delivery responsibility, availability, or quality.</p>`;
 }
 
 
@@ -2297,7 +2306,7 @@ function renderImpact(view) {
   if(newScroll)newScroll.scrollLeft=timelineScroll;
   $('impact-release-control').innerHTML=impactReleasePicker(model,state.impactReleaseHash);
   document.querySelectorAll('[data-impact-tab]').forEach(btn=>{const active=btn.dataset.impactTab===state.impactTab;btn.classList.toggle('is-active',active);btn.setAttribute('aria-pressed',String(active));});
-  const titles={timeline:'A release, under the microscope.',matrix:'Who drove and contributed to each release?',reach:'Where did the changes reach?',durability:'What happened after the release?'};
+  const titles={timeline:'A release, under the microscope.',matrix:'Who led and participated in each release?',reach:'Where did the changes reach?',durability:'What happened after the release?'};
   setText('impact-tab-title',titles[state.impactTab]);
 
   $('impact-area-toolbar').hidden=state.impactTab!=='reach';

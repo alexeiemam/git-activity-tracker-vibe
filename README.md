@@ -84,12 +84,12 @@ navigation to switch perspectives without reimporting data:
   area occurrences. Empty buckets remain visible, so quiet delivery periods
   cannot disappear. Browse **all tagged releases**, search by tag, filter by
   year and SemVer transition, or inspect release cohorts (patch/minor/major).
-  Compare release cohorts by **SemVer transition, matched release driver or calendar year**. Select any release to open its **Release Anatomy**: complete Git-ancestry
+  Compare release cohorts by **SemVer transition, matched release lead or calendar year**. Select any release to open its **Release Anatomy**: complete Git-ancestry
   incremental commits, recorded contributors and their commit shares, the
-  matched publisher/driver, changed code areas, commit-subject categories,
+  matched publisher/lead, changed code areas, commit-subject categories,
   GitHub publication details and notes, and the underlying hashes. The initial
   baseline tag is labelled non-incremental; releases with missing ancestry
-  warn that their evidence may be incomplete. "Drove release" is a distinct
+  warn that their evidence may be incomplete. "Led release" is a distinct
   GitHub publisher/tagger role, not a claim about who authored its code.
 - **Periods — start with time.** Choose **7, 14, 30, 90 days, or any custom
   inclusive interval**. Switch between an immediately preceding equal-duration
@@ -107,13 +107,13 @@ navigation to switch perspectives without reimporting data:
 - **Contributors — start with a person.** Select any **reconciled** contributor
   (all their merged author emails), then explore their **Delivery / Together / Focus /
   Behaviour / Evolution / Compare** views. The release portfolio distinguishes
-  tagged releases they authored for, releases they drove, and both; rates use
+  release participation (tagged releases they authored for), release leadership (releases they published or tagged), and both; rates use
   the same release-event population across compared people. **Together** shows
   which contributors authored changes in the same incremental tagged releases:
   shared release counts, the proportion of each person's release portfolio
   shared with the other, and symmetric Jaccard overlap (shared ÷ union).
   Choose a partner to inspect the actual shared tags, authorship counts and
-  separately attributed release drivers; Compare also shows pairwise overlap
+  separately attributed release leads; Compare also shows pairwise overlap
   for the selected people. Initial baseline and incomplete-ancestry tags are
   excluded from these overlap denominators, and co-participation does **not**
   establish direct collaboration. Focus shows where
@@ -277,14 +277,14 @@ production adoption, review effort or engineering correctness.
 
 ### Individual release impact
 
-The **People & releases** tab separates **releases driven** (GitHub publishers
+The **People & releases** tab separates **release leadership** (GitHub publishers
 explicitly matched to Git author groups, or annotated tagger email fallback)
-from **releases contributed to** (author-date scoped commits introduced by a
+from **release participation** (author-date scoped commits introduced by a
 release's tagged Git graph boundary). A person may occupy both roles, neither,
 or just one. It shows distinct releases, the overlap of both roles, released
 commits deduplicated across branches, median per-release commit share and
-codebase reach. The release matrix displays driver badges independently of the
-numeric metric, so a release driver with zero authored commits still appears.
+codebase reach. The release matrix displays lead badges (L) independently of the
+numeric metric, so a release lead with zero authored commits still appears.
 The release inspector shows publisher identity, publication time, title,
 notes, a safe GitHub link, and per-person shipped change evidence.
 
@@ -677,7 +677,8 @@ Within a given visualisation the scale is **shared across all displayed people, 
 - **Per active day** divides a contributor's measure by their active authored days (and team totals by contributor-days). **Per calendar week** divides by all elapsed days in the selection / 7, including quiet days.
 - **File touches** are changed-file entries across commits, **not** unique paths. **Line churn** is added + removed text lines; binary modifications contribute touches but no line counts.
 - **VERSION touches** are commits modifying a `VERSION` file, **not** authenticated releases. **Reverts** are counted as events, never subtracted from commit totals. Merge detection uses parents when available, otherwise the subject heuristic.
-- A share's denominator is **the same metric** in the selected reference group and time period. The selected group may be a single person, a subset, or everyone.
+- **Release participation**, **Release leadership** and **Released churn** (the *Release delivery* group of the Comparison lens) come from tag-defined release reconstruction, not individual commits, and are dated by the release's publication/tag date. Participation counts in-scope tagged releases that ship a person's authored commits; leadership counts releases they published on GitHub or tagged. For both, **% of reference group** is the share of releases in scope, and a team total counts each release once. **Released churn** is line churn from authored commits that actually shipped in an in-scope release; unreleased work is excluded, and a commit contained by several tags counts once at the first release that shipped it.
+- Except for release participation and leadership, a share's denominator is **the same metric** in the selected reference group and time period. The selected group may be a single person, a subset, or everyone.
 - Commit sizes and Git activity aren't reliable measures of individual effectiveness, value, or productivity.
 
 ## Session import/export

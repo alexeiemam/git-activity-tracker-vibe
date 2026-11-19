@@ -73,7 +73,7 @@ test('publisher mapping credits driver independently of authored contribution an
   assert.equal(profile.both,1);
   assert.equal(profile.drivenOnly,1);
   assert.equal(i.ghActors.find(a=>a.login==='casey-gh').groupName,'Casey');
-  assert.match(impactIndividualProfiles(i,'0'),/DRIVEN/);
+  assert.match(impactIndividualProfiles(i,'0'),/LEADERSHIP/);
   assert.match(impactReleaseMatrix(i),/impact-matrix-driver-mark/);
   assert.match(impactGithubStatus(i),/publishers matched/);
 });

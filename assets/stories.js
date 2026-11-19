@@ -195,9 +195,9 @@ function releaseFindings(subject,id,releases,windows) {
     findings.push(makeFinding({...common,id:'release-driving',type:'delivery',
       title:b.driven>a.driven?'Release publishing involvement has increased':'Release publishing involvement has decreased',
       summary:`Matched publication/tagger records attribute ${a.driven} releases to this contributor earlier and ${b.driven} recently.`,
-      evidence:[{label:'Earlier releases driven',value:a.driven},{label:'Recent releases driven',value:b.driven},{label:'Eligible tagged releases',value:`${a.eligible} / ${b.eligible}`}],
+      evidence:[{label:'Earlier release leadership',value:a.driven},{label:'Recent release leadership',value:b.driven},{label:'Eligible tagged releases',value:`${a.eligible} / ${b.eligible}`}],
       score:Math.abs(b.driven-a.driven)/Math.max(4,b.eligible)+.4,
-      limitations:[...common.limitations,'A release publisher is assumed to have driven the release; this is not verification of deployment responsibility. Unmatched publishers remain unattributed.'],
+      limitations:[...common.limitations,'A release publisher is assumed to have led the release; this is not verification of deployment responsibility. Unmatched publishers remain unattributed.'],
       why:'Compared over the same elapsed calendar window using observed publisher/tagger identities.'}));
   }
   return findings;
@@ -307,7 +307,7 @@ function contextFindings(subject,commits,releases,from,to) {
   if(eligible>0)findings.push(makeFinding({...scope,id:'context-delivery',type:'context',
     title:'How often authored changes appear in observed releases',
     summary:`Authored contributions entered ${releases.participated} of ${eligible} ancestry-complete, non-baseline tagged release increments in the observed scope${subject==='selection'?' for the selected group':''}.`,
-    evidence:[{label:'Eligible tagged release increments',value:eligible},{label:'With authored contribution',value:releases.participated},{label:'Participation share',value:releases.coverage==null?'Undefined':`${Math.round(releases.coverage*100)}%`},{label:'Releases driven',value:subject==='selection'?'Individual attribution only':releases.driven}],
+    evidence:[{label:'Eligible tagged release increments',value:eligible},{label:'With authored contribution',value:releases.participated},{label:'Participation share',value:releases.coverage==null?'Undefined':`${Math.round(releases.coverage*100)}%`},{label:'Release leadership',value:subject==='selection'?'Individual attribution only':releases.driven}],
     basis:'Tag ancestry, author-scoped contributions and release event dates',unit:'tagged releases',link:'impact-explorer',
     limitations:[...scope.limitations,'Observing one branch cannot measure the proportion of all work that was ever shipped. A published release is not proof of a deployment.'],
     why:'Descriptive release coverage, not a score or a claim about change quality.'}));

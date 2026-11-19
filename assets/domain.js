@@ -17,6 +17,10 @@ export const METRICS = Object.freeze({
   releases: { label: 'VERSION touches', unit: 'commits', note: 'Commits touching a VERSION file; not verified releases' },
   reverts: { label: 'Revert commits', unit: 'commits', note: 'Detected by commit subject' },
   merges: { label: 'Merge commits', unit: 'commits', note: 'Detected from parents when supplied, otherwise from subject' },
+  // Release measures are filled in from tag-defined release reconstruction, not from individual commits.
+  release_participation: { label: 'Release participation', unit: 'releases', source: 'releases', note: 'Tagged releases in scope that ship this person\'s authored commits; share is of all releases in scope' },
+  release_leadership: { label: 'Release leadership', unit: 'releases', source: 'releases', note: 'Tagged releases in scope this person published on GitHub or tagged; independent of authorship' },
+  released_churn: { label: 'Released churn', unit: 'lines', source: 'releases', note: 'Lines added + deleted in authored commits that shipped in a tagged release in scope, dated by that release; each commit counts once' },
 });
 
 export const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -357,7 +361,7 @@ function contributorStats(group, commits) {
       if (band >= 0) timeBands[band]++;
     }
     for (const key of Object.keys(METRICS)) {
-      if (key === 'active_days') continue;
+      if (key === 'active_days' || METRICS[key].source === 'releases') continue;
       const value = commitMetric(c, key);
       totals[key] += value;
       daily[key][c.date] = (daily[key][c.date] || 0) + value;

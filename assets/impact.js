@@ -288,6 +288,54 @@ function followUpInWindow(release, laterCommits, days, knownEnd) {
  * author-date scoped, merge/revert scoped eligible/selected/reference commits.
  * The two time bases are disclosed in the dashboard.
  */
+/**
+ * Fill the comparison lens's release measures from the scoped releases.
+ * Role measures count each release once per person, dated by its
+ * publication/tag date. Team totals count distinct releases, and the reference
+ * total is the number of releases in scope, so shares read as "% of releases".
+ */
+export function applyReleaseMeasures(view, impact) {
+  const releases=impact.releases||[];
+  const roles={
+    release_participation:release=>new Set([...release.reference,...release.selected].map(c=>c.groupId)),
+    release_leadership:release=>new Set(release.driver.groupId==null?[]:[release.driver.groupId]),
+  };
+  for(const [key,peopleIn] of Object.entries(roles)){
+    const people=releases.map(peopleIn);
+    for(const contributor of view.allContributors){
+      contributor.totals[key]=0;contributor.daily[key]={};
+      releases.forEach((release,index)=>{
+        if(!release.date||!people[index].has(contributor.id))return;
+        contributor.totals[key]++;
+        contributor.daily[key][release.date]=(contributor.daily[key][release.date]||0)+1;
+      });
+    }
+    view.selectedSummary.totals[key]=people.filter(ids=>[...ids].some(id=>view.selectedIds.has(id))).length;
+    view.referenceSummary.totals[key]=releases.length;
+  }
+  // Shipped volume is additive: a commit contained by several tags counts once,
+  // at the first release in scope that shipped it.
+  const shipped=new Set(),referenceIds=new Set(view.referenceContributors.map(c=>c.id));
+  for(const contributor of view.allContributors){contributor.totals.released_churn=0;contributor.daily.released_churn={};}
+  for(const release of releases){
+    if(!release.date)continue;
+    for(const commit of [...release.reference,...release.selected]){
+      if(shipped.has(commit.hash))continue;
+      shipped.add(commit.hash);
+      const contributor=view.byId.get(commit.groupId);if(!contributor)continue;
+      const churn=commit.files.reduce((n,f)=>n+f.added+f.deleted,0);
+      contributor.totals.released_churn+=churn;
+      contributor.daily.released_churn[release.date]=(contributor.daily.released_churn[release.date]||0)+churn;
+    }
+  }
+  const churnOf=ids=>view.allContributors.filter(c=>ids.has(c.id)).reduce((n,c)=>n+c.totals.released_churn,0);
+  view.selectedSummary.totals.released_churn=churnOf(view.selectedIds);
+  view.referenceSummary.totals.released_churn=churnOf(referenceIds);
+  if(roles[view.metric])view.referenceTotal=releases.length;
+  else if(view.metric==='released_churn')view.referenceTotal=view.referenceSummary.totals.released_churn;
+  return view;
+}
+
 export function impactAnalysis(view, allCommits, rawTags, options={}) {
   const metric=IMPACT_METRICS[options.metric] ? options.metric : 'commits';
   const githubReleases=Array.isArray(options.githubReleases) ? options.githubReleases : [];
