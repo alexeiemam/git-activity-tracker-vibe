@@ -136,7 +136,7 @@ test('story mode and lazy evidence panels are wired to global filters, export an
   assert.match(html,/id="stories-view"/);
   assert.match(html,/id="evidence-view" hidden/);
   assert.match(app,/function ensureEvidenceRendered/);
-  assert.match(app,/state.viewMode==='evidence'/);
+  assert.match(app,/const EVIDENCE_STAGES=/);
   assert.match(app,/storyFocusEmail:/);
   assert.match(app,/storyDismissed:\[\.\.\.state\.storyDismissed\]/);
   assert.match(worker,/buildStoryAnalysis\(view,impact\)/);

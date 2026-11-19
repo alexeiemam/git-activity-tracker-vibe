@@ -122,3 +122,7 @@ test('deployment links open the Environments view of Releases and round-trip',()
   assert.match(routeUrl('/index.html',routeFromState(next)),/view=deployments&environment=all&event=PROD-12-0/);
   assert.equal(applyRoute(next,readRoute('view=observatory'),groups).releaseView,'browse');
 });
+
+test('old Evidence links open People, where the contributor table now lives',()=>{
+  assert.equal(readRoute('view=evidence').view,'contributors');
+});

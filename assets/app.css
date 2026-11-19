@@ -1575,3 +1575,7 @@ button.primary-shape{cursor:pointer;line-height:1.4}button.primary-shape:hover{f
 .primary-release-sidebar .primary-browse-head{margin-bottom:8px}
 .primary-release-detail{min-width:0}.primary-release-detail .primary-anatomy{margin-top:0}
 @media(max-width:1020px){.primary-release-browse{grid-template-columns:1fr}.primary-release-sidebar{position:static;max-height:none}}
+.scope-commits{margin:12px 0 0;border-top:1px solid #dce5d9;padding-top:10px}
+.scope-commits>summary{font:600 11px var(--mono);color:#2d6148;cursor:pointer}
+.scope-commits .table-scroll{margin-top:10px;background:var(--paper);border:1px solid var(--line);border-radius:9px}
+.scope-commits .helper{margin:6px 0 0}

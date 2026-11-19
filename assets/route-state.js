@@ -1,7 +1,7 @@
 /** Small, stable, non-sensitive navigation URLs. Never encode imported evidence. */
-const MODES=new Set(['observatory','rhythm','contributors','codebase','deployments','evidence']);
+const MODES=new Set(['observatory','rhythm','contributors','codebase','deployments']);
 /** Views that were renamed; old links keep working. */
-const RENAMED={periods:'rhythm'};
+const RENAMED={periods:'rhythm',evidence:'contributors'};
 const modeOf=value=>RENAMED[value]||value;
 const TABS=new Set(['delivery','together','focus','behaviour','evolution','compare']);
 const DATE=/^\d{4}-\d{2}-\d{2}$/;

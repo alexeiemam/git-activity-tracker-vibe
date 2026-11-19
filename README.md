@@ -73,24 +73,24 @@ Open `http://localhost:8000` and choose **Explore demo dataset**, or use the gen
 
 No build, install, backend, API key, or CDN for the browser application is needed. The optional Google Fonts request can fall back to local fonts offline. The **capture command** calls an authenticated local GitHub CLI when installed; credentials are handled by `gh`, not by git:signals.
 
-## Five questions, one app
+## Four subjects, one app
 
 After importing history and confirming merged author identities, the app opens
 on **Releases**. An app bar holds the dataset summary and its actions (Back,
 **Add activity**, **Identities** and a **Links** menu for copying or opening the
-current view). Below it, one row of tabs organises everything by the question
-it answers, and each tab shows its overview first and its detailed charts
+current view). Below it, one row of tabs organises everything by its subject,
+the thing you pick and drill into (a release, a person, a stretch of time or a
+code area), and each tab shows its overview first and its detailed charts
 underneath:
 
 | Tab | Question | Contents |
 | --- | --- | --- |
 | **Releases** | What shipped, and where did it go? | **Browse releases** (the list beside the selected release's anatomy), **Overview** (landscape, mix, cohorts, deployment evidence, release gaps, Impact › Release detail and People & releases) and, when deployment history was imported, **Environments** (Heroku STAG/BETA/PROD events and how they relate to tags) |
-| **People** | Who contributed? | Contributor portraits; summary, contribution side by side and momentum over time |
+| **People** | Who contributed? | Contributor portraits; summary, contribution side by side, momentum over time and every measure per person (copyable as CSV) |
 | **Rhythm** | When, and how steadily? | The scope unfolding over time; the activity pulse; weekly, yearly and seasonal rhythms |
 | **Codebase** | Where in the code? | Released areas; who changed what; Impact › Codebase reach and Change evolution; change sizes |
-| **Evidence** | The records | The contributor table (copyable as CSV) and recent commits |
 
-Old links to `?view=periods` open the Rhythm tab, and `?view=deployments` links open Releases › Environments. Cards carry a single
+Old links to `?view=periods` open the Rhythm tab, `?view=deployments` links open Releases › Environments, and `?view=evidence` links open People. Cards carry a single
 heading, and each tab ends with **How to read this tab**: the evidence's clocks
 and merge/revert policy, what Git can and cannot show, and the caveats that
 apply to that tab, gathered in one place instead of repeated under every chart.
@@ -109,7 +109,8 @@ their change against the comparison window, and short observations note
 material changes; a comparison window that reaches outside the imported
 history is flagged and no change is claimed. **Summarise this scope** copies a
 traceable plain-text summary of the scope's activity, releases, areas,
-comparison and limitations. Links that open a month, a year, a release's
+comparison and limitations, and **Commits in this scope** lists the newest
+matching commits. Links that open a month, a year, a release's
 surrounding fortnight or a person's recent period set the scope's dates (and,
 for a person, its people). The **Codebase** tab adds **Who changed what**, a
 zero-aware person × top-level area grid for the scope (with an **Everyone

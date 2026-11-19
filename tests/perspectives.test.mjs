@@ -143,7 +143,10 @@ test('primary asset integration keeps release models in the analysis worker',()=
  assert.match(worker,/buildEvidenceIndex\(fullView,fullImpact,bounds\)/);
  assert.match(worker,/cachedPrimaryKey/);
  assert.match(app,/renderPrimaryExplorer\(perspectiveIndex,primary\)/);
- for(const name of ['observatory','rhythm','contributors','codebase','evidence'])assert.match(html,new RegExp(`data-experience="${name}"`));
+ for(const name of ['observatory','rhythm','contributors','codebase'])assert.match(html,new RegExp(`data-experience="${name}"`));
+ assert.doesNotMatch(html,/data-experience="evidence"/,'Evidence folded into People and the scope bar');
+ assert.match(html,/aria-labelledby="table-heading" data-tabs="contributors"/);
+ assert.match(html,/<details id="scope-commits"[\s\S]*id="recent-commits"/,'the scope\'s commits sit in the scope bar');
  assert.match(html,/id="scope-bar"/);
  assert.match(html,/id="scope-comparison"/,'the comparison window is part of the scope');
  assert.match(html,/id="people-measure" class="people-measure" data-tabs="contributors"/,'the measure sits with the People charts it drives');

@@ -224,7 +224,7 @@ let primary=primaryDefaults();
 let localDatasetId=null, routePushPending=false, routeRestoring=false;
 const routePath=()=>window.location.pathname||'./index.html';
 function currentRouteHref(){
-  const mode=state.viewMode==='evidence'?'evidence':primary.mode;
+  const mode=primary.mode;
   // A one-person scope travels with Rhythm links.
   const periodSelectedId=state.selectedIds.size===1?[...state.selectedIds][0]:null;
   return routeUrl(routePath(),routeFromState({...primary,mode,periodSelectedId},mergeGroups.map((g,i)=>({...g,id:String(i)})),localDatasetId));
@@ -305,7 +305,7 @@ function renderPrimary(){
   // Every tab follows the scope bar's dates.
   primary.periodFrom=state.start||analysis?.start||primary.periodFrom;
   primary.periodTo=state.end||analysis?.end||primary.periodTo;
-  primary.mode=state.viewMode==='evidence'?primary.mode:state.viewMode;
+  primary.mode=state.viewMode;
   perspectiveIndex.navigation={ui:primary,groups:mergeGroups.map((g,i)=>({...g,id:String(i)})),datasetId:localDatasetId,path:routePath(),scope:{ids:scopeIds()}};
   $('stories-view').innerHTML=renderPrimaryExplorer(perspectiveIndex,primary);
   $('scope-headline').innerHTML=scopeHeadline(perspectiveIndex,primary);
@@ -335,7 +335,7 @@ function goPrimary(mode,change={}, {remember=true,scroll=true}={}){
 }
 function resetPrimaryOnLoad(){
   restorePrimary(pendingImport?.scope);
-  if(pendingImport?.scope?.primary && state.viewMode!=='evidence')state.viewMode=primary.mode;
+  if(pendingImport?.scope?.primary)state.viewMode=primary.mode;
   // A permalink takes precedence over the imported session's last-view preference.
   if(new URL(window.location.href).searchParams.has('view')){
     const groups=mergeGroups.map((g,i)=>({...g,id:String(i)}));
@@ -920,9 +920,9 @@ function syncScopeAfterLoad() {
       const i=mergeGroups.findIndex(g=>g.emails.includes(s.rhythmFocusEmail));
       state.rhythmFocus=i<0?'selection':String(i);
     }
-    // Periods was renamed Rhythm; Deployments became a view of Releases.
-    const savedView=({periods:'rhythm',deployments:'observatory'})[s.viewMode]||s.viewMode;
-    if (['observatory','rhythm','contributors','codebase','evidence'].includes(savedView))state.viewMode=savedView;
+    // Periods was renamed Rhythm; Deployments became a view of Releases; Evidence's table joined People.
+    const savedView=({periods:'rhythm',deployments:'observatory',evidence:'contributors'})[s.viewMode]||s.viewMode;
+    if (['observatory','rhythm','contributors','codebase'].includes(savedView))state.viewMode=savedView;
     if (['team','person','compare'].includes(s.storyPerspective))state.storyPerspective=s.storyPerspective;
     if (['all','activity','rhythm','delivery','focus','seasonality','context'].includes(s.storyTopic))state.storyTopic=s.storyTopic;
     if (['noteworthy','hidden'].includes(s.storyCategory))state.storyCategory=s.storyCategory;
@@ -1038,6 +1038,7 @@ function renderScope(view) {
   const policy=`${view.includeMerges?'merges included':'merges excluded'} · ${view.includeReverts?'reverts included':'reverts excluded'}`;
   const comparison={previous:'compared with the previous period',year:'compared with the same dates last year',custom:primary.compareFrom&&primary.compareTo?`compared with ${formatDate(primary.compareFrom)} – ${formatDate(primary.compareTo)}`:'comparison dates not set',none:'no comparison'}[primary.periodComparison]||'';
   const people=view.selectedIds.size===view.groupDefs.length?`All ${view.groupDefs.length} people`:view.selectedIds.size===1?esc(view.groupDefs.find(g=>view.selectedIds.has(g.id))?.displayName||'1 person'):`${view.selectedIds.size} of ${view.groupDefs.length} people`;
+  setText('scope-commits-summary',`Commits in this scope (${number.format(view.selectedCommits.length)}; latest ${Math.min(18,view.selectedCommits.length)} shown)`);
   $('scope-summary').innerHTML=`<strong>${people}</strong><span>${esc(formatDate(view.start))} – ${esc(formatDate(view.end))}</span><span>${esc(comparison)}</span><span>${esc(policy)}</span>`;
   const total = rawCommits.length;
   setText('data-coverage', `Dataset: ${number.format(total)} deduplicated, dated commits · ${formatDate(view.min)} – ${formatDate(view.max)} · ${view.groupDefs.length} reconciled identities`);
@@ -2444,7 +2445,6 @@ function showPulseLensesFor(tab) {
 const sectionTabs=node=>(node.dataset.tabs||'').split(/\s+/);
 function setExperienceVisibility() {
   const tab=state.viewMode;
-  $('stories-view').hidden=tab==='evidence';
   const sections=[...document.querySelectorAll('#evidence-view [data-tabs]')];
   for(const node of sections)node.hidden=!sectionTabs(node).includes(evidenceTabOf(tab));
   $('evidence-view').hidden=!sections.some(node=>!node.hidden);
@@ -2498,12 +2498,11 @@ function focusStoryMonth() {
  * stay responsive. Each stage renders once per analysis run.
  */
 const EVIDENCE_STAGES=[
-  {key:'comparison',tabs:['contributors'],label:'Preparing comparisons',value:79,help:'Summary, ranking and trends',render:()=>{renderStats(analysis);renderRanking(analysis);renderTrend(analysis);}},
+  {key:'comparison',tabs:['contributors'],label:'Preparing comparisons',value:79,help:'Summary, ranking, trends and the contributor table',render:()=>{renderStats(analysis);renderRanking(analysis);renderTrend(analysis);renderTable(analysis);}},
   {key:'pulse',tabs:['rhythm','contributors','observatory'],label:'Rendering activity pulse',value:84,help:'Comparing authored dates',render:()=>renderPulse(analysis)},
   {key:'rhythm',tabs:['rhythm'],label:'Rendering weekly rhythms',value:89,help:'Weekdays, hours and seasonality',render:()=>renderRhythm(analysis)},
   {key:'impact',tabs:['observatory','codebase'],label:'Rendering impact evidence',value:94,help:'Tagged releases and contributor roles',render:()=>renderImpact(analysis)},
   {key:'codebase',tabs:['codebase'],label:'Rendering the codebase',value:96,help:'Change sizes',render:()=>renderFootprint(analysis)},
-  {key:'records',tabs:['evidence'],label:'Listing the records',value:98,help:'Contributor table and commit history',render:()=>{renderTable(analysis);renderRecent(analysis);}},
 ];
 let evidenceRendered={run:-1,keys:new Set()};
 const evidencePending=new Map();
@@ -2539,14 +2538,14 @@ async function ensureEvidenceRendered(tab=state.viewMode,run=renderGeneration,ge
 }
 async function switchExperience(next,{target=null}={}) {
   if(next==='deployments'){primary.releaseView='environments';next='observatory';}
-  if(!['observatory','rhythm','contributors','codebase','evidence'].includes(next))return;
+  if(next==='evidence')next='contributors';
+  if(!['observatory','rhythm','contributors','codebase'].includes(next))return;
   state.viewMode=next;
-  if(next!=='evidence')primary.mode=next;
+  primary.mode=next;
   setExperienceVisibility();
   if(!routeRestoring)routePushPending=true;
-  if(next!=='evidence')renderPrimary();
+  renderPrimary();
   await showTabEvidence(next);
-  if(next==='evidence')syncBrowserRoute();
   if(target){
     const node=$(target);
     if(node && !node.closest('[hidden]'))node.scrollIntoView({behavior:'smooth',block:'start'});
@@ -2561,7 +2560,7 @@ async function showTabEvidence(tab=state.viewMode) {
   catch(error){finishProgress(generation,error);$('scope-error').textContent=`Rendering failed: ${error.message}`;}
 }
 /** The tab that holds a workbench anchor. */
-const tabOfAnchor=anchor=>{const node=$(anchor);return node?sectionTabs(node.closest('[data-tabs]')||node)[0]||'evidence':'evidence';};
+const tabOfAnchor=anchor=>{const node=$(anchor);return node?sectionTabs(node.closest('[data-tabs]')||node)[0]||'contributors':'contributors';};
 async function storyOpenEvidence(anchor='ranking-heading',releaseHash=null) {
   if(releaseHash) {state.impactTab='timeline';state.impactReleaseHash=releaseHash;}
   await switchExperience(tabOfAnchor(anchor),{target:anchor});
@@ -2589,7 +2588,7 @@ async function renderDashboard() {
     analysis=result.view;impactModel=result.impact;storyModel=result.stories||buildStoryAnalysis(analysis,impactModel);
     perspectiveIndex=result.primaryIndex;
     evidenceRendered={run:-1,keys:new Set()};
-    updateControls();renderPicker();renderScope(analysis);
+    updateControls();renderPicker();renderScope(analysis);renderRecent(analysis);
     setExperienceVisibility();
     showProgress('Composing the story',78,'Checking baselines, sample sizes and supporting releases',generation);
     await yieldToUI();
@@ -2786,8 +2785,7 @@ async function restoreSessionPayload(payload,filename='imported session') {
 
 const ACTIONS={
   'experience-mode':(_event,target)=>{
-    if(target.dataset.experience==='evidence')switchExperience('evidence');
-    else goPrimary(target.dataset.experience,{}, {remember:true});
+    goPrimary(target.dataset.experience,{}, {remember:true});
   },
   'toggle-add-activity':()=>toggleAddActivity(),
   'cancel-add-activity':()=>toggleAddActivity(false),
@@ -3148,8 +3146,7 @@ function init() {
     if(route.dataset&&route.dataset!==localDatasetId){await restoreFromLocalLink();return;}
     if(!perspectiveIndex)return;
     const view=route.view;
-    if(view==='evidence'){routeRestoring=true;routePushPending=false;switchExperience('evidence').finally(()=>{routeRestoring=false;routePushPending=false;});}
-    else applyBrowserRoute();
+    applyBrowserRoute();
   });
   document.addEventListener('change',handleDocumentChange);
   document.addEventListener('input',handleDocumentInput);
