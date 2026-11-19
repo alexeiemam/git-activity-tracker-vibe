@@ -6,7 +6,7 @@
  * spread, never the value of a change.
  */
 export const FOOTPRINT_DEPTH = 5;
-const MAX_CELLS = 80;
+const MAX_CELLS = 150;
 /** "Focused" is judged on two-level folders, so file-level cells don't change what it means. */
 const FOCUS_DEPTH = 2;
 

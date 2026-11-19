@@ -2812,7 +2812,7 @@ const ACTIONS={
   'primary-release-page':(_e,t)=>{primary.releasePage=Math.max(0,Number(t.dataset.page)||0);renderPrimary();},
   'primary-reset-release-search':()=>{Object.assign(primary,{releaseBin:null,releaseYear:'all',releaseType:'all',releaseShape:'all',releaseFootprint:'all',releaseQuery:'',releasePage:0});renderPrimary();},
   'primary-toggle':(_e,t)=>{
-    const options={codebaseClock:['authored','released'],releaseView:['browse','overview','environments'],releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off']};
+    const options={mapExpanded:['on','off'],codebaseClock:['authored','released'],releaseView:['browse','overview','environments'],releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off']};
     if(!options[t.dataset.key]?.includes(t.dataset.value))return;
     primary[t.dataset.key]=t.dataset.value;
     if(t.dataset.key==='releaseView'){routePushPending=true;setExperienceVisibility();}

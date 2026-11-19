@@ -117,12 +117,21 @@ const cellName=cell=>{
   return cell.key.endsWith('/')?`${parts.at(-1)}/`:parts.at(-1);
 };
 
+/** A tall map or strip starts clipped to a short height; one setting expands every one of them. */
+const collapsible=(html,ui,{tall=true,label='map'}={})=>{
+  if(!tall)return html;
+  const open=ui?.mapExpanded==='on';
+  return `<div class="primary-collapsible${open?' is-expanded':''}"><div class="primary-collapsible-body">${html}</div><button type="button" class="primary-inline-link primary-collapsible-toggle" data-action="primary-toggle" data-key="mapExpanded" data-value="${open?'off':'on'}" aria-expanded="${open}">${open?`Collapse the ${label}`:`Show the whole ${label}`}</button></div>`;
+};
+/** Above this many tiles a map is taller than the collapsed height. */
+const TALL_MAP=24;
+
 /**
  * One fixed map for every release and every scope: top-level blocks, cells
  * (up to three levels deep) sized by all-time activity. With `selected`, the
  * map is a picker: cells and blocks select an area instead of being a picture.
  */
-function codebaseMap(map,shares,typical,{weightLabel,subject="this release's",selected=undefined}){
+function codebaseMap(map,shares,typical,{weightLabel,subject="this release's",selected=undefined,ui=null}){
   // `subject` is fixed wording chosen by the caller ("this release's", "the scope's authored"), never imported data.
   const picker=selected!==undefined;
   const position=new Map(map.keys.map((key,i)=>[key,i]));
@@ -142,13 +151,13 @@ function codebaseMap(map,shares,typical,{weightLabel,subject="this release's",se
   }).join('')}</div></div>`).join('');
   const labels=new Map(map.groups.flatMap(g=>g.cells.map(cell=>[cell.key,cell.label])));
   const ranked=map.keys.map((key,i)=>({key:labels.get(key)||key,share:shares[i],typical:typical?typical[i]:null})).filter(x=>x.share>0).sort((a,b)=>b.share-a.share).slice(0,5);
-  return `<div class="primary-map" ${picker?'role="group" aria-label="Codebase map: select an area"':`role="img" aria-label="${e(`Codebase map: ${ranked.map(x=>`${x.key} ${p(x.share)}`).join(', ')}`)}"`}>${groups}</div>
+  return `${collapsible(`<div class="primary-map" ${picker?'role="group" aria-label="Codebase map: select an area"':`role="img" aria-label="${e(`Codebase map: ${ranked.map(x=>`${x.key} ${p(x.share)}`).join(', ')}`)}"`}>${groups}</div>`,ui,{tall:map.keys.length>TALL_MAP})}
     <p class="primary-legend-row"><span><i class="primary-age-key"></i> Darker = more of ${subject} ${e(weightLabel)}</span>${typical?'<span><i class="primary-age-key is-bar"></i> Bar = share across all releases</span>':''}<span>Tile size = all-time activity</span></p>
     ${ranked.length?`<p class="primary-muted primary-map-top-list">Most changed: ${ranked.map(x=>`<strong>${e(x.key)}</strong> ${p(x.share)}${x.typical!=null?` <small>(all releases ${p(x.typical)})</small>`:''}`).join(' · ')}</p>`:''}`;
 }
 
 /** Every release as one column of map cells, in time order, grouped by top-level directory. */
-function footprintStrip(index,footprints,{selectedHash,matches=null,weight='files'}={}){
+function footprintStrip(index,footprints,{selectedHash,matches=null,weight='files',ui=null}={}){
   const releases=index.releases.filter(r=>r.date);
   if(!releases.length)return empty('No dated releases','Import tags to compare release footprints.');
   const {map}=footprints;
@@ -158,7 +167,7 @@ function footprintStrip(index,footprints,{selectedHash,matches=null,weight='file
     const cells=shares.map(v=>`<i style="opacity:${v?(0.12+0.88*Math.sqrt(v/max)).toFixed(2):0.04}"></i>`).join('');
     return stripColumn(r,{selectedHash,matches,tall:map.keys.length,label:`${footprintLabel(fp.shape)}, ${fp.cells} areas in ${fp.topLevels} top-level directories`},cells);
   }).join('');
-  return `<div class="primary-fp-strip-wrap"><div class="primary-fp-rows" aria-hidden="true">${labels}</div><div class="primary-fp-strip" role="group" aria-label="Release footprints in time order; rows are codebase areas grouped by top-level directory">${columns}</div></div>
+  return `${collapsible(`<div class="primary-fp-strip-wrap"><div class="primary-fp-rows" aria-hidden="true">${labels}</div><div class="primary-fp-strip" role="group" aria-label="Release footprints in time order; rows are codebase areas grouped by top-level directory">${columns}</div></div>`,ui,{tall:map.keys.length>TALL_MAP,label:'strip'})}
     <p class="primary-legend-row"><span>Oldest release → newest</span><span>Rows: two-level areas grouped by top-level directory</span>${matches?'<span>Dimmed: outside the current filters</span>':''}</p>`;
 }
 
@@ -182,7 +191,7 @@ function releaseShapePanel(index,r,details,ui){
     :releaseAgeChart(dist,{subject:'This release',ghost:compare&&!r.baseline&&typicalShape.releases?typicalShape.shares:null,facts:false});
   const weightLabel=lines?'lines changed':'file touches',{typical:placeTypical,reference:placeRef}=footprints;
   const placeBody=!foot.touches?empty('No file changes to place','This release has no matching file changes in the imported history.')
-    :codebaseMap(footprints.map,foot.shares[placeWeight],compare&&!r.baseline&&placeTypical.releases?placeTypical.shares[placeWeight]:null,{weightLabel});
+    :codebaseMap(footprints.map,foot.shares[placeWeight],compare&&!r.baseline&&placeTypical.releases?placeTypical.shares[placeWeight]:null,{weightLabel,ui});
   const byHash=new Map(index.releases.map(x=>[x.hash,x]));
   const similar=r.baseline?[]:similarReleases(r.hash,footprints.releases,{weight:placeWeight});
   return `<div class="primary-inset primary-age-panel primary-shape-panel">
@@ -450,7 +459,7 @@ function codebaseView(index,ui){
   const clockSwitch=`<div class="primary-preset-row" role="group" aria-label="Count changes">${toggleButton('codebaseClock','authored','Authored',clock)}${toggleButton('codebaseClock','released','Released',clock)}</div>`;
   const basis=clock==='released'?'commits shipped by releases published in the scope dates':'commits authored in the scope dates';
   return `<p class="primary-lede">Where the scope's changes landed, and who works where.</p>
-    ${card('The codebase map',`<div class="primary-row between"><p class="primary-muted">${e(day(from))} – ${e(day(to))} · ${e(basis)}${ids?' by the people in scope':''}. Select an area to see who works there.</p>${clockSwitch}</div>${fp.touches?codebaseMap(map,fp.shares.files,null,{weightLabel:'file touches',subject:`the scope's ${clock}`,selected}):empty('No file changes in this scope','Widen the scope\'s dates or people, or switch between authored and released changes.')}`)}
+    ${card('The codebase map',`<div class="primary-row between"><p class="primary-muted">${e(day(from))} – ${e(day(to))} · ${e(basis)}${ids?' by the people in scope':''}. Select an area to see who works there.</p>${clockSwitch}</div>${fp.touches?codebaseMap(map,fp.shares.files,null,{weightLabel:'file touches',subject:`the scope's ${clock}`,selected,ui}):empty('No file changes in this scope','Widen the scope\'s dates or people, or switch between authored and released changes.')}`)}
     ${portrait?card(selected,`<div class="primary-row between"><p class="primary-muted">${clock==='released'?'Released':'Authored'} changes in ${e(selected)} within the scope.</p><button type="button" class="primary-inline-link" data-action="primary-select-area" data-area="">Clear selection</button></div><div class="primary-facts">${stat(f(portrait.touches),'File touches')}${stat(f(portrait.commits),'Commits')}${stat(f(portrait.people.length),'People')}${stat(f(portrait.releases),'Releases shipping them')}</div><div class="primary-two-col"><div class="primary-inset"><h4>Who works here</h4>${portrait.people.slice(0,12).map(([id,v])=>`<div class="primary-ranked-row">${whoButton(index,id)}${bar(v,Math.max(1,...portrait.people.map(x=>x[1])))}<strong>${f(v)}</strong></div>`).join('')||'<p class="primary-muted">No matching changes.</p>'}</div><div class="primary-inset"><h4>Releases that shipped these changes</h4>${portrait.recentReleases.map(r=>`<div class="primary-release-brief">${tagButton(index,r)}<small>${e(day(r.date))}</small></div>`).join('')||'<p class="primary-muted">Not yet in a tagged release.</p>'}</div></div><details class="primary-notes"><summary>Newest commits here</summary><div class="primary-commit-list">${portrait.recent.map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(day(c.date))}</span>${whoButton(index,c.groupId)}<span class="primary-commit-subject">${e(c.subject)}</span></div>`).join('')||'<p>No matching commits.</p>'}</div></details>`):''}
     ${whoWhereCard(index,ui,{commits,clock,from,to,ids})}`;
 }

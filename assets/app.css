@@ -1587,3 +1587,8 @@ button.primary-map-cell:focus-visible,.primary-map-top:focus-visible{outline:3px
 
 .primary-map-cell>span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .primary-map-top.is-other{text-decoration:none;color:var(--muted)}
+
+/* Tall maps and strips start clipped, fading out, until expanded. */
+.primary-collapsible:not(.is-expanded)>.primary-collapsible-body{max-height:320px;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 72%,transparent);mask-image:linear-gradient(to bottom,#000 72%,transparent)}
+.primary-collapsible-toggle{display:block;margin:6px 0 10px;font:600 11px var(--mono)}
+.primary-collapsible-body:focus-within{max-height:none!important;-webkit-mask-image:none!important;mask-image:none!important}

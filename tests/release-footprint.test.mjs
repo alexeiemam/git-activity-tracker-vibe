@@ -124,3 +124,16 @@ test('footprint filter persists and rejects unknown values',()=>{
   assert.equal(restorePrimaryState({primary:{releaseFootprint:'focused'}}).releaseFootprint,'focused');
   assert.equal(restorePrimaryState({primary:{releaseFootprint:'huge'}}).releaseFootprint,'all');
 });
+
+test('tall maps start clipped with a control that expands every map',()=>{
+  const commits=Array.from({length:40},(_,i)=>commit(`app/f${i}.rb`));
+  const history=parseGitHistory([`TAG|v1||a${'0'.repeat(39)}|commit|${at(2)}`,
+    `COMMIT|a${'0'.repeat(39)}|ada@work|Ada|${at(1)}|${at(1)}|many files|\n${commits.map(c=>`1\t1\t${c.files[0].path}`).join('\n')}`].join('\n'));
+  const view=buildAnalysis(history.commits,[{displayName:'Ada',emails:['ada@work']}],{start:'2026-01-01',end:'2026-01-31'});
+  const big=buildEvidenceIndex(view,impactAnalysis(view,history.commits,history.tags),{min:'2026-01-01',max:'2026-01-31'});
+  const render=changes=>renderPrimaryExplorer(big,{...primaryDefaults(),mode:'codebase',periodFrom:'2026-01-01',periodTo:'2026-01-31',...changes});
+  assert.match(render({}),/class="primary-collapsible"><div class="primary-collapsible-body"><div class="primary-map"/);
+  assert.match(render({}),/data-key="mapExpanded" data-value="on" aria-expanded="false">Show the whole map/);
+  assert.match(render({mapExpanded:'on'}),/class="primary-collapsible is-expanded"[\s\S]*aria-expanded="true">Collapse the map/);
+  assert.equal(restorePrimaryState({primary:{mapExpanded:'sideways'}}).mapExpanded,'off');
+});

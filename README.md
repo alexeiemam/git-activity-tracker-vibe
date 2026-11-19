@@ -117,11 +117,14 @@ for a person, its people).
 **Codebase** is organised around a code area. **The codebase map** is the same
 map release footprints use: a file is its own tile when its path is at most
 five levels deep (`app/models/user.rb`, `README.md`), and deeper changes are
-grouped under their fifth-level folder. The busiest 80 tiles across all
+grouped under their fifth-level folder. The busiest 150 tiles across all
 history are shown by name inside their top-level folder; quieter files fold
 into that folder's "… other" tile, and top-level folders with none of the
 busiest tiles share one "other folders" block. Each folder's block starts at
-its share of all-time activity, so busy folders get room for their tiles. The map is shaded by the scope's changes on one of two clocks:
+its share of all-time activity, so busy folders get room for their tiles. Tall
+maps and footprint strips start clipped to a short height, fading out, with
+**Show the whole map** (or strip) to expand them; one setting expands them all,
+and tiles expand into view while keyboard focus is inside. The map is shaded by the scope's changes on one of two clocks:
 **Authored** (commits authored in the scope dates) or **Released** (commits
 shipped by releases published in the scope dates, each commit counted once).
 Select a cell, or a top-level block, to open that area's portrait: file
@@ -384,7 +387,7 @@ levels deep by name, deeper changes under their fifth-level folder. The
 (`app/models/`), so file-level tiles don't change what it means.
 
 - One **map** is built from the whole imported history, so every release is
-  drawn on the same tiles: top-level directories are blocks, the busiest 80
+  drawn on the same tiles: top-level directories are blocks, the busiest 150
   files or folders are tiles sized by all-time activity, and quieter areas fold
   into one "… other" cell per directory. Shading shows this release's share;
   **Compare with all releases** adds an orange bar per cell for the share of
