@@ -1,11 +1,11 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=git-ingest-input-20261113-1';
-import { mergeGitHistories, isCompleteRecapture, hasImportableEvidence } from './history-merge.js?v=git-ingest-input-20261113-1';
-import { impactAnalysis, applyReleaseMeasures } from './impact.js?v=git-ingest-input-20261113-1';
-import { buildStoryAnalysis } from './stories.js?v=git-ingest-input-20261113-1';
-import { buildEvidenceIndex } from './perspectives.js?v=git-ingest-input-20261113-1';
-import { buildDeploymentIndex } from './deployments.js?v=git-ingest-input-20261113-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-ingest-input-20261113-1';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=four-tabs-20261119-1';
+import { mergeGitHistories, isCompleteRecapture, hasImportableEvidence } from './history-merge.js?v=four-tabs-20261119-1';
+import { impactAnalysis, applyReleaseMeasures } from './impact.js?v=four-tabs-20261119-1';
+import { buildStoryAnalysis } from './stories.js?v=four-tabs-20261119-1';
+import { buildEvidenceIndex } from './perspectives.js?v=four-tabs-20261119-1';
+import { buildDeploymentIndex } from './deployments.js?v=four-tabs-20261119-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=four-tabs-20261119-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;
