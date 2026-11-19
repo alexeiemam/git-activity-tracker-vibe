@@ -210,7 +210,7 @@ const state = {
   period: 'all', start: null, end: null,
   includeMerges: false, includeReverts: true,
   metric: 'commits', mode: 'total', denominator: 'repository',
-  trend: 'rolling', pulseMode: 'monthly', pulseLens:'activity',continuityView:DEFAULT_SIGNATURE_MODE, pulseGapHorizon:DEFAULT_GAP_HORIZON, pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES, pulseDailyChurn:DEFAULT_DAILY_CHURN, pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT, rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
+  trend: 'rolling', pulseMode: 'monthly', pulseLens:'activity', pulseMetric:'commits',continuityView:DEFAULT_SIGNATURE_MODE, pulseGapHorizon:DEFAULT_GAP_HORIZON, pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES, pulseDailyChurn:DEFAULT_DAILY_CHURN, pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT, rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
   rhythmTab: 'weekly', seasonMode: 'rate', seasonYears: null, sortKey: 'lens', sortDesc: true,
   impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
   impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,
@@ -847,7 +847,7 @@ function syncScopeAfterLoad() {
   const desiredStart = dateAtDay(dayNumber(anniversary)+1);
   const initialStart = min > desiredStart ? min : desiredStart;
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
-    ...defaultMotionState(),metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
+    ...defaultMotionState(),metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseMetric:'commits',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{},
     viewMode:'observatory',storyPerspective:'team',storyFocus:'selection',storyTopic:'all',storyCategory:'noteworthy',storyShowAll:false,
     storyFindingId:null,storyMonth:null,storyPairA:null,storyPairB:null,storyTrail:[],storyDismissed:new Set() });
@@ -865,6 +865,7 @@ function syncScopeAfterLoad() {
     if (['rolling','weekly','cumulative'].includes(s.trend)) state.trend=s.trend;
     if (['monthly','daily','weekly'].includes(s.pulseMode)) state.pulseMode=s.pulseMode;
     if (['activity','release-gap','momentum','level','continuity'].includes(s.pulseLens)) state.pulseLens=s.pulseLens;
+    if (METRICS[s.pulseMetric]&&METRICS[s.pulseMetric].source!=='releases') state.pulseMetric=s.pulseMetric;
     if (SIGNATURE_MODES.includes(s.continuityView)) state.continuityView=s.continuityView;
     if(s.motionViews&&typeof s.motionViews==='object'&&!Array.isArray(s.motionViews)) for(const lens of MOTION_MODES){if(['cells','motion'].includes(s.motionViews[lens]))state.motionViews[lens]=s.motionViews[lens];}
     if(MOTION_WINDOWS.includes(s.motionWeeks))state.motionWeeks=s.motionWeeks;
@@ -962,6 +963,7 @@ function configureOptions() {
   const options=entries=>entries.map(([key,m])=>`<option value="${key}">${esc(m.label)}</option>`).join('');
   const measures=Object.entries(METRICS);
   $('metric-select').innerHTML=`<optgroup label="Authored activity">${options(measures.filter(([,m])=>m.source!=='releases'))}</optgroup><optgroup label="Release delivery">${options(measures.filter(([,m])=>m.source==='releases'))}</optgroup>`;
+  $('pulse-metric-select').innerHTML=options(measures.filter(([,m])=>m.source!=='releases'));
 }
 function updatePeriod(preset) {
   state.period=preset;scopeFollowsLatest=preset!=='custom';
@@ -987,7 +989,7 @@ function changeDate() {
 function resetFilters() {
   scopeFollowsLatest=true;
   Object.assign(state,{ period:'all',start:sourceDateBounds().min,end:sourceDateBounds().max,
-    ...defaultMotionState(),includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
+    ...defaultMotionState(),includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseMetric:'commits',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',rhythmTab:'weekly',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactAreaMode:'touches',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'all',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
@@ -1030,11 +1032,9 @@ function updateControls() {
 }
 function renderScope(view) {
   const policy=`${view.includeMerges?'merges included':'merges excluded'} · ${view.includeReverts?'reverts included':'reverts excluded'}`;
-  const lens=`${METRICS[view.metric].label.toLowerCase()} · ${displayModeLabel(state.mode).toLowerCase()}`;
-  const reference=` · reference: ${view.denominator==='repository'?'all contributors':'selected people'}`;
   const comparison={previous:'compared with the previous period',year:'compared with the same dates last year',custom:primary.compareFrom&&primary.compareTo?`compared with ${formatDate(primary.compareFrom)} – ${formatDate(primary.compareTo)}`:'comparison dates not set',none:'no comparison'}[primary.periodComparison]||'';
   const people=view.selectedIds.size===view.groupDefs.length?`All ${view.groupDefs.length} people`:view.selectedIds.size===1?esc(view.groupDefs.find(g=>view.selectedIds.has(g.id))?.displayName||'1 person'):`${view.selectedIds.size} of ${view.groupDefs.length} people`;
-  $('scope-summary').innerHTML=`<strong>${people}</strong><span>${esc(formatDate(view.start))} – ${esc(formatDate(view.end))}</span><span>${esc(comparison)}</span><span>${esc(policy)}</span><span>Measure: ${esc(lens)}${esc(reference)}</span>`;
+  $('scope-summary').innerHTML=`<strong>${people}</strong><span>${esc(formatDate(view.start))} – ${esc(formatDate(view.end))}</span><span>${esc(comparison)}</span><span>${esc(policy)}</span>`;
   const total = rawCommits.length;
   setText('data-coverage', `Dataset: ${number.format(total)} deduplicated, dated commits · ${formatDate(view.min)} – ${formatDate(view.max)} · ${view.groupDefs.length} reconciled identities`);
 }
@@ -1532,7 +1532,7 @@ function renderMonthlyPulse(view) {
     const map=new Map();
     if(signalMode){
       for (const bucket of signal.byId.get(c.id)?.months.values()||[])map.set(monthIndex(bucket.month),bucket);
-    } else for(const [d,val] of Object.entries(c.daily[view.metric])) {
+    } else for(const [d,val] of Object.entries(c.daily[state.pulseMetric])) {
       const mo=monthIndex(d);
       map.set(mo,(map.get(mo)||0)+val);
     }
@@ -1556,7 +1556,7 @@ function renderMonthlyPulse(view) {
     const ym=`${Math.floor(m/12)}-${String(m%12+1).padStart(2,'0')}`;
     const label=levelMode ? pulseLevelMonthLabel(c.displayName,ym,bucket) : gapMode ? bucket ? `${c.displayName}, ${ym}: mean weighted release-gap signal ${pulseScore(v)} of 100 over ${bucket.days} eligible weekdays; ${bucket.attentionDays} days at least ${ATTENTION_THRESHOLD}; ${bucket.distributedDays} distributed days. Latest credited release ${bucket.lastRelease?.tag||'unknown'} (${bucket.lastRelease?.linesChanged??'—'} shipped changed lines); effective gap ${pulseScore(bucket.lastEffectiveGap)} days.` : `${c.displayName}, ${ym}: no eligible days with a prior credited release contribution.` :
       momentumMode ? bucket ? `${c.displayName}, ${ym}: mean momentum ${momentumNumber(v)} across ${bucket.days} comparable workdays; ${bucket.buildingDays} building and ${bucket.coolingDays} cooling days; ${bucket.distributedDays} distributed days; latest ${momentumNumber(bucket.latest.score)} on ${bucket.latest.date}.` : `${c.displayName}, ${ym}: insufficient comparable workday history.` :
-      `${c.displayName} · ${ym}: ${number.format(v)} ${METRICS[view.metric].unit}; ${pulseTemporal?.byId.get(c.id)?.months.get(ym)?.meaningfulDays??0} meaningful workdays, ${pulseTemporal?.byId.get(c.id)?.months.get(ym)?.distributedDays??0} distributed workdays.`;
+      `${c.displayName} · ${ym}: ${number.format(v)} ${METRICS[state.pulseMetric].unit}; ${pulseTemporal?.byId.get(c.id)?.months.get(ym)?.meaningfulDays??0} meaningful workdays, ${pulseTemporal?.byId.get(c.id)?.months.get(ym)?.distributedDays??0} distributed workdays.`;
     return `<div class="pulse-cell ${signalMode?'pulse-gap-month':''} ${levelMode?'pulse-velocity-cell pulse-velocity-month':''}" style="${signalStyle?signalStyle(v):intensityStyle(v,scale)}" title="${esc(label)}" role="img" aria-label="${esc(label)}">${levelMode?`<span aria-hidden="true">${esc(velocityCellText(v))}</span>`:''}</div>`;
   }).join('')}`).join('');
   $('pulse').innerHTML=`<div class="pulse-grid" style="grid-template-columns:${columns}"><span></span>${yearHead.join('')}<span></span>${monthLabels}${cells}</div>`;
@@ -1584,7 +1584,7 @@ function renderDailyPulse(view) {
   const gapMode=!!pulseReleaseGap,momentumMode=!!pulseMomentum,levelMode=state.pulseLens==='level',signalMode=gapMode||momentumMode||levelMode;
   const signal=gapMode?pulseReleaseGap:momentumMode?pulseMomentum:pulseLevel;
   const signalStyle=gapMode?pulseGapCellStyle:momentumMode?pulseMomentumCellStyle:levelMode?velocityStyle:null;
-  const scale=signalMode?null:makeIntensityScale(view.contributors.flatMap(c=>Object.values(c.daily[view.metric])));
+  const scale=signalMode?null:makeIntensityScale(view.contributors.flatMap(c=>Object.values(c.daily[state.pulseMetric])));
   const weekColumns=`repeat(${weeks.length}, var(--pulse-week-size))`;
   const months=dailyPulseMonths(view).map(m=>`<span class="pulse-daily-month" style="grid-column:${m.index+1}">${esc(m.label)}</span>`).join('');
   const weekdays=DAY_NAMES.map((day,i)=>`<span aria-hidden="true">${i%2===0?esc(day):''}</span>`).join('');
@@ -1594,9 +1594,9 @@ function renderDailyPulse(view) {
       const day=dateAtDay(dayNumber(week)+i);
       if(day<view.start||day>view.end)return '<span class="pulse-daily-outside" aria-hidden="true"></span>';
       const cell=record?.daily.get(day);
-      const value=signalMode?(levelMode?(cell?.level??null):(cell?.score??null)):(c.daily[view.metric][day]||0);
+      const value=signalMode?(levelMode?(cell?.level??null):(cell?.score??null)):(c.daily[state.pulseMetric][day]||0);
       const label=gapMode ? pulseGapDailyLabel(c.displayName,cell) : momentumMode ? `${pulseMomentumDailyLabel(c.displayName,cell)}; ${pulseLevelDailyLabel(c.displayName,pulseLevel?.byId.get(c.id)?.daily.get(day))}` : levelMode?pulseLevelDailyLabel(c.displayName,cell) :
-        `${c.displayName}, ${formatDate(day)}: ${number.format(value)} ${METRICS[view.metric].unit}; ${pulseTemporalDailyLabel(pulseTemporal?.byId.get(c.id)?.daily.get(day)||emptyTemporalDay(pulseTimeSettings()))}. View day activity.`;
+        `${c.displayName}, ${formatDate(day)}: ${number.format(value)} ${METRICS[state.pulseMetric].unit}; ${pulseTemporalDailyLabel(pulseTemporal?.byId.get(c.id)?.daily.get(day)||emptyTemporalDay(pulseTimeSettings()))}. View day activity.`;
       return `<button type="button" class="pulse-cell pulse-daily-cell ${signalMode&&cell?.reason==='weekend'?'pulse-gap-weekend':''} ${levelMode?'pulse-velocity-cell pulse-velocity-day':''}" style="${signalStyle?signalStyle(value):intensityStyle(value,scale)}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(label)}" aria-label="${esc(label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${levelMode?`<span aria-hidden="true">${esc(velocityCellText(value))}</span>`:''}</button>`;
     })).join('');
     return `<div class="pulse-daily-contributor"><div class="pulse-daily-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div><div class="pulse-weekdays">${weekdays}</div><div class="pulse-day-cells" style="grid-template-columns:${weekColumns}">${cells}</div></div>`;
@@ -1636,6 +1636,8 @@ function renderPulse(view) {
   document.querySelectorAll('[data-motion-view]').forEach(button=>{const on=button.dataset.motionView===(motionVisible?'motion':'cells');button.classList.toggle('active',on);button.setAttribute('aria-pressed',String(on));
     button.textContent=button.dataset.motionView==='motion'?'Time explorer':(signatureMode?'Snapshot':'Cells');});
   const signature=signatureMode?signatureMatrix(perspectiveIndex,pulseContinuity,view.contributors,{from:view.start,to:view.end},{temporal:timing}):null;
+  $('pulse-metric-control').hidden=signalMode;
+  $('pulse-metric-select').value=state.pulseMetric;
   $('pulse-gap-settings').hidden=!gapMode;
   $('pulse-momentum-settings').hidden=!momentumMode;
   $('pulse-level-settings').hidden=!levelMode;
@@ -1683,8 +1685,8 @@ function renderPulse(view) {
     ? `Direction (−100 to +100): compare the latest ${state.pulseMomentumWorkdays} workdays with the prior ${state.pulseMomentumWorkdays} workdays for the same person. Daily contribution units blend 25% commits, 45% non-VERSION changed lines, 15% churn-weighted distribution, and 15% authored lines shipped in tagged releases. Window pace = 75% average units + 25% consistency (share of workdays with ≥ ${state.pulseMeaningfulLines} changed lines). Momentum = 100 × (recent pace − previous pace) / (recent pace + previous pace + 0.1). Positive is building; negative is cooling; zero can also mean no observed activity. The summary below separately shows absolute recent recorded contribution level. ${daily?'Open a date for both windows and today’s evidence.':'Monthly cells average scored weekdays, so opposing directions can cancel.'} At least ${2*state.pulseMomentumWorkdays} complete imported weekdays are required; weekends are not scored.`
     :daily
     ? `Each square is one authored day (Mon–Sun). Open a cell to see its first/last commit, span, active ${state.pulseTemporalPeriod}-minute windows and churn-weighted distribution. A single commit has unknown spread, not zero contribution. Scroll sideways for older weeks.`
-    : 'One square per person and calendar month. Intensity still shows the selected absolute Git metric. The distribution summary underneath adds meaningful-day consistency, recorded clock span and timed-window coverage.');
-  const caption=continuityMode?'CONTRIBUTION CONTINUITY':gapMode?'RELEASE GAP × ACTIVITY':momentumMode?'CONTRIBUTION MOMENTUM':levelMode?'ABSOLUTE VELOCITY':METRICS[view.metric].label.toUpperCase();
+    : 'One square per person and calendar month. Intensity shows the chosen colour-by measure. The distribution summary underneath adds meaningful-day consistency, recorded clock span and timed-window coverage.');
+  const caption=continuityMode?'CONTRIBUTION CONTINUITY':gapMode?'RELEASE GAP × ACTIVITY':momentumMode?'CONTRIBUTION MOMENTUM':levelMode?'ABSOLUTE VELOCITY':METRICS[state.pulseMetric].label.toUpperCase();
   const legend=continuityMode?pulseContinuityLegend():gapMode?pulseGapLegend():momentumMode?pulseMomentumLegend():null;
   if(!view.contributors.length||!view.spanDays){
     setText('pulse-context',signalMode?`${caption} / ${daily?'DAILY':weekly?'WEEKLY':'MONTHLY'} · ${continuityMode?'AUTHORED + TAGGED RELEASES':momentumMode?'−100 TO +100':levelMode?'FIXED ABSOLUTE INDEX':'0–100'}`:`${caption} / ${daily?'DAILY':'MONTHLY'} TOTALS · SHARED SCALE`);
@@ -1781,7 +1783,7 @@ function positionPulsePopover(cell) {
 }
 function showPulsePopover(cell,{pin=false}={}) {
   if(state.pulseMode!=='daily'||!analysis || (pulsePopoverPinned && !pin)) return;
-  const details=pulseDayDetails(analysis,cell.dataset.personId,cell.dataset.pulseDay);
+  const details=pulseDayDetails(analysis,cell.dataset.personId,cell.dataset.pulseDay,state.pulseMetric);
   if(!details)return;
   const popup=$('pulse-popover');
   const same=pulsePopoverOrigin===cell;
@@ -2423,6 +2425,30 @@ function showImpactTabsFor(tab) {
     if(evidenceRendered.keys.has('impact'))renderImpact(analysis);
   }
 }
+/**
+ * The activity pulse answers a different question on each tab: Rhythm shows
+ * when work happened and how continuously, People shows momentum and pace,
+ * and Releases shows gaps between releases and activity.
+ */
+const PULSE_VIEWS={
+  rhythm:{lenses:['activity','continuity'],title:'The activity pulse.',intro:'Authored changes per person over time, and recorded contribution continuity against each person\'s working-day pattern.'},
+  contributors:{lenses:['momentum','level'],title:'Momentum and pace.',intro:'Directional momentum against each person\'s own preceding period, and absolute velocity on a fixed scale.'},
+  observatory:{lenses:['release-gap'],title:'Release gaps and activity.',intro:'Where long gaps since a person\'s last released change coincide with quiet authored days.'},
+};
+const pulseLensByTab={rhythm:'activity',contributors:'momentum',observatory:'release-gap'};
+function showPulseLensesFor(tab) {
+  const host=PULSE_VIEWS[tab];if(!host)return;
+  for(const button of document.querySelectorAll('[data-pulse-lens]'))button.hidden=!host.lenses.includes(button.dataset.pulseLens);
+  document.querySelector('[data-pulse-lens]')?.closest('.segmented')?.toggleAttribute('hidden',host.lenses.length<2);
+  setText('pulse-heading',host.title);
+  const intro=$('pulse-heading').nextElementSibling;if(intro)intro.textContent=host.intro;
+  if(host.lenses.includes(state.pulseLens))return;
+  const lens=host.lenses.includes(pulseLensByTab[tab])?pulseLensByTab[tab]:host.lenses[0];
+  state.pulseLens=lens;
+  if(lens==='continuity'&&state.pulseMode==='monthly')state.pulseMode='weekly';
+  else if(lens!=='continuity'&&state.pulseMode==='weekly')state.pulseMode='monthly';
+  if(evidenceRendered.keys.has('pulse'))renderPulse(analysis);
+}
 /** The tab each workbench section belongs to comes from its `data-tabs` attribute. */
 const sectionTabs=node=>(node.dataset.tabs||'').split(/\s+/);
 function setExperienceVisibility() {
@@ -2439,7 +2465,7 @@ function setExperienceVisibility() {
       button.href=targetUrl(routePath(),{...primary,mode:tab},mergeGroups.map((g,i)=>({...g,id:String(i)})),localDatasetId,{view:button.dataset.experience});
     }else button.setAttribute('aria-pressed',String(active));
   }
-  showImpactTabsFor(tab);
+  showImpactTabsFor(tab);showPulseLensesFor(tab);
   const saved=$('local-link-toggle');
   if(saved)saved.textContent=localDatasetId?'Update saved history for other tabs':'Enable multi-tab links';
   const forget=$('local-link-clear');if(forget)forget.hidden=!localDatasetId;
@@ -2481,7 +2507,7 @@ function focusStoryMonth() {
  */
 const EVIDENCE_STAGES=[
   {key:'comparison',tabs:['contributors'],label:'Preparing comparisons',value:79,help:'Summary, ranking and trends',render:()=>{renderStats(analysis);renderRanking(analysis);renderTrend(analysis);}},
-  {key:'pulse',tabs:['rhythm'],label:'Rendering activity pulse',value:84,help:'Comparing authored dates',render:()=>renderPulse(analysis)},
+  {key:'pulse',tabs:['rhythm','contributors','observatory'],label:'Rendering activity pulse',value:84,help:'Comparing authored dates',render:()=>renderPulse(analysis)},
   {key:'rhythm',tabs:['rhythm'],label:'Rendering weekly rhythms',value:89,help:'Weekdays, hours and seasonality',render:()=>renderRhythm(analysis)},
   {key:'impact',tabs:['observatory','codebase'],label:'Rendering impact evidence',value:94,help:'Tagged releases and contributor roles',render:()=>renderImpact(analysis)},
   {key:'codebase',tabs:['codebase'],label:'Rendering the codebase',value:96,help:'Change sizes and codebase hotspots',render:()=>{renderFootprint(analysis);renderAreas(analysis);}},
@@ -2595,7 +2621,7 @@ function sessionPayload() {
     mergeGroups:mergeGroups.map(g=>({displayName:g.displayName,emails:[...g.emails],workingDays:normalizeWorkingDays(g.workingDays)})),
     scope:{selectedEmails,period:state.period,start:state.start,end:state.end,followsLatest:scopeFollowsLatest,metric:state.metric,mode:state.mode,denominator:state.denominator,
       includeMerges:state.includeMerges,includeReverts:state.includeReverts,trend:state.trend,pulseMode:state.pulseMode,
-      pulseLens:state.pulseLens,motionViews:state.motionViews,motionWeeks:state.motionWeeks,motionStep:state.motionStep,motionTrail:state.motionTrail,motionLabels:state.motionLabels,motionLevelDisplay:state.motionLevelDisplay,pulseGapHorizon:state.pulseGapHorizon,pulseBusyDay:state.pulseBusyDay,pulseReleaseLines:state.pulseReleaseLines,pulseDailyChurn:state.pulseDailyChurn,pulseMomentumWorkdays:state.pulseMomentumWorkdays,pulseLevelWorkdays:state.pulseLevelWorkdays,pulseContinuityWeeks:state.pulseContinuityWeeks,continuityView:state.continuityView,pulseTemporalPeriod:state.pulseTemporalPeriod,pulseTemporalChurn:state.pulseTemporalChurn,pulseMeaningfulLines:state.pulseMeaningfulLines,
+      pulseLens:state.pulseLens,pulseMetric:state.pulseMetric,motionViews:state.motionViews,motionWeeks:state.motionWeeks,motionStep:state.motionStep,motionTrail:state.motionTrail,motionLabels:state.motionLabels,motionLevelDisplay:state.motionLevelDisplay,pulseGapHorizon:state.pulseGapHorizon,pulseBusyDay:state.pulseBusyDay,pulseReleaseLines:state.pulseReleaseLines,pulseDailyChurn:state.pulseDailyChurn,pulseMomentumWorkdays:state.pulseMomentumWorkdays,pulseLevelWorkdays:state.pulseLevelWorkdays,pulseContinuityWeeks:state.pulseContinuityWeeks,continuityView:state.continuityView,pulseTemporalPeriod:state.pulseTemporalPeriod,pulseTemporalChurn:state.pulseTemporalChurn,pulseMeaningfulLines:state.pulseMeaningfulLines,
       rhythmDisplay:state.rhythmDisplay,rhythmTab:state.rhythmTab,seasonMode:state.seasonMode,seasonYears:state.seasonYears?[...state.seasonYears]:null,
       rhythmFocusEmail:emailForId(state.rhythmFocus),
       impactTab:state.impactTab,impactMetric:state.impactMetric,impactAreaMode:state.impactAreaMode,
@@ -2921,7 +2947,7 @@ const ACTIONS={
   'trend-mode':(_e,t)=>{state.trend=t.dataset.trend;if(analysis)renderTrend(analysis);},
   'pulse-mode':(_e,t)=>{if(t.dataset.pulseMode==='weekly'&&state.pulseLens!=='continuity')return;state.pulseMode=t.dataset.pulseMode;updateControls();if(analysis)renderPulse(analysis);},
   'pulse-motion-view':(_e,t)=>{const lens=state.pulseLens==='continuity'?state.continuityView:state.pulseLens;if(!MOTION_MODES.includes(lens))return;if(!['cells','motion'].includes(t.dataset.motionView))return;state.motionViews[lens]=t.dataset.motionView;state.motionFrameIndex=-1;if(analysis)renderPulse(analysis);},
-  'pulse-lens':(_e,t)=>{const previous=state.pulseLens;state.pulseLens=t.dataset.pulseLens;if(previous!=='continuity'&&state.pulseLens==='continuity')state.pulseMode='weekly';else if(state.pulseMode==='weekly'&&state.pulseLens!=='continuity')state.pulseMode='monthly';updateControls();if(analysis)renderPulse(analysis);},
+  'pulse-lens':(_e,t)=>{const previous=state.pulseLens;state.pulseLens=t.dataset.pulseLens;pulseLensByTab[state.viewMode]=state.pulseLens;if(previous!=='continuity'&&state.pulseLens==='continuity')state.pulseMode='weekly';else if(state.pulseMode==='weekly'&&state.pulseLens!=='continuity')state.pulseMode='monthly';updateControls();if(analysis)renderPulse(analysis);},
   'continuity-view':(_e,t)=>{if(!SIGNATURE_MODES.includes(t.dataset.continuityView))return;state.continuityView=t.dataset.continuityView;updateControls();if(analysis)renderPulse(analysis);},
   'rhythm-tab':(_e,t)=>{state.rhythmTab=t.dataset.rhythmTab;seasonHover=null;seasonPinned=null;renderRhythmExplorer(analysis);},
   'season-mode':(_e,t)=>{state.seasonMode=t.dataset.seasonMode;seasonHover=null;seasonPinned=null;renderSeasonality(analysis);},
@@ -3065,6 +3091,7 @@ function handleDocumentChange(event) {
     case 'identity-import-input':importIdentities(event);break;
     case 'period-select':updatePeriod(t.value);break;
     case 'date-from':case 'date-to':changeDate();break;
+    case 'pulse-metric-select':if(METRICS[t.value]){state.pulseMetric=t.value;renderPulse(analysis);$('pulse-metric-select').focus({preventScroll:true});}break;
     case 'scope-comparison':primary.periodComparison=t.value;updateControls();renderScope(analysis);renderPrimary();break;
     case 'scope-compare-from':case 'scope-compare-to':primary.compareFrom=$('scope-compare-from').value||null;primary.compareTo=$('scope-compare-to').value||null;renderScope(analysis);renderPrimary();break;
     case 'filter-merges':state.includeMerges=t.checked;renderDashboard();break;

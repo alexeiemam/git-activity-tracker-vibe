@@ -146,6 +146,10 @@ test('primary asset integration keeps release models in the analysis worker',()=
  for(const name of ['observatory','rhythm','contributors','codebase','deployments','evidence'])assert.match(html,new RegExp(`data-experience="${name}"`));
  assert.match(html,/id="scope-bar"/);
  assert.match(html,/id="scope-comparison"/,'the comparison window is part of the scope');
+ assert.match(html,/id="people-measure" class="people-measure" data-tabs="contributors"/,'the measure sits with the People charts it drives');
+ assert.match(html,/aria-labelledby="pulse-heading" data-tabs="rhythm contributors observatory"/,'each tab shows its own pulse lenses');
+ assert.match(html,/id="pulse-metric-select"/);
+ assert.match(app,/rhythm:\{lenses:\['activity','continuity'\]/);
 });
 
 test('release landscape preserves empty intervals as true calendar gaps',()=>{

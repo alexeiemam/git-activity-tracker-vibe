@@ -97,8 +97,11 @@ Old links to `?view=periods` open the Rhythm tab.
 describes: the people, the dates (all imported dates, the latest 7, 14, 30,
 90, 365 or 730 days, a calendar year or any custom interval), what to
 **compare with** (the previous period of equal length, the same dates last
-year, other dates or nothing), the merge/revert policy and the measure.
-**Edit scope** opens the controls. Under the summary, four headline facts
+year, other dates or nothing) and the merge/revert policy.
+**Edit scope** opens the controls. The measure is not part of the scope: it
+sits in a **Measure** toolbar on the People tab, beside the summary,
+contribution and trend charts it drives (the Evidence table's first column
+follows it too). Under the summary, four headline facts
 (authored commits, people authoring, release events and areas touched) show
 their change against the comparison window, and short observations note
 material changes; a comparison window that reaches outside the imported
@@ -416,8 +419,13 @@ The **ranking, trend and comparison table** use the chosen metric and mode. The 
 
 ### Release gap × authored activity (Pulse)
 
-The **activity pulse** offers five complementary lenses: **Authored activity**
-(the existing raw totals, still the default), **Release gap × activity** (a warm,
+The **activity pulse** offers five complementary lenses, each shown on the tab
+whose question it answers: **Rhythm** shows **Authored activity** and
+**Contribution continuity**, **People** shows **Contribution momentum** and
+**Absolute velocity**, and **Releases** shows **Release gap × activity**.
+Authored activity has its own **Colour by** measure (any authored measure,
+independent of the People tab's measure). The lenses are: **Authored activity**
+(raw totals), **Release gap × activity** (a warm,
 0–100 attention signal), and **Contribution momentum** (a diverging, signed
 trend against the same contributor's recent history), plus **Absolute velocity** (the fixed-scale, uncapped log index) and
 **Contribution continuity** (configurable per-identity working-day patterns, independently visible missing/extra contribution dates, observed quiet gaps and tagged-release participation). All support
@@ -782,7 +790,7 @@ Within a given visualisation the scale is **shared across all displayed people, 
 - **Per active day** divides a contributor's measure by their active authored days (and team totals by contributor-days). **Per calendar week** divides by all elapsed days in the selection / 7, including quiet days.
 - **File touches** are changed-file entries across commits, **not** unique paths. **Line churn** is added + removed text lines; binary modifications contribute touches but no line counts.
 - **VERSION touches** are commits modifying a `VERSION` file, **not** authenticated releases. **Reverts** are counted as events, never subtracted from commit totals. Merge detection uses parents when available, otherwise the subject heuristic.
-- **Release participation**, **Release leadership** and **Released churn** (the *Release delivery* group of the Comparison lens) come from tag-defined release reconstruction, not individual commits, and are dated by the release's publication/tag date. Participation counts in-scope tagged releases that ship a person's authored commits; leadership counts releases they published on GitHub or tagged. For both, **% of reference group** is the share of releases in scope, and a team total counts each release once. **Released churn** is line churn from authored commits that actually shipped in an in-scope release; unreleased work is excluded, and a commit contained by several tags counts once at the first release that shipped it.
+- **Release participation**, **Release leadership** and **Released churn** (the *Release delivery* group of the People tab's **Measure**) come from tag-defined release reconstruction, not individual commits, and are dated by the release's publication/tag date. Participation counts in-scope tagged releases that ship a person's authored commits; leadership counts releases they published on GitHub or tagged. For both, **% of reference group** is the share of releases in scope, and a team total counts each release once. **Released churn** is line churn from authored commits that actually shipped in an in-scope release; unreleased work is excluded, and a commit contained by several tags counts once at the first release that shipped it.
 - Except for release participation and leadership, a share's denominator is **the same metric** in the selected reference group and time period. The selected group may be a single person, a subset, or everyone.
 - Commit sizes and Git activity aren't reliable measures of individual effectiveness, value, or productivity.
 

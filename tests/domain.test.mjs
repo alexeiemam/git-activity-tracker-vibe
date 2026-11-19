@@ -186,6 +186,9 @@ test('daily pulse detail uses the same authored-date, person and commit filters 
   assert.equal(day.referenceValue,32); // Blair also changed 12 lines on the day
   assert.equal(day.share,62.5);
   assert.equal(day.referenceCommits,3);
+  const byCommits=pulseDayDetails(view,'0','2026-10-28','commits');
+  assert.equal(byCommits.metric,'commits','the pulse can colour by its own measure');
+  assert.equal(byCommits.metricValue,2);
   assert.equal(day.commitsCount,2);
   assert.deepEqual(new Set(day.commits.map(c=>c.hash)),new Set(['a1','a2']));
   assert.equal(day.added,13);

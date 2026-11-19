@@ -583,7 +583,7 @@ export function workingRhythm(view, focusId = 'selection') {
  * eligible commits and reference cohort from buildAnalysis. No second filter
  * path is introduced for the daily activity pulse or its details.
  */
-export function pulseDayDetails(view, contributorId, date) {
+export function pulseDayDetails(view, contributorId, date, metric = view.metric) {
   const id = String(contributorId);
   if (!validDate(date) || date < view.start || date > view.end || !view.selectedIds.has(id)) return null;
   const contributor = view.byId.get(id);
@@ -608,12 +608,12 @@ export function pulseDayDetails(view, contributorId, date) {
   }
   const times = commits.filter(c => Number.isInteger(c.hour))
     .map(c => `${String(c.hour).padStart(2, '0')}:${String(c.minute ?? 0).padStart(2, '0')}`).sort();
-  const metricValue = contributor.daily[view.metric]?.[date] || 0;
-  const referenceValue = sum(view.referenceContributors.map(c => c.daily[view.metric]?.[date] || 0));
+  const metricValue = contributor.daily[metric]?.[date] || 0;
+  const referenceValue = sum(view.referenceContributors.map(c => c.daily[metric]?.[date] || 0));
   const referenceCommits = sum(view.referenceContributors.map(c => c.daily.commits[date] || 0));
   return {
     date, contributorId: id, contributorName: contributor.displayName,
-    metric: view.metric, metricValue, referenceValue,
+    metric, metricValue, referenceValue,
     reference: view.denominator, share: referenceValue ? metricValue / referenceValue * 100 : null,
     referenceCommits,
     commitsCount: commits.length,
