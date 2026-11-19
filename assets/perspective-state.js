@@ -1,6 +1,7 @@
 /** Bounded, browser-independent navigation state for the three primary perspectives. */
 export const primaryDefaults=()=>({
   mode:'observatory',cohortBy:'type',releaseHash:null,releaseType:'all',releaseYear:'all',releaseQuery:'',releasePage:0,releaseBin:null,
+  releaseShape:'all',fingerprintView:'arrival',fingerprintWeight:'commits',fingerprintTypical:'on',
   periodPreset:'14',periodFrom:null,periodTo:null,periodComparison:'previous',compareFrom:null,compareTo:null,
   periodBucket:null,periodSelectedId:null,periodFocusPerson:null,periodFocusArea:null,
   contributorFocus:null,contributorTab:'delivery',contributorRange:'all',compareB:null,compareC:null,
@@ -11,6 +12,8 @@ const keys=['contributorFocus','compareB','compareC','coReleasePartner','periodS
 const accepted={
   mode:['observatory','periods','contributors','codebase','deployments'],cohortBy:['type','driver','year'],
   releaseType:['all','major','minor','patch','prerelease','unclassified','divergent','baseline','same-version'],
+  releaseShape:['all','hotfix','steady','long-tail','backlog','initial','unmeasured'],
+  fingerprintView:['arrival','histogram','strip'],fingerprintWeight:['commits','lines'],fingerprintTypical:['on','off'],
   periodComparison:['none','previous','year','custom'],
   contributorTab:['delivery','together','focus','behaviour','evolution','compare'],
   coReleaseSort:['shared','overlap'],

@@ -1,5 +1,6 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, codebasePortrait, windowOf, briefingText } from './perspectives.js?v=git-ingest-input-20261113-1';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, codebasePortrait, windowOf, briefingText, releaseFingerprints } from './perspectives.js?v=git-ingest-input-20261113-1';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=git-ingest-input-20261113-1';
 import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=git-ingest-input-20261113-1';
 import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=git-ingest-input-20261113-1';
 import { targetUrl } from './route-state.js?v=git-ingest-input-20261113-1';
@@ -28,18 +29,99 @@ const select=(id,values,selected,attr='')=>`<select id="${id}" class="primary-se
 const card=(title,body,eyebrow='')=>`<section class="primary-panel"><div class="primary-card-heading">${eyebrow?`<span class="primary-eyebrow">${e(eyebrow)}</span>`:''}<h3>${e(title)}</h3></div>${body}</section>`;
 const duration=v=>!Number.isFinite(v)?'—':v<1?`${n.format(v*24)} h`:v<90?`${n.format(v)} days`:`${n.format(v/30.44)} months`;
 /** Commit age at release as columns; waiting (unreleased) commits sit apart and stay out of percentiles. */
-function releaseAgeChart(dist,{compare=null,subject='Commits',compareLabel='Everyone'}={}){
-  const measured=dist.released+dist.unreleased;
-  if(!measured)return empty('No dated commits to measure','Commit age needs author times and a dated release.');
-  const share=(count,of)=>of?count/of:0;
-  const compareTotal=compare?compare.released+compare.unreleased:0;
-  const columns=[...dist.buckets.map((b,i)=>({label:b.label,count:b.count,mine:share(b.count,measured),theirs:compare?share(compare.buckets[i].count,compareTotal):null})),
-    ...(dist.unreleased||compare?.unreleased?[{label:'Not yet released',count:dist.unreleased,mine:share(dist.unreleased,measured),theirs:compare?share(compare.unreleased,compareTotal):null,waiting:true}]:[])];
-  const top=Math.max(...columns.map(c=>Math.max(c.mine,c.theirs||0)),.01);
-  const summary=`${subject}: median ${duration(dist.median)} from authoring to first release; 90% within ${duration(dist.p90)}${dist.unreleased?`; ${dist.unreleased} not yet released`:''}.`;
-  return `<div class="primary-age-chart" role="img" aria-label="${e(summary)}">${columns.map(c=>`<div class="primary-age-col${c.waiting?' is-waiting':''}" title="${e(`${c.label}: ${c.count} commits (${p(c.mine)})${c.theirs!=null?` · ${compareLabel}: ${p(c.theirs)}`:''}`)}"><span class="primary-age-bar"><i style="height:${clamp(c.mine/top*100,c.count?2:0,100)}%"></i>${c.theirs!=null?`<b style="bottom:${clamp(c.theirs/top*100,0,100)}%"></b>`:''}</span><strong>${f(c.count)}</strong><small>${e(c.label)}</small></div>`).join('')}</div>
-    ${compare?`<p class="primary-legend-row"><span><i class="primary-age-key"></i> ${e(subject)}</span><span><i class="primary-age-key is-compare"></i> ${e(compareLabel)}, same window</span></p>`:''}
-    <div class="primary-facts">${stat(duration(dist.median),'Median time to release',`${f(dist.released)} released commits`)}${stat(duration(dist.p75),'75% released within')}${stat(duration(dist.p90),'90% released within')}${stat(f(dist.unreleased),'Not yet released',dist.unreleased?`Oldest waiting ${duration(dist.oldestWaiting)}`:'Everything here has shipped')}</div>`;
+function releaseAgeChart(dist,{compare=null,ghost=null,subject='Commits',compareLabel='Everyone',facts=true}={}){
+  const measured=dist.total+dist.unreleased;
+  if(!dist.released&&!dist.unreleased)return empty('No dated commits to measure','Commit age needs author times and a dated release.');
+  const share=(value,of)=>of?value/of:0;
+  const unit=dist.weighted?'lines changed':'commits';
+  const compareTotal=compare?compare.total+compare.unreleased:0;
+  const columns=[...dist.buckets.map((b,i)=>({label:b.label,count:b.count,value:b.amount,mine:share(b.amount,measured),
+      theirs:compare?share(compare.buckets[i].amount,compareTotal):null,typical:ghost?ghost[i]:null})),
+    ...(dist.unreleased||compare?.unreleased?[{label:'Not yet released',count:dist.unreleased,value:dist.unreleased,mine:share(dist.unreleased,measured),theirs:compare?share(compare.unreleased,compareTotal):null,typical:null,waiting:true}]:[])];
+  const top=Math.max(...columns.map(c=>Math.max(c.mine,c.theirs||0,c.typical||0)),.01);
+  const summary=`${subject}: median ${duration(dist.median)} from authoring to first release by ${unit}; 90% within ${duration(dist.p90)}${dist.unreleased?`; ${dist.unreleased} not yet released`:''}.`;
+  return `<div class="primary-age-chart" role="img" aria-label="${e(summary)}">${columns.map(c=>`<div class="primary-age-col${c.waiting?' is-waiting':''}" title="${e(`${c.label}: ${f(c.value)} ${c.waiting?'commits':unit} (${p(c.mine)})${c.theirs!=null?` · ${compareLabel}: ${p(c.theirs)}`:''}${c.typical!=null?` · typical release: ${p(c.typical)}`:''}`)}"><span class="primary-age-bar">${c.typical!=null?`<u style="height:${clamp(c.typical/top*100,0,100)}%"></u>`:''}<i style="height:${clamp(c.mine/top*100,c.value?2:0,100)}%"></i>${c.theirs!=null?`<b style="bottom:${clamp(c.theirs/top*100,0,100)}%"></b>`:''}</span><strong>${f(c.value)}</strong><small>${e(c.label)}</small></div>`).join('')}</div>
+    ${compare||ghost?`<p class="primary-legend-row"><span><i class="primary-age-key"></i> ${e(subject)}${dist.weighted?' · lines changed':''}</span>${compare?`<span><i class="primary-age-key is-compare"></i> ${e(compareLabel)}, same window</span>`:''}${ghost?'<span><i class="primary-age-key is-typical"></i> Typical release</span>':''}</p>`:''}
+    ${facts?`<div class="primary-facts">${stat(duration(dist.median),'Median time to release',`${f(dist.released)} released commits`)}${stat(duration(dist.p75),'75% released within')}${stat(duration(dist.p90),'90% released within')}${stat(f(dist.unreleased),'Not yet released',dist.unreleased?`Oldest waiting ${duration(dist.oldestWaiting)}`:'Everything here has shipped')}</div>`:''}`;
+}
+
+const AGE_TICKS=[[1,'1 day'],[7,'1 week'],[30,'1 month'],[91,'3 months'],[182,'6 months'],[365,'1 year'],[730,'2 years']];
+/** Commits placed by author time before the release (log scale), in contributor lanes. */
+function arrivalTimeline(index,release,fingerprint,{weight='commits'}={}){
+  const entries=fingerprint.entries;
+  if(!entries.length)return empty('No dated commits to place','Commit age needs author times and a dated release.');
+  const byPerson=new Map();
+  for(const x of entries)byPerson.set(x.groupId,(byPerson.get(x.groupId)||0)+1);
+  const lanes=[...byPerson].sort((a,b)=>b[1]-a[1]).slice(0,7).map(([id])=>id);
+  const others=byPerson.size>lanes.length;
+  const laneOf=id=>{const i=lanes.indexOf(id);return i>=0?i:lanes.length;};
+  const rows=lanes.length+(others?1:0);
+  const W=760,left=128,right=W-24,top=26,lane=28,H=top+rows*lane+34;
+  const maxAge=Math.max(1,...entries.map(x=>x.age));
+  const x=age=>right-Math.log1p(age)/Math.log1p(maxAge)*(right-left);
+  const maxLines=Math.max(1,...entries.map(x=>x.lines));
+  const radius=v=>weight==='lines'?2.5+9*Math.sqrt(v/maxLines):3.6;
+  const jitter=hash=>((parseInt(hash.slice(0,6),16)||0)%100)/100-.5;
+  const median=fingerprint[weight].median;
+  const name=id=>index.groups.find(g=>g.id===id)?.displayName||'Unknown contributor';
+  const ticks=AGE_TICKS.filter(([d])=>d<=maxAge*1.05);
+  const dots=entries.slice().sort((a,b)=>b.lines-a.lines).map(c=>{
+    const cy=top+laneOf(c.groupId)*lane+lane/2+jitter(c.hash)*(lane-10);
+    return `<circle cx="${x(c.age).toFixed(1)}" cy="${cy.toFixed(1)}" r="${radius(c.lines).toFixed(1)}"><title>${e(`${c.subject} · ${name(c.groupId)} · authored ${day(c.date)} · ${duration(c.age)} before release · ${f(c.lines)} lines`)}</title></circle>`;
+  }).join('');
+  const summary=`${entries.length} commits by ${byPerson.size} contributors, placed by how long before ${release.tag} they were authored; median ${duration(median)}.`;
+  return `<div class="primary-arrival-wrap"><svg class="primary-arrival" viewBox="0 0 ${W} ${H}" role="img" aria-label="${e(summary)}">
+    ${[...lanes.map(name),...(others?['Others']:[])].map((label,i)=>`<text class="lane" x="${left-10}" y="${top+i*lane+lane/2+4}" text-anchor="end">${e(label.length>18?`${label.slice(0,17)}…`:label)}</text><line class="lane-rule" x1="${left}" x2="${right}" y1="${top+(i+1)*lane}" y2="${top+(i+1)*lane}"/>`).join('')}
+    ${ticks.map(([d,label])=>`<line class="tick" x1="${x(d)}" x2="${x(d)}" y1="${top}" y2="${top+rows*lane}"/><text class="axis" x="${x(d)}" y="${top+rows*lane+16}" text-anchor="middle">${e(label)}</text>`).join('')}
+    ${Number.isFinite(median)?`<line class="median" x1="${x(median)}" x2="${x(median)}" y1="${top-8}" y2="${top+rows*lane}"/><text class="median-label" x="${x(median)}" y="${top-12}" text-anchor="middle">median ${e(duration(median))}</text>`:''}
+    <line class="release" x1="${right}" x2="${right}" y1="${top-14}" y2="${top+rows*lane}"/><text class="release-label" x="${right}" y="${top-18}" text-anchor="end">${e(release.tag)} released</text>
+    <g class="dots">${dots}</g>
+    <text class="axis" x="${left}" y="${H-4}">← authored longer before release (log scale)</text>
+  </svg></div>`;
+}
+
+/** Every release as one column of age buckets (top = oldest), in time order. */
+function fingerprintStrip(index,fingerprints,{selectedHash,shape='all',weight='commits'}={}){
+  const releases=index.releases.filter(r=>r.date);
+  if(!releases.length)return empty('No dated releases','Import tags to compare release fingerprints.');
+  const rowsTopDown=RELEASE_AGE_BUCKETS.map((_,i)=>i).reverse();
+  const columns=releases.map(r=>{
+    const fp=fingerprints.releases.get(r.hash),dist=fp[weight];
+    const match=shape==='all'||fp.shape===shape;
+    const cells=rowsTopDown.map(i=>`<i style="opacity:${dist.total?(0.08+0.92*Math.sqrt(dist.buckets[i].share)).toFixed(2):0.04}"></i>`).join('');
+    return `<button type="button" class="primary-fp-col${r.hash===selectedHash?' selected':''}${match?'':' is-dim'}" data-action="primary-fingerprint-release" data-hash="${e(r.hash)}" data-shape="${e(fp.shape)}" aria-pressed="${r.hash===selectedHash}" aria-label="${e(`${r.tag}, ${day(r.date)}: ${shapeLabel(fp.shape)}, median ${duration(dist.median)}`)}" title="${e(`${r.tag} · ${day(r.date)} · ${shapeLabel(fp.shape)} · median ${duration(dist.median)}`)}">${cells}</button>`;
+  }).join('');
+  return `<div class="primary-fp-strip-wrap"><div class="primary-fp-axis" aria-hidden="true"><span>6+ months</span><span>&lt; 1 day</span></div><div class="primary-fp-strip" role="group" aria-label="Release fingerprints in time order; darker cells hold more ${weight==='lines'?'lines changed':'commits'}">${columns}</div></div>
+    <p class="primary-legend-row"><span>Oldest release → newest</span><span>Each column is one release; darker cells hold more ${weight==='lines'?'lines changed':'commits'} of that age</span>${shape!=='all'?`<span>Dimmed: not ${e(shapeLabel(shape))}</span>`:''}</p>`;
+}
+
+const shapeLabel=key=>RELEASE_SHAPES.find(s=>s.key===key)?.label||'Unmeasured';
+const shapeBadge=(key,reference)=>`<span class="primary-shape primary-shape-${e(key)}" title="${e(shapeNote(key,reference))}">${e(shapeLabel(key))}</span>`;
+const fingerprintToggle=(key,value,label,current)=>`<button type="button" class="primary-preset ${current===value?'active':''}" data-action="primary-fingerprint" data-key="${key}" data-value="${value}" aria-pressed="${current===value}">${e(label)}</button>`;
+
+/** Release fingerprint: one panel, three views and two modifiers. */
+function releaseFingerprintPanel(index,r,details,ui){
+  const {fingerprint:fp,typical}=details;
+  const view=ui.fingerprintView||'arrival',weight=ui.fingerprintWeight||'commits',showTypical=(ui.fingerprintTypical||'on')==='on';
+  const dist=fp[weight],typicalShape=typical[weight];
+  const fresher=r.baseline?null:fresherThan(dist.median,typicalShape.medians);
+  const comparison=fresher==null?(r.baseline?'The first tag is not compared with incremental releases.':`Fewer than five incremental releases to compare with.`)
+    :`Median wait ${duration(dist.median)}: shorter than ${p(fresher)} of releases${fresher>=.8?' (unusually fresh)':fresher<=.2?' (unusually old work)':''}.`;
+  const body=view==='arrival'?arrivalTimeline(index,r,fp,{weight})
+    :view==='histogram'?releaseAgeChart(dist,{subject:'This release',ghost:showTypical&&!r.baseline&&typicalShape.releases?typicalShape.shares:null,facts:false})
+    :fingerprintStrip(index,releaseFingerprints(index),{selectedHash:r.hash,shape:ui.releaseShape||'all',weight});
+  return `<div class="primary-inset primary-age-panel">
+    <div class="primary-fp-head"><div><h4>Release fingerprint</h4><p class="primary-muted">How long its changes had waited when it shipped. ${shapeBadge(fp.shape,details.reference)} <span>${e(shapeNote(fp.shape,details.reference))}</span></p></div>
+      <div class="primary-fp-controls">
+        <div class="primary-preset-row" role="group" aria-label="Fingerprint view">${fingerprintToggle('fingerprintView','arrival','Arrival',view)}${fingerprintToggle('fingerprintView','histogram','Age histogram',view)}${fingerprintToggle('fingerprintView','strip','Across releases',view)}</div>
+        <div class="primary-preset-row" role="group" aria-label="Weight by">${fingerprintToggle('fingerprintWeight','commits','Commits',weight)}${fingerprintToggle('fingerprintWeight','lines','Lines changed',weight)}</div>
+        ${view==='histogram'?`<div class="primary-preset-row" role="group" aria-label="Typical release overlay">${fingerprintToggle('fingerprintTypical',showTypical?'off':'on',showTypical?'Hide typical release':'Show typical release','')}</div>`:''}
+      </div></div>
+    ${body}
+    <div class="primary-facts">${stat(duration(dist.median),'Median time to release',`${f(dist.released)} dated commits${weight==='lines'?` · ${f(dist.total)} lines`:''}`)}${stat(duration(dist.p75),'75% released within')}${stat(duration(dist.p90),'90% released within')}${stat(fresher==null?'—':p(fresher),'Fresher than',fresher==null?'Not enough releases':'Share of releases with a longer median wait')}</div>
+    ${caption(`${comparison} Elapsed calendar time from each included commit's author time to this release's publication/tag time${weight==='lines'?', weighted by lines added + deleted':''}. Shapes describe the age of shipped work, not urgency or quality.`)}
+    ${r.baseline?'<p class="primary-warning">First tag in the imported history: it ships everything authored before it, so these ages include initial development.</p>':''}
+  </div>`;
 }
 const filterSentence=index=>`Git author timestamps for activity · tag/GitHub publication events for releases · ${index.policy.includeMerges?'merges included':'merges excluded'} · ${index.policy.includeReverts?'reverts included':'reverts excluded'}`;
 
@@ -52,10 +134,10 @@ function timelineGrid(bins,lanes,{action='primary-bin',dateAttr='data-bin',title
   return `<div class="primary-landscape" aria-label="${e(title)}"><div class="primary-lane-labels">${lanes.map(l=>`<span>${e(l.label)}</span>`).join('')}<span class="primary-landscape-time">Earlier → Recent</span></div><div class="primary-landscape-scroll"><div class="primary-landscape-columns" style="--bars:${bins.length}">${bins.map(b=>`<button type="button" class="primary-landscape-column" data-action="${action}" ${dateAttr}="${e(b.key)}" title="${e(`${b.key}: ${b.count??b.commits??0} ${lanes[0].label.toLowerCase()}; select this period`)}" aria-label="${e(`Inspect ${b.key}`)}">${lanes.map(l=>`<span class="primary-landscape-slot"><i style="height:${b[l.key]>0?clamp(6+94*b[l.key]/(values[l.key]||1),6,100):0}%" class="${e(l.className||'')}"></i></span>`).join('')}<small>${e(b.key)}</small></button>`).join('')}</div></div></div>`;
 }
 
-function releaseAnatomy(index,selectedHash){
+function releaseAnatomy(index,selectedHash,ui){
   const details=releaseDetails(index,selectedHash);
   if(!details)return empty('Select a release','Choose a tag in the landscape or release index to see its complete contents.');
-  const {release:r,commits,releaseAge}=details;
+  const {release:r,commits}=details;
   const rows=r.members.filter(m=>m.commits>0).sort((a,b)=>b.commits-a.commits);
   const total=Math.max(1,r.eligibleIntroduced);
   const people=rows.slice(0,12).map(m=>`<div class="primary-person-row"><span>${whoButton(index,m.id)}${r.driver.groupId===m.id?'<span class="primary-driver-chip">Led release</span>':''}</span>${bar(m.commits,total)}<strong>${f(m.commits)}</strong><small>${p(m.commits/total)}</small></div>`).join('');
@@ -68,7 +150,7 @@ function releaseAnatomy(index,selectedHash){
     <div class="primary-inspector-context"><span><strong>Lead:</strong> ${r.driver.groupId!=null?whoButton(index,r.driver.groupId):e(r.driver.name||'Not identified')}</span><span><strong>Previous tag:</strong> ${e(r.previousTag||'No preceding tagged ancestor')}</span><span><strong>Date source:</strong> ${e(r.dateSource||'Unknown')}</span></div>
     ${!r.lineageComplete?'<p class="primary-warning">Ancestry is incomplete in the imported refs. Introduced-change counts may be incomplete.</p>':''}
     <div class="primary-two-col"><div class="primary-inset"><h4>Who authored its changes?</h4>${people||empty('No matching included changes','Check the merge/revert policy and imported refs.')}${rows.length>12?`<p class="primary-muted">${rows.length-12} further contributors; use Explore Evidence for the full matrix.</p>`:''}<p class="primary-muted">Commit share uses the complete included release (under the stated commit policy). The lead role is independent.</p></div><div class="primary-inset"><h4>Where did they land?</h4>${areas.map(([name,count])=>`<div class="primary-area-row"><a href="${href(index,{view:'codebase',area:name})}" data-action="primary-open-area" data-area="${e(name)}">${e(name)}</a>${bar(count,maxArea)}<span>${f(count)}</span></div>`).join('')||'<p class="primary-muted">No files in this release.</p>'}<h4 class="primary-subtitle">Recorded change categories</h4><div class="primary-tags">${counts.map(([k,v])=>`<span>${e(k)} · ${f(v)}</span>`).join('')||'No categories recorded'}</div><p class="primary-muted">Categories are inferred from commit subjects, not verified intent.</p></div></div>
-    <div class="primary-inset primary-age-panel"><h4>How long had its changes waited?</h4>${releaseAgeChart(releaseAge,{subject:'This release'})}${r.baseline?'<p class="primary-warning">First tag in the imported history: it ships everything authored before it, so these ages include initial development.</p>':''}${caption('Elapsed time from each included commit\'s author time to this release\'s publication/tag time. Calendar time, not effort or review time.')}</div>
+    ${releaseFingerprintPanel(index,r,details,ui)}
     ${deploymentReleasePanel(index,r)}
     ${r.github?.body?`<details class="primary-notes"><summary>Read published release notes</summary><div class="primary-notes-body">${e(r.github.body)}</div></details>`:''}
     <details class="primary-notes"><summary>Inspect ${f(r.commits.length)} included commits (latest 40 shown)</summary><div class="primary-commit-list">${commits.map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(day(c.date))}</span>${whoButton(index,c.groupId)}<span class="primary-commit-subject">${e(c.subject)}</span></div>`).join('')||'<p>No matching commit detail in imported history.</p>'}</div></details>
@@ -81,7 +163,9 @@ function observatory(index,ui){
   if(!all.total)return `${chrome('01 / RELEASE OBSERVATORY','The shape of delivery.')} ${empty('No matched release tags','Re-import reachable Git tags to enable the release-first perspective. You can still explore authored activity in Periods.')}`;
   const years=[...new Set(all.releases.map(r=>r.date.slice(0,4)))].reverse();
   const binFor=date=>all.granularity==='quarter'?`${date.slice(0,4)} Q${Math.floor((+date.slice(5,7)-1)/3)+1}`:all.granularity==='month'?date.slice(0,7):dateAtWeek(date);
-  const list=all.releases.filter(r=>(ui.releaseType==='all'||r.kind===ui.releaseType)&&(ui.releaseYear==='all'||r.date.startsWith(ui.releaseYear))&&(!ui.releaseBin||binFor(r.date)===ui.releaseBin)&&(String(r.tag).toLowerCase().includes((ui.releaseQuery||'').toLowerCase()))).reverse();
+  const fingerprints=releaseFingerprints(index),shapeOf=r=>fingerprints.releases.get(r.hash)?.shape||'unmeasured';
+  const shapeCounts=new Map();for(const r of all.releases)shapeCounts.set(shapeOf(r),(shapeCounts.get(shapeOf(r))||0)+1);
+  const list=all.releases.filter(r=>(ui.releaseType==='all'||r.kind===ui.releaseType)&&(!ui.releaseShape||ui.releaseShape==='all'||shapeOf(r)===ui.releaseShape)&&(ui.releaseYear==='all'||r.date.startsWith(ui.releaseYear))&&(!ui.releaseBin||binFor(r.date)===ui.releaseBin)&&(String(r.tag).toLowerCase().includes((ui.releaseQuery||'').toLowerCase()))).reverse();
   const pages=Math.max(1,Math.ceil(list.length/24)),page=clamp(ui.releasePage||0,0,pages-1);
   const shown=list.slice(page*24,page*24+24);
   const chosen=list.find(r=>r.hash===ui.releaseHash)||list[0]||null;
@@ -108,8 +192,8 @@ function observatory(index,ui){
     ${card('The release landscape',`<p class="primary-muted">Aligned lanes describe release frequency, contributor appearances and summed codebase reach. Select a time bucket to narrow the release index; the release anatomy remains complete.</p>${timelineGrid(periods,[{label:'Releases',key:'count'},{label:'Contributor appearances',key:'people',className:'alt'},{label:'Codebase-area occurrences',key:'areas',className:'gold'}],{action:'primary-observatory-bin',dateAttr:'data-bin',title:'Release events grouped by time'})}<div class="primary-row between"><span class="primary-muted">${e(all.granularity)} buckets · earliest to latest · ${f(periods.length)} observed buckets</span><button class="primary-inline-link" type="button" data-action="primary-reset-release-search">Show all releases</button></div>`,'DELIVERY EVOLUTION')}
     <div class="primary-two-col"><div>${card('Release mix',`<div class="primary-type-list">${palette.map(([k,v])=>`<div><span>${e(type(k))}</span>${bar(v,Math.max(1,...palette.map(x=>x[1])))}<strong>${f(v)}</strong></div>`).join('')}</div><p class="primary-muted">SemVer labels identify version transitions, not their importance.</p>`,'RELEASE TYPES')}</div><div>${card("What's notable?",`<div class="primary-observation"><span class="primary-obs-mark">✳</span><p>${e(change||'The release history is ready for investigation. Select a period or release to compare who contributed, what changed and which people led delivery.')}</p></div><a class="primary-inline-link" href="${href(index,{view:'periods',from:ui.periodFrom,to:ui.periodTo})}" data-action="primary-nav" data-to="periods">Explore an arbitrary period ↗</a>`,'EVIDENCE-LED CONTEXT')}</div></div>
     ${card('Compare release cohorts',`<div class="primary-row between"><p class="primary-muted">Group comparable incremental releases, then inspect their typical size and people/area breadth. This is composition, not a ranking. Baselines excluded.</p><label>Group by ${select('primary-cohort-by',[{value:'type',label:'Version transition'},{value:'driver',label:'Matched / recorded lead'},{value:'year',label:'Release year'}],cohortBy)}</label></div><div class="primary-cohorts">${cohorts.map(([kind,rs])=>`<div class="primary-cohort"><span>${e(cohortBy==='type'?type(kind):kind)}</span><strong>${f(rs.length)} releases</strong><small>Median ${f(median(rs.map(r=>r.eligibleIntroduced)))} commits · ${f(median(rs.map(r=>r.contributors)))} contributors · ${f(median(rs.map(r=>r.areas)))} areas</small>${cohortBy==='type'?`<button class="primary-inline-link" type="button" data-action="primary-filter-release-type" data-type="${e(kind)}">Inspect this release kind ↗</button>`:''}</div>`).join('')}</div>${grouped.size>cohorts.length?`<p class="primary-muted">Showing ${cohorts.length} of ${grouped.size} cohorts; use the release index to inspect specific tags.</p>`:''}`,'COHORT ANALYSIS')}
-    ${card('Browse releases',`${ui.releaseBin?`<p class="primary-filter-chip">Viewing bucket ${e(ui.releaseBin)} <button type="button" data-action="primary-reset-release-bin">Clear filter ×</button></p>`:''}<div class="primary-controls primary-release-controls"><label>Kind ${select('primary-release-type',[{label:'All release kinds',value:'all'},...all.types.map(([k])=>({label:type(k),value:k}))],ui.releaseType)}</label><label>Year ${select('primary-release-year',[{value:'all',label:'All years'},...years.map(y=>({value:y,label:y}))],ui.releaseYear)}</label><label>Find a tag <input id="primary-release-query" class="primary-input" placeholder="Filter tag names…" value="${e(ui.releaseQuery||'')}"></label></div><div class="primary-release-list">${shown.map(r=>`<a href="${href(index,{view:'observatory',release:r.hash})}" class="primary-release-entry ${r.hash===chosen?.hash?'selected':''}" data-action="primary-select-release" data-hash="${e(r.hash)}" ${r.hash===chosen?.hash?'aria-current="true"':''}><span class="primary-release-symbol">${r.kind==='major'?'◆':r.kind==='minor'?'◈':'●'}</span><strong>${e(r.tag)}</strong><small>${e(day(r.date))}</small><span>${f(r.eligibleIntroduced)} commits</span><span>${f(r.contributors)} people</span><em>${e(type(r.kind))}</em></a>`).join('')||empty('No releases match','Change the year, type or tag search.')}</div><div class="primary-row between"><span class="primary-muted">${f(list.length)} matching · page ${page+1} of ${pages}</span><div class="primary-pager"><button data-action="primary-release-page" data-page="${page-1}" ${page===0?'disabled':''}>← Newer</button><button data-action="primary-release-page" data-page="${page+1}" ${page>=pages-1?'disabled':''}>Older →</button></div></div>`,'ALL TAGGED HISTORY')}
-    ${chosen?releaseAnatomy(index,chosen.hash):empty('No release in this filter','Change the year, type or tag filter to choose a release.')}`;
+    ${card('Browse releases',`${ui.releaseBin?`<p class="primary-filter-chip">Viewing bucket ${e(ui.releaseBin)} <button type="button" data-action="primary-reset-release-bin">Clear filter ×</button></p>`:''}<div class="primary-controls primary-release-controls"><label>Kind ${select('primary-release-type',[{label:'All release kinds',value:'all'},...all.types.map(([k])=>({label:type(k),value:k}))],ui.releaseType)}</label><label>Shape ${select('primary-release-shape',[{label:'All shapes',value:'all'},...RELEASE_SHAPES.filter(x=>shapeCounts.has(x.key)).map(x=>({label:`${x.label} (${f(shapeCounts.get(x.key))})`,value:x.key}))],ui.releaseShape||'all')}</label><label>Year ${select('primary-release-year',[{value:'all',label:'All years'},...years.map(y=>({value:y,label:y}))],ui.releaseYear)}</label><label>Find a tag <input id="primary-release-query" class="primary-input" placeholder="Filter tag names…" value="${e(ui.releaseQuery||'')}"></label></div><div class="primary-release-list">${shown.map(r=>`<a href="${href(index,{view:'observatory',release:r.hash})}" class="primary-release-entry has-shape ${r.hash===chosen?.hash?'selected':''}" data-action="primary-select-release" data-hash="${e(r.hash)}" ${r.hash===chosen?.hash?'aria-current="true"':''}><span class="primary-release-symbol">${r.kind==='major'?'◆':r.kind==='minor'?'◈':'●'}</span><strong>${e(r.tag)}</strong><small>${e(day(r.date))}</small><span>${f(r.eligibleIntroduced)} commits</span><span>${f(r.contributors)} people</span>${shapeBadge(shapeOf(r),fingerprints.reference)}<em>${e(type(r.kind))}</em></a>`).join('')||empty('No releases match','Change the year, type or tag search.')}</div><div class="primary-row between"><span class="primary-muted">${f(list.length)} matching · page ${page+1} of ${pages}</span><div class="primary-pager"><button data-action="primary-release-page" data-page="${page-1}" ${page===0?'disabled':''}>← Newer</button><button data-action="primary-release-page" data-page="${page+1}" ${page>=pages-1?'disabled':''}>Older →</button></div></div>`,'ALL TAGGED HISTORY')}
+    ${chosen?releaseAnatomy(index,chosen.hash,ui):empty('No release in this filter','Change the year, type, shape or tag filter to choose a release.')}`;
 }
 
 const dateInput=(id,value)=>`<input id="${id}" type="date" class="primary-input" value="${e(value||'')}">`;

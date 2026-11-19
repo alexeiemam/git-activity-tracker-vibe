@@ -28,24 +28,106 @@ function quantile(sorted, q) {
   const at = (sorted.length - 1) * q, low = Math.floor(at), high = Math.ceil(at);
   return sorted[low] + (sorted[high] - sorted[low]) * (at - low);
 }
+/** Smallest age by which a q share of the total weight has been released. */
+function weightedQuantile(pairs, q) {
+  const total = pairs.reduce((n, [, w]) => n + w, 0);
+  if (!total) return null;
+  let seen = 0;
+  for (const [age, weight] of pairs) {seen += weight;if (seen >= q * total) return age;}
+  return pairs.at(-1)[0];
+}
+
+const bucketOf = age => RELEASE_AGE_BUCKETS.findIndex(bucket => age < bucket.max);
 
 /**
  * Summarise released ages (days) and, optionally, the current waiting age of
  * unreleased commits. `undated` counts commits whose age cannot be measured.
+ * With `weights` (e.g. lines changed, aligned to `ages`), shares and
+ * percentiles describe weight rather than commit counts; `count` stays commits.
  */
-export function releaseAgeDistribution(ages, {waiting = [], undated = 0} = {}) {
-  const sorted = ages.filter(Number.isFinite).sort((a, b) => a - b);
+export function releaseAgeDistribution(ages, {waiting = [], undated = 0, weights = null} = {}) {
+  const pairs = ages.map((age, i) => [age, weights ? Math.max(0, weights[i] || 0) : 1])
+    .filter(([age]) => Number.isFinite(age)).sort((a, b) => a[0] - b[0]);
+  const sorted = pairs.map(([age]) => age);
   const waits = waiting.filter(Number.isFinite).sort((a, b) => a - b);
-  const counts = RELEASE_AGE_BUCKETS.map(() => 0);
-  for (const age of sorted) counts[RELEASE_AGE_BUCKETS.findIndex(bucket => age < bucket.max)]++;
+  const counts = RELEASE_AGE_BUCKETS.map(() => 0), amounts = RELEASE_AGE_BUCKETS.map(() => 0);
+  for (const [age, weight] of pairs) {const i = bucketOf(age);counts[i]++;amounts[i] += weight;}
+  const total = amounts.reduce((a, b) => a + b, 0);
   return {
-    released: sorted.length,
+    released: sorted.length, weighted: !!weights, total,
     buckets: RELEASE_AGE_BUCKETS.map((bucket, index) => ({key:bucket.key, label:bucket.label, count:counts[index],
-      share:sorted.length ? counts[index] / sorted.length : null})),
-    median: quantile(sorted, .5), p75: quantile(sorted, .75), p90: quantile(sorted, .9),
+      amount:amounts[index], share:total ? amounts[index] / total : null})),
+    median: weights ? weightedQuantile(pairs, .5) : quantile(sorted, .5),
+    p75: weights ? weightedQuantile(pairs, .75) : quantile(sorted, .75),
+    p90: weights ? weightedQuantile(pairs, .9) : quantile(sorted, .9),
     unreleased: waits.length, medianWaiting: quantile(waits, .5), oldestWaiting: waits.at(-1) ?? null,
     undated,
   };
+}
+
+/**
+ * Descriptive release shapes from commit-count percentiles. They are relative
+ * to this repository's typical incremental release, so a quarterly project and
+ * a daily one each get meaningful labels. They describe how old the shipped
+ * work was, not whether a release was good or urgent.
+ */
+export const RELEASE_SHAPES = Object.freeze([
+  {key:'hotfix', label:'Hotfix-shaped'},
+  {key:'steady', label:'Steady'},
+  {key:'long-tail', label:'Long tail'},
+  {key:'backlog', label:'Backlog flush'},
+  {key:'initial', label:'Initial history'},
+  {key:'unmeasured', label:'Unmeasured'},
+]);
+/** Without enough releases to compare, fall back to fixed calendar thresholds. */
+const FIXED_REFERENCE = Object.freeze({median:15, p90:30, relative:false});
+const MINIMUM_RELEASES = 5;
+
+/** The repository's typical release wait, from incremental releases' commit-count percentiles. */
+export function shapeReference(dists) {
+  const middle = values => {const list = values.filter(Number.isFinite).sort((a, b) => a - b);return list.length ? quantile(list, .5) : null;};
+  const measured = dists.filter(d => d?.released);
+  if (measured.length < MINIMUM_RELEASES) return {...FIXED_REFERENCE, releases:measured.length};
+  return {median:middle(measured.map(d => d.median)), p90:middle(measured.map(d => d.p90)), relative:true, releases:measured.length};
+}
+
+export function releaseShape(dist, {baseline = false, reference = FIXED_REFERENCE} = {}) {
+  if (baseline) return 'initial';
+  if (!dist?.released) return 'unmeasured';
+  if (dist.p90 <= reference.median / 2) return 'hotfix';
+  if (dist.median >= reference.median * 2) return 'backlog';
+  if (dist.p90 >= reference.p90 * 2 && dist.p90 >= 4 * Math.max(dist.median, 1 / 24)) return 'long-tail';
+  return 'steady';
+}
+
+const days = v => v < 1 ? `${Math.round(v * 24)} hours` : `${Math.round(v * 10) / 10} days`;
+/** Plain-language rule behind a shape, with this repository's thresholds. */
+export function shapeNote(key, reference = FIXED_REFERENCE) {
+  const basis = reference.relative ? `this repository's typical release` : 'fixed thresholds (fewer than five releases to compare)';
+  return {
+    hotfix:`90% of commits under ${days(reference.median / 2)} old: half ${basis}'s median wait`,
+    steady:`Close to ${basis}`,
+    'long-tail':`Mostly fresh, but its oldest 10% waited over ${days(reference.p90 * 2)}: twice ${basis}`,
+    backlog:`Median wait over ${days(reference.median * 2)}: twice ${basis}`,
+    initial:'First tag: ships everything authored before it',
+    unmeasured:'No commits with a measurable age',
+  }[key] || '';
+}
+
+/** The typical release: mean bucket shares across releases, so large releases do not dominate. */
+export function typicalReleaseShape(dists) {
+  const measured = dists.filter(d => d?.total > 0);
+  return {
+    releases: measured.length,
+    shares: RELEASE_AGE_BUCKETS.map((_, i) => measured.length ? measured.reduce((n, d) => n + d.buckets[i].share, 0) / measured.length : null),
+    medians: measured.map(d => d.median).filter(Number.isFinite).sort((a, b) => a - b),
+  };
+}
+
+/** Share of other releases whose median wait was longer (null when too few to compare). */
+export function fresherThan(median, medians, minimum = 5) {
+  if (!Number.isFinite(median) || medians.length < minimum) return null;
+  return medians.filter(m => m > median).length / medians.length;
 }
 
 /** Each commit's first shipping release, by release time, across all tag lineages. */

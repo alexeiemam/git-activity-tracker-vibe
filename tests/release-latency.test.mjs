@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {releaseAgeDays,releaseAgeDistribution,firstReleaseByCommit,commitReleaseAges,RELEASE_AGE_BUCKETS} from '../assets/release-latency.js';
+import {releaseAgeDays,releaseAgeDistribution,firstReleaseByCommit,commitReleaseAges,RELEASE_AGE_BUCKETS,releaseShape,typicalReleaseShape,fresherThan,shapeReference,shapeNote} from '../assets/release-latency.js';
 import {parseGitHistory,buildAnalysis} from '../assets/domain.js';
 import {impactAnalysis} from '../assets/impact.js';
-import {buildEvidenceIndex,contributorPortrait,releaseDetails} from '../assets/perspectives.js';
+import {buildEvidenceIndex,contributorPortrait,releaseDetails,releaseFingerprints} from '../assets/perspectives.js';
+import {restorePrimaryState} from '../assets/perspective-state.js';
 import {renderPrimaryExplorer} from '../assets/perspective-view.js';
 import {primaryDefaults} from '../assets/perspective-state.js';
 
@@ -78,6 +79,83 @@ test('release anatomy shows how long its included commits waited',()=>{
   assert.equal(details.releaseAge.unreleased,0);
   assert.equal(details.releaseAge.median,8,'c waited 14 days, d waited 2 days');
   const html=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseHash:release.hash});
-  assert.match(html,/How long had its changes waited\?/);
+  assert.match(html,/Release fingerprint/);
   assert.match(html,/Median time to release/);
+});
+
+test('lines weighting moves shares and percentiles towards large changes; commit counts are kept',()=>{
+  const d=releaseAgeDistribution([0.5,40],{weights:[10,990]});
+  assert.equal(d.weighted,true);
+  assert.equal(d.total,1000);
+  assert.deepEqual(d.buckets.map(b=>b.count),[1,0,0,0,0,1,0,0]);
+  assert.equal(d.buckets[5].share,.99);
+  assert.equal(d.median,40,'half the lines had waited 40 days, though half the commits were fresh');
+});
+
+test('shapes are relative to the repository\'s typical release once there are enough releases',()=>{
+  const quarterly=[40,50,60,70,80].map(m=>releaseAgeDistribution([m-10,m,m+10]));
+  const reference=shapeReference(quarterly);
+  assert.equal(reference.relative,true);
+  assert.equal(reference.median,60);
+  const shape=ages=>releaseShape(releaseAgeDistribution(ages),{reference});
+  assert.equal(shape([35,45,55]),'steady','a month-old median is normal for a quarterly project');
+  assert.equal(shape([1,5,10,20]),'hotfix');
+  assert.equal(shape([130,150,170]),'backlog');
+  assert.match(shapeNote('backlog',reference),/120 days: twice this repository's typical release/);
+  const few=shapeReference(quarterly.slice(0,4));
+  assert.equal(few.relative,false,'fewer than five releases fall back to fixed thresholds');
+  assert.match(shapeNote('steady',few),/fixed thresholds/);
+});
+
+test('release shapes describe the age of shipped work (fixed thresholds)',()=>{
+  const shape=ages=>releaseShape(releaseAgeDistribution(ages));
+  assert.equal(shape([0.1,0.5,1,2]),'hotfix');
+  assert.equal(shape([2,4,6,9,12]),'steady');
+  assert.equal(shape([1,1,2,2,3,3,4,90,120,150]),'long-tail');
+  assert.equal(shape([35,40,60,90]),'backlog');
+  assert.equal(shape([]),'unmeasured');
+  assert.equal(releaseShape(releaseAgeDistribution([1]),{baseline:true}),'initial');
+});
+
+test('typical release averages shapes so big releases do not dominate, and ranks freshness',()=>{
+  const typical=typicalReleaseShape([releaseAgeDistribution([0.5]),releaseAgeDistribution(Array(99).fill(40))]);
+  assert.equal(typical.shares[0],.5);
+  assert.equal(typical.shares[5],.5);
+  assert.equal(fresherThan(2,[1,3,5,8,13]),.8);
+  assert.equal(fresherThan(2,[1,3]),null,'too few releases to compare');
+});
+
+test('fingerprints exclude the first tag from the typical release and drive the shape filter',()=>{
+  const fps=releaseFingerprints(index);
+  assert.strictEqual(releaseFingerprints(index),fps,'cached per index');
+  const [v1,v11]=['v1.0.0','v1.1.0'].map(tag=>index.releases.find(r=>r.tag===tag));
+  assert.equal(fps.releases.get(v1.hash).shape,'initial');
+  assert.equal(fps.releases.get(v11.hash).shape,'steady');
+  assert.equal(fps.typical.commits.releases,1);
+  const filtered=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseShape:'initial'});
+  assert.match(filtered,/Initial history \(1\)/);
+  assert.match(filtered,new RegExp(`data-hash="${v1.hash}" aria-current="true"`),'filter narrows the release index');
+});
+
+test('each fingerprint view renders, with lines weighting and the typical overlay',()=>{
+  const hash=index.releases.find(r=>r.tag==='v1.1.0').hash;
+  const view=changes=>renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseHash:hash,...changes});
+  assert.match(view({fingerprintView:'arrival'}),/class="primary-arrival"[\s\S]*v1\.1\.0 released/);
+  assert.match(view({fingerprintView:'arrival',fingerprintWeight:'lines'}),/weighted by lines added \+ deleted/);
+  const histogram=view({fingerprintView:'histogram'});
+  assert.match(histogram,/Typical release/);
+  assert.match(histogram,/Hide typical release/);
+  assert.doesNotMatch(view({fingerprintView:'histogram',fingerprintTypical:'off'}),/<u style/);
+  const strip=view({fingerprintView:'strip',releaseShape:'steady'});
+  assert.equal((strip.match(/data-action="primary-fingerprint-release"/g)||[]).length,2);
+  assert.match(strip,/primary-fp-col selected/);
+  assert.match(strip,/primary-fp-col is-dim/,'releases outside the shape filter are dimmed');
+});
+
+test('fingerprint settings and shape filter persist and reject unknown values',()=>{
+  const restored=restorePrimaryState({primary:{fingerprintView:'strip',fingerprintWeight:'lines',fingerprintTypical:'off',releaseShape:'backlog'}});
+  assert.deepEqual([restored.fingerprintView,restored.fingerprintWeight,restored.fingerprintTypical,restored.releaseShape],['strip','lines','off','backlog']);
+  const bad=restorePrimaryState({primary:{fingerprintView:'pie',releaseShape:'urgent'}});
+  assert.equal(bad.fingerprintView,'arrival');
+  assert.equal(bad.releaseShape,'all');
 });

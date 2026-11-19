@@ -281,10 +281,36 @@ production adoption, review effort or engineering correctness.
 the publication/tag time of the first tagged release that shipped it (across
 all tag lineages). It is not effort, review or delivery lead time.
 
-- **Observatory › Release anatomy** shows how long the release's included
-  commits had waited, as a histogram (< 1 day … 6+ months) with the median and
-  75th/90th percentiles. The first tag ships all earlier history, so its ages
-  include initial development and are labelled as such.
+- **Observatory › Release anatomy › Release fingerprint** shows how long the
+  release's included commits had waited, with the median, 75th/90th
+  percentiles and how many releases had a longer median wait ("fresher than").
+  Choose a view:
+  - **Arrival**: each commit placed by how long before the release it was
+    authored (log scale), in contributor lanes, with the median marked.
+  - **Age histogram**: commits per age bucket (< 1 day … 6+ months), with the
+    repository's **typical release** as a dashed outline (hide or show it).
+    The typical release averages each incremental release's shape, so large
+    releases do not dominate.
+  - **Across releases**: every release as one column of age buckets in time
+    order (darker = more work of that age); select a column to open it.
+  **Weight by** switches between commits and lines changed (added + deleted),
+  so one large old change is not equal to one small fresh fix. The first tag
+  ships all earlier history, so its ages include initial development, it is
+  labelled as such and it is left out of the typical release.
+- **Release shapes** describe the age of shipped work, by commit count,
+  relative to this repository's typical incremental release (the median of
+  release medians and of release 90th percentiles), so a quarterly project and
+  a daily one each get meaningful labels: **Hotfix-shaped** (90% of commits
+  younger than half the typical median wait), **Backlog flush** (median wait
+  over twice the typical), **Long tail** (oldest 10% waited over twice the
+  typical 90th percentile, and at least four times its own median), otherwise
+  **Steady**. With fewer than five incremental releases, fixed thresholds
+  (typical median 15 days, 90th percentile 30 days) are used instead. Each
+  badge's tooltip states the actual thresholds. Shapes are descriptions, not
+  judgements of urgency or quality. Each release in
+  the index shows its shape, and **Browse releases › Shape** filters by it (the
+  Across releases view dims the rest). View, weighting, overlay and shape
+  filter are saved with the session.
 - **Contributors › Delivery** shows the same histogram for commits the person
   authored in the observation window, followed to their first release even if
   it ships after the window, against everyone's commits in the same window.

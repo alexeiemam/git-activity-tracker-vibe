@@ -6,7 +6,7 @@
  */
 import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=git-ingest-input-20261113-1';
 import { changeCategory, fileKind } from './impact.js?v=git-ingest-input-20261113-1';
-import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges } from './release-latency.js?v=git-ingest-input-20261113-1';
+import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, typicalReleaseShape, shapeReference } from './release-latency.js?v=git-ingest-input-20261113-1';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);
@@ -175,14 +175,50 @@ export function periodDigest(index,window,{comparison='previous',customCompariso
   };
 }
 
+const fingerprintCache=new WeakMap();
+/**
+ * Each release's commit-age fingerprint (by commits and by lines changed),
+ * its descriptive shape, and the repository's typical release shape.
+ * Computed once per evidence index.
+ */
+export function releaseFingerprints(index) {
+  if(fingerprintCache.has(index))return fingerprintCache.get(index);
+  const byHash=new Map(index.activity.map(c=>[c.hash,c]));
+  const releases=new Map();
+  for(const release of index.releases){
+    const entries=[];let undated=0;
+    for(const hash of release.commits){
+      const commit=byHash.get(hash);if(!commit)continue;
+      const age=releaseAgeDays(commit.authoredAt,release.timestamp);
+      if(age==null){undated++;continue;}
+      entries.push({hash,groupId:commit.groupId,date:commit.date,subject:commit.subject,age,lines:commit.additions+commit.deletions});
+    }
+    const ages=entries.map(x=>x.age);
+    const commits=releaseAgeDistribution(ages,{undated});
+    const lines=releaseAgeDistribution(ages,{undated,weights:entries.map(x=>x.lines)});
+    releases.set(release.hash,{entries,commits,lines});
+  }
+  // The first tag carries all earlier history, which would distort "typical".
+  const incremental=index.releases.filter(r=>!r.baseline).map(r=>releases.get(r.hash));
+  const reference=shapeReference(incremental.map(f=>f.commits));
+  for(const release of index.releases){
+    const fp=releases.get(release.hash);
+    fp.shape=releaseShape(fp.commits,{baseline:release.baseline,reference});
+  }
+  const result={releases,reference,typical:{commits:typicalReleaseShape(incremental.map(f=>f.commits)),lines:typicalReleaseShape(incremental.map(f=>f.lines))}};
+  fingerprintCache.set(index,result);
+  return result;
+}
+
 export function releaseDetails(index,hash) {
   const release=index.releases.find(r=>r.hash===hash);
   if(!release)return null;
   const byHash=new Map(index.activity.map(c=>[c.hash,c]));
   const included=release.commits.map(h=>byHash.get(h)).filter(Boolean);
-  const ages=included.map(c=>releaseAgeDays(c.authoredAt,release.timestamp));
+  const fingerprints=releaseFingerprints(index);
   return {release,commits:included.slice(-40).reverse(),
-    releaseAge:releaseAgeDistribution(ages.filter(v=>v!=null),{undated:ages.filter(v=>v==null).length}),
+    fingerprint:fingerprints.releases.get(hash),typical:fingerprints.typical,reference:fingerprints.reference,
+    releaseAge:fingerprints.releases.get(hash).commits,
     paths:sortCount(new Map(included.flatMap(c=>c.files.map(f=>[f.path,1]))
       .reduce((m,[path])=>(m.set(path,(m.get(path)||0)+1),m),new Map()))).slice(0,20),
   };
