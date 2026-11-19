@@ -4,10 +4,10 @@
  * complete introduced Git ancestry (subject only to the explicitly declared
  * merge/revert policy); an authored period is a different observation clock.
  */
-import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=people-20261119-2';
-import { changeCategory, fileKind } from './impact.js?v=people-20261119-2';
-import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape } from './release-footprint.js?v=people-20261119-2';
-import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=people-20261119-2';
+import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=codebase-20261119-2';
+import { changeCategory, fileKind } from './impact.js?v=codebase-20261119-2';
+import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape, folderArea } from './release-footprint.js?v=codebase-20261119-2';
+import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=codebase-20261119-2';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);
@@ -383,6 +383,70 @@ export function areaPortrait(index,commits,matches) {
   return {touches,commits:hit.length,people:sortCount(people),releases:releases.length,
     recentReleases:releases.slice(-12).reverse(),
     recent:hit.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10)};
+}
+
+/** Folders two levels deep (`app/models/`): the grain codebase signals are judged at. */
+export const SIGNAL_DEPTH=2;
+const SIGNAL_DEFAULTS=Object.freeze({
+  ownerShare:.8,        // an area relies on one person when they made this share of its changes…
+  minimumTouches:20,    // …and it has enough changes for that to mean something.
+  churnRatio:2,         // rising or fading: one half of the dates has this many times the other's changes…
+  minimumChurn:10,      // …and the busier half has at least this many.
+  minimumShared:3,      // a pair must share this many commits to count as changing together…
+  maxAreasPerCommit:12, // …and sweeping commits (renames, reformatting) are ignored.
+});
+
+/**
+ * Where attention is warranted in the code, from one set of commits:
+ * knowledge concentration (who made an area's changes), churn moving
+ * between the first and second half of the dates, and areas that change in
+ * the same commits. Areas are folders two levels deep. These describe
+ * recorded changes, not ownership, quality or risk on their own.
+ */
+export function codebaseSignals(commits,{from,to,...options}={}) {
+  const o={...SIGNAL_DEFAULTS,...options};
+  const mid=dayNumber(from)+(dayNumber(to)-dayNumber(from)+1)/2;
+  const spanDays=dayNumber(to)-dayNumber(from)+1,weekly=spanDays<=120;
+  const binOf=date=>weekly?Math.floor((dayNumber(date)-dayNumber(from))/7):(Number(date.slice(0,4))*12+Number(date.slice(5,7)))-(Number(from.slice(0,4))*12+Number(from.slice(5,7)));
+  const bins=binOf(to)+1;
+  const areas=new Map(),pairs=new Map();
+  const areaOf=name=>{
+    if(!areas.has(name))areas.set(name,{area:name,touches:0,commits:0,people:new Map(),first:0,second:0,series:Array(bins).fill(0)});
+    return areas.get(name);
+  };
+  for(const c of commits){
+    const touched=new Set();
+    for(const file of c.files){
+      const name=folderArea(file.path,SIGNAL_DEPTH),a=areaOf(name);
+      a.touches++;appendMap(a.people,c.groupId,1);
+      if(dayNumber(c.date)<mid)a.first++;else a.second++;
+      const bin=binOf(c.date);if(bin>=0&&bin<bins)a.series[bin]++;
+      touched.add(name);
+    }
+    for(const name of touched)areas.get(name).commits++;
+    if(touched.size<2||touched.size>o.maxAreasPerCommit)continue;
+    const list=[...touched].sort();
+    for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++)appendMap(pairs,`${list[i]}\u0000${list[j]}`,1);
+  }
+  const rows=[...areas.values()].map(a=>{
+    const people=sortCount(a.people);
+    let covered=0,half=0;
+    for(const [,n] of people){covered+=n;half++;if(covered>=a.touches/2)break;}
+    return {area:a.area,touches:a.touches,commits:a.commits,people,top:people[0]?.[0]??null,topShare:a.touches?(people[0]?.[1]||0)/a.touches:0,half,
+      first:a.first,second:a.second,series:a.series};
+  }).sort((a,b)=>b.touches-a.touches||a.area.localeCompare(b.area));
+  const concentrated=rows.filter(r=>r.touches>=o.minimumTouches&&r.topShare>=o.ownerShare);
+  const rising=rows.filter(r=>Math.max(r.first,r.second)>=o.minimumChurn&&r.second>=o.churnRatio*r.first&&r.second>r.first).sort((a,b)=>(b.second-b.first)-(a.second-a.first));
+  const fading=rows.filter(r=>Math.max(r.first,r.second)>=o.minimumChurn&&r.first>=o.churnRatio*r.second&&r.first>r.second).sort((a,b)=>(b.first-b.second)-(a.first-a.second));
+  const byArea=new Map(rows.map(r=>[r.area,r]));
+  const coupled=[...pairs].filter(([,n])=>n>=o.minimumShared).map(([key,shared])=>{
+    const [a,b]=key.split('\u0000'),x=byArea.get(a).commits,y=byArea.get(b).commits;
+    const overlap=shared/(x+y-shared);
+    // Strength weighs overlap by how often the pair changed: 50% of 200 commits outranks 60% of 5.
+    return {a,b,shared,overlap,ofA:shared/x,ofB:shared/y,strength:overlap*Math.log2(1+shared)};
+  }).sort((p,q)=>q.strength-p.strength||q.shared-p.shared||p.a.localeCompare(q.a));
+  const substantial=rows.filter(r=>r.touches>=o.minimumTouches).length;
+  return {areas:rows,concentrated,substantial,rising,fading,coupled,options:o,granularity:weekly?'week':'month',bins,mid:dateAtDay(Math.floor(mid))};
 }
 
 export function briefingText(index,digest) {

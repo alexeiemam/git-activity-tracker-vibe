@@ -1,12 +1,12 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait } from './perspectives.js?v=people-20261119-2';
-import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=people-20261119-2';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, releaseFootprint, footprintArea, topOf, OTHER_FOLDERS } from './release-footprint.js?v=people-20261119-2';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=people-20261119-2';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=people-20261119-2';
-import { targetUrl } from './route-state.js?v=people-20261119-2';
-import { markdownFrame } from './markdown.js?v=people-20261119-2';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=people-20261119-2';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals } from './perspectives.js?v=codebase-20261119-2';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=codebase-20261119-2';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, releaseFootprint, footprintArea, topOf, OTHER_FOLDERS } from './release-footprint.js?v=codebase-20261119-2';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=codebase-20261119-2';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=codebase-20261119-2';
+import { targetUrl } from './route-state.js?v=codebase-20261119-2';
+import { markdownFrame } from './markdown.js?v=codebase-20261119-2';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=codebase-20261119-2';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});
@@ -222,7 +222,7 @@ function releaseShapePanel(index,r,details,ui){
 const READING_GUIDE={
   observatory:['Tag ancestry defines what a release contains; release events are dated by GitHub publication, an annotated tag or the tagged commit.','The first tag is a baseline that ships all earlier history. Releases with incomplete ancestry, squashes and unmatched publishers need interpretation.','A release lead is the GitHub publisher or tagger, not a claim about who authored its code. Release shapes describe the age and location of shipped work, not its urgency, value or risk.','A GitHub release is not necessarily a production deployment. Environment events come from Heroku and are linked to tags by Git ancestry, not by dates or version numbers.'],
   contributors:['These are measures of recorded activity, not a ranking of performance.','Release participation and leadership are independent roles. A share of commits is not a share of effort, ownership or value.','The contributor table\'s first column follows the Measure above; copy it as CSV for your own analysis. Merge detection uses parent hashes when available (subject heuristics for older logs), and VERSION touches are a repository-specific proxy, not a verified release count.','Times are as recorded by each commit\'s author, in their own time zone; they show when changes were recorded, not hours worked.','A gap means no matching authored records in this import, not absence from work. Working-day patterns are observations, not verified schedules.'],
-  codebase:['The map shows files by name down to five levels, and deeper changes under their fifth-level folder; the people grid uses top-level folders. A file touched in several commits counts each time; binary changes count as touches but not lines.','Touching the same files does not establish ownership or direct collaboration.'],
+  codebase:['Signals are judged on folders two levels deep; the map shows files by name down to five levels, and deeper changes under their fifth-level folder; the people grid uses top-level folders.','One person making most of an area\'s changes, churn rising, or areas changing together describe recorded changes, not ownership, risk or design on their own. A file touched in several commits counts each time; binary changes count as touches but not lines.','Touching the same files does not establish ownership or direct collaboration.'],
 };
 export function readingGuide(index,tab){
   const general=index?[`${filterSentence(index)}.`,'Git records changes, not effort, difficulty, value, code quality or working hours. Only the imported, reachable history is visible; uncollected branches and missing dates are not counted.']:[];
@@ -470,15 +470,26 @@ function contributorView(index,ui){
     ${card('Follow their contribution',`<p class="primary-muted">Move from this portrait into the same person's authored period, release anatomy or component history, preserving an investigation trail.</p><div class="primary-card-footer"><a class="button soft" href="${href(index,{view:'contributors',from:windowOf(index,30).from,to:windowOf(index,30).to,person:index.groups.find(g=>g.id===focus)?.emails?.[0]})}" data-action="primary-person-period" data-person="${e(focus)}">Explore their recent period →</a><button class="button outline" type="button" data-action="primary-evidence-person" data-person="${e(focus)}">Inspect every activity chart ↗</button></div>`)}`;
 }
 
+/** An area's changes across the scope as a small line, with the halfway mark the churn comparison uses. */
+function sparkline(series,label){
+  const w=120,h=26,max=Math.max(1,...series),step=series.length>1?w/(series.length-1):w;
+  const points=series.map((v,i)=>`${(i*step).toFixed(1)},${(h-2-(h-4)*v/max).toFixed(1)}`).join(' ');
+  return `<svg class="primary-spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${e(label)}"><line x1="${w/2}" y1="0" x2="${w/2}" y2="${h}" class="primary-spark-mid"/><polyline points="${points}"/></svg>`;
+}
+/** An area name that opens its portrait. */
+const areaLink=area=>`<button type="button" class="primary-inline-link primary-area-link" data-action="primary-select-area" data-area="${e(area)}" data-jump="codebase-area">${e(area)}</button>`;
+
 /**
- * Codebase: one map shared with release footprints, shaded by the scope's
- * authored or released changes. Selecting an area shows who works there,
- * the releases that shipped it and its newest commits.
+ * Codebase: where attention is warranted in the code (knowledge
+ * concentration, churn moving, areas changing together), then the map,
+ * shared with release footprints, to explore any area: who works there, the
+ * releases that shipped it and its newest commits.
  */
 function codebaseView(index,ui){
   const {from,to,ids}=scopeOf(index,ui);
   const clock=ui.codebaseClock==='released'?'released':'authored';
   const commits=codebaseCommits(index,{from,to,ids,clock});
+  const signals=codebaseSignals(commits,{from,to});
   const {map}=releaseFootprints(index);
   const fp=releaseFootprint(commits,map);
   const selected=ui.codeArea||null;
@@ -487,9 +498,31 @@ function codebaseView(index,ui){
   const portrait=selected?areaPortrait(index,commits,matches):null;
   const clockSwitch=`<div class="primary-preset-row" role="group" aria-label="Count changes">${toggleButton('codebaseClock','authored','Authored',clock)}${toggleButton('codebaseClock','released','Released',clock)}</div>`;
   const basis=clock==='released'?'commits shipped by releases published in the scope dates':'commits authored in the scope dates';
-  return `<p class="primary-lede">Where the scope's changes landed, and who works where.</p>
-    ${card('The codebase map',`<div class="primary-row between"><p class="primary-muted">${e(day(from))} – ${e(day(to))} · ${e(basis)}${ids?' by the people in scope':''}. Select an area to see who works there.</p>${clockSwitch}</div>${fp.touches?codebaseMap(map,fp.shares.files,null,{weightLabel:'file touches',subject:`the scope's ${clock}`,selected,ui}):empty('No file changes in this scope','Widen the scope\'s dates or people, or switch between authored and released changes.')}`)}
-    ${portrait?card(selected,`<div class="primary-row between"><p class="primary-muted">${clock==='released'?'Released':'Authored'} changes in ${e(selected)} within the scope.</p><button type="button" class="primary-inline-link" data-action="primary-select-area" data-area="">Clear selection</button></div><div class="primary-facts">${stat(f(portrait.touches),'File touches')}${stat(f(portrait.commits),'Commits')}${stat(f(portrait.people.length),'People')}${stat(f(portrait.releases),'Releases shipping them')}</div><div class="primary-two-col"><div class="primary-inset"><h4>Who works here</h4>${portrait.people.slice(0,12).map(([id,v])=>`<div class="primary-ranked-row">${whoButton(index,id)}${bar(v,Math.max(1,...portrait.people.map(x=>x[1])))}<strong>${f(v)}</strong></div>`).join('')||'<p class="primary-muted">No matching changes.</p>'}</div><div class="primary-inset"><h4>Releases that shipped these changes</h4>${portrait.recentReleases.map(r=>`<div class="primary-release-brief">${tagButton(index,r)}<small>${e(day(r.date))}</small></div>`).join('')||'<p class="primary-muted">Not yet in a tagged release.</p>'}</div></div><details class="primary-notes"><summary>Newest commits here</summary><div class="primary-commit-list">${portrait.recent.map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(day(c.date))}</span>${whoButton(index,c.groupId)}<span class="primary-commit-subject">${e(c.subject)}</span></div>`).join('')||'<p>No matching commits.</p>'}</div></details>`):''}
+  const name=id=>index.groups.find(g=>g.id===id)?.displayName||'Unmatched';
+  const o=signals.options,rose=(r)=>r.first?`${f(r.second/r.first)}×`:'new',fell=(r)=>r.second?`${f(r.first/r.second)}×`:'stopped';
+  const jump=(id,text)=>`<a class="primary-inline-link" href="#${id}" data-action="primary-jump" data-target="${id}">${text} ↓</a>`;
+  const [pair]=signals.coupled;
+  const signalCards=`<div class="primary-signals">
+    <div class="primary-signal"><span>Knowledge concentration</span><strong>${f(signals.concentrated.length)} of ${f(signals.substantial)} areas rely mostly on one person</strong>${signals.concentrated.slice(0,3).map(r=>`<small>${areaLink(r.area)} · ${e(name(r.top))} · ${p(r.topShare)}</small>`).join('')||'<small>No area with enough changes is dominated by one person.</small>'}${jump('codebase-knowledge','Knowledge concentration')}</div>
+    <div class="primary-signal"><span>Churn</span><strong>${f(signals.rising.length)} rising · ${f(signals.fading.length)} fading</strong>${[...signals.rising.slice(0,2).map(r=>`<small>${areaLink(r.area)} ↑ ${rose(r)}</small>`),...signals.fading.slice(0,1).map(r=>`<small>${areaLink(r.area)} ↓ ${fell(r)}</small>`)].join('')||'<small>No area\'s changes moved sharply between the two halves.</small>'}${jump('codebase-churn','Churn')}</div>
+    <div class="primary-signal"><span>Changed together</span><strong>${pair?`${p(pair.overlap)} of their commits shared`:'No coupled areas'}</strong>${pair?`<small>${areaLink(pair.a)} and ${areaLink(pair.b)} share ${f(pair.shared)} commits</small>`:'<small>No two areas share enough commits.</small>'}${jump('codebase-coupling','Changed together')}</div>
+  </div>`;
+  const knowledge=signals.areas.slice(0,15);
+  const churn=[...signals.rising,...signals.fading,...signals.areas.filter(r=>!signals.rising.includes(r)&&!signals.fading.includes(r))].slice(0,15);
+  return `${sectionNav('Codebase',[['codebase-signals','Signals'],['codebase-map','Map'],['codebase-knowledge','Knowledge'],['codebase-churn','Churn'],['codebase-coupling','Changed together'],['codebase-who','Who works where']])}
+    ${sectionHeading('codebase-signals','Signals','Where attention is warranted in the code, from the scope\'s changes. Areas are folders two levels deep.')}
+    <div class="primary-row between primary-signal-head"><p class="primary-muted">${e(day(from))} – ${e(day(to))} · ${e(basis)}${ids?' by the people in scope':''}.</p>${clockSwitch}</div>
+    ${commits.length?signalCards:empty('No file changes in this scope','Widen the scope\'s dates or people, or switch between authored and released changes.')}
+    ${sectionHeading('codebase-map','Map','Every file five levels deep or less by name, deeper changes under their fifth-level folder. Select an area to see who works there.')}
+    ${card('The codebase map',fp.touches?codebaseMap(map,fp.shares.files,null,{weightLabel:'file touches',subject:`the scope's ${clock}`,selected,ui}):empty('No file changes in this scope','Widen the scope\'s dates or people, or switch between authored and released changes.'))}
+    ${portrait?`<div id="codebase-area" tabindex="-1">${card(selected,`<div class="primary-row between"><p class="primary-muted">${clock==='released'?'Released':'Authored'} changes in ${e(selected)} within the scope.</p><button type="button" class="primary-inline-link" data-action="primary-select-area" data-area="">Clear selection</button></div><div class="primary-facts">${stat(f(portrait.touches),'File touches')}${stat(f(portrait.commits),'Commits')}${stat(f(portrait.people.length),'People')}${stat(f(portrait.releases),'Releases shipping them')}</div><div class="primary-two-col"><div class="primary-inset"><h4>Who works here</h4>${portrait.people.slice(0,12).map(([id,v])=>`<div class="primary-ranked-row">${whoButton(index,id)}${bar(v,Math.max(1,...portrait.people.map(x=>x[1])))}<strong>${f(v)}</strong></div>`).join('')||'<p class="primary-muted">No matching changes.</p>'}</div><div class="primary-inset"><h4>Releases that shipped these changes</h4>${portrait.recentReleases.map(r=>`<div class="primary-release-brief">${tagButton(index,r)}<small>${e(day(r.date))}</small></div>`).join('')||'<p class="primary-muted">Not yet in a tagged release.</p>'}</div></div><details class="primary-notes"><summary>Newest commits here</summary><div class="primary-commit-list">${portrait.recent.map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(day(c.date))}</span>${whoButton(index,c.groupId)}<span class="primary-commit-subject">${e(c.subject)}</span></div>`).join('')||'<p>No matching commits.</p>'}</div></details>`)}</div>`:''}
+    ${sectionHeading('codebase-knowledge','Knowledge concentration',`How many people made each area's changes. An area relies mostly on one person when they made ${p(o.ownerShare)} or more of at least ${f(o.minimumTouches)} changes.`)}
+    ${card('Who made each area\'s changes',knowledge.length?`<div class="primary-table-wrap"><table class="primary-signal-table"><thead><tr><th>Area</th><th>Changes</th><th>People</th><th>Top contributor</th><th>Half the changes by</th></tr></thead><tbody>${knowledge.map(r=>`<tr class="${signals.concentrated.includes(r)?'is-flagged':''}"><th>${areaLink(r.area)}</th><td>${f(r.touches)}</td><td>${f(r.people.length)}</td><td>${r.top!=null?`${whoButton(index,r.top)}${bar(r.topShare,1)}<span>${p(r.topShare)}</span>`:'—'}${signals.concentrated.includes(r)?'<em>one main contributor</em>':''}</td><td>${f(r.half)} ${r.half===1?'person':'people'}</td></tr>`).join('')}</tbody></table></div>`:empty('No changes','No file changes in this scope.'))}
+    ${sectionHeading('codebase-churn','Churn',`Each area's changes in the first and second half of the scope (split at ${day(signals.mid)}), by ${signals.granularity}. Rising or fading means one half has ${f(o.churnRatio)}× the other's changes, with at least ${f(o.minimumChurn)} in the busier half.`)}
+    ${card('Where change is rising or fading',churn.length?`<div class="primary-table-wrap"><table class="primary-signal-table"><thead><tr><th>Area</th><th>First half</th><th>Second half</th><th>Change</th><th>Over the scope</th></tr></thead><tbody>${churn.map(r=>{const up=signals.rising.includes(r),down=signals.fading.includes(r);return `<tr class="${up||down?'is-flagged':''}"><th>${areaLink(r.area)}</th><td>${f(r.first)}</td><td>${f(r.second)}</td><td>${up?`<em class="is-up">↑ ${rose(r)}</em>`:down?`<em class="is-down">↓ ${fell(r)}</em>`:'steady'}</td><td>${sparkline(r.series,`${r.area}: ${r.touches} changes by ${signals.granularity}`)}</td></tr>`;}).join('')}</tbody></table></div>`:empty('No changes','No file changes in this scope.'))}
+    ${sectionHeading('codebase-coupling','Changed together',`Areas that change in the same commits. Overlap is shared commits ÷ commits touching either, and pairs are ranked by overlap weighted by how many commits they share; pairs need ${f(o.minimumShared)} shared commits, and commits touching more than ${f(o.maxAreasPerCommit)} areas (renames, reformatting) are ignored.`)}
+    ${card('Areas that change together',signals.coupled.length?`<div class="primary-table-wrap"><table class="primary-signal-table"><thead><tr><th>Areas</th><th>Shared commits</th><th>Overlap</th><th>Of the first's commits</th><th>Of the second's commits</th></tr></thead><tbody>${signals.coupled.slice(0,15).map(r=>`<tr><th>${areaLink(r.a)} + ${areaLink(r.b)}</th><td>${f(r.shared)}</td><td>${bar(r.overlap,1)}<span>${p(r.overlap)}</span></td><td>${p(r.ofA)}</td><td>${p(r.ofB)}</td></tr>`).join('')}</tbody></table></div>`:empty('No coupled areas','No two areas share enough commits in this scope.'))}
+    ${sectionHeading('codebase-who','Who works where','')}
     ${whoWhereCard(index,ui,{commits,clock,from,to,ids})}`;
 }
 

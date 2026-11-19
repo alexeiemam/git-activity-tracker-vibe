@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=people-20261119-2';
-import { generateDemoLog } from './demo-data.js?v=people-20261119-2';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=people-20261119-2';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=people-20261119-2';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=people-20261119-2';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=people-20261119-2';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=people-20261119-2';
-import { releaseScorecard } from './release-scorecard.js?v=people-20261119-2';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=people-20261119-2';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=people-20261119-2';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=people-20261119-2';
-import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=people-20261119-2';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=people-20261119-2';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=people-20261119-2';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=people-20261119-2';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=people-20261119-2';
-import { buildStoryAnalysis } from './stories.js?v=people-20261119-2';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=people-20261119-2';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=people-20261119-2';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=people-20261119-2';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=people-20261119-2';
-import { downloadFilename } from './download-names.js?v=people-20261119-2';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=people-20261119-2';
-import { buildDeploymentIndex } from './deployments.js?v=people-20261119-2';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=people-20261119-2';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=people-20261119-2';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=people-20261119-2';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=people-20261119-2';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=people-20261119-2';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=people-20261119-2';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=people-20261119-2';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=people-20261119-2';
+} from './domain.js?v=codebase-20261119-2';
+import { generateDemoLog } from './demo-data.js?v=codebase-20261119-2';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=codebase-20261119-2';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=codebase-20261119-2';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=codebase-20261119-2';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=codebase-20261119-2';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=codebase-20261119-2';
+import { releaseScorecard } from './release-scorecard.js?v=codebase-20261119-2';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=codebase-20261119-2';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=codebase-20261119-2';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=codebase-20261119-2';
+import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=codebase-20261119-2';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=codebase-20261119-2';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=codebase-20261119-2';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=codebase-20261119-2';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=codebase-20261119-2';
+import { buildStoryAnalysis } from './stories.js?v=codebase-20261119-2';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=codebase-20261119-2';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=codebase-20261119-2';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=codebase-20261119-2';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=codebase-20261119-2';
+import { downloadFilename } from './download-names.js?v=codebase-20261119-2';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=codebase-20261119-2';
+import { buildDeploymentIndex } from './deployments.js?v=codebase-20261119-2';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=codebase-20261119-2';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=codebase-20261119-2';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=codebase-20261119-2';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=codebase-20261119-2';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=codebase-20261119-2';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=codebase-20261119-2';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=codebase-20261119-2';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=codebase-20261119-2';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=people-20261119-2', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=codebase-20261119-2', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -2963,7 +2963,7 @@ const ACTIONS={
   'primary-select-release':(_e,t)=>{primary.releaseHash=t.dataset.hash;primary.releaseView='browse';routePushPending=true;renderPrimary();$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-open-person':(_e,t)=>goPrimary('contributors',{contributorFocus:t.dataset.person,contributorTab:'delivery',contributorRange:'all'},{jump:'people-portrait'}),
   'primary-open-area':(_e,t)=>goPrimary('codebase',{codeArea:t.dataset.area}),
-  'primary-select-area':(_e,t)=>{Object.assign(primary,{codeArea:t.dataset.area||null,periodFocusPerson:null,periodFocusArea:null});routePushPending=true;renderPrimary();},
+  'primary-select-area':(_e,t)=>{Object.assign(primary,{codeArea:t.dataset.area||null,periodFocusPerson:null,periodFocusArea:null});routePushPending=true;renderPrimary();if(t.dataset.jump&&t.dataset.area)jumpTo(t.dataset.jump);},
   'primary-release-page':(_e,t)=>{primary.releasePage=Math.max(0,Number(t.dataset.page)||0);renderPrimary();},
   'primary-reset-release-search':()=>{Object.assign(primary,{releaseYear:'all',releaseType:'all',releaseShape:'all',releaseFootprint:'all',releaseQuery:'',releasePage:0});renderPrimary();},
   'primary-toggle':(_e,t)=>{

@@ -320,3 +320,13 @@ test('Releases is one page: browse, over time, then environments when deployment
  assert.ok(html.indexOf('id="releases-browse"')<html.indexOf('id="releases-over-time"'));
  assert.doesNotMatch(html,/releases-environments/,'without deployment history there is no Environments section');
 });
+
+test('Codebase leads with signals, then the map and a section per signal, each area opening its portrait',()=>{
+ const html=renderPrimaryExplorer(index,ui({mode:'codebase',periodFrom:'2025-01-01',periodTo:'2025-03-31'}));
+ const order=[...html.matchAll(/id="(codebase-[a-z]+)" tabindex="-1"/g)].map(m=>m[1]);
+ assert.deepEqual(order,['codebase-signals','codebase-map','codebase-knowledge','codebase-churn','codebase-coupling','codebase-who']);
+ assert.match(html,/Knowledge concentration<\/span><strong>\d+ of \d+ areas rely mostly on one person/,'with the denominator for context');
+ assert.match(html,/<table class="primary-signal-table"><thead><tr><th>Area<\/th><th>Changes<\/th>/);
+ assert.match(html,/data-action="primary-select-area" data-area="app\/[^"]*" data-jump="codebase-area"/,'area names open the area portrait');
+ assert.match(html,/<svg class="primary-spark"/,'churn has a sparkline per area');
+});

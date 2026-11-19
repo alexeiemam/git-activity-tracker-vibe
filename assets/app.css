@@ -1641,3 +1641,26 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 #rhythm-weekly-content:focus,#season-year-content:focus,#season-seasonal-content:focus,[id^="people-"]:focus,[id^="releases-"]:focus{outline:none}
 #season-seasonal-content{margin-top:22px}
 .primary-release-sidebar{top:120px;max-height:calc(100vh - 134px)}
+
+/* Codebase signals: three callouts, then a table each. */
+.primary-signal-head{margin:4px 0 12px;gap:10px;flex-wrap:wrap}
+.primary-signals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 8px}
+.primary-signal{display:grid;align-content:start;gap:6px;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.primary-signal>span{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#557567}
+.primary-signal>strong{font:650 17px/1.3 var(--font);color:#1d3b2e}
+.primary-signal>small{font-size:12px;color:#4d6457}
+.primary-signal>a{margin-top:4px;font:600 11px var(--mono)}
+.primary-area-link{font:600 12px var(--mono)}
+.primary-signal-table{width:100%;border-collapse:collapse;font-size:12px}
+.primary-signal-table th,.primary-signal-table td{padding:8px 10px;border-bottom:1px solid #e8eee6;text-align:left;vertical-align:middle}
+.primary-signal-table thead th{font:600 10px var(--mono);letter-spacing:.06em;color:#667d6b;text-transform:uppercase}
+.primary-signal-table td .primary-mini-track{display:inline-block;width:70px;vertical-align:middle;margin-right:8px}
+.primary-signal-table tr.is-flagged>th{box-shadow:inset 3px 0 0 #c2925d}
+.primary-signal-table em{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:999px;font:600 10px var(--mono);font-style:normal;background:#fbe9dd;color:#8a4316}
+.primary-signal-table em.is-up{margin:0;background:#fbe9dd;color:#8a4316}
+.primary-signal-table em.is-down{margin:0;background:#e7efe8;color:#2f5e45}
+.primary-spark{display:block;overflow:visible}
+.primary-spark polyline{fill:none;stroke:#2a7453;stroke-width:1.6;stroke-linejoin:round}
+.primary-spark-mid{stroke:#c9d6cb;stroke-dasharray:2 3}
+#codebase-area{scroll-margin-top:124px}
+@media(max-width:860px){.primary-signals{grid-template-columns:1fr}}

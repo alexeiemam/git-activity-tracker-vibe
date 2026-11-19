@@ -93,7 +93,7 @@ weighting or measure choices:
 | --- | --- | --- |
 | **Releases** | What shipped, and where did it go? | **Browse releases** (seven ways to pick a release, with the selected release's anatomy), **Over time** (the scope unfolding) and, when deployment history was imported, **Environments** (published versus production, Heroku STAG/BETA/PROD events and how they relate to tags) |
 | **People** | Who contributed, when, and how steadily? | **Contribution** (the measure, summary, contribution side by side, every measure per person — copyable as CSV — and commit sizes), **Over time** (momentum over time and the activity pulse with all five lenses), **Working patterns** (weekly, yearly and seasonal rhythms) and **One person** (the contributor portrait) |
-| **Codebase** | Where in the code? | The codebase map (up to three directory levels) with an area portrait, and who works where |
+| **Codebase** | Where in the code, and where is attention warranted? | **Signals** (knowledge concentration, churn rising or fading, areas changing together), the **Map** with an area portrait, a section per signal, and **Who works where** |
 
 Old links to `?view=periods`, `?view=rhythm` and `?view=evidence` open People (with any dates becoming the scope), and `?view=deployments` links open Releases › Environments. Cards carry a single
 heading, and each tab ends with **How to read this tab**: the evidence's clocks
@@ -119,7 +119,24 @@ matching commits. Links that open a month, a year, a release's
 surrounding fortnight or a person's recent period set the scope's dates (and,
 for a person, its people).
 
-**Codebase** is organised around a code area. **The codebase map** is the same
+**Codebase** is organised around a code area and opens with **Signals**: where
+attention is warranted, from the scope's authored or released changes, judged
+on folders two levels deep (`app/models/`):
+
+- **Knowledge concentration** — areas where one person made 80% or more of at
+  least 20 changes, out of the areas with that many changes, plus how many
+  people cover half of each area's changes.
+- **Churn** — areas whose changes in one half of the scope are at least twice
+  the other half's (with at least 10 in the busier half), with a weekly or
+  monthly sparkline per area.
+- **Changed together** — pairs of areas that change in the same commits, by
+  overlap (shared commits ÷ commits touching either), ranked by overlap
+  weighted by how often they changed; pairs need three shared commits, and
+  commits touching more than 12 areas (renames, reformatting) are ignored.
+
+Each signal has its own section with the full table; every area name opens
+that area's portrait. These describe recorded changes, not ownership, risk or
+design on their own. **The codebase map** is the same
 map release footprints use: a file is its own tile when its path is at most
 five levels deep (`app/models/user.rb`, `README.md`), and deeper changes are
 grouped under their fifth-level folder. The busiest 150 tiles across all
