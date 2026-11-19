@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {codebaseSignals} from '../assets/perspectives.js';
+import {codebaseSignals,childOf,folderTrail,folderMap,fileCompanions} from '../assets/perspectives.js';
 
 let serial=0;
 const commit=(groupId,date,...paths)=>({hash:`c${serial++}`,groupId,date,files:paths.map(path=>({path,added:1,deleted:0}))});
@@ -64,4 +64,37 @@ test('coupled pairs rank by overlap weighted by how often they change together',
   const [first,second]=codebaseSignals(commits,window).coupled;
   assert.deepEqual([first.a,second.a],['app/core/','docs/x/'],'50% of 80 commits outranks 100% of 3');
   assert.equal(second.overlap,1);
+});
+
+test('a folder\'s children are its subfolders and the files directly in it',()=>{
+  assert.equal(childOf('app/services/billing/x.rb','app/services/'),'app/services/billing/');
+  assert.equal(childOf('app/services/x.rb','app/services/'),'app/services/x.rb');
+  assert.equal(childOf('README.md',''),'README.md');
+  assert.equal(childOf('lib/x.rb','app/'),null);
+  assert.deepEqual(folderTrail('app/services/x.rb'),['app/','app/services/']);
+});
+
+test('signals compare a folder\'s children when given its areas',()=>{
+  const commits=many(20,i=>commit('ada',`2026-01-${String(1+i).padStart(2,'0')}`,'app/services/billing/a.rb'));
+  const s=codebaseSignals([...commits,commit('ben','2026-02-01','lib/x.rb')],{...window,areaOf:path=>childOf(path,'app/services/')});
+  assert.deepEqual(s.areas.map(r=>r.area),['app/services/billing/'],'files outside the folder are left out');
+  assert.deepEqual(s.concentrated.map(r=>r.area),['app/services/billing/']);
+  assert.equal(s.areas[0].last,'2026-01-20');
+});
+
+test('a folder map has a block per subfolder and folds quiet tiles beyond the limit',()=>{
+  const totals=new Map([['app/a/x.rb',9],['app/a/y.rb',5],['app/a/z.rb',1],['app/b/deep/q.rb',4],['app/top.rb',2],['lib/l.rb',7]]);
+  const map=folderMap(totals,'app/',{maxCells:3});
+  assert.deepEqual(map.groups.map(g=>g.key),['app/a/','app/b/','files here'],'files directly here come last');
+  assert.deepEqual(map.groups[0].cells.map(c=>[c.key,c.touches,c.folded]),[['app/a/x.rb',9,0],['app/a/y.rb',5,0],['app/a/…',1,1]]);
+  assert.deepEqual(map.groups[1].cells.map(c=>c.key),['app/b/deep/']);
+  assert.equal(map.locate('app/a/z.rb'),'app/a/…');
+  assert.equal(map.locate('app/top.rb'),'files here…');
+  assert.equal(map.locate('lib/l.rb'),null);
+});
+
+test('a file\'s companions are the files changed in its commits, ignoring sweeping ones',()=>{
+  const commits=[...many(3,()=>commit('ada','2026-02-01','app/a.rb','spec/a_spec.rb')),commit('ada','2026-02-02','app/a.rb','app/b.rb'),
+    commit('ada','2026-02-03','app/a.rb',...many(13,i=>`x/${i}.rb`))];
+  assert.deepEqual(fileCompanions(commits,'app/a.rb'),[['spec/a_spec.rb',3],['app/b.rb',1]]);
 });

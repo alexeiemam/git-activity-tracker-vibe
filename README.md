@@ -93,7 +93,7 @@ weighting or measure choices:
 | --- | --- | --- |
 | **Releases** | What shipped, and where did it go? | **Browse releases** (seven ways to pick a release, with the selected release's anatomy), **Over time** (the scope unfolding) and, when deployment history was imported, **Environments** (published versus production, Heroku STAG/BETA/PROD events and how they relate to tags) |
 | **People** | Who contributed, when, and how steadily? | **Contribution** (the measure, summary, contribution side by side, every measure per person — copyable as CSV — and commit sizes), **Over time** (momentum over time and the activity pulse with all five lenses), **Working patterns** (weekly, yearly and seasonal rhythms) and **One person** (the contributor portrait) |
-| **Codebase** | Where in the code, and where is attention warranted? | **Signals** (knowledge concentration, churn rising or fading, areas changing together), the **Map** with an area portrait, a section per signal, and **Who works where** |
+| **Codebase** | Where in the code, and where is attention warranted? | A folder browser from the repository down to any file: **Signals** (knowledge concentration, churn, changing together) among the current folder's children, its **Map**, its **Contents** and **Who works where**; a file shows its history |
 
 Old links to `?view=periods`, `?view=rhythm` and `?view=evidence` open People (with any dates becoming the scope), and `?view=deployments` links open Releases › Environments. Cards carry a single
 heading, and each tab ends with **How to read this tab**: the evidence's clocks
@@ -119,41 +119,45 @@ matching commits. Links that open a month, a year, a release's
 surrounding fortnight or a person's recent period set the scope's dates (and,
 for a person, its people).
 
-**Codebase** is organised around a code area and opens with **Signals**: where
-attention is warranted, from the scope's authored or released changes, judged
-on folders two levels deep (`app/models/`):
+**Codebase** is a folder browser. It starts at the repository and follows one
+current folder; the path above it (**repository › app › services**) goes back
+up, and every folder or file name is an ordinary link, so links, Back and new
+tabs work (`?view=codebase&area=app/services/`). There is no depth limit: keep
+opening folders until you reach a file. Every section compares the folders
+and files directly inside the current folder, from the scope's changes on one
+of two clocks: **Authored** (commits authored in the scope dates) or
+**Released** (commits shipped by releases published in the scope dates, each
+commit counted once). A line of facts gives the folder's file touches,
+commits, people and the releases that shipped them.
 
-- **Knowledge concentration** — areas where one person made 80% or more of at
-  least 20 changes, out of the areas with that many changes, plus how many
-  people cover half of each area's changes.
-- **Churn** — areas whose changes in one half of the scope are at least twice
-  the other half's (with at least 10 in the busier half), with a weekly or
-  monthly sparkline per area.
-- **Changed together** — pairs of areas that change in the same commits, by
-  overlap (shared commits ÷ commits touching either), ranked by overlap
-  weighted by how often they changed; pairs need three shared commits, and
-  commits touching more than 12 areas (renames, reformatting) are ignored.
+- **Signals** — where attention is warranted among the folder's children:
+  - **Knowledge concentration** — children where one person made 80% or more
+    of at least 20 changes, out of those with that many changes.
+  - **Churn** — children whose changes in one half of the scope are at least
+    twice the other half's (with at least 10 in the busier half).
+  - **Changed together** — pairs of children that change in the same commits,
+    by overlap (shared commits ÷ commits touching either), ranked by overlap
+    weighted by how often they changed; pairs need three shared commits, and
+    commits touching more than 12 of them (renames, reformatting) are ignored.
+- **Map** — a block per subfolder holding its own folders and files, and one
+  block for the files directly here, sized by all-time activity and shaded by
+  the scope's changes. The busiest 150 tiles are named; quieter ones fold into
+  one "… N more" tile per block. Select any tile or block name to open it.
+  Tall maps start clipped, with **Show the whole map** to expand them.
+- **Contents** — every folder and file ever changed directly inside, folders
+  first, sortable by **Most changed**, **Recently changed** or **Name**: the
+  scope's changes, people and top contributor's share, a weekly or monthly
+  trend and the last change, with badges for the signals (one main
+  contributor, rising, fading, changes with). Long lists start clipped, with
+  **Show the whole list**.
+- **Who works where** — a zero-aware person × child grid on the same clock,
+  with an **Everyone else** row when the scope is narrowed; select a column to
+  open it, or a cell to list its commits.
 
-Each signal has its own section with the full table; every area name opens
-that area's portrait. These describe recorded changes, not ownership, risk or
-design on their own. **The codebase map** is the same
-map release footprints use: a file is its own tile when its path is at most
-five levels deep (`app/models/user.rb`, `README.md`), and deeper changes are
-grouped under their fifth-level folder. The busiest 150 tiles across all
-history are shown by name inside their top-level folder; quieter files fold
-into that folder's "… other" tile, and top-level folders with none of the
-busiest tiles share one "other folders" block. Each folder's block starts at
-its share of all-time activity, so busy folders get room for their tiles. Tall
-maps and footprint strips start clipped to a short height, fading out, with
-**Show the whole map** (or strip) to expand them; one setting expands them all,
-and tiles expand into view while keyboard focus is inside. The map is shaded by the scope's changes on one of two clocks:
-**Authored** (commits authored in the scope dates) or **Released** (commits
-shipped by releases published in the scope dates, each commit counted once).
-Select a cell, or a top-level block, to open that area's portrait: file
-touches, commits, who works there, the releases that shipped its changes and
-its newest commits. **Who works where** is a zero-aware person × top-level area
-grid on the same clock, with an **Everyone else** row when the scope is
-narrowed; select a cell to list its commits. The scope bar is the only date
+A file shows who changed it, the releases that shipped those changes, its
+newest commits and the files changed in the same commits. These describe
+recorded changes, not ownership, risk or design on their own. Older links to
+a top-level area (`app/`) land on that folder. The scope bar is the only date
 control.
 
 - **Releases — start with releases.** **Browse releases** opens with the
@@ -424,7 +428,7 @@ are not measured.
 ### Codebase footprint
 
 **Releases › Release anatomy › Release shape › Where they landed** shows where a release's
-changes landed, on the same tiles as the Codebase map: files up to five
+changes landed, on a fixed map of the whole repository: files up to five
 levels deep by name, deeper changes under their fifth-level folder. The
 **Focused** shape still measures concentration over two-level folders
 (`app/models/`), so file-level tiles don't change what it means.
@@ -435,7 +439,7 @@ levels deep by name, deeper changes under their fifth-level folder. The
   into one "… other" cell per directory. Shading shows this release's share;
   **Compare with all releases** adds an orange bar per cell for the share of
   all incremental releases' changes, pooled. Select a directory name to open
-  it in the codebase explorer.
+  that folder in the Codebase browser.
 - **Browse releases › Footprints** shows every release as a column of the same
   cells in time order; select a column to open that release.
 - **Footprint shapes**, relative to the average incremental release (fixed

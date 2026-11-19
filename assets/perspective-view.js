@@ -1,12 +1,12 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals } from './perspectives.js?v=workdays-20261119-1';
-import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=workdays-20261119-1';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, releaseFootprint, footprintArea, topOf, OTHER_FOLDERS } from './release-footprint.js?v=workdays-20261119-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=workdays-20261119-1';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=workdays-20261119-1';
-import { targetUrl } from './route-state.js?v=workdays-20261119-1';
-import { markdownFrame } from './markdown.js?v=workdays-20261119-1';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=workdays-20261119-1';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=folders-20261119-1';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=folders-20261119-1';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=folders-20261119-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=folders-20261119-1';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=folders-20261119-1';
+import { targetUrl } from './route-state.js?v=folders-20261119-1';
+import { markdownFrame } from './markdown.js?v=folders-20261119-1';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=folders-20261119-1';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});
@@ -118,11 +118,11 @@ const cellName=cell=>{
   return cell.key.endsWith('/')?`${parts.at(-1)}/`:parts.at(-1);
 };
 
-/** A tall map or strip starts clipped to a short height; one setting expands every one of them. */
-const collapsible=(html,ui,{tall=true,label='map'}={})=>{
+/** A tall map, strip or list starts clipped to a short height; one setting per `key` expands every one of them. */
+const collapsible=(html,ui,{tall=true,label='map',key='mapExpanded'}={})=>{
   if(!tall)return html;
-  const open=ui?.mapExpanded==='on';
-  return `<div class="primary-collapsible${open?' is-expanded':''}"><div class="primary-collapsible-body">${html}</div><button type="button" class="primary-inline-link primary-collapsible-toggle" data-action="primary-toggle" data-key="mapExpanded" data-value="${open?'off':'on'}" aria-expanded="${open}">${open?`Collapse the ${label}`:`Show the whole ${label}`}</button></div>`;
+  const open=ui?.[key]==='on';
+  return `<div class="primary-collapsible${open?' is-expanded':''}"><div class="primary-collapsible-body">${html}</div><button type="button" class="primary-inline-link primary-collapsible-toggle" data-action="primary-toggle" data-key="${key}" data-value="${open?'off':'on'}" aria-expanded="${open}">${open?`Collapse the ${label}`:`Show the whole ${label}`}</button></div>`;
 };
 /** Above this many tiles a map is taller than the collapsed height. */
 const TALL_MAP=24;
@@ -132,13 +132,12 @@ const TALL_MAP=24;
  * (up to three levels deep) sized by all-time activity. With `selected`, the
  * map is a picker: cells and blocks select an area instead of being a picture.
  */
-function codebaseMap(map,shares,typical,{weightLabel,subject="this release's",selected=undefined,ui=null}){
-  // `subject` is fixed wording chosen by the caller ("this release's", "the scope's authored"), never imported data.
-  const picker=selected!==undefined;
+function codebaseMap(map,shares,typical,{weightLabel,subject="this release's",ui=null}){
+  // `subject` is fixed wording chosen by the caller ("this release's"), never imported data.
   const position=new Map(map.keys.map((key,i)=>[key,i]));
   const max=Math.max(...shares,.0001),maxTypical=typical?Math.max(...typical,.0001):1;
-  const top=g=>g.top===OTHER_FOLDERS?`<span class="primary-map-top is-other">${e(g.top)}</span>`:picker?`<button type="button" class="primary-map-top${selected===g.top?' is-selected':''}" data-action="primary-select-area" data-area="${e(g.top)}" aria-pressed="${selected===g.top}" title="Select all of ${e(g.top)}">${e(g.top)}</button>`
-    :`<button type="button" class="primary-map-top" data-action="primary-open-area" data-area="${e(g.top)}" title="Open ${e(g.top)} in the codebase explorer">${e(g.top)}</button>`;
+  const top=g=>g.top===OTHER_FOLDERS?`<span class="primary-map-top is-other">${e(g.top)}</span>`
+    :`<button type="button" class="primary-map-top" data-action="primary-open-area" data-area="${e(g.top)}" title="Open ${e(g.top)} in the codebase browser">${e(g.top)}</button>`;
   // Each block starts at its share of all-time activity, so busy folders get room for their tiles.
   const total=map.groups.reduce((n,g)=>n+g.touches,0)||1;
   const groups=map.groups.map(g=>`<div class="primary-map-group" style="flex:${g.touches} 1 calc(${(100*g.touches/total).toFixed(1)}% - 6px)">${top(g)}<div class="primary-map-cells">${g.cells.map(cell=>{
@@ -146,13 +145,11 @@ function codebaseMap(map,shares,typical,{weightLabel,subject="this release's",se
     const typicalShare=typical?typical[i]||0:null;
     const title=`${cell.label}: ${p(share)} of ${subject} ${weightLabel}${typicalShare!=null?` · all releases ${p(typicalShare)}`:''}`;
     const inner=`<span>${e(cellName(cell))}</span>${typicalShare?`<b style="width:${clamp(typicalShare/maxTypical*100,4,100).toFixed(0)}%"></b>`:''}`;
-    const style=`flex-grow:${cell.touches};background:rgba(31,106,73,${alpha.toFixed(2)})`,cls=`primary-map-cell${alpha>.55?' is-strong':''}`;
-    return picker?`<button type="button" class="${cls}${selected===cell.key?' is-selected':''}" style="${style}" data-action="primary-select-area" data-area="${e(cell.key)}" aria-pressed="${selected===cell.key}" title="${e(title)}">${inner}</button>`
-      :`<div class="${cls}" style="${style}" title="${e(title)}">${inner}</div>`;
+    return `<div class="primary-map-cell${alpha>.55?' is-strong':''}" style="flex-grow:${cell.touches};background:rgba(31,106,73,${alpha.toFixed(2)})" title="${e(title)}">${inner}</div>`;
   }).join('')}</div></div>`).join('');
   const labels=new Map(map.groups.flatMap(g=>g.cells.map(cell=>[cell.key,cell.label])));
   const ranked=map.keys.map((key,i)=>({key:labels.get(key)||key,share:shares[i],typical:typical?typical[i]:null})).filter(x=>x.share>0).sort((a,b)=>b.share-a.share).slice(0,5);
-  return `${collapsible(`<div class="primary-map" ${picker?'role="group" aria-label="Codebase map: select an area"':`role="img" aria-label="${e(`Codebase map: ${ranked.map(x=>`${x.key} ${p(x.share)}`).join(', ')}`)}"`}>${groups}</div>`,ui,{tall:map.keys.length>TALL_MAP})}
+  return `${collapsible(`<div class="primary-map" role="img" aria-label="${e(`Codebase map: ${ranked.map(x=>`${x.key} ${p(x.share)}`).join(', ')}`)}">${groups}</div>`,ui,{tall:map.keys.length>TALL_MAP})}
     <p class="primary-legend-row"><span><i class="primary-age-key"></i> Darker = more of ${subject} ${e(weightLabel)}</span>${typical?'<span><i class="primary-age-key is-bar"></i> Bar = share across all releases</span>':''}<span>Tile size = all-time activity</span></p>
     ${ranked.length?`<p class="primary-muted primary-map-top-list">Most changed: ${ranked.map(x=>`<strong>${e(x.key)}</strong> ${p(x.share)}${x.typical!=null?` <small>(all releases ${p(x.typical)})</small>`:''}`).join(' · ')}</p>`:''}`;
 }
@@ -222,7 +219,7 @@ function releaseShapePanel(index,r,details,ui){
 const READING_GUIDE={
   observatory:['Tag ancestry defines what a release contains; release events are dated by GitHub publication, an annotated tag or the tagged commit.','The first tag is a baseline that ships all earlier history. Releases with incomplete ancestry, squashes and unmatched publishers need interpretation.','A release lead is the GitHub publisher or tagger, not a claim about who authored its code. Release shapes describe the age and location of shipped work, not its urgency, value or risk.','A GitHub release is not necessarily a production deployment. Environment events come from Heroku and are linked to tags by Git ancestry, not by dates or version numbers.'],
   contributors:['These are measures of recorded activity, not a ranking of performance.','Release participation and leadership are independent roles. A share of commits is not a share of effort, ownership or value.','The contributor table\'s first column follows the Measure above; copy it as CSV for your own analysis. Merge detection uses parent hashes when available (subject heuristics for older logs), and VERSION touches are a repository-specific proxy, not a verified release count.','Times are as recorded by each commit\'s author, in their own time zone; they show when changes were recorded, not hours worked.','A gap means no matching authored records in this import, not absence from work. Working-day patterns are observations, not verified schedules.'],
-  codebase:['Signals are judged on folders two levels deep; the map shows files by name down to five levels, and deeper changes under their fifth-level folder; the people grid uses top-level folders.','One person making most of an area\'s changes, churn rising, or areas changing together describe recorded changes, not ownership, risk or design on their own. A file touched in several commits counts each time; binary changes count as touches but not lines.','Touching the same files does not establish ownership or direct collaboration.'],
+  codebase:['Every section follows the folder you are in: signals, the map, the contents and the people grid compare the folders and files directly inside it. Open a folder to go in, and the path above to come back out.','One person making most of an area\'s changes, churn rising, or areas changing together describe recorded changes, not ownership, risk or design on their own. A file touched in several commits counts each time; binary changes count as touches but not lines.','Touching the same files does not establish ownership or direct collaboration.'],
 };
 export function readingGuide(index,tab){
   const general=index?[`${filterSentence(index)}.`,'Git records changes, not effort, difficulty, value, code quality or working hours. Only the imported, reachable history is visible; uncollected branches and missing dates are not counted.']:[];
@@ -379,16 +376,6 @@ function scopeTimelineCard(index,ui){
  * Who works where: file touches per person and top-level area, on the
  * Codebase tab's clock. A narrowed scope adds everyone else as context.
  */
-function whoWhereCard(index,ui,{commits,clock,from,to,ids}){
-  const grid=personAreaTouches(commits);
-  const people=grid.people.slice(0,10),areas=grid.areas.slice(0,9);
-  const scale=makeIntensityScale([...grid.cells.values()].flatMap(row=>[...row.values()]));
-  const everyone=ids?new Map(personAreaTouches(codebaseCommits(index,{from,to,clock})).areas):null;
-  const scoped=new Map(grid.areas);
-  const focus=ui.periodFocusPerson&&ui.periodFocusArea?commits.filter(c=>c.groupId===ui.periodFocusPerson&&c.files.some(file=>file.area===ui.periodFocusArea)):[];
-  return card('Who works where',`<p class="primary-muted">${clock==='released'?'Released':'Authored'} file touches per person and top-level area. Select a cell to list the commits behind it.</p>${people.length&&areas.length?`<div class="primary-matrix-scroll"><table class="primary-heat-table"><thead><tr><th>Contributor</th>${areas.map(([a])=>`<th><button type="button" class="primary-inline-link" data-action="primary-select-area" data-area="${e(a)}">${e(a)}</button></th>`).join('')}</tr></thead><tbody>${people.map(([id])=>`<tr><th>${whoButton(index,id)}</th>${areas.map(([area])=>{const value=grid.cells.get(id)?.get(area)||0;return `<td><button type="button" data-action="primary-period-cell" data-person="${e(id)}" data-area="${e(area)}" style="${intensityStyle(value,scale)}" title="${e(`${value} ${clock} file touches in ${area}`)}">${f(value)}</button></td>`;}).join('')}</tr>`).join('')}${everyone?`<tr class="primary-heat-others"><th>Everyone else</th>${areas.map(([area])=>{const value=(everyone.get(area)||0)-(scoped.get(area)||0);return `<td><span title="${e(`${value} ${clock} file touches in ${area} by people outside the scope`)}">${f(value)}</span></td>`;}).join('')}</tr>`:''}</tbody></table></div><div class="primary-colour-legend">${intensityLegend(scale)}</div>`:empty('No comparable cells','No file touches recorded in this scope.')}${ui.periodFocusPerson&&ui.periodFocusArea?`<div class="primary-selected-evidence" id="primary-who-where-detail"><h4>${e(index.groups.find(g=>g.id===ui.periodFocusPerson)?.displayName||'Contributor')} · ${e(ui.periodFocusArea)}</h4><p>${focus.length} matching commits · first 14 shown</p>${focus.slice(0,14).map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(c.date)}</span> ${e(c.subject)}</div>`).join('')||'<p>No matching commits.</p>'}</div>`:''}`);
-}
-
 function weekHeatmap(slots,options={shape:true}){
   const total=slots.flat().reduce((a,b)=>a+b,0);
   const values=slots.flat().map(v=>options.shape&&total?100*v/total:v);
@@ -476,54 +463,135 @@ function sparkline(series,label){
   const points=series.map((v,i)=>`${(i*step).toFixed(1)},${(h-2-(h-4)*v/max).toFixed(1)}`).join(' ');
   return `<svg class="primary-spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${e(label)}"><line x1="${w/2}" y1="0" x2="${w/2}" y2="${h}" class="primary-spark-mid"/><polyline points="${points}"/></svg>`;
 }
-/** An area name that opens its portrait. */
-const areaLink=area=>`<button type="button" class="primary-inline-link primary-area-link" data-action="primary-select-area" data-area="${e(area)}" data-jump="codebase-area">${e(area)}</button>`;
+/** A real link to a folder or file in the codebase browser; the page then starts at its heading. */
+const areaLink=(index,area,text=area,cls='primary-inline-link primary-area-link')=>`<a class="${cls}" href="${href(index,{view:'codebase',area:area||null})}" data-action="primary-select-area" data-area="${e(area)}" data-jump="codebase-here">${e(text)}</a>`;
+/** The last segment of a folder or file key, keeping a folder's trailing slash. */
+const leafName=key=>`${key.split('/').filter(Boolean).pop()||key}${key.endsWith('/')?'/':''}`;
+/** Where the browser stands: a folder ('' is the repository), plus a file when one is open. Older area links still land. */
+function codebaseLocation(index,area){
+  let at=String(area||'');
+  if(at==='(root)'||at===OTHER_FOLDERS)at='';
+  if(at.endsWith('…'))at=at.slice(0,-1);
+  const totals=pathTouches(index);
+  if(at&&!at.endsWith('/')&&!totals.has(at))at=`${at}/`;
+  const file=at&&!at.endsWith('/')?at:null;
+  return {folder:file?folderTrail(file).pop()||'':at,file};
+}
+function breadcrumb(index,folder,file){
+  const steps=[['','repository'],...folderTrail(`${folder}x`).map(key=>[key,leafName(key)]),...(file?[[file,leafName(file)]]:[])];
+  return `<nav class="primary-breadcrumb" aria-label="Location in the codebase"><ol>${steps.map(([key,text],i)=>`<li>${i===steps.length-1?`<span aria-current="page">${e(text)}</span>`:areaLink(index,key,text)}</li>`).join('')}</ol></nav>`;
+}
+
+/** The current folder as tiles: a block per child folder holding its own children, sized by all-time touches, darker for the scope's touches. */
+function folderMapView(index,fm,commits,ui,clock){
+  const counts=new Map();
+  for(const c of commits)for(const file of c.files){const key=fm.locate(file.path);if(key)counts.set(key,(counts.get(key)||0)+1);}
+  const max=Math.max(1,...counts.values()),total=fm.groups.reduce((n,g)=>n+g.touches,0)||1;
+  const rel=key=>key.slice(fm.folder.length);
+  const tile=(cell,group)=>{
+    const count=counts.get(cell.key)||0,alpha=count?0.08+0.92*count/max:0;
+    const style=`flex-grow:${cell.touches};background:rgba(31,106,73,${alpha.toFixed(2)})`,cls=`primary-map-cell${alpha>.55?' is-strong':''}`;
+    if(cell.folded){
+      const text=`… ${f(cell.folded)} more`,title=`${f(cell.folded)} quieter ${group===FILES_HERE?'files':`items in ${rel(group)}`}: ${f(count)} ${clock} file touches in the scope`;
+      return group===FILES_HERE?`<span class="${cls}" style="${style}" title="${e(title)}"><span>${e(text)}</span></span>`:areaLink(index,group,text,cls).replace('<a ',`<a style="${style}" title="${e(title)}" `);
+    }
+    return areaLink(index,cell.key,leafName(cell.key),cls).replace('<a ',`<a style="${style}" title="${e(`${rel(cell.key)}: ${f(count)} ${clock} file touches in the scope · ${f(cell.touches)} all time`)}" `).replace(/>([^<]*)<\/a>$/,'><span>$1</span></a>');
+  };
+  const groups=fm.groups.map(g=>`<div class="primary-map-group" style="flex:${g.touches} 1 calc(${(100*g.touches/total).toFixed(1)}% - 6px)">${g.key===FILES_HERE?`<span class="primary-map-top is-other">${e(FILES_HERE)}</span>`:areaLink(index,g.key,rel(g.key),'primary-map-top')}<div class="primary-map-cells">${g.cells.map(cell=>tile(cell,g.key)).join('')}</div></div>`).join('');
+  return `${collapsible(`<nav class="primary-map" aria-label="Map of ${e(fm.folder||'the repository')}: open a folder or file">${groups}</nav>`,ui,{tall:fm.keys.length>TALL_MAP})}
+    <p class="primary-legend-row"><span><i class="primary-age-key"></i> Darker = more of the scope's ${e(clock)} file touches</span><span>Tile size = all-time activity</span><span>Select a folder or file to open it</span></p>`;
+}
+
+/** Every folder and file directly inside the current folder, folders first, with the signals as badges. */
+function contentsCard(index,ui,{folder,signals}){
+  const children=new Map();
+  for(const [path,touches] of pathTouches(index)){
+    const key=childOf(path,folder);if(!key)continue;
+    const row=children.get(key)||{key,isFolder:key.endsWith('/'),allTime:0,files:0};
+    row.allTime+=touches;row.files++;children.set(key,row);
+  }
+  const byArea=new Map(signals.areas.map(r=>[r.area,r]));
+  const sort=ui.codeSort||'changes';
+  const order={changes:(a,b)=>(b.touches||0)-(a.touches||0)||b.allTime-a.allTime,name:()=>0,recent:(a,b)=>String(b.last||'').localeCompare(String(a.last||''))};
+  const rows=[...children.values()].map(row=>({...row,...(byArea.get(row.key)||{})}))
+    .sort((a,b)=>(b.isFolder-a.isFolder)||order[sort](a,b)||a.key.localeCompare(b.key));
+  const max=Math.max(1,...rows.map(r=>r.touches||0));
+  const name=id=>index.groups.find(g=>g.id===id)?.displayName||'Unmatched';
+  // Badges repeat the signals: rows are copies, so they match by key; only the strongest pairs earn a "changes with".
+  const keys=list=>new Set(list.map(r=>r.area)),concentrated=keys(signals.concentrated),rising=keys(signals.rising),fading=keys(signals.fading);
+  const partner=key=>{const pair=signals.coupled.slice(0,3).find(r=>r.a===key||r.b===key);return pair&&(pair.a===key?pair.b:pair.a);};
+  const badges=r=>[concentrated.has(r.key)?'<em>one main contributor</em>':'',
+    rising.has(r.key)?`<em class="is-up">↑ rising ${r.first?`${f(r.second/r.first)}×`:'from none'}</em>`:'',
+    fading.has(r.key)?`<em class="is-down">↓ fading ${r.second?`${f(r.first/r.second)}×`:'to none'}</em>`:'',
+    partner(r.key)?`<em>changes with ${e(leafName(partner(r.key)))}</em>`:''].join('');
+  const sorter=`<div class="primary-preset-row" role="group" aria-label="Sort">${toggleButton('codeSort','changes','Most changed',sort)}${toggleButton('codeSort','recent','Recently changed',sort)}${toggleButton('codeSort','name','Name',sort)}</div>`;
+  const table=`<div class="primary-table-wrap"><table class="primary-signal-table primary-contents-table"><thead><tr><th>Name</th><th>Changes</th><th>People</th><th>Over the scope</th><th>Last changed</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.isFolder?'is-folder':'is-file'}"><th>${areaLink(index,r.key,leafName(r.key))}${r.isFolder?`<small>${f(r.files)} ${r.files===1?'file':'files'}</small>`:''}${badges(r)}</th><td>${r.touches?`${bar(r.touches,max)}<span>${f(r.touches)}</span>`:'<span class="primary-muted">—</span>'}</td><td>${r.touches?`${f(r.people.length)} · ${e(name(r.top))} ${p(r.topShare)}`:'—'}</td><td>${r.touches?sparkline(r.series,`${r.key}: ${r.touches} changes by ${signals.granularity}`):''}</td><td>${r.last?e(day(r.last)):'—'}</td></tr>`).join('')}</tbody></table></div>`;
+  return card(`Inside ${folder||'the repository'}`,rows.length?`<div class="primary-row between"><p class="primary-muted">${f(rows.filter(r=>r.isFolder).length)} folders and ${f(rows.filter(r=>!r.isFolder).length)} files ever changed here. Changes, people and trend are the scope's; files never changed in it show a dash.</p>${sorter}</div>${collapsible(table,ui,{tall:rows.length>TALL_MAP,label:'list',key:'listExpanded'})}`:empty('Nothing recorded here','No file in the imported history sits in this folder.'));
+}
+
+/** People × the current folder's children: who makes the changes inside it. */
+function whoWhereCard(index,ui,{commits,clock,from,to,ids,folder}){
+  const areaOf=path=>childOf(path,folder);
+  const grid=personAreaTouches(commits,areaOf);
+  const people=grid.people.slice(0,10),areas=grid.areas.slice(0,9);
+  const scale=makeIntensityScale([...grid.cells.values()].flatMap(row=>[...row.values()]));
+  const everyone=ids?new Map(personAreaTouches(codebaseCommits(index,{from,to,clock}),areaOf).areas):null;
+  const scoped=new Map(grid.areas),rel=key=>key.slice(folder.length);
+  const inArea=(path,area)=>area.endsWith('/')?path.startsWith(area):path===area;
+  const focus=ui.periodFocusPerson&&ui.periodFocusArea?commits.filter(c=>c.groupId===ui.periodFocusPerson&&c.files.some(file=>inArea(file.path,ui.periodFocusArea))):[];
+  return card(`Who works where in ${folder||'the repository'}`,`<p class="primary-muted">${clock==='released'?'Released':'Authored'} file touches per person and folder or file inside ${e(folder||'the repository')}. Select a column to open it, or a cell to list the commits behind it.</p>${people.length&&areas.length?`<div class="primary-matrix-scroll"><table class="primary-heat-table"><thead><tr><th>Contributor</th>${areas.map(([a])=>`<th>${areaLink(index,a,rel(a))}</th>`).join('')}</tr></thead><tbody>${people.map(([id])=>`<tr><th>${whoButton(index,id)}</th>${areas.map(([area])=>{const value=grid.cells.get(id)?.get(area)||0;return `<td><button type="button" data-action="primary-period-cell" data-person="${e(id)}" data-area="${e(area)}" style="${intensityStyle(value,scale)}" title="${e(`${value} ${clock} file touches in ${area}`)}">${f(value)}</button></td>`;}).join('')}</tr>`).join('')}${everyone?`<tr class="primary-heat-others"><th>Everyone else</th>${areas.map(([area])=>{const value=(everyone.get(area)||0)-(scoped.get(area)||0);return `<td><span title="${e(`${value} ${clock} file touches in ${area} by people outside the scope`)}">${f(value)}</span></td>`;}).join('')}</tr>`:''}</tbody></table></div><div class="primary-colour-legend">${intensityLegend(scale)}</div>`:empty('No comparable cells','No file touches recorded here in this scope.')}${ui.periodFocusPerson&&ui.periodFocusArea?`<div class="primary-selected-evidence" id="primary-who-where-detail"><h4>${e(index.groups.find(g=>g.id===ui.periodFocusPerson)?.displayName||'Contributor')} · ${e(ui.periodFocusArea)}</h4><p>${focus.length} matching commits · first 14 shown</p>${focus.slice(0,14).map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(c.date)}</span> ${e(c.subject)}</div>`).join('')||'<p>No matching commits.</p>'}</div>`:''}`);
+}
+
+/** One file: who changed it, the releases that shipped those changes, its newest commits and the files that change with it. */
+function fileCard(index,file,portrait,companions){
+  const maxPeople=Math.max(1,...portrait.people.map(x=>x[1])),maxWith=Math.max(1,...companions.map(x=>x[1]));
+  return card(leafName(file),portrait.touches?`<div class="primary-two-col"><div class="primary-inset"><h4>Who changed it</h4>${portrait.people.slice(0,12).map(([id,v])=>`<div class="primary-ranked-row">${whoButton(index,id)}${bar(v,maxPeople)}<strong>${f(v)}</strong></div>`).join('')}</div><div class="primary-inset"><h4>Releases that shipped these changes</h4>${portrait.recentReleases.map(r=>`<div class="primary-release-brief">${tagButton(index,r)}<small>${e(day(r.date))}</small></div>`).join('')||'<p class="primary-muted">Not yet in a tagged release.</p>'}</div></div>
+    <div class="primary-two-col"><div class="primary-inset"><h4>Newest commits</h4><div class="primary-commit-list">${portrait.recent.map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(day(c.date))}</span>${whoButton(index,c.groupId)}<span class="primary-commit-subject">${e(c.subject)}</span></div>`).join('')}</div></div><div class="primary-inset"><h4>Changed in the same commits</h4>${companions.map(([path,v])=>`<div class="primary-ranked-row">${areaLink(index,path,path)}${bar(v,maxWith)}<strong>${f(v)}</strong></div>`).join('')||'<p class="primary-muted">Always changed on its own here.</p>'}</div></div>`
+    :empty('No changes to this file in the scope','Widen the scope\'s dates or people, or switch between authored and released changes.'));
+}
 
 /**
- * Codebase: where attention is warranted in the code (knowledge
- * concentration, churn moving, areas changing together), then the map,
- * shared with release footprints, to explore any area: who works there, the
- * releases that shipped it and its newest commits.
+ * Codebase: a folder browser. One current folder, from the repository
+ * down to any file, scopes every section: where attention is warranted among
+ * its children, a map of them, everything inside it and who works where.
+ * A file shows who changed it, the releases that shipped it and its commits.
  */
 function codebaseView(index,ui){
   const {from,to,ids}=scopeOf(index,ui);
   const clock=ui.codebaseClock==='released'?'released':'authored';
   const commits=codebaseCommits(index,{from,to,ids,clock});
-  const signals=codebaseSignals(commits,{from,to});
-  const {map}=releaseFootprints(index);
-  const fp=releaseFootprint(commits,map);
-  const selected=ui.codeArea||null;
-  // A selection is a map cell, a top-level block or a folder from a link.
-  const matches=path=>{const area=footprintArea(path);return area===selected||map.cellOf.get(area)===selected||topOf(area)===selected||selected.endsWith('/')&&area.startsWith(selected);};
-  const portrait=selected?areaPortrait(index,commits,matches):null;
+  const {folder,file}=codebaseLocation(index,ui.codeArea);
+  const here=file||folder;
+  const portrait=areaPortrait(index,commits,file?path=>path===file:path=>path.startsWith(folder));
   const clockSwitch=`<div class="primary-preset-row" role="group" aria-label="Count changes">${toggleButton('codebaseClock','authored','Authored',clock)}${toggleButton('codebaseClock','released','Released',clock)}</div>`;
   const basis=clock==='released'?'commits shipped by releases published in the scope dates':'commits authored in the scope dates';
+  const head=`${sectionHeading('codebase-here',here?leafName(here):'Repository',file?'':'Open any folder to look inside it; every section below follows the folder you are in.')}
+    ${breadcrumb(index,folder,file)}
+    <div class="primary-row between primary-signal-head"><p class="primary-muted">${e(day(from))} – ${e(day(to))} · ${e(basis)}${ids?' by the people in scope':''}.</p>${clockSwitch}</div>
+    <div class="primary-facts">${stat(f(portrait.touches),'File touches')}${stat(f(portrait.commits),'Commits')}${stat(f(portrait.people.length),'People')}${stat(f(portrait.releases),'Releases shipping them')}</div>`;
+  if(file)return `${sectionNav('Codebase',[['codebase-here','File'],['codebase-file','History']])}${head}
+    ${sectionHeading('codebase-file','History','')}
+    ${fileCard(index,file,portrait,fileCompanions(commits,file))}`;
+  const signals=codebaseSignals(commits,{from,to,areaOf:path=>childOf(path,folder)});
   const name=id=>index.groups.find(g=>g.id===id)?.displayName||'Unmatched';
-  const o=signals.options,rose=(r)=>r.first?`${f(r.second/r.first)}×`:'new',fell=(r)=>r.second?`${f(r.first/r.second)}×`:'stopped';
-  const jump=(id,text)=>`<a class="primary-inline-link" href="#${id}" data-action="primary-jump" data-target="${id}">${text} ↓</a>`;
+  const o=signals.options,rose=r=>r.first?`${f(r.second/r.first)}×`:'new',fell=r=>r.second?`${f(r.first/r.second)}×`:'stopped';
+  const rel=key=>key.slice(folder.length),link=key=>areaLink(index,key,rel(key));
   const [pair]=signals.coupled;
   const signalCards=`<div class="primary-signals">
-    <div class="primary-signal"><span>Knowledge concentration</span><strong>${f(signals.concentrated.length)} of ${f(signals.substantial)} areas rely mostly on one person</strong>${signals.concentrated.slice(0,3).map(r=>`<small>${areaLink(r.area)} · ${e(name(r.top))} · ${p(r.topShare)}</small>`).join('')||'<small>No area with enough changes is dominated by one person.</small>'}${jump('codebase-knowledge','Knowledge concentration')}</div>
-    <div class="primary-signal"><span>Churn</span><strong>${f(signals.rising.length)} rising · ${f(signals.fading.length)} fading</strong>${[...signals.rising.slice(0,2).map(r=>`<small>${areaLink(r.area)} ↑ ${rose(r)}</small>`),...signals.fading.slice(0,1).map(r=>`<small>${areaLink(r.area)} ↓ ${fell(r)}</small>`)].join('')||'<small>No area\'s changes moved sharply between the two halves.</small>'}${jump('codebase-churn','Churn')}</div>
-    <div class="primary-signal"><span>Changed together</span><strong>${pair?`${p(pair.overlap)} of their commits shared`:'No coupled areas'}</strong>${pair?`<small>${areaLink(pair.a)} and ${areaLink(pair.b)} share ${f(pair.shared)} commits</small>`:'<small>No two areas share enough commits.</small>'}${jump('codebase-coupling','Changed together')}</div>
+    <div class="primary-signal"><span>Knowledge concentration</span><strong>${f(signals.concentrated.length)} of ${f(signals.substantial)} busy folders and files rely mostly on one person</strong>${signals.concentrated.slice(0,3).map(r=>`<small>${link(r.area)} · ${e(name(r.top))} · ${p(r.topShare)}</small>`).join('')||'<small>Nothing here with enough changes is dominated by one person.</small>'}</div>
+    <div class="primary-signal"><span>Churn</span><strong>${f(signals.rising.length)} rising · ${f(signals.fading.length)} fading</strong>${[...signals.rising.slice(0,2).map(r=>`<small>${link(r.area)} ↑ ${rose(r)}</small>`),...signals.fading.slice(0,1).map(r=>`<small>${link(r.area)} ↓ ${fell(r)}</small>`)].join('')||'<small>Nothing here moved sharply between the two halves.</small>'}</div>
+    <div class="primary-signal"><span>Changed together</span><strong>${pair?`${p(pair.overlap)} of their commits shared`:'Nothing coupled'}</strong>${pair?`<small>${link(pair.a)} and ${link(pair.b)} share ${f(pair.shared)} commits</small>`:'<small>No two folders or files here share enough commits.</small>'}</div>
   </div>`;
-  const knowledge=signals.areas.slice(0,15);
-  const churn=[...signals.rising,...signals.fading,...signals.areas.filter(r=>!signals.rising.includes(r)&&!signals.fading.includes(r))].slice(0,15);
-  return `${sectionNav('Codebase',[['codebase-signals','Signals'],['codebase-map','Map'],['codebase-knowledge','Knowledge'],['codebase-churn','Churn'],['codebase-coupling','Changed together'],['codebase-who','Who works where']])}
-    ${sectionHeading('codebase-signals','Signals','Where attention is warranted in the code, from the scope\'s changes. Areas are folders two levels deep.')}
-    <div class="primary-row between primary-signal-head"><p class="primary-muted">${e(day(from))} – ${e(day(to))} · ${e(basis)}${ids?' by the people in scope':''}.</p>${clockSwitch}</div>
+  const fm=folderMap(pathTouches(index),folder);
+  return `${sectionNav('Codebase',[['codebase-here','Folder'],['codebase-signals','Signals'],['codebase-map','Map'],['codebase-contents','Contents'],['codebase-who','Who works where']])}${head}
+    ${sectionHeading('codebase-signals','Signals',`Where attention is warranted among the folders and files inside ${folder||'the repository'}. One person makes ${p(o.ownerShare)} or more of at least ${f(o.minimumTouches)} changes; churn rising or fading means one half of the dates (split at ${day(signals.mid)}) has ${f(o.churnRatio)}× the other's changes, with at least ${f(o.minimumChurn)}; pairs change together in ${f(o.minimumShared)} or more commits, ignoring commits that touch more than ${f(o.maxAreasPerCommit)} of them.`)}
     ${commits.length?signalCards:empty('No file changes in this scope','Widen the scope\'s dates or people, or switch between authored and released changes.')}
-    ${sectionHeading('codebase-map','Map','Every file five levels deep or less by name, deeper changes under their fifth-level folder. Select an area to see who works there.')}
-    ${card('The codebase map',fp.touches?codebaseMap(map,fp.shares.files,null,{weightLabel:'file touches',subject:`the scope's ${clock}`,selected,ui}):empty('No file changes in this scope','Widen the scope\'s dates or people, or switch between authored and released changes.'))}
-    ${portrait?`<div id="codebase-area" tabindex="-1">${card(selected,`<div class="primary-row between"><p class="primary-muted">${clock==='released'?'Released':'Authored'} changes in ${e(selected)} within the scope.</p><button type="button" class="primary-inline-link" data-action="primary-select-area" data-area="">Clear selection</button></div><div class="primary-facts">${stat(f(portrait.touches),'File touches')}${stat(f(portrait.commits),'Commits')}${stat(f(portrait.people.length),'People')}${stat(f(portrait.releases),'Releases shipping them')}</div><div class="primary-two-col"><div class="primary-inset"><h4>Who works here</h4>${portrait.people.slice(0,12).map(([id,v])=>`<div class="primary-ranked-row">${whoButton(index,id)}${bar(v,Math.max(1,...portrait.people.map(x=>x[1])))}<strong>${f(v)}</strong></div>`).join('')||'<p class="primary-muted">No matching changes.</p>'}</div><div class="primary-inset"><h4>Releases that shipped these changes</h4>${portrait.recentReleases.map(r=>`<div class="primary-release-brief">${tagButton(index,r)}<small>${e(day(r.date))}</small></div>`).join('')||'<p class="primary-muted">Not yet in a tagged release.</p>'}</div></div><details class="primary-notes"><summary>Newest commits here</summary><div class="primary-commit-list">${portrait.recent.map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(day(c.date))}</span>${whoButton(index,c.groupId)}<span class="primary-commit-subject">${e(c.subject)}</span></div>`).join('')||'<p>No matching commits.</p>'}</div></details>`)}</div>`:''}
-    ${sectionHeading('codebase-knowledge','Knowledge concentration',`How many people made each area's changes. An area relies mostly on one person when they made ${p(o.ownerShare)} or more of at least ${f(o.minimumTouches)} changes.`)}
-    ${card('Who made each area\'s changes',knowledge.length?`<div class="primary-table-wrap"><table class="primary-signal-table"><thead><tr><th>Area</th><th>Changes</th><th>People</th><th>Top contributor</th><th>Half the changes by</th></tr></thead><tbody>${knowledge.map(r=>`<tr class="${signals.concentrated.includes(r)?'is-flagged':''}"><th>${areaLink(r.area)}</th><td>${f(r.touches)}</td><td>${f(r.people.length)}</td><td>${r.top!=null?`${whoButton(index,r.top)}${bar(r.topShare,1)}<span>${p(r.topShare)}</span>`:'—'}${signals.concentrated.includes(r)?'<em>one main contributor</em>':''}</td><td>${f(r.half)} ${r.half===1?'person':'people'}</td></tr>`).join('')}</tbody></table></div>`:empty('No changes','No file changes in this scope.'))}
-    ${sectionHeading('codebase-churn','Churn',`Each area's changes in the first and second half of the scope (split at ${day(signals.mid)}), by ${signals.granularity}. Rising or fading means one half has ${f(o.churnRatio)}× the other's changes, with at least ${f(o.minimumChurn)} in the busier half.`)}
-    ${card('Where change is rising or fading',churn.length?`<div class="primary-table-wrap"><table class="primary-signal-table"><thead><tr><th>Area</th><th>First half</th><th>Second half</th><th>Change</th><th>Over the scope</th></tr></thead><tbody>${churn.map(r=>{const up=signals.rising.includes(r),down=signals.fading.includes(r);return `<tr class="${up||down?'is-flagged':''}"><th>${areaLink(r.area)}</th><td>${f(r.first)}</td><td>${f(r.second)}</td><td>${up?`<em class="is-up">↑ ${rose(r)}</em>`:down?`<em class="is-down">↓ ${fell(r)}</em>`:'steady'}</td><td>${sparkline(r.series,`${r.area}: ${r.touches} changes by ${signals.granularity}`)}</td></tr>`;}).join('')}</tbody></table></div>`:empty('No changes','No file changes in this scope.'))}
-    ${sectionHeading('codebase-coupling','Changed together',`Areas that change in the same commits. Overlap is shared commits ÷ commits touching either, and pairs are ranked by overlap weighted by how many commits they share; pairs need ${f(o.minimumShared)} shared commits, and commits touching more than ${f(o.maxAreasPerCommit)} areas (renames, reformatting) are ignored.`)}
-    ${card('Areas that change together',signals.coupled.length?`<div class="primary-table-wrap"><table class="primary-signal-table"><thead><tr><th>Areas</th><th>Shared commits</th><th>Overlap</th><th>Of the first's commits</th><th>Of the second's commits</th></tr></thead><tbody>${signals.coupled.slice(0,15).map(r=>`<tr><th>${areaLink(r.a)} + ${areaLink(r.b)}</th><td>${f(r.shared)}</td><td>${bar(r.overlap,1)}<span>${p(r.overlap)}</span></td><td>${p(r.ofA)}</td><td>${p(r.ofB)}</td></tr>`).join('')}</tbody></table></div>`:empty('No coupled areas','No two areas share enough commits in this scope.'))}
+    ${sectionHeading('codebase-map','Map',`Each folder inside ${folder||'the repository'} with its own folders and files, and the files directly here.`)}
+    ${card(`Map of ${folder||'the repository'}`,fm.keys.length?folderMapView(index,fm,commits,ui,clock):empty('Nothing recorded here','No file in the imported history sits in this folder.'))}
+    ${sectionHeading('codebase-contents','Contents','Every folder and file directly inside, with the scope\'s changes, people and trend, and badges for the signals above.')}
+    ${contentsCard(index,ui,{folder,signals})}
     ${sectionHeading('codebase-who','Who works where','')}
-    ${whoWhereCard(index,ui,{commits,clock,from,to,ids})}`;
+    ${whoWhereCard(index,ui,{commits,clock,from,to,ids,folder})}`;
 }
 
 export function renderPrimaryExplorer(index,ui){

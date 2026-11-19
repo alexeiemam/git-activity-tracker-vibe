@@ -132,8 +132,20 @@ test('tall maps start clipped with a control that expands every map',()=>{
   const view=buildAnalysis(history.commits,[{displayName:'Ada',emails:['ada@work']}],{start:'2026-01-01',end:'2026-01-31'});
   const big=buildEvidenceIndex(view,impactAnalysis(view,history.commits,history.tags),{min:'2026-01-01',max:'2026-01-31'});
   const render=changes=>renderPrimaryExplorer(big,{...primaryDefaults(),mode:'codebase',periodFrom:'2026-01-01',periodTo:'2026-01-31',...changes});
-  assert.match(render({}),/class="primary-collapsible"><div class="primary-collapsible-body"><div class="primary-map"/);
+  assert.match(render({}),/class="primary-collapsible"><div class="primary-collapsible-body"><nav class="primary-map"/);
   assert.match(render({}),/data-key="mapExpanded" data-value="on" aria-expanded="false">Show the whole map/);
   assert.match(render({mapExpanded:'on'}),/class="primary-collapsible is-expanded"[\s\S]*aria-expanded="true">Collapse the map/);
   assert.equal(restorePrimaryState({primary:{mapExpanded:'sideways'}}).mapExpanded,'off');
+  const folder=render({codeArea:'app/'});
+  assert.match(folder,/data-key="listExpanded" data-value="on" aria-expanded="false">Show the whole list/,'a long folder list clips on its own switch');
+  assert.match(render({codeArea:'app/',listExpanded:'on'}),/aria-expanded="true">Collapse the list/);
+});
+
+test('the folder list badges a child that relies mostly on one person',()=>{
+  const commits=Array.from({length:25},(_,i)=>`COMMIT|b${String(i).padStart(39,'0')}|ada@work|Ada|${at(1)}|${at(1)}|work ${i}|\n1\t1\tapp/billing/a.rb`);
+  const history=parseGitHistory([`TAG|v1||b${'0'.repeat(39)}|commit|${at(2)}`,...commits].join('\n'));
+  const view=buildAnalysis(history.commits,[{displayName:'Ada',emails:['ada@work']}],{start:'2026-01-01',end:'2026-01-31'});
+  const index=buildEvidenceIndex(view,impactAnalysis(view,history.commits,history.tags),{min:'2026-01-01',max:'2026-01-31'});
+  const html=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'codebase',periodFrom:'2026-01-01',periodTo:'2026-01-31',codeArea:'app/'});
+  assert.match(html,/data-area="app\/billing\/"[^>]*>billing\/<\/a><small>1 file<\/small><em>one main contributor<\/em>/);
 });

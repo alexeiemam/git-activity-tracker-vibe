@@ -201,13 +201,14 @@ test('release cohort controls offer lead and year compositions without productiv
  assert.doesNotMatch(driver,/productivity score:\s*\d+/);
 });
 
-test('codebase shows authored or released changes on one map, with an area portrait',()=>{
+test('codebase opens a folder: its path, a map of what is inside, its contents and who works there',()=>{
  const scoped=changes=>renderPrimaryExplorer(index,ui({mode:'codebase',periodFrom:'2025-01-17',periodTo:'2025-01-19',codeArea:'app/',...changes}));
  const authored=scoped({});
- assert.match(authored,/The codebase map/);
- assert.match(authored,/data-action="primary-select-area" data-area="app\/" aria-pressed="true"/,'the map is an area picker');
- assert.match(authored,/Who works here[\s\S]*Ben/);
- assert.match(authored,/Who works where/);
+ assert.match(authored,/aria-label="Location in the codebase"><ol><li><a [^>]*data-area=""[^>]*>repository<\/a><\/li><li><span aria-current="page">app\/<\/span>/,'the path goes back up to the repository');
+ assert.match(authored,/Map of app\//);
+ assert.match(authored,/<a class="primary-map-top" href="[^"]*area=app%2Fmodels%2F[^"]*" data-action="primary-select-area" data-area="app\/models\/" data-jump="codebase-here">models\/<\/a>/,'each folder inside is a real link that opens it');
+ assert.match(authored,/Inside app\/[\s\S]*data-area="app\/controllers\/"[\s\S]*1 file/,'contents list every folder ever changed, even quiet in the scope');
+ assert.match(authored,/Who works where in app\/[\s\S]*Ben/);
  const released=scoped({codebaseClock:'released'});
  assert.match(released,/aria-pressed="true">Released/);
  assert.match(released,/No file changes in this scope/,'no release was published in these dates');
@@ -321,12 +322,20 @@ test('Releases is one page: browse, over time, then environments when deployment
  assert.doesNotMatch(html,/releases-environments/,'without deployment history there is no Environments section');
 });
 
-test('Codebase leads with signals, then the map and a section per signal, each area opening its portrait',()=>{
- const html=renderPrimaryExplorer(index,ui({mode:'codebase',periodFrom:'2025-01-01',periodTo:'2025-03-31'}));
- const order=[...html.matchAll(/id="(codebase-[a-z]+)" tabindex="-1"/g)].map(m=>m[1]);
- assert.deepEqual(order,['codebase-signals','codebase-map','codebase-knowledge','codebase-churn','codebase-coupling','codebase-who']);
- assert.match(html,/Knowledge concentration<\/span><strong>\d+ of \d+ areas rely mostly on one person/,'with the denominator for context');
- assert.match(html,/<table class="primary-signal-table"><thead><tr><th>Area<\/th><th>Changes<\/th>/);
- assert.match(html,/data-action="primary-select-area" data-area="app\/[^"]*" data-jump="codebase-area"/,'area names open the area portrait');
- assert.match(html,/<svg class="primary-spark"/,'churn has a sparkline per area');
+test('Codebase follows one folder from the repository down to a file',()=>{
+ const at=(codeArea,changes={})=>renderPrimaryExplorer(index,ui({mode:'codebase',periodFrom:'2025-01-01',periodTo:'2025-03-31',codeArea,...changes}));
+ const root=at(null);
+ const order=html=>[...html.matchAll(/id="(codebase-[a-z]+)" tabindex="-1"/g)].map(m=>m[1]);
+ assert.deepEqual(order(root),['codebase-here','codebase-signals','codebase-map','codebase-contents','codebase-who']);
+ assert.match(root,/Knowledge concentration<\/span><strong>\d+ of \d+ busy folders and files rely mostly on one person/,'with the denominator for context');
+ assert.match(root,/data-area="app\/"[^>]*>app\/<\/a>[\s\S]*data-area="test\/"/,'the repository lists its top-level folders');
+ assert.match(root,/<svg class="primary-spark"/,'each changed row has a trend');
+ assert.equal(at('(root)'),root,'older links to the root area land on the repository');
+ assert.match(at('app'),/aria-current="page">app\/</,'a folder named without its slash still opens');
+ const file=at('app/models/model.rb');
+ assert.deepEqual(order(file),['codebase-here','codebase-file']);
+ assert.match(file,/data-area="app\/"[^>]*>app\/<\/a><\/li><li><a [^>]*data-area="app\/models\/"[^>]*>models\/<\/a><\/li><li><span aria-current="page">model\.rb</);
+ assert.match(file,/Who changed it[\s\S]*Ada/);
+ assert.match(file,/Releases that shipped these changes/);
+ assert.match(at('app/',{codeSort:'name'}),/aria-pressed="true">Name/);
 });

@@ -6,7 +6,7 @@ export const primaryDefaults=()=>({
   periodBucket:null,periodSelectedId:null,periodFocusPerson:null,periodFocusArea:null,
   contributorFocus:null,contributorTab:'delivery',contributorRange:'all',compareB:null,compareC:null,
   coReleasePartner:null,coReleaseSort:'shared',
-  codeArea:null,codebaseClock:'authored',mapExpanded:'off',deploymentEnv:'all',deploymentYear:'all',deploymentFocus:null,deploymentPage:0,trail:[],
+  codeArea:null,codebaseClock:'authored',codeSort:'changes',mapExpanded:'off',listExpanded:'off',deploymentEnv:'all',deploymentYear:'all',deploymentFocus:null,deploymentPage:0,trail:[],
 });
 const keys=['contributorFocus','compareB','compareC','coReleasePartner','periodSelectedId','periodFocusPerson'];
 const accepted={
@@ -18,7 +18,7 @@ const accepted={
   periodComparison:['none','previous','year','custom'],
   contributorTab:['delivery','together','focus','evolution','compare'],
   coReleaseSort:['shared','overlap'],
-  contributorRange:['all','year','period'],codebaseClock:['authored','released'],mapExpanded:['on','off'],deploymentEnv:['all','STAG','BETA','PROD'],
+  contributorRange:['all','year','period'],codebaseClock:['authored','released'],codeSort:['changes','recent','name'],mapExpanded:['on','off'],listExpanded:['on','off'],deploymentEnv:['all','STAG','BETA','PROD'],
 };
 const safeValue=(name,val)=>['releasePage','deploymentPage'].includes(name)
   ? Number.isInteger(val)&&val>=0&&val<=100000

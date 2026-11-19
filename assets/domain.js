@@ -4,9 +4,9 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=workdays-20261119-1';
-import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=workdays-20261119-1';
-import { scheduleFor } from './working-patterns.js?v=workdays-20261119-1';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=folders-20261119-1';
+import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=folders-20261119-1';
+import { scheduleFor } from './working-patterns.js?v=folders-20261119-1';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },

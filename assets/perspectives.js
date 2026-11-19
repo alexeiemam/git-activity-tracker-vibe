@@ -4,10 +4,10 @@
  * complete introduced Git ancestry (subject only to the explicitly declared
  * merge/revert policy); an authored period is a different observation clock.
  */
-import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=workdays-20261119-1';
-import { changeCategory, fileKind } from './impact.js?v=workdays-20261119-1';
-import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape, folderArea } from './release-footprint.js?v=workdays-20261119-1';
-import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=workdays-20261119-1';
+import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=folders-20261119-1';
+import { changeCategory, fileKind } from './impact.js?v=folders-20261119-1';
+import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape, folderArea } from './release-footprint.js?v=folders-20261119-1';
+import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=folders-20261119-1';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);
@@ -362,11 +362,13 @@ export function codebaseCommits(index,{from,to,ids=null,clock='authored'}) {
 }
 
 /** File touches per person and top-level area, with each person's and area's total. */
-export function personAreaTouches(commits) {
+/** File touches per person and area; `areaOf(path)` names the area (null leaves the file out), top-level by default. */
+export function personAreaTouches(commits,areaOf=null) {
   const cells=new Map(),people=new Map(),areas=new Map();
   for(const c of commits)for(const file of c.files){
-    const row=cells.get(c.groupId)||new Map();appendMap(row,file.area,1);cells.set(c.groupId,row);
-    appendMap(people,c.groupId,1);appendMap(areas,file.area,1);
+    const area=areaOf?areaOf(file.path):file.area;if(area==null)continue;
+    const row=cells.get(c.groupId)||new Map();appendMap(row,area,1);cells.set(c.groupId,row);
+    appendMap(people,c.groupId,1);appendMap(areas,area,1);
   }
   return {cells,people:sortCount(people),areas:sortCount(areas)};
 }
@@ -385,7 +387,78 @@ export function areaPortrait(index,commits,matches) {
     recent:hit.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10)};
 }
 
-/** Folders two levels deep (`app/models/`): the grain codebase signals are judged at. */
+/**
+ * The child of `folder` ('' for the repository root, otherwise `app/services/`)
+ * that holds a path: a subfolder such as `app/services/billing/`, the file
+ * itself when it sits directly in the folder, or null outside the folder.
+ */
+export function childOf(path,folder='') {
+  const clean=String(path||'').replace(/^\/+/,'');
+  if(!clean.startsWith(folder))return null;
+  const rest=clean.slice(folder.length),slash=rest.indexOf('/');
+  return !rest?null:slash<0?clean:folder+rest.slice(0,slash+1);
+}
+/** The folders above a path, outermost first: `app/services/x.rb` → `app/`, `app/services/`. */
+export function folderTrail(path) {
+  const parts=String(path||'').split('/');parts.pop();
+  return parts.filter(Boolean).map((_,i,all)=>`${all.slice(0,i+1).join('/')}/`);
+}
+
+const touchCache=new WeakMap();
+/** File touches per path across all history: every file the repository has recorded, for listing a folder. */
+export function pathTouches(index) {
+  if(touchCache.has(index))return touchCache.get(index);
+  const totals=new Map();
+  for(const c of index.activity||[])for(const file of c.files||[])appendMap(totals,file.path,1);
+  touchCache.set(index,totals);
+  return totals;
+}
+
+/** Files changed in the same commits as `file`, most often first; sweeping commits (renames, reformatting) are ignored. */
+export function fileCompanions(commits,file,{maxFiles=SIGNAL_DEFAULTS.maxAreasPerCommit,limit=10}={}) {
+  const counts=new Map();
+  for(const c of commits){
+    if(c.files.length>maxFiles||!c.files.some(f=>f.path===file))continue;
+    for(const path of new Set(c.files.map(f=>f.path)))if(path!==file)appendMap(counts,path,1);
+  }
+  return sortCount(counts).slice(0,limit);
+}
+
+/** Files directly in a folder share one block on its map. */
+export const FILES_HERE='files here';
+/**
+ * One folder as a map: a block per child folder holding its own children,
+ * and one block for the files directly inside it, sized by all-time touches.
+ * The busiest `maxCells` tiles are kept and the rest fold into one "… other"
+ * tile per block, so a crowded folder stays legible. `locate(path)` gives a
+ * path's tile key, or null outside the folder.
+ */
+export function folderMap(totals,folder='',{maxCells=150}={}) {
+  const cellKey=path=>{const child=childOf(path,folder);return child&&(child.endsWith('/')?{group:child,key:childOf(path,child)}:{group:FILES_HERE,key:child});};
+  const raw=new Map();
+  for(const [path,touches] of totals){
+    const at=cellKey(path);if(!at)continue;
+    const cell=raw.get(at.key)||{key:at.key,group:at.group,touches:0};
+    cell.touches+=touches;raw.set(at.key,cell);
+  }
+  const ranked=[...raw.values()].sort((a,b)=>b.touches-a.touches||a.key.localeCompare(b.key));
+  const kept=new Set(ranked.slice(0,maxCells).map(cell=>cell.key));
+  const groups=new Map(),fold=new Map();
+  for(const cell of ranked){
+    const group=groups.get(cell.group)||{key:cell.group,touches:0,cells:[]};
+    groups.set(cell.group,group);group.touches+=cell.touches;
+    if(kept.has(cell.key)){group.cells.push({...cell,folded:0});continue;}
+    const key=`${cell.group}…`;fold.set(cell.key,key);
+    let other=group.cells.find(c=>c.key===key);
+    if(!other){other={key,group:cell.group,touches:0,folded:0};group.cells.push(other);}
+    other.touches+=cell.touches;other.folded++;
+  }
+  const ordered=[...groups.values()].sort((a,b)=>(a.key===FILES_HERE)-(b.key===FILES_HERE)||b.touches-a.touches||a.key.localeCompare(b.key));
+  return {folder,groups:ordered,keys:ordered.flatMap(g=>g.cells.map(c=>c.key)),
+    locate:path=>{const at=cellKey(path);return at?fold.get(at.key)||at.key:null;}};
+}
+
+/** Folders two levels deep (`app/models/`): the grain codebase signals are judged at by default. */
 export const SIGNAL_DEPTH=2;
 const SIGNAL_DEFAULTS=Object.freeze({
   ownerShare:.8,        // an area relies on one person when they made this share of its changes…
@@ -400,25 +473,28 @@ const SIGNAL_DEFAULTS=Object.freeze({
  * Where attention is warranted in the code, from one set of commits:
  * knowledge concentration (who made an area's changes), churn moving
  * between the first and second half of the dates, and areas that change in
- * the same commits. Areas are folders two levels deep. These describe
+ * the same commits. Areas are folders two levels deep unless `areaOf(path)`
+ * names them (null leaves a file out), as the folder browser does with a
+ * folder's children. These describe
  * recorded changes, not ownership, quality or risk on their own.
  */
-export function codebaseSignals(commits,{from,to,...options}={}) {
+export function codebaseSignals(commits,{from,to,areaOf=path=>folderArea(path,SIGNAL_DEPTH),...options}={}) {
   const o={...SIGNAL_DEFAULTS,...options};
   const mid=dayNumber(from)+(dayNumber(to)-dayNumber(from)+1)/2;
   const spanDays=dayNumber(to)-dayNumber(from)+1,weekly=spanDays<=120;
   const binOf=date=>weekly?Math.floor((dayNumber(date)-dayNumber(from))/7):(Number(date.slice(0,4))*12+Number(date.slice(5,7)))-(Number(from.slice(0,4))*12+Number(from.slice(5,7)));
   const bins=binOf(to)+1;
   const areas=new Map(),pairs=new Map();
-  const areaOf=name=>{
-    if(!areas.has(name))areas.set(name,{area:name,touches:0,commits:0,people:new Map(),first:0,second:0,series:Array(bins).fill(0)});
+  const area=name=>{
+    if(!areas.has(name))areas.set(name,{area:name,touches:0,commits:0,people:new Map(),first:0,second:0,series:Array(bins).fill(0),last:null});
     return areas.get(name);
   };
   for(const c of commits){
     const touched=new Set();
     for(const file of c.files){
-      const name=folderArea(file.path,SIGNAL_DEPTH),a=areaOf(name);
-      a.touches++;appendMap(a.people,c.groupId,1);
+      const name=areaOf(file.path);if(name==null)continue;
+      const a=area(name);
+      a.touches++;appendMap(a.people,c.groupId,1);if(!a.last||c.date>a.last)a.last=c.date;
       if(dayNumber(c.date)<mid)a.first++;else a.second++;
       const bin=binOf(c.date);if(bin>=0&&bin<bins)a.series[bin]++;
       touched.add(name);
@@ -433,7 +509,7 @@ export function codebaseSignals(commits,{from,to,...options}={}) {
     let covered=0,half=0;
     for(const [,n] of people){covered+=n;half++;if(covered>=a.touches/2)break;}
     return {area:a.area,touches:a.touches,commits:a.commits,people,top:people[0]?.[0]??null,topShare:a.touches?(people[0]?.[1]||0)/a.touches:0,half,
-      first:a.first,second:a.second,series:a.series};
+      first:a.first,second:a.second,series:a.series,last:a.last};
   }).sort((a,b)=>b.touches-a.touches||a.area.localeCompare(b.area));
   const concentrated=rows.filter(r=>r.touches>=o.minimumTouches&&r.topShare>=o.ownerShare);
   const rising=rows.filter(r=>Math.max(r.first,r.second)>=o.minimumChurn&&r.second>=o.churnRatio*r.first&&r.second>r.first).sort((a,b)=>(b.second-b.first)-(a.second-a.first));
