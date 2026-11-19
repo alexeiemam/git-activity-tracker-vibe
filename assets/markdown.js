@@ -5,7 +5,7 @@
  * as text, only http(s) and mailto links are kept, and images become links,
  * so nothing is fetched from the notes.
  */
-import { Marked } from './vendor/marked.esm.js?v=folders-20261119-1';
+import { Marked } from './vendor/marked.esm.js?v=offdays-20261119-1';
 
 const escape = value => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 const SAFE_URL = /^(https?:\/\/|mailto:)/i;

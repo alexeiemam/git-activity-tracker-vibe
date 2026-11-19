@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=folders-20261119-1';
-import { generateDemoLog } from './demo-data.js?v=folders-20261119-1';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=folders-20261119-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=folders-20261119-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=folders-20261119-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=folders-20261119-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=folders-20261119-1';
-import { releaseScorecard } from './release-scorecard.js?v=folders-20261119-1';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=folders-20261119-1';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=folders-20261119-1';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=folders-20261119-1';
-import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=folders-20261119-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=folders-20261119-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=folders-20261119-1';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=folders-20261119-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=folders-20261119-1';
-import { buildStoryAnalysis } from './stories.js?v=folders-20261119-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=folders-20261119-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=folders-20261119-1';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=folders-20261119-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=folders-20261119-1';
-import { downloadFilename } from './download-names.js?v=folders-20261119-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=folders-20261119-1';
-import { buildDeploymentIndex } from './deployments.js?v=folders-20261119-1';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=folders-20261119-1';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=folders-20261119-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=folders-20261119-1';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=folders-20261119-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=folders-20261119-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=folders-20261119-1';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=folders-20261119-1';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=folders-20261119-1';
+} from './domain.js?v=offdays-20261119-1';
+import { generateDemoLog } from './demo-data.js?v=offdays-20261119-1';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=offdays-20261119-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=offdays-20261119-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=offdays-20261119-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=offdays-20261119-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=offdays-20261119-1';
+import { releaseScorecard } from './release-scorecard.js?v=offdays-20261119-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=offdays-20261119-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=offdays-20261119-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=offdays-20261119-1';
+import {WEEKDAY_LABELS,normalizeWorkingDays,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=offdays-20261119-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=offdays-20261119-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=offdays-20261119-1';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=offdays-20261119-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=offdays-20261119-1';
+import { buildStoryAnalysis } from './stories.js?v=offdays-20261119-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=offdays-20261119-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=offdays-20261119-1';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=offdays-20261119-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=offdays-20261119-1';
+import { downloadFilename } from './download-names.js?v=offdays-20261119-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=offdays-20261119-1';
+import { buildDeploymentIndex } from './deployments.js?v=offdays-20261119-1';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=offdays-20261119-1';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=offdays-20261119-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=offdays-20261119-1';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=offdays-20261119-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=offdays-20261119-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=offdays-20261119-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=offdays-20261119-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=offdays-20261119-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=folders-20261119-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=offdays-20261119-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -1303,7 +1303,7 @@ function pulseMomentumCellStyle(score) {
   return `background:${fill};border-color:${fill};color:${t>.65?'#fff':'#2a3933'}`;
 }
 function pulseMomentumLegend() {
-  return `<div class="pulse-gap-legend" role="group" aria-label="Contribution momentum: negative scores indicate cooling, zero is unchanged, positive scores indicate building. Unknown dates are hatched."><span>−100 · cooling</span><span class="pulse-gap-swatches">${[-100,-50,0,50,100].map(score=>`<i style="${pulseMomentumCellStyle(score)}" title="${momentumNumber(score)}" aria-hidden="true"></i>`).join('')}</span><span>+100 · building</span><span class="pulse-gap-missing">▨ · not scored</span></div>`;
+  return `<div class="pulse-gap-legend" role="group" aria-label="Contribution momentum: negative scores indicate cooling, zero is unchanged, positive scores indicate building. Unknown dates are hatched. Non-working days are unscored, and any work on them shows as a dot and still counts."><span>−100 · cooling</span><span class="pulse-gap-swatches">${[-100,-50,0,50,100].map(score=>`<i style="${pulseMomentumCellStyle(score)}" title="${momentumNumber(score)}" aria-hidden="true"></i>`).join('')}</span><span>+100 · building</span><span class="pulse-gap-missing">▨ · not scored</span><span class="pulse-gap-missing"><i class="pulse-offday has-work" aria-hidden="true"><i class="pulse-offday-work"></i></i> work on a non-working day · counted, not scored</span></div>`;
 }
 function pulseActivitySummary(model) {
   return `<div class="pulse-gap-summary-head"><strong>How the contribution is distributed</strong><span>Clock span, substantive activity windows and consistency are descriptive evidence—not hours worked.</span></div>
@@ -1398,7 +1398,7 @@ function pulseGapCellStyle(score) {
   return `background:${fill};border-color:${fill};color:${t>.59?'#fff':'#493024'}`;
 }
 function pulseGapLegend() {
-  return `<div class="pulse-gap-legend" role="group" aria-label="Combined signal from zero to one hundred, fixed across contributors and date ranges. Unavailable and non-working-day values are hatched; their work still counts."><span>0 · neutral</span><span class="pulse-gap-swatches">${[0,25,50,75,100].map(score=>`<i style="${pulseGapCellStyle(score)}" title="${score} of 100" aria-hidden="true"></i>`).join('')}</span><span>100 · high signal</span><span class="pulse-gap-missing">▨ · not scored</span></div>`;
+  return `<div class="pulse-gap-legend" role="group" aria-label="Combined signal from zero to one hundred, fixed across contributors and date ranges. Unavailable dates are hatched. Non-working days are unscored, and any work on them shows as a dot and still counts."><span>0 · neutral</span><span class="pulse-gap-swatches">${[0,25,50,75,100].map(score=>`<i style="${pulseGapCellStyle(score)}" title="${score} of 100" aria-hidden="true"></i>`).join('')}</span><span>100 · high signal</span><span class="pulse-gap-missing">▨ · not scored</span><span class="pulse-gap-missing"><i class="pulse-offday has-work" aria-hidden="true"><i class="pulse-offday-work"></i></i> work on a non-working day · counted, not scored</span></div>`;
 }
 function pulseGapDailyLabel(person,cell) {
   const base=`${person}, ${formatDate(cell.date)}: ${number.format(cell.commits)} authored commits and ${number.format(cell.churn)} non-VERSION changed lines`;
@@ -1411,8 +1411,8 @@ function pulseGapDailyLabel(person,cell) {
 function pulseGapSummary(model) {
   const latest=row=>row.latestRelease ? `${esc(row.latestRelease.tag)} · ${formatDate(row.latestRelease.date)}` : 'Not observed';
   const credit=row=>row.latestRelease ? `${number.format(row.latestRelease.linesChanged)} lines · ${pulseCredit(row.latestRelease)}` : '—';
-  return `${!model.rows.some(row=>row.scoredDays)?'<p class="pulse-gap-unavailable">No eligible weekdays have a measurable authored contribution to an incremental tagged release in this date range. Hatched cells are unknown, not zero.</p>':''}<div class="pulse-gap-summary-head"><strong>Individual release-gap context</strong><span>Absolute contribution credit, not a measure of performance or a contributor ranking.</span></div>
-    <div class="table-scroll"><table class="pulse-gap-table"><thead><tr><th>Contributor</th><th>Latest credited release</th><th>Author's lines / credit</th><th>Calendar gap</th><th>Weighted gap</th><th>Mean daily signal</th><th>Days ≥ ${ATTENTION_THRESHOLD}</th><th>Weekdays scored</th></tr></thead><tbody>
+  return `${!model.rows.some(row=>row.scoredDays)?'<p class="pulse-gap-unavailable">No eligible working days have a measurable authored contribution to an incremental tagged release in this date range. Hatched cells are unknown, not zero.</p>':''}<div class="pulse-gap-summary-head"><strong>Individual release-gap context</strong><span>Absolute contribution credit, not a measure of performance or a contributor ranking.</span></div>
+    <div class="table-scroll"><table class="pulse-gap-table"><thead><tr><th>Contributor</th><th>Latest credited release</th><th>Author's lines / credit</th><th>Calendar gap</th><th>Weighted gap</th><th>Mean daily signal</th><th>Days ≥ ${ATTENTION_THRESHOLD}</th><th>Working days scored</th></tr></thead><tbody>
     ${model.rows.map(row=>`<tr><th>${esc(row.name)}</th><td>${latest(row)}</td><td>${credit(row)}</td><td>${row.latestGap===null?'—':`${row.latestGap} days`}</td><td>${row.latestEffectiveGap===null?'—':`${pulseScore(row.latestEffectiveGap)} / ${model.horizon} days`}</td><td>${pulseScore(row.averageScore)}${row.averageScore===null?'':' / 100'}</td><td>${number.format(row.attentionDays)}</td><td>${number.format(row.scoredDays)}</td></tr>`).join('')}</tbody></table></div>
     <p class="pulse-gap-caution">A release reduces the accumulated gap by min(your recorded changed text lines / ${model.fullCreditLines}, 100%). Additions and deletions count; VERSION-only, zero-line and lead-only events earn no reset credit. Release ancestry is computed before the selected date window; line counts can be inflated by generated files or miss binary and unrecorded work. Daily authored churn also softens the score: the quiet-day factor multiplies max(1 − commits / ${model.busyDay}, 0) by max(1 − non-VERSION daily changed lines / ${model.busyChurn}, 0). Additionally, distributed substantive authored activity can soften at most ${Math.round(MAX_GAP_DISTRIBUTION_RELIEF*100)}% of the remaining daily signal; it cannot reset release credit, and unknown timestamps earn no extra relief. The first observed measurable release starts from an unknown earlier history, conservatively treated as a full gap before credit. A missing or quiet Git day is <em>not</em> evidence of inactivity, delivery responsibility, availability, or quality.</p>`;
 }
@@ -1534,7 +1534,7 @@ function renderContinuityDailyPulse(view) {
       const day=dateAtDay(dayNumber(week)+i);
       if(day<view.start||day>view.end)return '<span class="pulse-daily-outside" aria-hidden="true"></span>';
       const item=record?.daily.get(day),label=continuityDayLabel(c.displayName,item);
-      return `<button type="button" class="pulse-cell pulse-daily-cell continuity-day-tile ${item&&!item.workday?'continuity-weekend':''} ${item&&!item.workday&&item.meaningful?'continuity-weekend-activity':''}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(label)}" aria-label="${esc(label)}. View date evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${continuityTile(item,pulseContinuity,{daily:true})}</button>`;
+      return `<button type="button" class="pulse-cell pulse-daily-cell continuity-day-tile ${item&&!item.workday?'continuity-weekend':''} ${item&&!item.workday&&(item.meaningful||item.authored)?'continuity-weekend-activity':''}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(label)}" aria-label="${esc(label)}. View date evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${continuityTile(item,pulseContinuity,{daily:true})}</button>`;
     })).join('');
     return `<div class="pulse-daily-contributor"><div class="pulse-daily-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div><div class="pulse-weekdays">${weekdays}</div><div class="pulse-day-cells" style="grid-template-columns:${weekColumns}">${cells}</div></div>`;
   }).join('');
@@ -1574,7 +1574,7 @@ function renderMonthlyPulse(view) {
     const bucket=map.get(m);
     const v=signalMode?(bucket?.score??null):(bucket||0);
     const ym=`${Math.floor(m/12)}-${String(m%12+1).padStart(2,'0')}`;
-    const label=levelMode ? pulseLevelMonthLabel(c.displayName,ym,bucket) : gapMode ? bucket ? `${c.displayName}, ${ym}: mean weighted release-gap signal ${pulseScore(v)} of 100 over ${bucket.days} eligible weekdays; ${bucket.attentionDays} days at least ${ATTENTION_THRESHOLD}; ${bucket.distributedDays} distributed days. Latest credited release ${bucket.lastRelease?.tag||'unknown'} (${bucket.lastRelease?.linesChanged??'—'} shipped changed lines); effective gap ${pulseScore(bucket.lastEffectiveGap)} days.` : `${c.displayName}, ${ym}: no eligible days with a prior credited release contribution.` :
+    const label=levelMode ? pulseLevelMonthLabel(c.displayName,ym,bucket) : gapMode ? bucket ? `${c.displayName}, ${ym}: mean weighted release-gap signal ${pulseScore(v)} of 100 over ${bucket.days} eligible working days; ${bucket.attentionDays} days at least ${ATTENTION_THRESHOLD}; ${bucket.distributedDays} distributed days. Latest credited release ${bucket.lastRelease?.tag||'unknown'} (${bucket.lastRelease?.linesChanged??'—'} shipped changed lines); effective gap ${pulseScore(bucket.lastEffectiveGap)} days.` : `${c.displayName}, ${ym}: no eligible days with a prior credited release contribution.` :
       momentumMode ? bucket ? `${c.displayName}, ${ym}: mean momentum ${momentumNumber(v)} across ${bucket.days} comparable workdays; ${bucket.buildingDays} building and ${bucket.coolingDays} cooling days; ${bucket.distributedDays} distributed days; latest ${momentumNumber(bucket.latest.score)} on ${bucket.latest.date}.` : `${c.displayName}, ${ym}: insufficient comparable workday history.` :
       `${c.displayName} · ${ym}: ${number.format(v)} ${METRICS[state.pulseMetric].unit}; ${pulseTemporal?.byId.get(c.id)?.months.get(ym)?.meaningfulDays??0} meaningful workdays, ${pulseTemporal?.byId.get(c.id)?.months.get(ym)?.distributedDays??0} distributed workdays.`;
     return `<div class="pulse-cell ${signalMode?'pulse-gap-month':''} ${levelMode?'pulse-velocity-cell pulse-velocity-month':''}" style="${signalStyle?signalStyle(v):intensityStyle(v,scale)}" title="${esc(label)}" role="img" aria-label="${esc(label)}">${levelMode?`<span aria-hidden="true">${esc(velocityCellText(v))}</span>`:''}</div>`;
@@ -1617,7 +1617,10 @@ function renderDailyPulse(view) {
       const value=signalMode?(levelMode?(cell?.level??null):(cell?.score??null)):(c.daily[state.pulseMetric][day]||0);
       const label=gapMode ? pulseGapDailyLabel(c.displayName,cell) : momentumMode ? `${pulseMomentumDailyLabel(c.displayName,cell)}; ${pulseLevelDailyLabel(c.displayName,pulseLevel?.byId.get(c.id)?.daily.get(day))}` : levelMode?pulseLevelDailyLabel(c.displayName,cell) :
         `${c.displayName}, ${formatDate(day)}: ${number.format(value)} ${METRICS[state.pulseMetric].unit}; ${pulseTemporalDailyLabel(pulseTemporal?.byId.get(c.id)?.daily.get(day)||emptyTemporalDay(pulseTimeSettings()))}. View day activity.`;
-      return `<button type="button" class="pulse-cell pulse-daily-cell ${signalMode&&cell?.reason==='non-working-day'?`pulse-gap-weekend${cell.commits?' has-work':''}`:''} ${levelMode?'pulse-velocity-cell pulse-velocity-day':''}" style="${signalStyle?signalStyle(value):intensityStyle(value,scale)}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(label)}" aria-label="${esc(label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${levelMode?`<span aria-hidden="true">${esc(velocityCellText(value))}</span>`:''}</button>`;
+      // A non-working day is unscored but never blank: its work shows as a dot, darker for more commits.
+      const offDay=signalMode&&cell?.reason==='non-working-day';
+      const work=offDay&&cell.commits?`<i class="pulse-offday-work" style="opacity:${Math.min(1,.35+.65*cell.commits/state.pulseBusyDay).toFixed(2)}" aria-hidden="true"></i>`:'';
+      return `<button type="button" class="pulse-cell pulse-daily-cell ${offDay?`pulse-offday${cell.commits?' has-work':''}`:''} ${levelMode?'pulse-velocity-cell pulse-velocity-day':''}" style="${offDay?'':signalStyle?signalStyle(value):intensityStyle(value,scale)}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(label)}" aria-label="${esc(label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover">${work}${levelMode?`<span aria-hidden="true">${esc(velocityCellText(value))}</span>`:''}</button>`;
     })).join('');
     return `<div class="pulse-daily-contributor"><div class="pulse-daily-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div><div class="pulse-weekdays">${weekdays}</div><div class="pulse-day-cells" style="grid-template-columns:${weekColumns}">${cells}</div></div>`;
   }).join('');
@@ -1701,9 +1704,9 @@ function renderPulse(view) {
     :levelMode
     ? `Absolute recorded velocity is a fixed-scale, uncapped composite of authored commits, non-VERSION changed lines, authored changes included in releases, and temporal distribution. Daily and monthly cells show their actual numeric values: monthly values are averages per covered calendar day, including quiet days. The colour thresholds never adapt to peers or filtered maxima. The table below shows selected-period averages and a separate trailing ${state.pulseLevelWorkdays}-working-day view. One reference index unit corresponds to the weighted model’s reference inputs; this is not a work quota, measure of hours or quality.`
     :gapMode
-    ? `Signal (0–100) = 100 × weighted release gap × max(1 − daily commits / ${state.pulseBusyDay}, 0) × max(1 − daily non-VERSION changed lines / ${state.pulseDailyChurn}, 0) × (1 − 0.15 × churn-weighted time distribution). The gap grows to 100% in ${state.pulseGapHorizon} days; incremental tagged releases reduce it by min(your shipped changed lines / ${state.pulseReleaseLines}, 1). A busy commit day or substantial churn can neutralise the signal; meaningful changes spread across distinct ${state.pulseTemporalPeriod}-minute windows can modestly soften any remainder (max 15%). ${daily?'Each square is one date; open a cell for its evidence.':'Each monthly square averages eligible weekday signals.'} Weekends, unobserved dates and days before measurable release credit are not scored.`
+    ? `Signal (0–100) = 100 × weighted release gap × max(1 − daily commits / ${state.pulseBusyDay}, 0) × max(1 − daily non-VERSION changed lines / ${state.pulseDailyChurn}, 0) × (1 − 0.15 × churn-weighted time distribution). The gap grows to 100% in ${state.pulseGapHorizon} days; incremental tagged releases reduce it by min(your shipped changed lines / ${state.pulseReleaseLines}, 1). A busy commit day or substantial churn can neutralise the signal; meaningful changes spread across distinct ${state.pulseTemporalPeriod}-minute windows can modestly soften any remainder (max 15%). ${daily?'Each square is one date; open a cell for its evidence.':'Each monthly square averages eligible working-day signals.'} Each person's non-working days (set per identity; Mon–Fri unless changed) are not scored, but work on them shows as a dot and still counts. Unobserved dates and days before measurable release credit are not scored.`
     :momentumMode
-    ? `Direction (−100 to +100): compare the latest ${state.pulseMomentumWorkdays} workdays with the prior ${state.pulseMomentumWorkdays} workdays for the same person. Daily contribution units blend 25% commits, 45% non-VERSION changed lines, 15% churn-weighted distribution, and 15% authored lines shipped in tagged releases. Window pace = 75% average units + 25% consistency (share of workdays with ≥ ${state.pulseMeaningfulLines} changed lines). Momentum = 100 × (recent pace − previous pace) / (recent pace + previous pace + 0.1). Positive is building; negative is cooling; zero can also mean no observed activity. The summary below separately shows absolute recent recorded contribution level. ${daily?'Open a date for both windows and today’s evidence.':'Monthly cells average scored weekdays, so opposing directions can cancel.'} At least ${2*state.pulseMomentumWorkdays} complete imported weekdays are required; weekends are not scored.`
+    ? `Direction (−100 to +100): compare the latest ${state.pulseMomentumWorkdays} workdays with the prior ${state.pulseMomentumWorkdays} workdays for the same person. Daily contribution units blend 25% commits, 45% non-VERSION changed lines, 15% churn-weighted distribution, and 15% authored lines shipped in tagged releases. Window pace = 75% average units + 25% consistency (share of workdays with ≥ ${state.pulseMeaningfulLines} changed lines). Momentum = 100 × (recent pace − previous pace) / (recent pace + previous pace + 0.1). Positive is building; negative is cooling; zero can also mean no observed activity. The summary below separately shows absolute recent recorded contribution level. ${daily?'Open a date for both windows and today’s evidence.':'Monthly cells average scored working days, so opposing directions can cancel.'} At least ${2*state.pulseMomentumWorkdays} imported working days are required. Each person's non-working days (set per identity; Mon–Fri unless changed) are not scored, but work on them shows as a dot and counts in the window that spans it.`
     :daily
     ? `Each square is one authored day (Mon–Sun). Open a cell to see its first/last commit, span, active ${state.pulseTemporalPeriod}-minute windows and churn-weighted distribution. A single commit has unknown spread, not zero contribution. Scroll sideways for older weeks.`
     : 'One square per person and calendar month. Intensity shows the chosen colour-by measure. The distribution summary underneath adds meaningful-day consistency, recorded clock span and timed-window coverage.');

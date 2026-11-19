@@ -1090,7 +1090,10 @@ button.primary-shape{cursor:pointer;line-height:1.4}button.primary-shape:hover{f
 .pulse-gap-swatches{display:flex;align-items:center;gap:2px}
 .pulse-gap-swatches i{display:block;width:23px;height:14px;border:1px solid transparent;border-radius:2px}
 .pulse-gap-missing{white-space:nowrap;color:var(--muted)}
-.pulse-gap-weekend{opacity:.44}
+.pulse-offday{display:inline-grid;place-items:center;background:#f6f8f4;border:1px dashed #cdd8cb}
+.pulse-offday.has-work{border-style:solid;border-color:#9cc8ad}
+.pulse-offday-work{display:block;width:56%;height:56%;border-radius:50%;background:#1f6a49}
+.pulse-gap-legend i.pulse-offday{width:14px;height:14px;border-radius:2px;vertical-align:-3px;margin-right:4px}
 .pulse-gap-month{min-width:22px}
 .pulse-gap-summary{margin-top:21px;padding-top:18px;border-top:1px solid var(--line-soft)}
 .pulse-gap-summary-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
@@ -1113,7 +1116,7 @@ button.primary-shape{cursor:pointer;line-height:1.4}button.primary-shape:hover{f
 .pulse-gap-detail-facts b{text-align:right;overflow-wrap:anywhere;color:#47372b}
 .pulse-gap-detail small{display:block;margin-top:9px;font:10px/1.5 var(--mono);color:#77604e}
 @media(max-width:720px){.pulse-lens-bar{align-items:flex-start}.pulse-gap-legend{gap:6px}.pulse-gap-swatches i{width:16px}.pulse-gap-detail{margin:10px 13px 0}.pulse-gap-detail-facts span{flex-wrap:wrap}}
-@media(forced-colors:active){.pulse-gap-swatches i,.pulse-gap-month,.pulse-daily-cell{border:1px solid CanvasText}.pulse-gap-weekend{opacity:1;border-style:dashed}}
+@media(forced-colors:active){.pulse-gap-swatches i,.pulse-gap-month,.pulse-daily-cell{border:1px solid CanvasText}.pulse-offday{border-style:dashed}.pulse-offday-work{background:CanvasText}}
 .pulse-gap-unavailable{font:11px/1.6 var(--mono);color:#925a32;background:#fff9ef;border:1px solid #f0dfc6;border-radius:6px;padding:10px 12px;margin:0 0 15px}
 
 /* Signed, self-relative contribution momentum complements absolute and gap lenses. */

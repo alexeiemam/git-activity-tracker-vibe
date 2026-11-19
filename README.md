@@ -565,9 +565,11 @@ credited release and line count, literal and effective gaps, mean score and
 number of weekdays at **50+**. Hover details also show the authored-clock
 span, active time periods, churn-weighted distribution and incremental relief.
 Monthly cells contain the arithmetic mean of
-**eligible weekday daily scores**, not a snapshot of month-end gap. Days
-outside imported history, weekends and days without a prior measurable
-release contribution are unscored (hatched), not zero. Filtering the visible
+**eligible working-day daily scores**, not a snapshot of month-end gap. Days
+outside imported history and days without a prior measurable release
+contribution are unscored (hatched), not zero. Each person's non-working days
+(set per identity; Mon–Fri unless changed) are unscored too, but never blank:
+work on them shows as a green dot, darker for more commits, and still counts. Filtering the visible
 authored dates does not erase release credits: releases always come from the
 full imported, policy-filtered release index. The release and shared temporal settings, lens and granularity persist across
 session export/import; older sessions restore missing settings to their
@@ -829,10 +831,11 @@ observe activity momentum: commits and lines still count. These weighting
 constants are fixed across contributors; the adjustable gap/churn thresholds in
 the *other* lens do not silently change this one.
 
-A day is scored only with **2N complete, in-coverage weekdays** in the full
+A day is scored only with **2N in-coverage working days** in the full
 imported history. Narrowing the displayed date filter does not erase either
-comparison period. Weekends, outside-history days and incomplete warm-up
-periods are hatched as *unscored*. Monthly cells average the **signed daily
+comparison period. Outside-history days and incomplete warm-up periods are
+hatched as *unscored*; non-working days are unscored, but their work shows as
+a green dot and counts in the window that spans it. Monthly cells average the **signed daily
 scores**, so a month with building and cooling phases may average near zero;
 hover text reports both counts. Daily hover/focus/click evidence includes both
 windows' commits, churn, shipped lines, normalised units and that day's Git
