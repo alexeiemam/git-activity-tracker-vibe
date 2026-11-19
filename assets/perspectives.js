@@ -6,6 +6,7 @@
  */
 import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=git-ingest-input-20261113-1';
 import { changeCategory, fileKind } from './impact.js?v=git-ingest-input-20261113-1';
+import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges } from './release-latency.js?v=git-ingest-input-20261113-1';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);
@@ -49,7 +50,7 @@ const releaseTextChanges = commits => {
 };
 
 const compactCommit = c=>({
-  hash:c.hash,groupId:c.groupId,date:c.date,hour:c.hour,minute:c.minute,offsetMinutes:c.offsetMinutes,subject:c.subject,
+  hash:c.hash,groupId:c.groupId,date:c.date,authoredAt:c.authoredAt,hour:c.hour,minute:c.minute,offsetMinutes:c.offsetMinutes,subject:c.subject,
   kind:changeCategory(c),merges:c.isMerge,reverts:c.isRevert,
   additions:c.files.reduce((v,f)=>v+(f.added||0),0),
   deletions:c.files.reduce((v,f)=>v+(f.deleted||0),0),
@@ -179,7 +180,9 @@ export function releaseDetails(index,hash) {
   if(!release)return null;
   const byHash=new Map(index.activity.map(c=>[c.hash,c]));
   const included=release.commits.map(h=>byHash.get(h)).filter(Boolean);
+  const ages=included.map(c=>releaseAgeDays(c.authoredAt,release.timestamp));
   return {release,commits:included.slice(-40).reverse(),
+    releaseAge:releaseAgeDistribution(ages.filter(v=>v!=null),{undated:ages.filter(v=>v==null).length}),
     paths:sortCount(new Map(included.flatMap(c=>c.files.map(f=>[f.path,1]))
       .reduce((m,[path])=>(m.set(path,(m.get(path)||0)+1),m),new Map()))).slice(0,20),
   };
@@ -245,6 +248,10 @@ export function contributorPortrait(index,personId,window) {
     if(ownedHashes.has(hash)){seen.add(hash);shipped.push(hash);}
   }
   const profile=summariseActivity(activity,window.from,window.to);
+  // Follow window-authored commits to their first release even if it ships after the window.
+  const firstRelease=firstReleaseByCommit(index.releases);
+  const asOf=Date.parse(`${index.bounds.max}T23:59:59.999Z`);
+  const windowActivity=index.activity.filter(c=>c.date>=window.from&&c.date<=window.to);
   const months=new Map();
   const ensure=(date)=>{const key=date.slice(0,7);if(!months.has(key))months.set(key,{key,commits:0,releases:0,driven:0,areas:new Set()});return months.get(key);};
   for(const c of activity){const cell=ensure(c.date);cell.commits++;for(const f of c.files)cell.areas.add(f.area);}
@@ -264,6 +271,8 @@ export function contributorPortrait(index,personId,window) {
     involvement:involvement.slice().reverse(),months:calendar,slots,
     distinctAreas:profile.areas.length,
     driverWithOthers:median(driven.map(r=>r.contributors)),
+    releaseAge:commitReleaseAges(activity,firstRelease,asOf),
+    teamReleaseAge:commitReleaseAges(windowActivity,firstRelease,asOf),
   };
 }
 

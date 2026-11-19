@@ -275,6 +275,27 @@ explicit GitHub publisher → contributor mappings and focused impact contributo
 rank employees by productivity.** Git alone cannot measure customer value,
 production adoption, review effort or engineering correctness.
 
+### Time to release
+
+**Time to release** is the elapsed calendar time from a commit's author time to
+the publication/tag time of the first tagged release that shipped it (across
+all tag lineages). It is not effort, review or delivery lead time.
+
+- **Observatory › Release anatomy** shows how long the release's included
+  commits had waited, as a histogram (< 1 day … 6+ months) with the median and
+  75th/90th percentiles. The first tag ships all earlier history, so its ages
+  include initial development and are labelled as such.
+- **Contributors › Delivery** shows the same histogram for commits the person
+  authored in the observation window, followed to their first release even if
+  it ships after the window, against everyone's commits in the same window.
+  **Not yet released** counts commits no tag has shipped, with how long the
+  oldest has waited as of the end of the imported history; these are still
+  waiting, so they are excluded from the percentiles. **Compare** adds median
+  time to release and commits not yet released.
+
+Commits without an author time, or whose release is recorded before authorship,
+are not measured.
+
 ### Individual release impact
 
 The **People & releases** tab separates **release leadership** (GitHub publishers
