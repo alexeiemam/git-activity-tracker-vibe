@@ -321,11 +321,13 @@ function setScope({from,to,people=null},mode=null){
 }
 function primarySnapshot(){
   const {trail,...snapshot}=primary;
-  return {...snapshot,label:({observatory:'Releases',rhythm:'Rhythm',contributors:'People',codebase:'Codebase',deployments:'Deployments'})[primary.mode]};
+  return {...snapshot,label:({observatory:'Releases',rhythm:'Rhythm',contributors:'People',codebase:'Codebase'})[primary.mode]};
 }
 
 function goPrimary(mode,change={}, {remember=true,scroll=true}={}){
-  if(!['observatory','rhythm','contributors','codebase','deployments'].includes(mode))return;
+  // Deployments is the Environments view of Releases.
+  if(mode==='deployments'){mode='observatory';change={...change,releaseView:'environments'};}
+  if(!['observatory','rhythm','contributors','codebase'].includes(mode))return;
   if(remember && (mode!==primary.mode||Object.keys(change).length))primary.trail=[...primary.trail,primarySnapshot()].slice(-8);
   Object.assign(primary,change,{mode});state.viewMode=mode;
   routePushPending=true;setExperienceVisibility();renderPrimary();showTabEvidence(mode);
@@ -918,8 +920,9 @@ function syncScopeAfterLoad() {
       const i=mergeGroups.findIndex(g=>g.emails.includes(s.rhythmFocusEmail));
       state.rhythmFocus=i<0?'selection':String(i);
     }
-    const savedView=s.viewMode==='periods'?'rhythm':s.viewMode; // Periods was renamed Rhythm.
-    if (['observatory','rhythm','contributors','codebase','deployments','evidence'].includes(savedView))state.viewMode=savedView;
+    // Periods was renamed Rhythm; Deployments became a view of Releases.
+    const savedView=({periods:'rhythm',deployments:'observatory'})[s.viewMode]||s.viewMode;
+    if (['observatory','rhythm','contributors','codebase','evidence'].includes(savedView))state.viewMode=savedView;
     if (['team','person','compare'].includes(s.storyPerspective))state.storyPerspective=s.storyPerspective;
     if (['all','activity','rhythm','delivery','focus','seasonality','context'].includes(s.storyTopic))state.storyTopic=s.storyTopic;
     if (['noteworthy','hidden'].includes(s.storyCategory))state.storyCategory=s.storyCategory;
@@ -2535,7 +2538,8 @@ async function ensureEvidenceRendered(tab=state.viewMode,run=renderGeneration,ge
   try{await job;}finally{evidencePending.delete(pendingKey);}
 }
 async function switchExperience(next,{target=null}={}) {
-  if(!['observatory','rhythm','contributors','codebase','deployments','evidence'].includes(next))return;
+  if(next==='deployments'){primary.releaseView='environments';next='observatory';}
+  if(!['observatory','rhythm','contributors','codebase','evidence'].includes(next))return;
   state.viewMode=next;
   if(next!=='evidence')primary.mode=next;
   setExperienceVisibility();
@@ -2815,7 +2819,7 @@ const ACTIONS={
   'primary-release-page':(_e,t)=>{primary.releasePage=Math.max(0,Number(t.dataset.page)||0);renderPrimary();},
   'primary-reset-release-search':()=>{Object.assign(primary,{releaseBin:null,releaseYear:'all',releaseType:'all',releaseShape:'all',releaseFootprint:'all',releaseQuery:'',releasePage:0});renderPrimary();},
   'primary-toggle':(_e,t)=>{
-    const options={releaseView:['browse','overview'],releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off']};
+    const options={releaseView:['browse','overview','environments'],releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off']};
     if(!options[t.dataset.key]?.includes(t.dataset.value))return;
     primary[t.dataset.key]=t.dataset.value;
     if(t.dataset.key==='releaseView'){routePushPending=true;setExperienceVisibility();}

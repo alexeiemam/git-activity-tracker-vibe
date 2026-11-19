@@ -145,12 +145,13 @@ test('unresolvable and ambiguous Git SHA values cannot generate author credit',(
 
 test('the event and release views distinguish independent QA vs PROD and preserve data safety',()=>{
   const {index,bounds}=fixture();const ui=primaryDefaults();ui.periodFrom=bounds.min;ui.periodTo=bounds.max;ui.contributorFocus='0';
-  for(const mode of ['observatory','rhythm','contributors','deployments']){
-    ui.mode=mode;
+  for(const mode of ['observatory','rhythm','contributors','environments']){
+    // Deployments is the Environments view of Releases.
+    Object.assign(ui,mode==='environments'?{mode:'observatory',releaseView:'environments'}:{mode,releaseView:'browse'});
     const html=renderPrimaryExplorer(index,ui);
     assert.ok(html.length>1500,mode);
     assert.doesNotMatch(html,/NEVER_SHOW_ME|TOPSECRET/);
-    if(mode==='deployments'){
+    if(mode==='environments'){
       assert.match(html,/STAG · QA/);
       assert.match(html,/BETA · QA/);
       assert.match(html,/Production/);
@@ -158,16 +159,18 @@ test('the event and release views distinguish independent QA vs PROD and preserv
       assert.match(html,/data-action="deployment-select"/);
     }
   }
-  const anatomy=renderPrimaryExplorer(index,{...ui,mode:'observatory',releaseHash:index.releases[1].hash});
+  const anatomy=renderPrimaryExplorer(index,{...ui,mode:'observatory',releaseView:'browse',releaseHash:index.releases[1].hash});
   assert.match(anatomy,/Where is this tagged revision observed/);
   assert.match(anatomy,/Present by this observed snapshot|First introduced in observed transition/);
   assert.match(periodBriefingForUi(index,{...ui,mode:'rhythm'}),/Heroku .* STAG events/);
 });
 
 test('deployment browser state is session-exportable, bounded and restored',()=>{
-  const state=primaryDefaults();Object.assign(state,{mode:'deployments',deploymentEnv:'PROD',deploymentYear:'2025',deploymentPage:3});
+  const state=primaryDefaults();Object.assign(state,{mode:'observatory',releaseView:'environments',deploymentEnv:'PROD',deploymentYear:'2025',deploymentPage:3});
   const restored=restorePrimaryState({primary:primaryStateForExport(state)},[]);
-  assert.equal(restored.mode,'deployments');assert.equal(restored.deploymentEnv,'PROD');
+  assert.equal(restored.mode,'observatory');assert.equal(restored.releaseView,'environments');assert.equal(restored.deploymentEnv,'PROD');
+  const older=restorePrimaryState({primary:{mode:'deployments'}},[]);
+  assert.deepEqual([older.mode,older.releaseView],['observatory','environments'],'sessions saved on the Deployments tab reopen Environments');
   assert.equal(restored.deploymentPage,3);
   assert.equal(restorePrimaryState({primary:{mode:'deployments',deploymentEnv:'BOGUS',deploymentPage:1e9}},[]).deploymentEnv,'all');
 });
@@ -199,7 +202,9 @@ test('missing Heroku metadata retains a working release-first dashboard',()=>{
   index.deployments=gitOnly;
   const ui={...primaryDefaults(),mode:'observatory'};
   assert.match(renderPrimaryExplorer(index,{...ui,releaseView:'overview'}),/No Heroku deployment history/);
-  assert.match(renderPrimaryExplorer(index,{...ui,mode:'deployments'}),/No deployment history yet/);
+  const environments=renderPrimaryExplorer(index,{...ui,releaseView:'environments'});
+  assert.doesNotMatch(environments,/data-value="environments"/,'without deployment history there is no Environments view');
+  assert.match(environments,/primary-release-browse/,'and the Releases tab falls back to browsing');
 });
 
 test('latest QA-versus-PROD ancestry is descriptive, not a promotion inference',()=>{

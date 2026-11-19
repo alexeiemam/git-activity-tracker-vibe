@@ -67,7 +67,7 @@ test('rendering produces ordinary anchors for release, contributor and deploymen
   const markup=renderPrimaryExplorer(index,{mode:'observatory',releaseHash:impact.releases?.[0]?.hash||null,cohortBy:'type',releaseType:'all',releaseYear:'all',releaseQuery:'',releasePage:0,trail:[]});
   assert.match(markup,/<a [^>]*href="\/index\.html\?view=contributors/);
   const page=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-  assert.match(page,/<a href="\?view=deployments" class="app-tab"/,'deployments is a tab in the app shell');
+  assert.doesNotMatch(page,/<a href="\?view=deployments" class="app-tab"/,'deployments is a view of Releases, not a tab');
   assert.match(page,/data-action="local-copy-url"/,'copying a link lives in the app bar');
   assert.match(markup,/dataset=local-123456789/);
 });
@@ -114,4 +114,11 @@ test('old Behaviour links open the Rhythm tab for that person',()=>{
   const next=applyRoute({mode:'observatory'},route,groups);
   assert.equal(next.mode,'rhythm');
   assert.equal(next.contributorFocus,'0');
+});
+
+test('deployment links open the Environments view of Releases and round-trip',()=>{
+  const next=applyRoute({mode:'contributors'},readRoute('view=deployments&environment=PROD&event=PROD-12-0'),groups);
+  assert.deepEqual([next.mode,next.releaseView,next.deploymentFocus],['observatory','environments','PROD-12-0']);
+  assert.match(routeUrl('/index.html',routeFromState(next)),/view=deployments&environment=all&event=PROD-12-0/);
+  assert.equal(applyRoute(next,readRoute('view=observatory'),groups).releaseView,'browse');
 });

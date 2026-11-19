@@ -14,7 +14,9 @@ const emailFor=(id,groups)=>groups?.find(g=>String(g.id)===String(id))?.emails?.
 const idFor=(email,groups)=>groups?.find(g=>g.emails?.some(e=>e.toLowerCase()===email.toLowerCase()))?.id??null;
 const add=(q,name,value,valid=()=>true)=>{if(value!=null&&value!==''&&valid(String(value)))q.set(name,String(value));};
 export function routeFromState(ui,groups=[],datasetId=null){
-  const mode=ui?.mode||'observatory',r={view:MODES.has(mode)?mode:'observatory'};
+  // Environments is a view of Releases, but keeps its own `view=deployments` links.
+  const environments=ui?.mode==='deployments'||ui?.mode==='observatory'&&ui?.releaseView==='environments';
+  const mode=environments?'deployments':ui?.mode||'observatory',r={view:MODES.has(mode)?mode:'observatory'};
   if(mode==='observatory')r.release=ui.releaseHash;
   if(mode==='rhythm')r.person=emailFor(ui.periodSelectedId,groups);
   if(mode==='contributors'){
@@ -52,6 +54,8 @@ export function readRoute(source){
 }
 export function applyRoute(ui,route,groups=[]){
   const next={...ui,mode:route.view||'observatory',trail:[]};
+  if(next.mode==='deployments')Object.assign(next,{mode:'observatory',releaseView:'environments'});
+  else if(next.mode==='observatory'&&next.releaseView==='environments')next.releaseView='browse';
   if(route.release)next.releaseHash=route.release;
   if(route.person){const id=idFor(route.person,groups);if(id!=null){
     if(next.mode==='rhythm')next.periodSelectedId=String(id);

@@ -73,7 +73,7 @@ Open `http://localhost:8000` and choose **Explore demo dataset**, or use the gen
 
 No build, install, backend, API key, or CDN for the browser application is needed. The optional Google Fonts request can fall back to local fonts offline. The **capture command** calls an authenticated local GitHub CLI when installed; credentials are handled by `gh`, not by git:signals.
 
-## Six questions, one app
+## Five questions, one app
 
 After importing history and confirming merged author identities, the app opens
 on **Releases**. An app bar holds the dataset summary and its actions (Back,
@@ -84,14 +84,13 @@ underneath:
 
 | Tab | Question | Contents |
 | --- | --- | --- |
-| **Releases** | What shipped? | **Browse releases** (the list beside the selected release's anatomy) and **Overview** (landscape, mix, cohorts, deployment evidence, release gaps, Impact › Release detail and People & releases) |
+| **Releases** | What shipped, and where did it go? | **Browse releases** (the list beside the selected release's anatomy), **Overview** (landscape, mix, cohorts, deployment evidence, release gaps, Impact › Release detail and People & releases) and, when deployment history was imported, **Environments** (Heroku STAG/BETA/PROD events and how they relate to tags) |
 | **People** | Who contributed? | Contributor portraits; summary, contribution side by side and momentum over time |
 | **Rhythm** | When, and how steadily? | The scope unfolding over time; the activity pulse; weekly, yearly and seasonal rhythms |
 | **Codebase** | Where in the code? | Released areas; who changed what; Impact › Codebase reach and Change evolution; change sizes |
-| **Deployments** | Where did it run? | Heroku environments and their relationship to tagged releases |
 | **Evidence** | The records | The contributor table (copyable as CSV) and recent commits |
 
-Old links to `?view=periods` open the Rhythm tab. Cards carry a single
+Old links to `?view=periods` open the Rhythm tab, and `?view=deployments` links open Releases › Environments. Cards carry a single
 heading, and each tab ends with **How to read this tab**: the evidence's clocks
 and merge/revert policy, what Git can and cannot show, and the caveats that
 apply to that tab, gathered in one place instead of repeated under every chart.
