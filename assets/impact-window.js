@@ -7,10 +7,13 @@ const dayStart = date => {
   return Number.isFinite(value) && new Date(value).toISOString().slice(0,10) === date ? value : null;
 };
 // Release positions use their recorded event calendar date (GitHub publication
-// when present, otherwise the tag/date fallback), not an inferred UTC day.
+// when present, otherwise the tag/date fallback), not an inferred UTC day, at
+// their time of day on that date, so several releases in a day spread out in
+// order. A release without a known time sits at midday.
 export const impactReleasePosition = release => {
   const localDay = dayStart(release.date);
-  return localDay===null ? (Number.isFinite(release.timestamp)?release.timestamp:null) : localDay + DAY/2;
+  if (localDay===null) return Number.isFinite(release.timestamp)?release.timestamp:null;
+  return localDay + (Number.isFinite(release.clock) && release.clock>=0 && release.clock<DAY ? release.clock : DAY/2);
 };
 const dateOf = time => new Date(time).toISOString().slice(0,10);
 const clamp = (value, min, max) => Math.min(Math.max(value,min),max);

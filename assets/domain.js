@@ -4,9 +4,9 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=daysoff-20261119-1';
-import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=daysoff-20261119-1';
-import { scheduleFor } from './working-patterns.js?v=daysoff-20261119-1';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=releaseclock-20261119-2';
+import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=releaseclock-20261119-2';
+import { scheduleFor } from './working-patterns.js?v=releaseclock-20261119-2';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },
@@ -35,6 +35,12 @@ export const TIME_BANDS = [
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const EMPTY_TOTALS = () => Object.fromEntries(Object.keys(METRICS).map(key => [key, 0]));
 
+/** Milliseconds since local midnight in an ISO timestamp's own offset, or null. */
+const localClock = text => {
+  const m = /^\d{4}-\d{2}-\d{2}[T ](\d{2}):(\d{2})(?::(\d{2}))?/.exec(text || '');
+  if (!m || +m[1] > 23 || +m[2] > 59 || +(m[3] || 0) > 59) return null;
+  return ((+m[1] * 60 + +m[2]) * 60 + +(m[3] || 0)) * 1000;
+};
 export function validDate(date) {
   if (!DATE_RE.test(String(date))) return false;
   const parsed = new Date(`${date}T00:00:00Z`);
@@ -157,6 +163,8 @@ export function parseGitHistory(raw, {allowEmpty=false} = {}) {
       tags.push({ name: (parts[1] || '').trim(), hash: commitHash,
         taggedAt: Number.isFinite(Date.parse(timeText)) ? Date.parse(timeText) : null,
         taggedDate: validDate(timeText.slice(0, 10)) ? timeText.slice(0, 10) : null,
+        // The tagger's own clock time on that date, so same-day releases keep their order and spacing.
+        taggedClock: localClock(timeText),
         timestampSource: objectType === 'tag' ? 'tagger' : 'tagged-commit',
         annotated: objectType === 'tag',
         taggerName:objectType === 'tag' ? String(parts[6] || '').trim() : '',

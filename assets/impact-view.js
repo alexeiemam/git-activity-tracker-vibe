@@ -1,12 +1,40 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=daysoff-20261119-1';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=daysoff-20261119-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=daysoff-20261119-1';
+import { IMPACT_METRICS } from './impact.js?v=releaseclock-20261119-2';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition } from './impact-window.js?v=releaseclock-20261119-2';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=releaseclock-20261119-2';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
 const p = x => x==null?'—':`${Math.abs(x) > 0 && Math.abs(x) < .1 ? Number(x.toPrecision(2)) : n.format(x)}%`;
 const amount = x => x==null?'—':n.format(x);
+const clockText = r => Number.isFinite(r?.clock) ? ` ${String(Math.floor(r.clock/3600000)).padStart(2,'0')}:${String(Math.floor(r.clock/60000)%60).padStart(2,'0')}` : '';
+/**
+ * Releases sit at their time of day; where dots would still overlap, a later
+ * one moves right just far enough to clear the earlier ones, never up or down
+ * (height is the measure) and never more than a few dot widths. Its stem still
+ * starts at its true time, so a moved dot leans back to where it belongs.
+ * Only when zoomed in far enough that a day has room (MIN_DODGE_DAY pixels):
+ * across years nothing can be separated, and leaning stems would only hatch.
+ */
+const DOT_CLEARANCE=13,MAX_DODGE=3*DOT_CLEARANCE,MIN_DODGE_DAY=8;
+export function dodgeReleases(records,xOf,yOf,right,dodge=true) {
+  const placed=[],layout=new Map();
+  const ordered=[...records].sort((a,b)=>xOf(a)-xOf(b));
+  for(const r of ordered){
+    const at=xOf(r),cy=yOf(r);
+    let cx=at;
+    if(dodge)for(const p of placed){
+      if(p.cx<at-DOT_CLEARANCE)continue;
+      const dy=Math.abs(p.cy-cy);
+      if(dy>=DOT_CLEARANCE)continue;
+      cx=Math.max(cx,p.cx+Math.sqrt(DOT_CLEARANCE**2-dy**2));
+    }
+    cx=Math.min(cx,at+MAX_DODGE,Math.max(at,right));
+    const item={at,cx:Math.round(cx*10)/10,cy};
+    placed.push(item);layout.set(r.hash,item);
+  }
+  return layout;
+}
 const shortDate = x => x ? new Date(`${x}T12:00:00Z`).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}) : 'Undated';
 const typeLabel = s => ({baseline:'First tag on lineage',major:'Major',minor:'Minor',patch:'Patch',prerelease:'Pre-release',divergent:'Version decreased',unclassified:'Unclassified', 'same-version':'Same version'})[s] || 'Unclassified';
 const color = s => ({major:'#b65e49',minor:'#4d70a4',patch:'#2b7957',prerelease:'#a47833',baseline:'#707e70'})[s] || '#84708f';
@@ -140,16 +168,18 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
   if(ticks.length<2)ticks.push({time:min,label:shortDate(windowDates.from)},{time:max,label:shortDate(windowDates.to)});
   // Avoid dozens of overlapping labels on a full-history overview.
   const skip=Math.max(1,Math.ceil(ticks.length/11));
+  const dayWidth=(x(min+86400000)-x(min));
+  const layout=dodgeReleases(records,r=>x(impactReleasePosition(r)),r=>r.metricValue==null?181:y(r.metricValue),width-36,dayWidth>=MIN_DODGE_DAY);
   const stems=records.map(r=>{
     const undefinedMetric=r.metricValue==null;
-    const cx=x(impactReleasePosition(r)),cy=undefinedMetric?181:y(r.metricValue),active=r.hash===selectedHash;
-    const msg=`${r.tag} · ${shortDate(r.date)} · ${typeLabel(r.transition)} · ${humanMetric(r.metricValue,model.metric)} ${IMPACT_METRICS[model.metric]} · ${driverText(r)} · ${amount(r.selectedFootprint.pathsCount)} paths`;
-    return `<line x1="${cx}" y1="170" x2="${cx}" y2="${cy}" stroke="${color(r.transition)}" stroke-opacity="${active?'.8':'.34'}" stroke-width="${active?3:2}"/>
+    const {at,cx,cy}=layout.get(r.hash),active=r.hash===selectedHash;
+    const msg=`${r.tag} · ${shortDate(r.date)}${clockText(r)} · ${typeLabel(r.transition)} · ${humanMetric(r.metricValue,model.metric)} ${IMPACT_METRICS[model.metric]} · ${driverText(r)} · ${amount(r.selectedFootprint.pathsCount)} paths`;
+    return `<line x1="${at}" y1="170" x2="${cx}" y2="${cy}" stroke="${color(r.transition)}" stroke-opacity="${active?'.8':'.34'}" stroke-width="${active?3:2}"/>
       ${active?`<circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="#152f21" stroke-width="2" opacity=".5"/>`:''}
       <circle cx="${cx}" cy="${cy}" r="${active?8:5.5}" fill="${undefinedMetric?'#fff':color(r.transition)}" stroke="${active?'#152f21':undefinedMetric?'#8d9f91':'#fff'}" stroke-width="${active?3:2}" role="button" tabindex="0" aria-current="${active?'true':'false'}" aria-label="${e(msg)}. Select release" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-timeline-dot"><title>${e(msg)}</title></circle>`;
   }).join('');
   const selected=records.find(r=>r.hash===selectedHash);
-  const selectedX=selected?x(impactReleasePosition(selected)):0;
+  const selectedX=selected?layout.get(selected.hash).cx:0;
   const selectedText=selected?.tag.length>24?selected.tag.slice(0,21)+'…':selected?.tag||'';
   const captionW=Math.max(110,Math.min(230,selectedText.length*7+70));
   const captionLeft=Math.max(50,Math.min(width-captionW-23,selectedX-captionW/2));

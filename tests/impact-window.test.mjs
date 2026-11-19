@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { impactTimelineZoomWindow,impactTimelineShiftWindow,impactTimelineCentreWindow,impactTimelinePreferenceFor,impactTimelineExtent,impactTimelineWindow,impactTimelineZoom,impactTimelineReveal,impactTimelineCustomRange,impactTimelinePan,impactTimelineDates } from '../assets/impact-window.js';
-import { impactTimeline } from '../assets/impact-view.js';
+import { impactTimeline, dodgeReleases } from '../assets/impact-view.js';
+import { impactReleasePosition } from '../assets/impact-window.js';
+import { parseGitHistory } from '../assets/domain.js';
 
 const DAY=86400000;
 const at=date=>Date.parse(`${date}T12:00:00Z`);
@@ -119,4 +121,31 @@ test('exact windows zoom around a pointer, shift, centre and save as dates, alwa
   assert.match(saved.from,/^\d{4}-\d{2}-\d{2}$/);
   const exact=impactTimelineWindow(m,{mode:'custom',start:zoomed.start,end:zoomed.end});
   assert.deepEqual([exact.start,exact.end],[zoomed.start,zoomed.end],'an exact window is shown as given');
+});
+
+test('releases sit at their time of day, so same-day releases spread out in order',()=>{
+  const midnight=Date.parse('2026-03-12T00:00:00Z');
+  const morning=impactReleasePosition({date:'2026-03-12',clock:9*3600000});
+  const evening=impactReleasePosition({date:'2026-03-12',clock:17.5*3600000});
+  assert.equal(morning,midnight+9*3600000);
+  assert.ok(evening-morning===8.5*3600000,'eight and a half hours apart, not stacked');
+  assert.equal(impactReleasePosition({date:'2026-03-12'}),midnight+DAY/2,'no known time: midday');
+  assert.equal(impactReleasePosition({date:'2026-03-12',clock:DAY}),midnight+DAY/2,'an impossible time is ignored');
+  const {tags}=parseGitHistory(`TAG|v2||${'c'.repeat(40)}|commit|2026-03-12T23:40:05+01:00\nCOMMIT|${'c'.repeat(40)}|a@x|A|2026-03-12T10:00:00Z|2026-03-12T10:00:00Z|feat: x|`);
+  assert.equal(tags[0].taggedDate,'2026-03-12','the tagger\'s own date');
+  assert.equal(tags[0].taggedClock,(23*3600+40*60+5)*1000,'and their own clock, not UTC');
+});
+
+test('overlapping release dots move right just enough, keep their height, and only when zoomed in',()=>{
+  const rows=[{hash:'a',x:100,y:50},{hash:'b',x:103,y:50},{hash:'c',x:104,y:90},{hash:'d',x:300,y:50}];
+  const layout=dodgeReleases(rows,r=>r.x,r=>r.y,1000);
+  assert.deepEqual(layout.get('a'),{at:100,cx:100,cy:50});
+  assert.equal(layout.get('b').cx,113,'cleared by one dot width');
+  assert.equal(layout.get('b').at,103,'its stem still starts at its true time');
+  assert.equal(layout.get('b').cy,50,'height is the measure and never moves');
+  assert.equal(layout.get('c').cx,104,'a dot well above needs no move');
+  assert.equal(layout.get('d').cx,300);
+  const crowd=Array.from({length:8},(_,i)=>({hash:String(i),x:100,y:50}));
+  assert.ok(dodgeReleases(crowd,r=>r.x,r=>r.y,1000).get('7').cx<=100+39,'never more than three dot widths');
+  assert.equal(dodgeReleases(rows,r=>r.x,r=>r.y,1000,false).get('b').cx,103,'zoomed out: true time only');
 });

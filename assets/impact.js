@@ -7,7 +7,7 @@
  * No line-level survival, deploy date, customer value, or team productivity is
  * inferred from numstat; file revisitation is explicitly a proxy.
  */
-import { fileArea } from './domain.js?v=daysoff-20261119-1';
+import { fileArea } from './domain.js?v=releaseclock-20261119-2';
 
 export const IMPACT_METRICS = Object.freeze({
   commits: 'Commits', churn: 'Line churn', paths: 'Distinct paths', areas: 'Codebase areas', share: 'Commit share',
@@ -376,7 +376,11 @@ export function impactAnalysis(view, allCommits, rawTags, options={}) {
     const driver=login ? {source:'github-publisher',login,name:login,groupId:publisherGroup?.id??null,groupName:publisherGroup?.displayName??null,matchSource:actorMatches.get(login.toLowerCase())?.source||'unmatched'}
       : main.taggerEmail ? {source:'annotated-tagger',login:null,name:main.taggerName||main.taggerEmail,groupId:taggerGroup?.id??null,groupName:taggerGroup?.displayName??null}
       : {source:'unknown',login:null,name:null,groupId:null,groupName:null};
-    return { hash, tag:main.name, aliases:tags.map(t=>t.name), date, timestamp,
+    // Time of day on the release's own date: exact for GitHub (UTC) and commit fallbacks, the tagger's clock for tags.
+    const midnight=date?Date.parse(`${date}T00:00:00Z`):NaN;
+    const sinceMidnight=timestamp==null||!Number.isFinite(midnight)?null:((timestamp-midnight)%86400000+86400000)%86400000;
+    const clock=!published&&main.taggedAt!=null&&Number.isFinite(main.taggedClock)?main.taggedClock:sinceMidnight;
+    return { hash, tag:main.name, aliases:tags.map(t=>t.name), date, timestamp, clock,
       timeSource:published?'github-published':main.taggedAt==null?'fallback-commit':main.timestampSource,
       version:parseTagVersion(main.name), taggedAt:main.taggedAt, annotated:main.annotated,
       github:github&&!github.draft?github:null,githubDraft:github?.draft===true, published,

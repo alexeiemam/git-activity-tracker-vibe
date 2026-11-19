@@ -1,13 +1,13 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=daysoff-20261119-1';
-import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=daysoff-20261119-1';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=daysoff-20261119-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=daysoff-20261119-1';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=daysoff-20261119-1';
-import { targetUrl } from './route-state.js?v=daysoff-20261119-1';
-import { markdownFrame } from './markdown.js?v=daysoff-20261119-1';
-import { workedDaysBalance, daysOffText } from './working-patterns.js?v=daysoff-20261119-1';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=daysoff-20261119-1';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=releaseclock-20261119-2';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=releaseclock-20261119-2';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=releaseclock-20261119-2';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=releaseclock-20261119-2';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=releaseclock-20261119-2';
+import { targetUrl } from './route-state.js?v=releaseclock-20261119-2';
+import { markdownFrame } from './markdown.js?v=releaseclock-20261119-2';
+import { workedDaysBalance, daysOffText } from './working-patterns.js?v=releaseclock-20261119-2';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=releaseclock-20261119-2';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});

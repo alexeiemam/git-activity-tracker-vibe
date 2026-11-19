@@ -7,10 +7,10 @@
  * selected-cohort peer comparisons reveal sustained, unusually high levels.
  * No score is a measure of work hours, output quality or individual performance.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=daysoff-20261119-1';
-import {dailyEvidence} from './momentum.js?v=daysoff-20261119-1';
-import {temporalActivityByPerson,emptyTemporalDay,temporalOptions} from './temporal-activity.js?v=daysoff-20261119-1';
-import {scheduleById,countAgainstSchedule} from './working-patterns.js?v=daysoff-20261119-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=releaseclock-20261119-2';
+import {dailyEvidence} from './momentum.js?v=releaseclock-20261119-2';
+import {temporalActivityByPerson,emptyTemporalDay,temporalOptions} from './temporal-activity.js?v=releaseclock-20261119-2';
+import {scheduleById,countAgainstSchedule} from './working-patterns.js?v=releaseclock-20261119-2';
 
 export const LEVEL_WINDOWS = Object.freeze([5,10,20]);
 export const DEFAULT_LEVEL_WINDOW = 10;
