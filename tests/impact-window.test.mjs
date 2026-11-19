@@ -206,6 +206,14 @@ test('the timeline shows a work strip, and only the selected release and its ove
   assert.ok(html.includes('impact-partner-ring'));
   assert.ok(html.includes('1 day of work shared with v2'));
   assert.equal((html.match(/impact-focus-leader/g) || []).length, 2);
+  assert.ok(!/class="impact-flight[^>]*data-impact-hash/.test(html), 'the strip never chooses a release');
+  assert.ok(html.includes('data-action="impact-flight"'));
+  // Pinning the shared day shows both releases' work, whatever is selected.
+  const day = Math.floor(at('2026-03-09')/86400000)*86400000;
+  const pinned = impactTimeline(model, 'v3', { mode: 'all', flight: { start: day, end: day + 86400000 } });
+  assert.deepEqual([...pinned.matchAll(/class="impact-focus-tail[^"]*"(?: data-action="impact-release" data-impact-hash="([^"]+)")?/g)].map(m => m[1]), ['v1', 'v2']);
+  assert.ok(pinned.includes('class="impact-flight is-pinned"'));
+  assert.ok(pinned.includes('1 day of its work in this stretch'));
   const none = impactTimeline(model, 'v3', { mode: 'all' });
   assert.equal((none.match(/class="impact-focus-tail[ "]/g) || []).length, 1);
 });

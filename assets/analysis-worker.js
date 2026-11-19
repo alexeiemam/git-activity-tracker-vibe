@@ -1,11 +1,11 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=tails-20261119-3';
-import { mergeGitHistories, isCompleteRecapture, hasImportableEvidence } from './history-merge.js?v=tails-20261119-3';
-import { impactAnalysis, applyReleaseMeasures } from './impact.js?v=tails-20261119-3';
-import { buildStoryAnalysis } from './stories.js?v=tails-20261119-3';
-import { buildEvidenceIndex } from './perspectives.js?v=tails-20261119-3';
-import { buildDeploymentIndex } from './deployments.js?v=tails-20261119-3';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=tails-20261119-3';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=flight-20261119-1';
+import { mergeGitHistories, isCompleteRecapture, hasImportableEvidence } from './history-merge.js?v=flight-20261119-1';
+import { impactAnalysis, applyReleaseMeasures } from './impact.js?v=flight-20261119-1';
+import { buildStoryAnalysis } from './stories.js?v=flight-20261119-1';
+import { buildEvidenceIndex } from './perspectives.js?v=flight-20261119-1';
+import { buildDeploymentIndex } from './deployments.js?v=flight-20261119-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=flight-20261119-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;

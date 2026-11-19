@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=tails-20261119-3';
-import { generateDemoLog } from './demo-data.js?v=tails-20261119-3';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=tails-20261119-3';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=tails-20261119-3';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=tails-20261119-3';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=tails-20261119-3';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=tails-20261119-3';
-import { releaseScorecard } from './release-scorecard.js?v=tails-20261119-3';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=tails-20261119-3';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=tails-20261119-3';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=tails-20261119-3';
-import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=tails-20261119-3';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=tails-20261119-3';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=tails-20261119-3';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=tails-20261119-3';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=tails-20261119-3';
-import { buildStoryAnalysis } from './stories.js?v=tails-20261119-3';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=tails-20261119-3';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=tails-20261119-3';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=tails-20261119-3';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=tails-20261119-3';
-import { downloadFilename } from './download-names.js?v=tails-20261119-3';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=tails-20261119-3';
-import { buildDeploymentIndex } from './deployments.js?v=tails-20261119-3';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=tails-20261119-3';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=tails-20261119-3';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=tails-20261119-3';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=tails-20261119-3';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=tails-20261119-3';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=tails-20261119-3';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=tails-20261119-3';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=tails-20261119-3';
+} from './domain.js?v=flight-20261119-1';
+import { generateDemoLog } from './demo-data.js?v=flight-20261119-1';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=flight-20261119-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=flight-20261119-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=flight-20261119-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=flight-20261119-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=flight-20261119-1';
+import { releaseScorecard } from './release-scorecard.js?v=flight-20261119-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=flight-20261119-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=flight-20261119-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=flight-20261119-1';
+import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=flight-20261119-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=flight-20261119-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=flight-20261119-1';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=flight-20261119-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=flight-20261119-1';
+import { buildStoryAnalysis } from './stories.js?v=flight-20261119-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=flight-20261119-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=flight-20261119-1';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=flight-20261119-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=flight-20261119-1';
+import { downloadFilename } from './download-names.js?v=flight-20261119-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=flight-20261119-1';
+import { buildDeploymentIndex } from './deployments.js?v=flight-20261119-1';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=flight-20261119-1';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=flight-20261119-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=flight-20261119-1';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=flight-20261119-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=flight-20261119-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=flight-20261119-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=flight-20261119-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=flight-20261119-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=tails-20261119-3', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=flight-20261119-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -2300,6 +2300,8 @@ const SIZE_BANDS=[
 // author-date and release-date filters used to calculate Git evidence.
 /** While dragging, pinching or easing, the timeline shows an exact window instead of the saved one. */
 let timelineView=null,timelineFrame=0,timelineAnimation=0,timelineSettle=0;
+/** A stretch of the work strip pinned to show whose work it held: a way of looking, never a release choice. */
+let timelineFlight=null;
 function timelinePreference() {
   if(timelineView)return {mode:'custom',start:timelineView.start,end:timelineView.end};
   return {mode:state.impactTimelineMode,from:state.impactTimelineFrom,to:state.impactTimelineTo};
@@ -2309,7 +2311,7 @@ const currentTimelineWindow=()=>impactModel?impactTimelineWindow(impactModel,tim
 function renderImpactTimeline() {
   const root=$('impact-timeline');if(!root||!impactModel)return;
   const focused=document.activeElement?.closest?.('.impact-timeline-scroll')?'.impact-timeline-scroll':document.activeElement?.closest?.('.impact-overview-window')?'.impact-overview-window':null;
-  root.innerHTML=impactTimeline(impactModel,state.impactReleaseHash,timelinePreference());
+  root.innerHTML=impactTimeline(impactModel,state.impactReleaseHash,{...timelinePreference(),flight:timelineFlight});
   if(focused)root.querySelector(focused)?.focus({preventScroll:true});
 }
 /** Show an exact window on the next frame; many gesture events can arrive per frame. */
@@ -2560,7 +2562,7 @@ function renderImpact(view) {
   if(!view.contributors.some(c=>c.id===state.impactFocus))state.impactFocus='selection';
   setText('impact-scope',`Release-event dates: ${view.start}–${view.end} · Author dates: same range · ${view.includeMerges?'Merges included':'Merges excluded'} · ${view.includeReverts?'Reverts included':'Reverts excluded'} · ${model.referenceLabel} reference · ${model.allReleaseCount-model.releases.length} tagged snapshots outside the selected release-event window${model.unresolved.length?` · ${model.unresolved.length} unresolved tag refs`:''}. Tag boundaries are graph-based.`);
   const timelineScroll=$('impact-timeline').querySelector('.impact-timeline-scroll')?.scrollLeft || 0;
-  $('impact-timeline').innerHTML=impactTimeline(model,state.impactReleaseHash,timelinePreference());
+  $('impact-timeline').innerHTML=impactTimeline(model,state.impactReleaseHash,{...timelinePreference(),flight:timelineFlight});
   const newScroll=$('impact-timeline').querySelector('.impact-timeline-scroll');
   if(newScroll)newScroll.scrollLeft=timelineScroll;
   $('impact-release-control').innerHTML=impactReleasePicker(model,state.impactReleaseHash);
@@ -3189,8 +3191,14 @@ const ACTIONS={
     renderDashboard();$('pulse-heading').scrollIntoView({behavior:'smooth',block:'start'});
   },
   'impact-tab':(_e,t)=>{state.impactTab=t.dataset.impactTab;renderImpact(analysis);},
+  'impact-flight':(_e,t)=>{
+    const start=Number(t.dataset.flightStart),end=Number(t.dataset.flightEnd);
+    timelineFlight=timelineFlight?.start===start&&timelineFlight?.end===end?null:{start,end};
+    renderImpactTimeline();
+  },
   'impact-release':(event,t)=>{
     // In Browse releases the impact views pick the release shown below them.
+    timelineFlight=null;
     const hash=t.dataset.impactHash,fromMarker=!!t.closest('.impact-timeline-scroll');
     if(primary.releaseHash!==hash){primary.releaseHash=hash;routePushPending=true;renderPrimary();}
     chooseImpactRelease(hash,{focus:event.type==='keydown'&&fromMarker?'marker':null,showTimeline:false,tab:state.impactTab});
@@ -3442,6 +3450,7 @@ function init() {
     if (seasonPinned) {event.preventDefault();seasonPinned=null;seasonHover=null;renderSeasonDetail();}
     else if (rhythmPinned) {event.preventDefault();rhythmPinned=null;rhythmHover=null;renderRhythmDetail();}
     else if (identityPicker) {event.preventDefault();closeIdentityPicker();}
+    else if (timelineFlight) {event.preventDefault();timelineFlight=null;renderImpactTimeline();}
     else if (!$('pulse-popover').hidden) closePulseAndRestoreFocus();
   });
 }

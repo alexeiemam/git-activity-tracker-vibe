@@ -1720,3 +1720,4 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 .impact-flight-key{gap:2px!important}.impact-flight-key i{width:12px!important;height:8px!important;border-radius:1px!important}.impact-flight-key i:first-child{margin-left:4px}
 .impact-timeline-legend i.impact-shared-key{width:14px;height:9px;border-radius:1.5px;background:#f3c9ae}
 @media (forced-colors:active){.impact-focus-line,.impact-focus-marks{stroke:CanvasText}.impact-shared-day,.impact-flight{fill:Highlight}.impact-partner-ring{stroke:Highlight}}
+.impact-flight.is-pinned{stroke:#173d2c;stroke-width:1.5}

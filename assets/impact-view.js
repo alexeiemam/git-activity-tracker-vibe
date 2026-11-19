@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=tails-20261119-3';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=tails-20261119-3';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=tails-20261119-3';
+import { IMPACT_METRICS } from './impact.js?v=flight-20261119-1';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=flight-20261119-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=flight-20261119-1';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -120,14 +120,16 @@ export function impactIndividualProfiles(model, focus='selection') {
  * how many releases had commits written in it: pale for one, warming as work
  * for several releases ran at once. Below it, only the selected release's
  * tail and the tails of the releases it shared work days with, each joined to
- * its own dot by a leader, with the shared days shaded on both.
+ * its own dot by a leader, with the shared days shaded on both. Pinning a
+ * stretch of the strip (never a release choice) swaps those for the tails of
+ * every release whose work it held, the stretch shaded on each.
  */
 const STRIP_Y=180,STRIP_H=8,FOCUS_TOP=206,FOCUS_LANE=13,DAY_MS=86400000;
 const FLIGHT_COLOURS=['#dbe7de','#f3c9ae','#e8996f','#cf6340'];
 const flightColour=count=>FLIGHT_COLOURS[Math.min(count,4)-1];
 const isoDay=t=>new Date(t).toISOString().slice(0,10);
 const tagList=tags=>tags.length>6?`${tags.slice(0,6).join(', ')} and ${tags.length-6} more`:tags.join(', ');
-function releaseWork(all,min,max,x,left,right,selectedHash) {
+function releaseWork(all,min,max,x,left,right,selectedHash,flight=null) {
   const dayWidth=x(min+DAY_MS)-x(min);
   const bins=workInFlight(all,min,max,Math.ceil(3/Math.max(dayWidth,.01)));
   if(!bins.length)return {svg:'',height:0,partners:new Set()};
@@ -138,9 +140,12 @@ function releaseWork(all,min,max,x,left,right,selectedHash) {
     const count=ordered.length,days=Math.round((bin.end-bin.start)/DAY_MS);
     const when=days>1?`${shortDate(isoDay(bin.start))} – ${shortDate(isoDay(bin.end-DAY_MS))}`:shortDate(isoDay(bin.start));
     const msg=`${when} · work for ${count} ${count===1?'release':'releases'}: ${tagList(ordered.map(r=>r.tag))}`;
-    return `<rect x="${a}" y="${STRIP_Y}" width="${b-a}" height="${STRIP_H}" fill="${flightColour(count)}" class="impact-flight" data-action="impact-release" data-impact-hash="${e(ordered.at(-1).hash)}" data-flight="${e(ordered.map(r=>r.hash).join(' '))}"><title>${e(msg)}</title></rect>`;
+    const pinned=flight&&bin.start<flight.end&&bin.end>flight.start;
+    return `<rect x="${a}" y="${STRIP_Y}" width="${b-a}" height="${STRIP_H}" fill="${flightColour(count)}" class="impact-flight${pinned?' is-pinned':''}" data-action="impact-flight" data-flight-start="${bin.start}" data-flight-end="${bin.end}" data-flight="${e(ordered.map(r=>r.hash).join(' '))}" aria-pressed="${!!pinned}"><title>${e(msg)}${pinned?' · click again to unpin':' · click to see these releases\' work'}</title></rect>`;
   }).join('');
-  const selected=all.find(r=>r.hash===selectedHash&&r.tail);
+  const inFlight=t=>flight&&t>=flight.start&&t<flight.end;
+  const pinned=flight?all.filter(r=>r.tail?.marks.some(inFlight)).slice(-8):[];
+  const selected=pinned.length?null:all.find(r=>r.hash===selectedHash&&r.tail);
   const partners=(selected?.workPartners||[]).map(p=>({...p,release:all.find(r=>r.hash===p.hash)})).filter(p=>p.release?.tail);
   const sharedDays=new Set(partners.flatMap(p=>p.days));
   const lane=(r,i,days,active)=>{
@@ -148,7 +153,9 @@ function releaseWork(all,min,max,x,left,right,selectedHash) {
     const a=Math.max(left,x(from)),b=Math.min(right,x(to)),end=x(to),visible=end>=left&&end<=right;
     const span=Math.round((to-from)/DAY_MS);
     const written=`${amount(marks.length)} ${marks.length===1?'commit':'commits'} written ${shortDate(isoDay(from))} – ${shortDate(r.date)}${span?` (${amount(span)} ${span===1?'day':'days'})`:''}`;
-    const msg=active
+    const msg=pinned.length
+      ?`${r.tag} · ${written} · ${amount(days.length)} ${days.length===1?'day':'days'} of its work in this stretch`
+      :active
       ?`${r.tag} · ${written}${carried?` · ${amount(carried)} written before ${r.previousTag} shipped`:''}${partners.length?` · shares work days with ${partners.map(p=>`${p.tag} (${p.days.length})`).join(', ')}`:''}`
       :`${r.tag} · ${written} · ${amount(days.length)} ${days.length===1?'day':'days'} of work shared with ${selected.tag}`;
     let ticks='',last=-1;
@@ -169,12 +176,14 @@ function releaseWork(all,min,max,x,left,right,selectedHash) {
       ${shade}<line x1="${a}" y1="${y}" x2="${b}" y2="${y}" class="impact-focus-line"/><path d="${ticks}" class="impact-focus-marks"/>
       ${visible?`<circle cx="${end}" cy="${y}" r="2.8" fill="${color(r.transition)}"/>`:''}${label}</g>`;
   };
-  const focus=selected?[lane(selected,0,sharedDays,true),...partners.map((p,i)=>lane(p.release,i+1,p.days,false))].join(''):'';
-  const lanes=selected?1+partners.length:0;
+  const daysIn=r=>[...new Set(r.tail.marks.filter(inFlight).map(t=>Math.floor(t/DAY_MS)))];
+  const focus=pinned.length?pinned.map((r,i)=>lane(r,i,daysIn(r),r.hash===selectedHash)).join('')
+    :selected?[lane(selected,0,sharedDays,true),...partners.map((p,i)=>lane(p.release,i+1,p.days,false))].join(''):'';
+  const lanes=pinned.length||(selected?1+partners.length:0);
   return {svg:`<text x="40" y="${STRIP_Y+7}" text-anchor="end" class="impact-axis">WORK</text>${strip}${focus}`,
     // Room below the axis down to the last drawn row; the authored bars follow.
     height:(lanes?FOCUS_TOP+(lanes-.5)*FOCUS_LANE:STRIP_Y+STRIP_H)-170+4,
-    partners:new Set(partners.map(p=>p.hash))};
+    partners:new Set((pinned.length?pinned:partners).map(p=>p.hash))};
 }
 export function impactTimeline(model, selectedHash, options={mode:'all'}) {
   if(!model.releases.length)return '';
@@ -186,7 +195,7 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
   const records=all.filter(r=>impactReleasePosition(r)>=min&&impactReleasePosition(r)<=max);
   const width=1100;
   const x=date=>58+(date-min)/(max-min||1)*(width-94);
-  const work=releaseWork(all,min,max,x,48,width-28,selectedHash);
+  const work=releaseWork(all,min,max,x,48,width-28,selectedHash,options.flight);
   const o=work.height,height=288+o;
   const hi=Math.max(1,...records.map(r=>r.metricValue??0));
   const y=value=>160-value/hi*108;
@@ -281,7 +290,7 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
     </svg></div>
     ${!records.length?'<p class="impact-muted" role="status">No release tags fall within this timeline range. Adjust the dates or choose a release from the dropdown to locate it.</p>':''}
     <div class="impact-timeline-legend">${['major','minor','patch','prerelease','baseline','unclassified'].map(kind=>`<span><i style="background:${color(kind)}"></i>${typeLabel(kind)}</span>`).join('')}
-      <span><i style="background:#9dbfac;border-radius:1px"></i>Authored commits (including unreleased)</span><span><i style="background:#ad7d3c;transform:rotate(45deg);border-radius:0"></i>VERSION touched (author date)</span><span><i style="background:#fff;border:2px solid #8d9f91"></i>Undefined measure</span><span class="impact-flight-key">Work in flight ${FLIGHT_COLOURS.map((c,i)=>`<i style="background:${c}" title="${i+1}${i===3?'+':''} releases"></i>`).join('')}&nbsp;1 → 4+ releases</span><span><i class="impact-shared-key"></i>Work days shared with the selected release</span></div>`;
+      <span><i style="background:#9dbfac;border-radius:1px"></i>Authored commits (including unreleased)</span><span><i style="background:#ad7d3c;transform:rotate(45deg);border-radius:0"></i>VERSION touched (author date)</span><span><i style="background:#fff;border:2px solid #8d9f91"></i>Undefined measure</span><span class="impact-flight-key">Work in flight ${FLIGHT_COLOURS.map((c,i)=>`<i style="background:${c}" title="${i+1}${i===3?'+':''} releases"></i>`).join('')}&nbsp;1 → 4+ releases</span><span><i class="impact-shared-key"></i>Shared work days · click a stretch to pin it, Esc to unpin</span></div>`;
 }
 
 export function impactReleasePicker(model, hash) {
