@@ -1,5 +1,8 @@
 /** Small, stable, non-sensitive navigation URLs. Never encode imported evidence. */
-const MODES=new Set(['observatory','periods','contributors','codebase','deployments','evidence']);
+const MODES=new Set(['observatory','rhythm','contributors','codebase','deployments','evidence']);
+/** Views that were renamed; old links keep working. */
+const RENAMED={periods:'rhythm'};
+const modeOf=value=>RENAMED[value]||value;
 const TABS=new Set(['delivery','together','focus','behaviour','evolution','compare']);
 const DATE=/^\d{4}-\d{2}-\d{2}$/;
 const dateOk=value=>{if(!DATE.test(String(value)))return false;const ms=Date.parse(`${value}T00:00:00Z`);return Number.isFinite(ms)&&new Date(ms).toISOString().slice(0,10)===value;};
@@ -13,7 +16,7 @@ const add=(q,name,value,valid=()=>true)=>{if(value!=null&&value!==''&&valid(Stri
 export function routeFromState(ui,groups=[],datasetId=null){
   const mode=ui?.mode||'observatory',r={view:MODES.has(mode)?mode:'observatory'};
   if(mode==='observatory')r.release=ui.releaseHash;
-  if(mode==='periods')r.person=emailFor(ui.periodSelectedId,groups);
+  if(mode==='rhythm')r.person=emailFor(ui.periodSelectedId,groups);
   if(mode==='contributors'){
     r.person=emailFor(ui.contributorFocus,groups);
     r.tab=ui.contributorTab;
@@ -21,7 +24,7 @@ export function routeFromState(ui,groups=[],datasetId=null){
     r.personB=emailFor(ui.compareB,groups);
     r.personC=emailFor(ui.compareC,groups);
   }
-  if(mode==='periods'||mode==='contributors'&&ui.contributorRange==='period'){
+  if(mode==='rhythm'||mode==='contributors'&&ui.contributorRange==='period'){
     r.from=ui.periodFrom;r.to=ui.periodTo;
   }
   if(mode==='codebase'){r.area=ui.codeArea;if(ui.codebaseRange==='period'){r.from=ui.periodFrom;r.to=ui.periodTo;}}
@@ -34,7 +37,7 @@ export function routeFromState(ui,groups=[],datasetId=null){
 export function readRoute(source){
   const query=source instanceof URL?source.searchParams:new URLSearchParams(String(source).replace(/^\?/,''));
   const value=key=>query.get(key);
-  const r={view:MODES.has(value('view'))?value('view'):'observatory'};
+  const r={view:MODES.has(modeOf(value('view')))?modeOf(value('view')):'observatory'};
   if(SHA.test(value('release')||''))r.release=value('release').toLowerCase();
   for(const key of ['person','partner','personB','personC'])if(EMAIL.test(value(key)||''))r[key]=value(key).toLowerCase();
   if(TABS.has(value('tab')))r.tab=value('tab');
@@ -51,7 +54,7 @@ export function applyRoute(ui,route,groups=[]){
   const next={...ui,mode:route.view||'observatory',trail:[]};
   if(route.release)next.releaseHash=route.release;
   if(route.person){const id=idFor(route.person,groups);if(id!=null){
-    if(next.mode==='periods')next.periodSelectedId=String(id);
+    if(next.mode==='rhythm')next.periodSelectedId=String(id);
     else next.contributorFocus=String(id);
   }}
   if(route.partner){const id=idFor(route.partner,groups);if(id!=null)next.coReleasePartner=String(id);}
@@ -85,8 +88,8 @@ export function targetUrl(path,ui,groups,datasetId,changes){
   const view=changes.view||base.view;
   // Avoid stale detail query parameters when navigating to another kind of object.
   const next={dataset:base.dataset,view};
-  if(view==='periods'){next.from=base.from;next.to=base.to;}
-  if((view==='contributors'||view==='codebase')&&(ui?.mode==='periods'||(view==='contributors'&&ui?.mode==='contributors'&&ui?.contributorRange==='period')||(view==='codebase'&&ui?.mode==='codebase'&&ui?.codebaseRange==='period'))){next.from=ui?.periodFrom;next.to=ui?.periodTo;}
+  if(view==='rhythm'){next.from=base.from;next.to=base.to;}
+  if((view==='contributors'||view==='codebase')&&(ui?.mode==='rhythm'||(view==='contributors'&&ui?.mode==='contributors'&&ui?.contributorRange==='period')||(view==='codebase'&&ui?.mode==='codebase'&&ui?.codebaseRange==='period'))){next.from=ui?.periodFrom;next.to=ui?.periodTo;}
   return routeUrl(path,{...next,...changes});
 }
 export const routeKeys=keys;

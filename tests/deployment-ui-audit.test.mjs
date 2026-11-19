@@ -7,8 +7,8 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const js=readFileSync(new URL('../assets/app.js',import.meta.url),'utf8');
 
 test('active vs inactive primary navigation has deliberate contrasting text colours',()=>{
-  assert.match(css,/\.experience-switch a\.experience-choice\.is-current,[\s\S]*?color:#fff/);
-  assert.match(css,/\.experience-switch a\.experience-choice:not\(\.is-current\)\{color:#486150/);
+  assert.match(css,/\.app-tab\.is-current,\.app-tab\[aria-current="page"\]\{background:#1d3b2e;border-color:#1d3b2e;color:#fff/);
+  assert.match(css,/\.app-tab\{[^}]*color:#486150/);
   assert.match(css,/\.primary-tabs button\.active,[\s\S]*?color:#fff/);
   assert.match(css,/\.primary-preset\.active,[\s\S]*?color:#fff/);
   assert.match(css,/@media\(forced-colors:active\)/);
@@ -45,6 +45,6 @@ test('3,000-record capture is visibly bounded and incomplete coverage can be rep
   assert.match(html,/rows\[:3000\]/);
   assert.match(html,/HEROKUSTATUS\|%s\|partial/);
   assert.match(js,/reconcileProviderGroups/);
-  assert.match(html,/Review identities/);
+  assert.match(html,/data-action="review-identities"/);
   assert.doesNotMatch(html,/--num 3000 -r/);
 });

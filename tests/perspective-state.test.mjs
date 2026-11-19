@@ -60,3 +60,9 @@ test('co-release sorting, selected partner, and reconciled identity survive sess
   assert.equal(restored.coReleaseSort,'overlap');
   assert.equal(restorePrimaryState({primary:{coReleaseSort:'random',contributorTab:'evil'}},groups).coReleaseSort,'shared');
 });
+
+test('sessions saved in the Periods view restore into the Rhythm view',()=>{
+  const restored=restorePrimaryState({primary:{mode:'periods',trail:[{mode:'periods',periodFrom:'2025-01-01'}]}});
+  assert.equal(restored.mode,'rhythm');
+  assert.equal(restored.trail[0].mode,'rhythm');
+});

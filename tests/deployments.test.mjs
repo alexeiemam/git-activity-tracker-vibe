@@ -145,7 +145,7 @@ test('unresolvable and ambiguous Git SHA values cannot generate author credit',(
 
 test('the event and release views distinguish independent QA vs PROD and preserve data safety',()=>{
   const {index,bounds}=fixture();const ui=primaryDefaults();ui.periodFrom=bounds.min;ui.periodTo=bounds.max;ui.contributorFocus='0';
-  for(const mode of ['observatory','periods','contributors','deployments']){
+  for(const mode of ['observatory','rhythm','contributors','deployments']){
     ui.mode=mode;
     const html=renderPrimaryExplorer(index,ui);
     assert.ok(html.length>1500,mode);
@@ -161,7 +161,7 @@ test('the event and release views distinguish independent QA vs PROD and preserv
   const anatomy=renderPrimaryExplorer(index,{...ui,mode:'observatory',releaseHash:index.releases[1].hash});
   assert.match(anatomy,/Where is this tagged revision observed/);
   assert.match(anatomy,/Present by this observed snapshot|First introduced in observed transition/);
-  assert.match(periodBriefingForUi(index,{...ui,mode:'periods'}),/Heroku .* STAG events/);
+  assert.match(periodBriefingForUi(index,{...ui,mode:'rhythm'}),/Heroku .* STAG events/);
 });
 
 test('deployment browser state is session-exportable, bounded and restored',()=>{

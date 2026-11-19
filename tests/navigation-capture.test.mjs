@@ -41,7 +41,7 @@ test('URL route safely rejects untrusted query values and does not manufacture c
 });
 
 test('native deep links retain period context when following a person or codebase area',()=>{
-  const state={mode:'periods',periodFrom:'2025-02-01',periodTo:'2025-02-14'};
+  const state={mode:'rhythm',periodFrom:'2025-02-01',periodTo:'2025-02-14'};
   const link=targetUrl('/index.html',state,groups,'local-123456789',{view:'contributors',person:'alias@work.io',tab:'delivery'});
   assert.match(link,/from=2025-02-01/);
   assert.match(link,/to=2025-02-14/);
@@ -66,8 +66,9 @@ test('rendering produces ordinary anchors for release, contributor and deploymen
   index.navigation={ui:{mode:'observatory'},groups,path:'/index.html',datasetId:'local-123456789'};
   const markup=renderPrimaryExplorer(index,{mode:'observatory',releaseHash:impact.releases?.[0]?.hash||null,cohortBy:'type',releaseType:'all',releaseYear:'all',releaseQuery:'',releasePage:0,trail:[]});
   assert.match(markup,/<a [^>]*href="\/index\.html\?view=contributors/);
-  assert.match(markup,/<a [^>]*href="\/index\.html\?view=deployments/);
-  assert.match(markup,/data-action="local-copy-url"/);
+  const page=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+  assert.match(page,/<a href="\?view=deployments" class="app-tab"/,'deployments is a tab in the app shell');
+  assert.match(page,/data-action="local-copy-url"/,'copying a link lives in the app bar');
   assert.match(markup,/dataset=local-123456789/);
 });
 
@@ -101,4 +102,9 @@ test('explicitly marked shallow boundaries cannot masquerade as complete root an
   const result=parseGitHistory(record);
   assert.equal(result.commits[0].parentsKnown,false);
   assert.equal(result.historyEnrichment[0].status,'bounded');
+});
+
+test('links and sessions from the Periods view open the Rhythm view',()=>{
+  assert.equal(readRoute('view=periods&from=2025-02-01&to=2025-02-14').view,'rhythm');
+  assert.match(routeUrl('/index.html',routeFromState({mode:'rhythm',periodFrom:'2025-02-01',periodTo:'2025-02-14'})),/view=rhythm&from=2025-02-01/);
 });

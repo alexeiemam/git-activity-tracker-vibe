@@ -1,4 +1,4 @@
-# git:signals — follow the releases, periods and people behind software delivery
+# git:signals — follow the releases, people and rhythms behind software delivery
 
 A local, zero-build Git evidence explorer with three connected ways into a repository: **the releases, a chosen period, or its contributors**. Tagged snapshots keep their complete code ancestry; authored activity remains a separate observation clock. Imported logs are processed locally in the browser, not uploaded to a service.
 
@@ -73,13 +73,27 @@ Open `http://localhost:8000` and choose **Explore demo dataset**, or use the gen
 
 No build, install, backend, API key, or CDN for the browser application is needed. The optional Google Fonts request can fall back to local fonts offline. The **capture command** calls an authenticated local GitHub CLI when installed; credentials are handled by `gh`, not by git:signals.
 
-## Three first-class perspectives
+## Six questions, one app
 
 After importing history and confirming merged author identities, the app opens
-**Observatory**, not the earlier standalone Stories experience. Use the main
-navigation to switch perspectives without reimporting data:
+on **Releases**. An app bar holds the dataset summary and its actions (Back,
+**Add activity**, **Identities** and a **Links** menu for copying or opening the
+current view). Below it, one row of tabs organises everything by the question
+it answers, and each tab shows its overview first and its detailed charts
+underneath:
 
-- **Observatory — start with releases.** A release landscape shows aligned
+| Tab | Question | Contents |
+| --- | --- | --- |
+| **Releases** | What shipped? | Release landscape, cohorts, Browse releases, Release anatomy, Impact › Release detail and People & releases |
+| **People** | Who contributed? | Contributor portraits; summary, contribution side by side and momentum over time |
+| **Rhythm** | When, and how steadily? | The period view; the activity pulse; weekly, yearly and seasonal rhythms |
+| **Codebase** | Where in the code? | Released areas; Impact › Codebase reach and Change evolution; change sizes; hotspots |
+| **Deployments** | Where did it run? | Heroku environments and their relationship to tagged releases |
+| **Evidence** | The records | The contributor table (copyable as CSV) and recent commits |
+
+Old links to `?view=periods` open the Rhythm tab.
+
+- **Releases — start with releases.** A release landscape shows aligned
   calendar-bucket lanes for release counts, contributor appearances and codebase
   area occurrences. Empty buckets remain visible, so quiet delivery periods
   cannot disappear. Browse **all tagged releases**, search by tag, filter by
@@ -91,7 +105,7 @@ navigation to switch perspectives without reimporting data:
   baseline tag is labelled non-incremental; releases with missing ancestry
   warn that their evidence may be incomplete. "Led release" is a distinct
   GitHub publisher/tagger role, not a claim about who authored its code.
-- **Periods — start with time.** Choose **7, 14, 30, 90 days, or any custom
+- **Rhythm — start with time.** Choose **7, 14, 30, 90 days, or any custom
   inclusive interval**. Switch between an immediately preceding equal-duration
   window, the same calendar period last year, a custom baseline or no
   comparison. The **period unfolding** timeline aligns authored commits,
@@ -104,7 +118,7 @@ navigation to switch perspectives without reimporting data:
   release notes provide *recorded* purpose, not invented motivation. Copy a
   traceable **Period Briefing** including scope, activity, released events,
   components, comparison and limitations.
-- **Contributors — start with a person.** Select any **reconciled** contributor
+- **People — start with a person.** Select any **reconciled** contributor
   (all their merged author emails), then explore their **Delivery / Together / Focus /
   Behaviour / Evolution / Compare** views. The release portfolio distinguishes
   release participation (tagged releases they authored for), release leadership (releases they published or tagged), and both; rates use
@@ -127,12 +141,11 @@ navigation to switch perspectives without reimporting data:
 **Follow the contribution.** A release, contributor, area or period is
 selectable from the relevant views. The application preserves an investigation
 trail in native browser Back/Forward history, with compact per-view URLs and keeps the selected period as context when
-following a contributor or code area. **Codebase** is a contextual fourth
-view, showing released areas, the contributors who touched them and related
-release snapshots. The existing deep **Detailed analytical workbench** remains
-available on demand, including the daily/monthly Activity Pulse, weekly
-rhythm clock/grid/bars, annual seasonality, old impact matrices and recent
-commit tables. It renders lazily rather than blocking the Observatory.
+following a contributor or code area. **Codebase** shows released areas, the
+contributors who touched them and related release snapshots. The detailed
+charts (the daily/monthly Activity Pulse, weekly rhythm clock/grid/bars,
+annual seasonality, impact matrices and commit tables) render lazily, per
+tab, the first time that tab is opened, so they never block the overview.
 
 ### Two explicit clocks, no silent truncation
 
@@ -144,9 +157,9 @@ lightweight-tag approximation. An authored-period view selects commits by
 **author timestamp**, including their original author-local hour; the same
 period can independently contain releases whose introduced commits were
 written much earlier. Personal focus changes the highlighted authorship,
-not the complete contents or denominator of a release. Within the Detailed
-analytical workbench the legacy author-date scope can deliberately narrow
-release analytics; the UI labels that narrower perspective explicitly.
+not the complete contents or denominator of a release. The detailed charts
+use the author-date **Scope** above the tab content, which can deliberately
+narrow release analytics; the UI labels that narrower perspective explicitly.
 
 **Interpretation limits:** Git shows recorded contributions and reachable
 release history—not hours worked, performance, business value, collaboration
@@ -157,8 +170,7 @@ unverified claims of intent are presented as facts.
 
 **Implementation:** `assets/perspectives.js` builds the reusable, compact
 release-first evidence index in `assets/analysis-worker.js` independently of
-workbench author-date scope. `assets/perspective-view.js` renders the three
-views and Codebase drill-down; `assets/perspective-state.js` restores bounded
+the author-date scope. `assets/perspective-view.js` renders each tab's overview; `assets/perspective-state.js` restores bounded
 navigation and durable contributor identity selections across session exports.
 `assets/stories.js` and `assets/story-view.js` remain in the codebase for
 compatibility with existing tests, but Stories is no longer the primary UX.
@@ -281,7 +293,7 @@ production adoption, review effort or engineering correctness.
 the publication/tag time of the first tagged release that shipped it (across
 all tag lineages). It is not effort, review or delivery lead time.
 
-**Observatory › Release anatomy › Release shape** has two halves, **When its
+**Releases › Release anatomy › Release shape** has two halves, **When its
 changes were written** (time to release) and **Where they landed** (codebase
 footprint, below). One **Weight by** switch (commits & files, or lines changed)
 and one **Compare with all releases** switch apply to both. Each half's shape
@@ -320,7 +332,7 @@ filtered to that shape.
   Releases outside the current filters are dimmed; select a column to open that
   release. The view, weighting, comparison and filters are saved with the
   session.
-- **Contributors › Delivery** shows the same histogram for commits the person
+- **People › Delivery** shows the same histogram for commits the person
   authored in the observation window, followed to their first release even if
   it ships after the window, against everyone's commits in the same window.
   **Not yet released** counts commits no tag has shipped, with how long the
@@ -333,7 +345,7 @@ are not measured.
 
 ### Codebase footprint
 
-**Observatory › Release anatomy › Release shape › Where they landed** shows where a release's
+**Releases › Release anatomy › Release shape › Where they landed** shows where a release's
 changes landed, two directories deep (`app/models/`; files directly in a
 top-level directory count as that directory, and root files as `(root)`).
 
@@ -381,9 +393,9 @@ reachable prior history, not just a release-sized increment. Shares and lead
 times always use the existing contributor/date/merge/revert/reference scope.
 No combined impact score is calculated.
 
-## Detailed workbench: consistent authored-date selection
+## Detailed charts: consistent authored-date selection
 
-Within the **Detailed analytical workbench**, each chart is rendered from one shared `buildAnalysis(rawCommits, groups, scope)` result in `assets/domain.js`. Its author-date/selection rules are distinct from the primary complete-release Observatory, which preserves full tagged contents. The workbench applies the following, in this order:
+Within the detailed charts, each chart is rendered from one shared `buildAnalysis(rawCommits, groups, scope)` result in `assets/domain.js`. Its author-date/selection rules are distinct from the primary complete-release Observatory, which preserves full tagged contents. The workbench applies the following, in this order:
 
 1. **Identity** — reconcile any number of author emails into people using an explicit, searchable batch selector; select all, any subset, or one person (Solo). Moving identities changes only their contributor mapping, not the imported commits. Already-merged source groups lose only the selected emails; empty source groups disappear.
 2. **Dates** — inclusive authored dates; all imported history, latest 90/365/730 days, calendar year or custom. Rolling presets anchor to the *latest imported authored commit or tag event*, not the computer's current date. Tag dates extend the available window without changing which commits are attributed by author date.
@@ -920,7 +932,7 @@ which is reported rather than silently implying the link can be reopened.
 
 ## Contribution Signature and two complementary quadrants
 
-The **Detailed analytical workbench → Activity Pulse → Contribution Continuity**
+The **Rhythm → Activity Pulse → Contribution Continuity**
 now offers four subviews: **Combined signature** (the default when entering the
 continuity lens), **Delivery quadrant**, **Contribution quadrant**, and the
 original **Day counts**. These subviews share the selected contributors, the
@@ -1021,7 +1033,7 @@ Time Explorer by default; the other four Pulse lenses retain their familiar
 heatmaps as the default. The original numbered, hoverable quadrant snapshot and
 its full evidence inspector remain available without changing any scores.
 
-**Navigation:** Detailed analytical workbench -> Activity Pulse -> choose a
+**Navigation:** Rhythm -> Activity Pulse -> choose a
 lens. For the existing quadrants, first choose Contribution continuity, then
 Delivery quadrant or Contribution quadrant. Use the conspicuous **Cells /
 Time explorer** (or **Snapshot / Time explorer**) control above the plot.

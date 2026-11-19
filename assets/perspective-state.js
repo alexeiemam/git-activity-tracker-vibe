@@ -10,7 +10,7 @@ export const primaryDefaults=()=>({
 });
 const keys=['contributorFocus','compareB','compareC','coReleasePartner','periodSelectedId','periodFocusPerson'];
 const accepted={
-  mode:['observatory','periods','contributors','codebase','deployments'],cohortBy:['type','driver','year'],
+  mode:['observatory','rhythm','contributors','codebase','deployments'],cohortBy:['type','driver','year'],
   releaseType:['all','major','minor','patch','prerelease','unclassified','divergent','baseline','same-version'],
   releaseShape:['all','hotfix','steady','long-tail','backlog','initial','unmeasured'],
   releaseFootprint:['all','focused','spread','cross-cutting','broad-sweep','initial','unmeasured'],
@@ -31,11 +31,13 @@ export function restorePrimaryState(scope,groups=[]) {
     if(key==='trail'||!Object.hasOwn(safe,key)||!safeValue(key,safe[key]))continue;
     state[key]=safe[key];
   }
+  // Periods became the Rhythm view; sessions saved before the rename keep their place.
+  if(state.mode==='periods')state.mode='rhythm';
   for(const [key,values] of Object.entries(accepted))if(!values.includes(state[key]))state[key]=primaryDefaults()[key];
   for(const key of ['periodFrom','periodTo','compareFrom','compareTo'])
     if(state[key]&&!/^\d{4}-\d{2}-\d{2}$/.test(state[key]))state[key]=null;
   if(state.periodFrom&&state.periodTo&&state.periodFrom>state.periodTo){state.periodFrom=null;state.periodTo=null;}
-  if(Array.isArray(safe.trail))state.trail=safe.trail.filter(v=>v&&accepted.mode.includes(v.mode)).slice(-8)
+  if(Array.isArray(safe.trail))state.trail=safe.trail.map(v=>v?.mode==='periods'?{...v,mode:'rhythm'}:v).filter(v=>v&&accepted.mode.includes(v.mode)).slice(-8)
     .map(v=>Object.fromEntries(Object.entries(v).filter(([k,val])=>k!=='trail'&&k!=='label'&&Object.hasOwn(state,k)&&safeValue(k,val))));
   // Contributors are reconciled by stable author email. Array indexes change
   // when identities are merged or newly detected in imported session history.

@@ -1,5 +1,5 @@
 /**
- * Release-first evidence index for Observatory, Periods and Contributors.
+ * Release-first evidence index for the Releases, People, Rhythm and Codebase tabs.
  * Pure, DOM-free and built off the main thread. A release always means the
  * complete introduced Git ancestry (subject only to the explicitly declared
  * merge/revert policy); an authored period is a different observation clock.

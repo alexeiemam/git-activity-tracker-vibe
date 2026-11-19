@@ -77,7 +77,7 @@ test('comparison outside imported history is marked non-comparable, not inferred
  const digest=periodDigest(index,{from:'2025-01-09',to:'2025-01-13'},{comparison:'previous'});
  assert.equal(digest.comparisonComparable,false);
  assert.equal(digest.comparison.summary.commits,0);
- const rendered=renderPrimaryExplorer(index,ui({mode:'periods',periodFrom:'2025-01-09',periodTo:'2025-01-13'}));
+ const rendered=renderPrimaryExplorer(index,ui({mode:'rhythm',periodFrom:'2025-01-09',periodTo:'2025-01-13'}));
  assert.match(rendered,/beyond imported history/);
  assert.doesNotMatch(rendered,/No material multi-signal change/);
 });
@@ -118,7 +118,7 @@ test('period timeline contains all daily or monthly buckets, including empty one
 });
 
 test('all views render safe labels and bounded evidence, with no fabricated impact score',()=>{
- for(const mode of ['observatory','periods','contributors','codebase']){
+ for(const mode of ['observatory','rhythm','contributors','codebase']){
   const html=renderPrimaryExplorer(index,ui({mode}));
   assert.ok(html.length>500);
   assert.doesNotMatch(html,/productivity score:\s*\d/);
@@ -129,7 +129,7 @@ test('all views render safe labels and bounded evidence, with no fabricated impa
 });
 
 test('copyable period briefing uses the same filters as the rendered period',()=>{
- const state=ui({mode:'periods',periodComparison:'previous'});
+ const state=ui({mode:'rhythm',periodComparison:'previous'});
  const briefing=periodBriefingForUi(index,state);
  assert.match(briefing,/2025-02-16 to 2025-02-28/);
  assert.match(briefing,/2025-02-03 to 2025-02-15/);
@@ -143,7 +143,7 @@ test('primary asset integration keeps release models in the analysis worker',()=
  assert.match(worker,/buildEvidenceIndex\(fullView,fullImpact,bounds\)/);
  assert.match(worker,/cachedPrimaryKey/);
  assert.match(app,/renderPrimaryExplorer\(perspectiveIndex,primary\)/);
- for(const name of ['observatory','periods','contributors'])assert.match(html,new RegExp(`data-experience="${name}"`));
+ for(const name of ['observatory','rhythm','contributors','codebase','deployments','evidence'])assert.match(html,new RegExp(`data-experience="${name}"`));
  assert.match(html,/id="legacy-scope-details"/);
 });
 
@@ -176,7 +176,7 @@ test('many releases retain a bounded DOM and navigate without dropping history',
 });
 
 test('period inspection works when release events exist but no commits were authored in the window',()=>{
- const period=ui({mode:'periods',periodFrom:'2025-02-20',periodTo:'2025-02-20',periodBucket:'2025-02-20',periodComparison:'none'});
+ const period=ui({mode:'rhythm',periodFrom:'2025-02-20',periodTo:'2025-02-20',periodBucket:'2025-02-20',periodComparison:'none'});
  const html=renderPrimaryExplorer(index,period);
  assert.match(html,/1 release events/);
  assert.match(html,/No authored commits in this bucket/);
