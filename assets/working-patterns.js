@@ -17,6 +17,48 @@ export function isScheduledDay(date,days) {
   const weekday=new Date(`${date}T12:00:00Z`).getUTCDay();
   return normalizeWorkingDays(days).includes(weekday);
 }
+/** Every day of the week: what rates use when an identity has no working days set. */
+export const EVERY_DAY=Object.freeze([0,1,2,3,4,5,6]);
+
+/**
+ * How an identity's days are measured: their working days, or every day when
+ * none are set (so their work is still measured, never left out). `noneSet`
+ * lets summaries say so plainly.
+ */
+export function scheduleFor(days) {
+  const pattern=normalizeWorkingDays(days),measured=pattern.length?pattern:[...EVERY_DAY];
+  return {pattern,measured,noneSet:!pattern.length,
+    isWorkingDay:date=>measured.includes(new Date(`${date}T12:00:00Z`).getUTCDay())};
+}
+/** Each identity's schedule from a `{id: workingDays}` map, falling back to their own pattern. */
+export function scheduleById(workingDaysById={},id,fallback) {
+  return scheduleFor(Object.hasOwn(workingDaysById||{},String(id))?workingDaysById[String(id)]:fallback);
+}
+
+/**
+ * Count the days that meet some test (`hit`) against a schedule, week by week
+ * (Monday–Sunday). A hit on a non-working day fills a missed working day in
+ * the same week; any further hits are `extra`. Nothing is dropped:
+ * `met + extra` is every hit.
+ */
+export function countAgainstSchedule(entries,isWorkingDay) {
+  const weeks=new Map();
+  for(const {date,hit} of entries){
+    const at=Date.parse(`${date}T00:00:00Z`),monday=new Date(at-((new Date(at).getUTCDay()+6)%7)*86400000).toISOString().slice(0,10);
+    const week=weeks.get(monday)||{expected:0,onSchedule:0,offSchedule:0};
+    if(isWorkingDay(date)){week.expected++;week.onSchedule+=Number(!!hit);}
+    else week.offSchedule+=Number(!!hit);
+    weeks.set(monday,week);
+  }
+  const total={expected:0,onSchedule:0,substituted:0,extra:0};
+  for(const week of weeks.values()){
+    const substituted=Math.min(week.expected-week.onSchedule,week.offSchedule);
+    total.expected+=week.expected;total.onSchedule+=week.onSchedule;
+    total.substituted+=substituted;total.extra+=week.offSchedule-substituted;
+  }
+  total.met=total.onSchedule+total.substituted;
+  return total;
+}
 export function workingPatternLabel(days) {
   const normalized=normalizeWorkingDays(days);
   return normalized.length?`${normalized.length}-day reference · ${normalized.map(day=>WEEKDAY_LABELS[day]).join(', ')}`:'0-day reference · no scheduled dates';

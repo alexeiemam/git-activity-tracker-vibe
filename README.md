@@ -614,6 +614,32 @@ been removed. Directional Momentum may still show a neutral peer reference in
 its optional summary; its calculation has not changed. Absolute velocity is
 an observable Git-change index, **not hours worked, quality or productivity**.
 
+### Working days: one reference per identity, and no work left out
+
+Every measure that depends on working days uses each identity's own
+working-day pattern (set under **Identities** or **Working-day patterns by
+contributor**; Mon–Fri by default), never a fixed Monday–Friday. Work on a
+non-working day is never dropped:
+
+- **Consistency** (the activity pulse's distribution summary, absolute
+  velocity) counts meaningful days against working days week by week. A
+  meaningful day on a non-working day fills a missed working day in the same
+  week; any beyond that are shown as **+N on non-working days**, e.g. "475 of
+  784 working days · +26 on non-working days".
+- **Rolling windows** (contribution momentum, absolute velocity's recent pace)
+  are the last N working days *plus* any non-working days inside that span,
+  averaged over the N working days, so weekend work adds to the window it fell
+  in. Release tags are credited on their own date.
+- **Release gap** raises no concern on a non-working day, but that day's work
+  still counts and is shown in its details.
+- **Non-working-day share** (the rhythm explorer, the contributor table and
+  the annual scorecard) replaces the old Saturday–Sunday "weekend share", per
+  identity.
+- **No working days set** is respected, not treated as absence: rates and
+  windows then measure against every day (and say so), and nobody is counted
+  as working "off" days. Continuity keeps its own meaning for an empty
+  pattern: no expected days, with every active day shown as extra.
+
 ### Contribution continuity: weekly counts first, weekday patterns second
 
 **Contribution continuity** reveals sparse Git activity without assuming that

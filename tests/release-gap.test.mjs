@@ -49,11 +49,11 @@ test('tiny release earns proportional credit instead of resetting the gap; earli
   assert.equal(model.fullCreditLines,200);
 });
 
-test('driver-only, baseline, zero-line contributions and weekends do not falsely reset the gap',()=>{
+test('driver-only, baseline, zero-line contributions and non-working days do not falsely reset the gap',()=>{
   const model=releaseGapMatrix(index,[person('1','Ben')],{from:'2026-01-30',to:'2026-03-04'});
   assert.equal(date(model,'1','2026-01-30').reason,'no-prior-contribution');
   assert.equal(date(model,'1','2026-01-30').score,null);
-  assert.equal(date(model,'1','2026-01-31').reason,'weekend');
+  assert.equal(date(model,'1','2026-01-31').reason,'non-working-day');
   assert.equal(date(model,'1','2026-03-02').score,0,'first genuine incremental contribution resets the gap');
   assert.equal(model.byId.get('1').latestRelease.tag,'v1.1.2');
   assert.equal(date(model,'1','2026-03-03').score,1.7);

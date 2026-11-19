@@ -365,7 +365,7 @@ test('weekly timing remains empty and undefined when all scoped commits lack an 
   assert.equal(r.missingTime,1);
   assert.equal(r.peakSlot,null);
   assert.equal(r.peakDay,null);
-  assert.equal(r.weekendShare,null);
+  assert.equal(r.offDayShare,null);
   assert.equal(sum(r.weekdays.map(d=>d.count)),0);
   assert.equal(sum(r.cells.map(d=>d.count)),0);
   assert.equal(r.cells[0].percentage,null);

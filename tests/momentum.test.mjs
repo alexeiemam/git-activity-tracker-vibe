@@ -77,7 +77,7 @@ test('build-up, decline, stability and no activity are different, without requir
   assert.equal(none.byId.get('0').scoredDays,1);
 });
 
-test('release shipping boosts trend, baseline/driver/VERSION-only do not, weekend tags are credited on Monday',()=>{
+test('release shipping boosts trend, baseline/driver/VERSION-only do not, and a weekend tag counts in the window spanning it',()=>{
   const days=workdays('2026-01-05',24);
   const baseline={date:days[0],tag:'v0',baseline:true,members:[{id:'0',commits:1,releaseLineChurn:9999}]};
   const weekend=release('2026-01-31','v1','0',200); // Saturday
@@ -90,13 +90,14 @@ test('release shipping boosts trend, baseline/driver/VERSION-only do not, weeken
   assert.equal(get(model,days[19]).recent.churn,0,'VERSION-only changes must not earn substantive churn');
   assert.equal(get(model,days[19]).previous.churn,0);
   assert.equal(get(model,days[19]).recent.releaseLines,0);
-  assert.equal(get(model,'2026-01-31').reason,'weekend');
-  assert.equal(get(model,'2026-02-02').releaseLines,200);
-  assert.equal(get(model,'2026-02-02').releases[0].tag,'v1');
+  assert.equal(get(model,'2026-01-31').reason,'non-working-day');
+  assert.equal(get(model,'2026-01-31').releaseLines,200,'credited on its own date');
+  assert.equal(get(model,'2026-01-31').releases[0].tag,'v1');
+  assert.equal(get(model,'2026-02-02').recent.releaseLines,200,'Monday\'s window spans the weekend after Friday');
   assert.ok(get(model,'2026-02-02').score>get(model,days[19]).score);
 });
 
-test('monthly cells average signed weekday results, excluding weekends, out-of-coverage and warm-up',()=>{
+test('monthly cells average signed working-day results, excluding non-working days, out-of-coverage and warm-up',()=>{
   const days=workdays('2026-01-05',30);
   const activity=days.slice(12,24).map(d=>change('0',d,100));
   const history=withHistory(activity,[],{min:days[0],max:days[26]});
@@ -106,7 +107,7 @@ test('monthly cells average signed weekday results, excluding weekends, out-of-c
   assert.equal(get(model,days[8]).reason,'insufficient-history');
   assert.equal(get(model,days[9]).reason,'scored');
   assert.equal(get(model,days[27]).reason,'outside-history');
-  assert.equal(get(model,'2026-01-24').reason,'weekend');
+  assert.equal(get(model,'2026-01-24').reason,'non-working-day');
   for (const bucket of row.months.values()) {
     const eligible=[...row.daily.values()].filter(d=>d.reason==='scored'&&d.date.startsWith(bucket.month));
     assert.equal(bucket.days,eligible.length);
@@ -170,4 +171,15 @@ test('five Pulse lenses, settings, explanatory notes and export roundtrip are wi
   assert.match(app,/\['activity','release-gap','momentum','level','continuity'\]\.includes\(s\.pulseLens\)/);
   assert.match(app,/pulseDayMarkup\(details,gapItem,momentumItem,temporalItem,levelItem,continuityItem\)/);
   assert.ok(MOMENTUM_DIRECTION_THRESHOLD>0);
+});
+
+test('weekend work counts in the window spanning it; with no working days set, every day is scored',()=>{
+  const days=workdays('2026-01-05',24);
+  const activity=[...days.slice(0,20).map(d=>change('0',d,40)),change('0','2026-01-31',400)];
+  const history=withHistory(activity,[],{min:days[0],max:days.at(-1)});
+  const model=momentumMatrix(history,[contributor()],{from:days[19],to:days.at(-1)},{workdays:5});
+  assert.equal(get(model,'2026-02-02').recent.churn>=400,true,'Saturday\'s work is in Monday\'s recent window');
+  assert.equal(get(model,'2026-02-02').recent.nonWorkingDays,1);
+  const anyDay=momentumMatrix(history,[contributor()],{from:days[19],to:days.at(-1)},{workdays:5,workingDaysById:{'0':[]}});
+  assert.equal(get(anyDay,'2026-01-31').reason,'scored','no working days set: weekends are measured too');
 });

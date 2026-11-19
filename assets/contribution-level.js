@@ -7,9 +7,10 @@
  * selected-cohort peer comparisons reveal sustained, unusually high levels.
  * No score is a measure of work hours, output quality or individual performance.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=layout-20261119-1';
-import {dailyEvidence} from './momentum.js?v=layout-20261119-1';
-import {temporalActivityByPerson,emptyTemporalDay,temporalOptions,isWorkday} from './temporal-activity.js?v=layout-20261119-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=workdays-20261119-1';
+import {dailyEvidence} from './momentum.js?v=workdays-20261119-1';
+import {temporalActivityByPerson,emptyTemporalDay,temporalOptions} from './temporal-activity.js?v=workdays-20261119-1';
+import {scheduleById,countAgainstSchedule} from './working-patterns.js?v=workdays-20261119-1';
 
 export const LEVEL_WINDOWS = Object.freeze([5,10,20]);
 export const DEFAULT_LEVEL_WINDOW = 10;
@@ -82,9 +83,9 @@ export function contributionLevelMatrix(index,contributors,window,options={}) {
   const rows=[],byId=new Map();
   if(valid) for(const person of contributors||[]) {
     const source=activity.get(String(person.id))||new Map(),clocks=timing.get(String(person.id));
-    const daily=new Map(),months=new Map(),rolling=[];
-    let total=0,days=0,commits=0,churn=0,releaseLines=0,meaningfulDays=0,
-      distributedDays=0,coveredWorkdays=0,latestWindow=null;
+    const schedule=scheduleById(options.workingDaysById,person.id,person.workingDays);
+    const daily=new Map(),months=new Map(),rolling=[],covered=[];
+    let total=0,days=0,commits=0,churn=0,releaseLines=0,latestWindow=null,working=0;
     // Include earlier evidence for the trailing working-day pace, even when
     // only a day or a month is currently selected for display.
     const first=hasHistory?Math.min(dayNumber(start),dayNumber(coverageStart)):dayNumber(start);
@@ -93,15 +94,19 @@ export function contributionLevelMatrix(index,contributors,window,options={}) {
       const original=source.get(date)||{commits:0,churn:0,releaseLines:0,releases:[]};
       const time=clocks?.get(date)||emptyTemporalDay(temporal);
       const level=inCoverage?contributionLevelUnits({...original,distribution:time.distribution}):null;
-      const weekday=isWorkday(date);
-      if(inCoverage&&weekday) {
-        rolling.push({level,meaningful:time.meaningful,date});
-        if(rolling.length>workdays)rolling.shift();
-        if(rolling.length===workdays) {
+      const weekday=schedule.isWorkingDay(date);
+      // Recent pace: the last N working days plus any non-working days in that span,
+      // averaged over the N working days so their work adds to the pace rather than vanishing.
+      if(inCoverage) {
+        rolling.push({level,meaningful:time.meaningful,date,workingDay:weekday});
+        if(weekday)working++;
+        while(working>workdays||(rolling.length&&!rolling[0].workingDay)){if(rolling.shift().workingDay)working--;}
+        if(working===workdays&&weekday) {
           const average=rolling.reduce((n,item)=>n+item.level,0)/workdays;
-          const consistency=rolling.filter(item=>item.meaningful).length/workdays;
+          const met=countAgainstSchedule(rolling.map(item=>({date:item.date,hit:item.meaningful})),schedule.isWorkingDay);
+          const consistency=met.met/workdays;
           latestWindow={asOf:date,workdays,level:0.8*average+0.2*consistency,
-            average,consistency};
+            average,consistency,extraDays:met.extra};
         }
       }
       if(date<start)continue;
@@ -116,14 +121,21 @@ export function contributionLevelMatrix(index,contributors,window,options={}) {
       bucket.days++;bucket.total+=level;bucket.commits+=original.commits;
       bucket.churn+=original.churn;bucket.releaseLines+=original.releaseLines;
       days++;total+=level;commits+=original.commits;churn+=original.churn;releaseLines+=original.releaseLines;
-      if(weekday) {
-        coveredWorkdays++;bucket.weekdayDays++;
-        meaningfulDays+=Number(time.meaningful);distributedDays+=Number(time.distributed);
-        bucket.meaningfulDays+=Number(time.meaningful);bucket.distributedDays+=Number(time.distributed);
-      }
+      covered.push({date,time});
+      if(!bucket.covered)bucket.covered=[];
+      bucket.covered.push({date,time});
     }
-    for(const bucket of months.values())bucket.score=bucket.days?bucket.total/bucket.days:null;
-    const row={id:String(person.id),name:person.displayName,daily,months,
+    // Consistency counts meaningful days against working days, week by week; extra days stay visible.
+    const tally=(list,flag)=>countAgainstSchedule(list.map(({date,time})=>({date,hit:time[flag]})),schedule.isWorkingDay);
+    for(const bucket of months.values()){
+      bucket.score=bucket.days?bucket.total/bucket.days:null;
+      const meaningful=tally(bucket.covered||[],'meaningful');
+      Object.assign(bucket,{weekdayDays:meaningful.expected,meaningfulDays:meaningful.met,extraDays:meaningful.extra,distributedDays:tally(bucket.covered||[],'distributed').met});
+      delete bucket.covered;
+    }
+    const meaningful=tally(covered,'meaningful'),distributed=tally(covered,'distributed');
+    const coveredWorkdays=meaningful.expected,meaningfulDays=meaningful.met,distributedDays=distributed.met;
+    const row={id:String(person.id),name:person.displayName,daily,months,schedule,extraDays:meaningful.extra,
       averageLevel:days?total/days:null,coveredDays:days,coveredWorkdays,
       recentLevel:latestWindow?.level??null,recent:latestWindow,
       commits,churn,releaseLines,meaningfulDays,distributedDays,

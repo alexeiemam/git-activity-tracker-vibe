@@ -97,17 +97,19 @@ test('period length and churn cap are configurable, validated, and produce indep
   assert.notEqual(first,temporalActivityByPerson(idx,{period:120,churnCap:25}));
 });
 
-test('daily and monthly consistency counts covered workdays, excludes weekends, respects full filtered history and unknown clock',()=>{
+test('consistency counts working days, lets weekend work fill a missed working day, and respects full filtered history and unknown clock',()=>{
   const idx={activity:[c(9,0,50),c(15,0,50),c(9,0,30,'src/a.rb','2026-02-03'),c(null,null,300,'src/a.rb','2026-02-04'),c(9,0,200,'src/a.rb','2026-02-07')],bounds:{min:'2026-02-02',max:'2026-02-10'}};
   const summary=temporalActivitySummary(idx,[contributor()],{from:'2026-02-01',to:'2026-02-12'});
   const row=summary.byId.get('0');
   assert.equal(row.coveredDays,7); // Mon 2 to Tue 10
-  assert.equal(row.meaningfulDays,3); // Mon, Tue, Wed
+  assert.equal(row.meaningfulDays,4,'Mon, Tue, Wed, and Saturday filling Thursday or Friday that week');
+  assert.equal(row.substitutedDays,1);
+  assert.equal(row.extraDays,0);
   assert.equal(row.distributedDays,1);
-  assert.equal(row.daysWithClock,2);
+  assert.equal(row.daysWithClock,3,'Saturday\'s timed commit is counted too');
   assert.equal(row.daysWithMeasuredSpan,1);
   assert.equal(row.meanSpanMinutes,360);
-  assert.equal(row.months.get('2026-02').meaningfulDays,3);
+  assert.equal(row.months.get('2026-02').meaningfulDays,4);
   assert.equal(temporalActivitySummary(idx,[contributor()],{from:'2026-02-03',to:'2026-02-03'}).byId.get('0').daily.get('2026-02-02').churn,100,'raw evidence is retained despite selected date range');
 });
 
@@ -198,4 +200,16 @@ test('invalid or nonfinite file statistics cannot poison daily distribution or c
   const day=temporalDay([broken,c(16,0,60)]);
   assert.equal(day.churn,95);
   assert.ok(Number.isFinite(day.distribution));
+});
+
+test('work beyond the working week is extra, and identities without working days are measured on every day',()=>{
+  const busy={activity:['2026-02-02','2026-02-03','2026-02-04','2026-02-05','2026-02-06','2026-02-07','2026-02-08'].map(day=>c(9,0,60,'src/a.rb',day)),bounds:{min:'2026-02-02',max:'2026-02-08'}};
+  const fullWeek=temporalActivitySummary(busy,[contributor()],{from:'2026-02-02',to:'2026-02-08'}).byId.get('0');
+  assert.deepEqual([fullWeek.coveredDays,fullWeek.meaningfulDays,fullWeek.extraDays,fullWeek.consistency],[5,5,2,1],'weekend work is visible as extra, not dropped');
+  const none=temporalActivitySummary(busy,[{...contributor(),workingDays:[]}],{from:'2026-02-02',to:'2026-02-08'}).byId.get('0');
+  assert.equal(none.schedule.noneSet,true);
+  assert.deepEqual([none.coveredDays,none.meaningfulDays,none.extraDays],[7,7,0],'no working days set: every day is measured, nothing dropped');
+  const sunThu=temporalActivitySummary(busy,[contributor()],{from:'2026-02-02',to:'2026-02-08'},{workingDaysById:{'0':[0,1,2,3,4]}}).byId.get('0');
+  assert.equal(sunThu.coveredDays,5,'the identity\'s own working days set the denominator');
+  assert.equal(sunThu.extraDays,2,'Friday and Saturday are their extra days');
 });

@@ -74,7 +74,7 @@ test('relative share and index are undefined, not 0%, for a year with no focus c
   assert.equal(y.months[2].share,null);
   assert.equal(y.months[2].index,null);
   assert.equal(y.months[2].pace,0);
-  assert.equal(y.weekendShare,null);
+  assert.equal(y.offDayShare,null);
   assert.equal(y.perActiveDay,null);
 });
 

@@ -1,5 +1,5 @@
 /**
- * Authored-clock distribution and workday consistency for one contributor.
+ * Authored-clock distribution and working-day consistency for one contributor.
  *
  * This is descriptive Git evidence, NOT hours worked, effort, availability,
  * quality, or a performance score. A Git commit has a local authored date and
@@ -9,7 +9,8 @@
  * Days, identities and merge/revert inclusion come from the full-history,
  * policy-filtered evidence index. Display windows do not trim earlier context.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=layout-20261119-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=workdays-20261119-1';
+import {scheduleById,countAgainstSchedule} from './working-patterns.js?v=workdays-20261119-1';
 
 export const TEMPORAL_PERIODS = Object.freeze([60,90,120]);
 export const TEMPORAL_PERIOD_DEFAULT = 90;
@@ -24,7 +25,6 @@ export const MAX_GAP_DISTRIBUTION_RELIEF = 0.15;
 
 const rounded=value=>Math.round(value*1000)/1000;
 const clamp01=value=>Math.max(0,Math.min(1,value));
-export const isWorkday=date=>validDate(date) && ![0,6].includes(new Date(`${date}T12:00:00Z`).getUTCDay());
 export function temporalOptions(options={}) {
   const period=Number(options.period),churnCap=Number(options.churnCap),meaningfulLines=Number(options.meaningfulLines);
   return {
@@ -132,7 +132,13 @@ export function temporalActivityByPerson(index,options={}) {
   return result;
 }
 
-/** Calendar summary for the original Activity lens; percentages use covered weekdays. */
+/**
+ * Calendar summary for the Activity lens. Consistency is measured against
+ * each identity's own working days (every day when none are set): a
+ * meaningful day on a non-working day fills a missed working day in the same
+ * week, and any beyond that are reported as extra days, never dropped. Clock
+ * span and distribution describe every active day, whenever it fell.
+ */
 export function temporalActivitySummary(index,contributors,window,options={}) {
   const settings=temporalOptions(options),grouped=temporalActivityByPerson(index,settings);
   const start=window?.from,end=window?.to,valid=validDate(start)&&validDate(end)&&start<=end;
@@ -140,30 +146,34 @@ export function temporalActivitySummary(index,contributors,window,options={}) {
   const observed=validDate(bounds.min)&&validDate(bounds.max)&&Array.isArray(index?.activity);
   const rows=[],byId=new Map();
   if(valid)for(const person of contributors||[]) {
-    const days=grouped.get(String(person.id))||new Map(),months=new Map();
-    let coveredDays=0,meaningfulDays=0,distributedDays=0,daysWithClock=0,daysWithMeasuredSpan=0;
-    let spanSum=0,activePeriodSum=0,distributionSum=0,distributionCount=0;
+    const id=String(person.id),schedule=scheduleById(options.workingDaysById,id,person.workingDays);
+    const days=grouped.get(id)||new Map(),entries=[];
+    let activeDays=0,daysWithClock=0,daysWithMeasuredSpan=0,spanSum=0,activePeriodSum=0,distributionSum=0,distributionCount=0;
     for(let day=dayNumber(start),last=dayNumber(end);day<=last;day++){
       const date=dateAtDay(day);
-      if(!observed||date<bounds.min||date>bounds.max||!isWorkday(date))continue;
-      coveredDays++;
+      if(!observed||date<bounds.min||date>bounds.max)continue;
       const item=days.get(date)||emptyTemporalDay(settings);
-      meaningfulDays+=Number(item.meaningful);
-      distributedDays+=Number(item.distributed);
+      entries.push({date,item});
+      activeDays+=Number(item.commits>0);
       daysWithClock+=Number(item.timedCommits>0);
       if(item.spanMinutes!==null){daysWithMeasuredSpan++;spanSum+=item.spanMinutes;activePeriodSum+=item.activePeriods;}
       if(item.distribution!==null){distributionSum+=item.distribution;distributionCount++;}
-      const month=date.slice(0,7);
-      if(!months.has(month)) months.set(month,{month,coveredDays:0,meaningfulDays:0,distributedDays:0,daysWithClock:0});
-      const bucket=months.get(month);
-      bucket.coveredDays++;bucket.meaningfulDays+=Number(item.meaningful);
-      bucket.distributedDays+=Number(item.distributed);
-      bucket.daysWithClock+=Number(item.timedCommits>0);
     }
-    const row={id:String(person.id),name:person.displayName,daily:days,months,coveredDays,
-      meaningfulDays,distributedDays,daysWithClock,daysWithMeasuredSpan,
-      consistency:coveredDays?rounded(meaningfulDays/coveredDays):null,
-      distributedConsistency:coveredDays?rounded(distributedDays/coveredDays):null,
+    const tally=(list,flag)=>countAgainstSchedule(list.map(({date,item})=>({date,hit:item[flag]})),schedule.isWorkingDay);
+    const months=new Map();
+    for(const entry of entries){const month=entry.date.slice(0,7);if(!months.has(month))months.set(month,[]);months.get(month).push(entry);}
+    const monthRows=new Map([...months].map(([month,list])=>{
+      const meaningful=tally(list,'meaningful'),distributed=tally(list,'distributed');
+      return [month,{month,coveredDays:meaningful.expected,meaningfulDays:meaningful.met,extraDays:meaningful.extra,
+        distributedDays:distributed.met,daysWithClock:list.filter(({item})=>item.timedCommits>0).length,
+        activeDays:list.filter(({item})=>item.commits>0).length}];
+    }));
+    const meaningful=tally(entries,'meaningful'),distributed=tally(entries,'distributed');
+    const row={id,name:person.displayName,daily:days,months:monthRows,schedule,
+      coveredDays:meaningful.expected,meaningfulDays:meaningful.met,extraDays:meaningful.extra,
+      substitutedDays:meaningful.substituted,distributedDays:distributed.met,activeDays,daysWithClock,daysWithMeasuredSpan,
+      consistency:meaningful.expected?rounded(meaningful.met/meaningful.expected):null,
+      distributedConsistency:distributed.expected?rounded(distributed.met/distributed.expected):null,
       meanSpanMinutes:daysWithMeasuredSpan?Math.round(spanSum/daysWithMeasuredSpan):null,
       meanActivePeriods:daysWithMeasuredSpan?rounded(activePeriodSum/daysWithMeasuredSpan):null,
       meanDistribution:distributionCount?rounded(distributionSum/distributionCount):null};

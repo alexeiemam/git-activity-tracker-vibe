@@ -11,9 +11,10 @@
  * This is NOT a rating of people or performance. Line counts miss pairing,
  * reviews, binary work, and many other kinds of contribution.
  */
-import { dayNumber, dateAtDay, validDate } from './domain.js?v=layout-20261119-1';
-import { nonVersionChurn, temporalActivityByPerson, emptyTemporalDay, MAX_GAP_DISTRIBUTION_RELIEF, temporalOptions } from './temporal-activity.js?v=layout-20261119-1';
-export { nonVersionChurn } from './temporal-activity.js?v=layout-20261119-1';
+import { dayNumber, dateAtDay, validDate } from './domain.js?v=workdays-20261119-1';
+import { nonVersionChurn, temporalActivityByPerson, emptyTemporalDay, MAX_GAP_DISTRIBUTION_RELIEF, temporalOptions } from './temporal-activity.js?v=workdays-20261119-1';
+import { scheduleById } from './working-patterns.js?v=workdays-20261119-1';
+export { nonVersionChurn } from './temporal-activity.js?v=workdays-20261119-1';
 
 export const GAP_HORIZONS = Object.freeze([30, 60, 90]);
 export const BUSY_DAY_THRESHOLDS = Object.freeze([2, 4, 6]);
@@ -115,6 +116,8 @@ export function releaseGapMatrix(index, contributors, window, options = {}) {
   const rows = [];
   const byId = new Map();
   if (valid) for (const person of contributors || []) {
+    // Quiet days only raise attention on the identity's working days (every day when none are set).
+    const schedule = scheduleById(options.workingDaysById, person.id, person.workingDays);
     const events = releasesById.get(String(person.id)) || [];
     const daily = new Map(), months = new Map();
     const authored = person.daily?.commits || {};
@@ -139,10 +142,9 @@ export function releaseGapMatrix(index, contributors, window, options = {}) {
       const commits = Number(authored[date] || 0);
       const churn = fullDayChurn ? (dailyChurn?.get(date) || 0) : Number(person.daily?.churn?.[date] || 0);
       const temporal=timedDays?.get(date)||emptyTemporalDay(timeSettings);
-      const weekday = new Date(`${date}T12:00:00Z`).getUTCDay();
       const inCoverage = (!index?.bounds?.min || date >= index.bounds.min) &&
         (!index?.bounds?.max || date <= index.bounds.max);
-      const reason = !inCoverage ? 'outside-history' : weekday === 0 || weekday === 6 ? 'weekend' :
+      const reason = !inCoverage ? 'outside-history' : !schedule.isWorkingDay(date) ? 'non-working-day' :
         !lastRelease ? 'no-prior-contribution' : 'scored';
       const daysSinceRelease = lastRelease ? d - lastEventDay : null;
       // Clamp the age *before* applying each release credit. Otherwise a tiny

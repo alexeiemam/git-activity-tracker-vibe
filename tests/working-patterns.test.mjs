@@ -168,7 +168,7 @@ test('UI, identity persistence and import contracts expose contributor-specific 
   const app=readFileSync(new URL('../assets/app.js',import.meta.url),'utf8');
   const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
   const external=readFileSync(new URL('../assets/external-identities.js',import.meta.url),'utf8');
-  assert.match(app,/workingDaysById:Object.fromEntries/);
+  assert.match(app,/const workingDaysById=\(\)=>Object.fromEntries\(mergeGroups/,'every model measures against the same identity working days');
   assert.match(app,/workingDays:normalizeWorkingDays\(g\.workingDays\)/);
   assert.match(app,/workingDays:normalizeWorkingDays\(group\.workingDays\)/);
   assert.match(app,/renderWorkingPatterns\(view\)/);
@@ -178,4 +178,17 @@ test('UI, identity persistence and import contracts expose contributor-specific 
   assert.match(html,/id="continuity-pattern-editor"/);
   assert.match(html,/id="continuity-schedule-details"/);
   assert.match(external,/\.\.\.g,emails:/);
+});
+
+test('non-working-day share follows each identity\'s working days and never counts people without any as off',async()=>{
+  const {buildAnalysis,offDayShare}=await import('../assets/domain.js');
+  const commits=[['2026-01-10','a@x'],['2026-01-12','a@x'],['2026-01-11','b@x'],['2026-01-12','b@x'],['2026-01-10','c@x']]
+    .map(([date,email],i)=>({hash:`h${i}`,email,name:email,date,authoredAt:Date.parse(`${date}T10:00:00Z`),hour:10,minute:0,subject:'x',parents:[],files:[{path:'a.rb',added:1,deleted:0}]}));
+  const view=buildAnalysis(commits,[{displayName:'A',emails:['a@x']},{displayName:'B',emails:['b@x'],workingDays:[0,1,2,3,4]},{displayName:'C',emails:['c@x'],workingDays:[]}],{start:'2026-01-01',end:'2026-01-31'});
+  const [a,b,c]=['0','1','2'].map(id=>view.byId.get(id));
+  assert.equal(a.offDayCommits,1,'Saturday is off for a Mon–Fri identity');
+  assert.equal(b.offDayCommits,0,'Sunday is a working day for a Sun–Thu identity');
+  assert.equal(c.offDayCommits,0,'nobody is "off" without working days set');
+  assert.equal(offDayShare(view,view.selectedCommits),25,'1 of the 4 commits by people with working days set');
+  assert.ok(structuredClone(view.byId.get('0')),'analysis stays plain data so the worker can post it');
 });

@@ -4,13 +4,13 @@
  * date selection. Author activity is dated by authorship; releases by tag date.
  * These coordinates describe recorded Git evidence, never attendance or quality.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=layout-20261119-1';
-import {mondayOfDate,continuityMatrix} from './continuity.js?v=layout-20261119-1';
-import {signatureMatrix,DELIVERY_REFERENCE_LINES,CONTRIBUTION_REFERENCE_INDEX} from './contribution-signature.js?v=layout-20261119-1';
-import {dailyEvidence} from './momentum.js?v=layout-20261119-1';
-import {momentumMatrix} from './momentum.js?v=layout-20261119-1';
-import {contributionLevelMatrix} from './contribution-level.js?v=layout-20261119-1';
-import {releaseGapMatrix} from './release-gap.js?v=layout-20261119-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=workdays-20261119-1';
+import {mondayOfDate,continuityMatrix} from './continuity.js?v=workdays-20261119-1';
+import {signatureMatrix,DELIVERY_REFERENCE_LINES,CONTRIBUTION_REFERENCE_INDEX} from './contribution-signature.js?v=workdays-20261119-1';
+import {dailyEvidence} from './momentum.js?v=workdays-20261119-1';
+import {momentumMatrix} from './momentum.js?v=workdays-20261119-1';
+import {contributionLevelMatrix} from './contribution-level.js?v=workdays-20261119-1';
+import {releaseGapMatrix} from './release-gap.js?v=workdays-20261119-1';
 
 export const MOTION_WINDOWS=Object.freeze([4,8,12,20]);
 export const MOTION_STEPS=Object.freeze([1,2,4]);
@@ -117,12 +117,13 @@ function releaseEvidence(releases,personId,from,to) {
     breadth:opportunities?inclusions/opportunities:null,
     rate:opportunities&&known?lines/opportunities:null};
 }
-function selectDays(daily,from,to,weekdayOnly=false) {
+/** Days in a range; `scoredOnly` keeps the days a lens scored (working days, by each identity's own pattern). */
+function selectDays(daily,from,to,scoredOnly=false) {
   const out=[];
   if(!daily)return out;
   for(let d=dayNumber(from),end=dayNumber(to);d<=end;d++){
-    const date=dateAtDay(d),weekday=new Date(`${date}T12:00:00Z`).getUTCDay();
-    if(weekdayOnly&&(weekday===0||weekday===6))continue;
+    const date=dateAtDay(d);
+    if(scoredOnly&&daily.get(date)?.reason==='non-working-day')continue;
     const item=daily.get(date);
     if(item)out.push(item);
   }
@@ -155,9 +156,9 @@ export function buildMotionScenes(index,contributors,range,mode,options={}) {
   const continuity=signatureNeeded?continuityMatrix(index,people,range,{meaningfulLines:options.meaningfulLines,
     workingDaysById:patterns,weeks:options.continuityWeeks}):null;
   const signature=signatureNeeded?signatureMatrix(index,continuity,people,range,{temporal:options.temporal}):null;
-  const gap=mode==='release-gap'?releaseGapMatrix(index,people,range,{horizon:options.gapHorizon,busyDay:options.busyDay,fullCreditLines:options.releaseLines,busyChurn:options.dailyChurn,temporal:options.temporal}):null;
-  const momentum=mode==='momentum'?momentumMatrix(index,people,range,{workdays:options.momentumWorkdays,temporal:options.temporal}):null;
-  const level=['momentum','level'].includes(mode)?contributionLevelMatrix(index,people,range,{workdays:options.levelWorkdays,temporal:options.temporal}):null;
+  const gap=mode==='release-gap'?releaseGapMatrix(index,people,range,{horizon:options.gapHorizon,busyDay:options.busyDay,fullCreditLines:options.releaseLines,busyChurn:options.dailyChurn,temporal:options.temporal,workingDaysById:patterns}):null;
+  const momentum=mode==='momentum'?momentumMatrix(index,people,range,{workdays:options.momentumWorkdays,temporal:options.temporal,workingDaysById:patterns}):null;
+  const level=['momentum','level'].includes(mode)?contributionLevelMatrix(index,people,range,{workdays:options.levelWorkdays,temporal:options.temporal,workingDaysById:patterns}):null;
   const source=mode==='activity'?dailyEvidence(index):null;
   const releases=mode==='delivery'?index?.releases||[]:[];
   const bounds=index?.bounds||{};

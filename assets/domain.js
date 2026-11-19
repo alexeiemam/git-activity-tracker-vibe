@@ -4,8 +4,9 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=layout-20261119-1';
-import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=layout-20261119-1';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=workdays-20261119-1';
+import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=workdays-20261119-1';
+import { scheduleFor } from './working-patterns.js?v=workdays-20261119-1';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },
@@ -344,18 +345,21 @@ function contributorStats(group, commits) {
   const timeBands = Array(TIME_BANDS.length).fill(0);
   const areas = new Map();
   let timedCommits = 0;
-  let weekendCommits = 0;
-  let timedWeekendCommits = 0;
+  // Work on the identity's non-working days is counted, never dropped; with no working days set, none are "off".
+  const schedule = scheduleFor(group.workingDays);
+  const offDay = date => !schedule.noneSet && !schedule.isWorkingDay(date);
+  let offDayCommits = 0;
+  let timedOffDayCommits = 0;
 
   for (const c of commits) {
     days.add(c.date);
     const dow = dayOfWeek(c.date);
     weekdays[dow]++;
-    if (dow > 4) weekendCommits++;
+    if (offDay(c.date)) offDayCommits++;
     if (Number.isInteger(c.hour)) {
       timedCommits++;
       timedWeekdays[dow]++;
-      if (dow > 4) timedWeekendCommits++;
+      if (offDay(c.date)) timedOffDayCommits++;
       hours[c.hour]++;
       const band = TIME_BANDS.findIndex(t => c.hour >= t.start && c.hour < t.end);
       if (band >= 0) timeBands[band]++;
@@ -390,13 +394,16 @@ function contributorStats(group, commits) {
     hours,
     timeBands,
     timedCommits,
-    weekendCommits,
-    timedWeekendCommits,
+    // Plain data: analysis is posted back from a worker, which cannot carry functions.
+    workingDays: schedule.pattern,
+    offDayCommits,
+    timedOffDayCommits,
     areas,
     firstCommit: dates[0] || null,
     lastCommit: dates.at(-1) || null,
     longestStreak: longestStreak(days),
-    longestWorkdayStreak: longestConsecutiveWorkdays(days),
+    // Domain weekdays run Monday = 0; working patterns use JavaScript's Sunday = 0.
+    longestWorkdayStreak: longestConsecutiveWorkdays(days, schedule.measured.map(day => (day + 6) % 7)),
   };
 }
 
@@ -429,6 +436,7 @@ export function buildAnalysis(rawCommits, groups, scope = {}) {
     id: String(i),
     displayName: String(g.displayName || g.emails?.[0] || 'Unknown'),
     emails: (g.emails || []).map(e => String(e).toLowerCase()),
+    workingDays: g.workingDays,
   })).filter(g => g.emails.length > 0);
   const emailToId = new Map();
   for (const group of groupDefs) {
@@ -500,6 +508,26 @@ export function withWeekAggregation(view) {
  * focusId='selection' aggregates the globally selected people. An individual
  * focus is only permitted for a person included in that selection.
  */
+/**
+ * Share of commits made on their author's non-working days, among authors who
+ * have working days set (null when none have, so nobody is silently "off").
+ */
+export function offDayShare(view, commits) {
+  let counted = 0, off = 0;
+  const schedules = new Map();
+  const scheduleOf = id => {
+    if (!schedules.has(id)) { const person = view.byId.get(id); schedules.set(id, person ? scheduleFor(person.workingDays) : null); }
+    return schedules.get(id);
+  };
+  for (const commit of commits || []) {
+    const schedule = scheduleOf(String(commit.groupId));
+    if (!schedule || schedule.noneSet) continue;
+    counted++;
+    if (!schedule.isWorkingDay(commit.date)) off++;
+  }
+  return counted ? off / counted * 100 : null;
+}
+
 export function workingRhythm(view, focusId = 'selection') {
   const focus = String(focusId);
   if (focus !== 'selection' && !view.selectedIds.has(focus)) return null;
@@ -570,7 +598,7 @@ export function workingRhythm(view, focusId = 'selection') {
     peakSlot: timedCommits ? busiest : null,
     peakDay: timedCommits ? busiestDay : null,
     peakHour: timedCommits ? hourTotals.indexOf(Math.max(...hourTotals)) : null,
-    weekendShare: timedCommits ? (dayTotals[5] + dayTotals[6]) / timedCommits * 100 : null,
+    offDayShare: offDayShare(view, focused.filter(c => Number.isInteger(c.hour))),
     referenceName: view.denominator === 'selection' ? 'selected group' : 'imported repository',
     showReference: focus === 'selection'
       ? !(view.denominator === 'selection' || view.selectedIds.size === view.allContributors.length)
@@ -743,7 +771,6 @@ export function seasonalityAnalysis(view, focusId = 'selection') {
     const count = commits.length;
     const timed = commits.filter(c => Number.isInteger(c.hour) && c.hour >= 0 && c.hour <= 23);
     const activeDays = new Set(commits.map(c => c.date)).size;
-    const weekend = commits.filter(c => dayOfWeek(c.date) >= 5).length;
     const evening = timed.filter(c => c.hour >= 18 && c.hour <= 23).length;
     const slots = Array(168).fill(0);
     const weekdayExposures = Array(7).fill(0);
@@ -761,7 +788,7 @@ export function seasonalityAnalysis(view, focusId = 'selection') {
       perActiveDay: activeDays ? count / activeDays : null,
       timedCount: timed.length, untimedCount: count - timed.length,
       timeCoverage: count ? timed.length / count * 100 : null,
-      weekendShare: count ? weekend / count * 100 : null,
+      offDayShare: offDayShare(view, commits),
       eveningShare: timed.length ? evening / timed.length * 100 : null,
       slots, weekdayExposures,
     });
@@ -810,7 +837,7 @@ export function seasonalityAnalysis(view, focusId = 'selection') {
       const active = new Set(matching.map(c => c.date)).size;
       return { year: year.year, count: matching.length, pace: year.exposureDays ? matching.length / year.exposureDays * 7 : null,
         activeFrequency: year.exposureDays ? active / year.exposureDays * 100 : null,
-        weekendShare: matching.length ? matching.filter(c => dayOfWeek(c.date) >= 5).length / matching.length * 100 : null };
+        offDayShare: offDayShare(view, matching) };
     }),
   }));
   return { focusId: focus, name, from, to, years, comparisons, seasonalAverage,

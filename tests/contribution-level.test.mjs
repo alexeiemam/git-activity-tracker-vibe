@@ -103,7 +103,7 @@ test('VERSION-only churn cannot inflate level, while authored commits still coun
   assert.equal(version.temporal.meaningful,false);
 });
 
-test('release contributions preserve incremental author credit, not baseline or driver-only attribution; weekend tags go to Monday',()=>{
+test('release contributions preserve incremental author credit, not baseline or driver-only attribution; a weekend tag is credited on its own date',()=>{
   const dates=weekdays('2026-01-05',27);
   const releases=[
     {date:dates[0],tag:'v0',baseline:true,members:[{id:'0',commits:1,releaseLineChurn:10000}]},
@@ -115,11 +115,10 @@ test('release contributions preserve incremental author credit, not baseline or 
   const model=matrix(index,dates);
   assert.equal(model.byId.get('0').daily.get(dates[0]).releaseLines,0);
   assert.equal(model.byId.get('1').daily.get(dates[20]).releaseLines,0);
-  assert.equal(model.byId.get('0').daily.get('2026-01-31').releaseLines,0);
-  const monday=model.byId.get('0').daily.get('2026-02-02');
-  assert.equal(monday.releaseLines,3000);
-  assert.equal(monday.releases[0].tag,'v1');
-  assert.ok(monday.level>model.byId.get('0').daily.get('2026-02-03').level);
+  const saturday=model.byId.get('0').daily.get('2026-01-31');
+  assert.equal(saturday.releaseLines,3000,'credited on the day it was tagged');
+  assert.equal(saturday.releases[0].tag,'v1');
+  assert.ok(saturday.level>model.byId.get('0').daily.get('2026-02-03').level);
 });
 
 test('peer comparisons exclude the subject and are safe for ties, quiet peers and single-contributor selection',()=>{
