@@ -83,11 +83,15 @@ the thing you pick and drill into (a release, a person or a code area). Time is
 not a tab: the scope bar chooses the dates and comparison window, and each
 subject has its own "over time" section. Each tab is one page with every
 section shown in order; a sticky **On this page** bar under the tabs jumps to a
-section and highlights the one you are reading:
+section and highlights the one you are reading. Within a section, jump links do
+the same for its parts (a portrait's Delivery to Compare; weekly, yearly and
+seasonal rhythms). Only alternative views of one thing stay as switches: the
+seven ways to browse releases, the pulse lenses, Authored/Released, and
+weighting or measure choices:
 
 | Tab | Question | Contents |
 | --- | --- | --- |
-| **Releases** | What shipped, and where did it go? | **Browse releases** (seven ways to pick a release, with the selected release's anatomy) and, when deployment history was imported, **Environments** (published versus production, Heroku STAG/BETA/PROD events and how they relate to tags) |
+| **Releases** | What shipped, and where did it go? | **Browse releases** (seven ways to pick a release, with the selected release's anatomy), **Over time** (the scope unfolding) and, when deployment history was imported, **Environments** (published versus production, Heroku STAG/BETA/PROD events and how they relate to tags) |
 | **People** | Who contributed, when, and how steadily? | **Contribution** (the measure, summary, contribution side by side, every measure per person — copyable as CSV — and commit sizes), **Over time** (momentum over time and the activity pulse with all five lenses), **Working patterns** (weekly, yearly and seasonal rhythms) and **One person** (the contributor portrait) |
 | **Codebase** | Where in the code? | The codebase map (up to three directory levels) with an area portrait, and who works where |
 
@@ -165,8 +169,10 @@ control.
   authored dates); a gap means no matching authored records, not absence from
   work.
 - **People — start with a person.** Select any **reconciled** contributor
-  (all their merged author emails), then explore their **Delivery / Together / Focus /
-  Evolution / Compare** views in **People › One person**; **Working rhythm ↑**
+  (all their merged author emails); **People › One person** then shows their
+  **Delivery**, **Together**, **Focus**, **Evolution** and **Compare people**
+  sections in order, with jump links between them (Compare starts with a
+  second person already chosen, and old `tab=…` links jump to that section); **Working rhythm ↑**
   jumps to Working patterns focused on them (old `tab=behaviour` links focus
   them too). The release portfolio distinguishes
   release participation (tagged releases they authored for), release leadership (releases they published or tagged), and both; rates use
@@ -802,7 +808,7 @@ In the **Rhythm explorer**, select a contributor chip or click **Explore** in th
 
 ### Comparing years and seasonality
 
-Under **The Working Rhythm**, switch between **Weekly patterns**, **Across years**, and **Seasonality** without altering the global contributor/date/merge/revert cohort. The contributor focus picker is shared across all three tabs: inspect any globally selected individual or the combined selection. A separate multi-year chip picker restricts **only the years displayed**, not the eligible commits or reference group. The selected tab, historical measure and visible years survive session export/import.
+**People › Working patterns** shows **Weekly patterns**, **Across years** and **Seasonality** in order (with jump links to each), without altering the global contributor/date/merge/revert cohort. The contributor focus picker is shared across all three: inspect any globally selected individual or the combined selection. A separate multi-year chip picker restricts **only the years displayed**, not the eligible commits or reference group. The selected tab, historical measure and visible years survive session export/import.
 
 **Across years** displays a Jan–Dec **Year × Month** heatmap, an annual behavioural scorecard, same-scale **7 × 24** weekly-hour heatmaps for each year, and a contributor × year matrix when several people are selected. The annual scorecard separates commits/week from active calendar-day frequency, commits per active day, weekend share, evening share, and timestamp coverage. Weekday-hour grids always show each cell as a **share of that year's *timed* commits** (same colour scale across years) so a change in annual volume cannot masquerade as a change in rhythm. Clicking or keyboard-focusing a month/hour reveals counts, author dates, changed files/lines, reference-share context, and recent matching commit subjects. **View this month across dashboard** explicitly changes the global date window and updates every other visualisation; merely inspecting or hiding a year never does.
 

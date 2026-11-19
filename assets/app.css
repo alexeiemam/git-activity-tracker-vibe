@@ -1630,3 +1630,14 @@ button.primary-map-cell:focus-visible,.primary-map-top:focus-visible{outline:3px
 .primary-slot>.stat-grid{margin:14px 0 10px}
 .primary-slot>.insight-strip{margin-bottom:24px}
 @media(max-width:720px){.primary-section-nav{top:56px;gap:4px}.primary-section-nav a{padding:5px 9px}}
+
+/* Jump links inside a section (a portrait, the rhythm explorer): everything below is shown; these skip to a part. */
+.primary-jump-links{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+.primary-jump-links a{padding:6px 11px;border-radius:7px;border:1px solid #d6e3d8;background:#fffefa;color:#2f5e45;font:600 11px var(--mono);text-decoration:none}
+.primary-jump-links a:hover{background:#e8f3eb}
+.primary-jump-links a:focus-visible{outline:3px solid #4f9a78;outline-offset:2px}
+a.rhythm-tab{text-decoration:none;color:inherit}
+#rhythm-weekly-content,#season-year-content,#season-seasonal-content{scroll-margin-top:124px}
+#rhythm-weekly-content:focus,#season-year-content:focus,#season-seasonal-content:focus,[id^="people-"]:focus,[id^="releases-"]:focus{outline:none}
+#season-seasonal-content{margin-top:22px}
+.primary-release-sidebar{top:120px;max-height:calc(100vh - 134px)}

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=people-20261119-1">
+  <link rel="stylesheet" href="./assets/app.css?v=people-20261119-2">
 </head>
 <body>
   <div class="page">
@@ -276,12 +276,12 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
         <div class="report-card rhythm-report-card">
           <div id="rhythm-explorer" class="rhythm-explorer" aria-label="Detailed working rhythm explorer">
             <div class="rhythm-explorer-heading"><div><span class="eyebrow">THE RHYTHM EXPLORER</span><h4 id="rhythm-focus-name">A closer look at the week</h4><p id="rhythm-focus-caption">Choose whose rhythm to inspect. This does not change the global comparison.</p></div><div class="rhythm-focus-picker" id="rhythm-focus-picker" role="group" aria-label="Contributor to inspect within the global selection"></div></div>
-            <div class="rhythm-tabs" role="group" aria-label="Behaviour analysis timescale">
-              <button type="button" data-action="rhythm-tab" data-rhythm-tab="weekly" class="rhythm-tab is-active" aria-pressed="true">Weekly patterns <span>DAY × HOUR</span></button>
-              <button type="button" data-action="rhythm-tab" data-rhythm-tab="years" class="rhythm-tab" aria-pressed="false">Across years <span>EVOLUTION</span></button>
-              <button type="button" data-action="rhythm-tab" data-rhythm-tab="seasonal" class="rhythm-tab" aria-pressed="false">Seasonality <span>RECURRING SIGNALS</span></button>
-            </div>
-            <div id="rhythm-weekly-content">
+            <nav class="rhythm-tabs primary-jump-links" aria-label="Working patterns: jump to a section">
+              <a href="#rhythm-weekly-content" class="rhythm-tab" data-action="primary-jump" data-target="rhythm-weekly-content">Weekly patterns <span>DAY × HOUR</span></a>
+              <a href="#season-year-content" class="rhythm-tab" data-action="primary-jump" data-target="season-year-content">Across years <span>EVOLUTION</span></a>
+              <a href="#season-seasonal-content" class="rhythm-tab" data-action="primary-jump" data-target="season-seasonal-content">Seasonality <span>RECURRING SIGNALS</span></a>
+            </nav>
+            <div id="rhythm-weekly-content" tabindex="-1">
               <div id="rhythm-kpis" class="rhythm-kpis"></div>
             <div id="rhythm-plots" class="rhythm-plots">
               <section class="rhythm-weekday-card" aria-labelledby="rhythm-weekdays-label"><div class="rhythm-panel-title"><div><span class="eyebrow">01 / WEEKDAY PROFILE</span><h5 id="rhythm-weekdays-label">Which days?</h5></div><span class="helper">7 days · timed commits</span></div><div id="rhythm-weekday-columns"></div></section>
@@ -290,9 +290,9 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
             <div class="rhythm-detail" id="rhythm-detail" role="status" aria-live="off"></div>
               <p class="rhythm-footnote">These are <strong>commit-occurrence</strong> patterns, regardless of the comparison metric chosen above (lines changed do not indicate when someone worked). All displays use the same timed-commit cohort and 168 Monday–Sunday author-local hour buckets. Times are <strong>as recorded by each commit's author</strong>; different time zones are not converted to a common clock. Untimed commits are excluded from all three rhythm charts, not just the hourly views. No pattern here measures working hours or productivity.</p>
             </div>
-            <div id="season-explorer" class="season-explorer" hidden>
+            <div id="season-explorer" class="season-explorer">
               <div class="season-toolbar">
-                <div><span class="eyebrow">01 / COMPARE LIKE WITH LIKE</span><h5 id="season-view-title">Across years</h5><p id="season-explanation">Compare the same authored history at different time scales.</p></div>
+                <div><span class="eyebrow">01 / COMPARE LIKE WITH LIKE</span><h5 id="season-view-title">Across years and seasons</h5><p id="season-explanation">Separate changes in activity level from changes in timing and composition, then compare January with January to see whether seasonal swings recur.</p></div>
                 <div class="season-modes segmented" role="group" aria-label="Historical comparison measure">
                   <button type="button" class="segment active" data-action="season-mode" data-season-mode="rate" aria-pressed="true">Commits / week</button>
                   <button type="button" class="segment" data-action="season-mode" data-season-mode="shape" aria-pressed="false">Within year %</button>
@@ -301,7 +301,7 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
               </div>
               <div class="season-year-picker" id="season-year-picker" role="group" aria-label="Years displayed in the comparison"></div>
               <div class="season-mode-help" id="season-mode-help"></div>
-              <div id="season-year-content">
+              <div id="season-year-content" tabindex="-1">
                 <div class="season-section-head"><div><span class="eyebrow">01 / THE YEAR × MONTH MATRIX</span><h5>When does activity concentrate?</h5></div><span class="helper">Same authored dates · one shared colour scale</span></div>
                 <div id="season-month-matrix"></div>
                 <div class="season-section-head"><div><span class="eyebrow">02 / ANNUAL BEHAVIOUR</span><h5>Volume is not behaviour.</h5></div><span class="helper">Exposure-adjusted rates · year-over-year matched dates</span></div>
@@ -310,7 +310,7 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
                 <div id="season-rhythm-years"></div>
                 <div id="season-person-comparison" class="season-person-comparison"></div>
               </div>
-              <div id="season-seasonal-content" hidden>
+              <div id="season-seasonal-content" tabindex="-1">
                 <div class="season-section-head"><div><span class="eyebrow">01 / JANUARY → DECEMBER</span><h5>Overlay equivalent months across years.</h5></div><span class="helper">Missing months are gaps, not zeroes</span></div>
                 <div id="season-overlay"></div>
                 <div id="season-signals"></div>
@@ -348,6 +348,6 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=people-20261119-1"></script>
+  <script type="module" src="./assets/app.js?v=people-20261119-2"></script>
 </body>
 </html>

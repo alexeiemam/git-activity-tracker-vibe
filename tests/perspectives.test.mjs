@@ -300,7 +300,10 @@ test('views sit with their subject: change evolution with releases, commit sizes
 test('People is one page in reading order, and every slot a view renders has a section to fill it',()=>{
  const html=renderPrimaryExplorer(index,ui({mode:'contributors'}));
  const order=[...html.matchAll(/id="(people-[a-z-]+)" tabindex="-1"|data-slot="([a-z]+)"/g)].map(m=>m[1]||m[2]);
- assert.deepEqual(order,['people-contribution','measure','stats','insight','ranking','table','sizes','people-over-time','trend','pulse','people-patterns','rhythm','people-portrait']);
+ assert.deepEqual(order,['people-contribution','measure','stats','insight','ranking','table','sizes','people-over-time','trend','pulse','people-patterns','rhythm','people-portrait','people-delivery','people-together','people-focus','people-evolution','people-compare']);
+ assert.doesNotMatch(html,/data-action="primary-contributor-tab"/,'portrait sections are all shown; links jump between them');
+ assert.match(html,/<nav class="primary-jump-links" aria-label="This portrait: jump to a section"><a href="#people-delivery" data-action="primary-jump"/);
+ assert.match(html,/id="people-compare"[\s\S]*Person B[\s\S]*selected/,'Compare is shown with a second person already chosen');
  assert.match(html,/class="primary-section-nav" aria-label="People: jump to a section"><a href="#people-contribution" data-action="primary-jump"/);
  const page=readFileSync(new URL('../index.html',import.meta.url),'utf8');
  const sections=new Set([...page.matchAll(/data-slot-section="([a-z]+)"/g)].map(m=>m[1]));
@@ -308,4 +311,12 @@ test('People is one page in reading order, and every slot a view renders has a s
  for(const mode of ['observatory','contributors','codebase'])for(const browse of ['timeline','list'])for(const m of renderPrimaryExplorer(index,ui({mode,releaseBrowse:browse})).matchAll(/data-slot="([a-z]+)"/g))slots.add(m[1]);
  assert.deepEqual([...slots].sort(),[...sections].sort(),'no orphan slots and no unreachable sections');
  assert.match(renderPrimaryExplorer(index,ui({mode:'observatory'})),/id="releases-over-time"[\s\S]*The scope, unfolding/,'the scope timeline is a Releases section');
+});
+
+test('Releases is one page: browse, over time, then environments when deployment history exists',()=>{
+ const html=renderPrimaryExplorer(index,ui({mode:'observatory'}));
+ assert.match(html,/aria-label="Releases: jump to a section"><a href="#releases-browse"[^>]*>Browse releases<\/a><a href="#releases-over-time"/);
+ assert.doesNotMatch(html,/data-key="releaseView"/,'no Browse/Environments switch');
+ assert.ok(html.indexOf('id="releases-browse"')<html.indexOf('id="releases-over-time"'));
+ assert.doesNotMatch(html,/releases-environments/,'without deployment history there is no Environments section');
 });
