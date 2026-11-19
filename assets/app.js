@@ -22,7 +22,7 @@ import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } 
 import { buildStoryAnalysis } from './stories.js?v=git-ingest-input-20261113-1';
 import { renderStoryExplorer, storyCopyText } from './story-view.js?v=git-ingest-input-20261113-1';
 import { buildEvidenceIndex, windowOf } from './perspectives.js?v=git-ingest-input-20261113-1';
-import { renderPrimaryExplorer, periodBriefingForUi } from './perspective-view.js?v=git-ingest-input-20261113-1';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline } from './perspective-view.js?v=git-ingest-input-20261113-1';
 import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=git-ingest-input-20261113-1';
 import { downloadFilename } from './download-names.js?v=git-ingest-input-20261113-1';
 import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=git-ingest-input-20261113-1';
@@ -225,7 +225,9 @@ let localDatasetId=null, routePushPending=false, routeRestoring=false;
 const routePath=()=>window.location.pathname||'./index.html';
 function currentRouteHref(){
   const mode=state.viewMode==='evidence'?'evidence':primary.mode;
-  return routeUrl(routePath(),routeFromState({...primary,mode},mergeGroups.map((g,i)=>({...g,id:String(i)})),localDatasetId));
+  // A one-person scope travels with Rhythm links.
+  const periodSelectedId=state.selectedIds.size===1?[...state.selectedIds][0]:null;
+  return routeUrl(routePath(),routeFromState({...primary,mode,periodSelectedId},mergeGroups.map((g,i)=>({...g,id:String(i)})),localDatasetId));
 }
 function syncBrowserRoute(){
   if(!perspectiveIndex||routeRestoring)return;
@@ -243,6 +245,7 @@ function applyBrowserRoute(){
   const groups=mergeGroups.map((g,i)=>({...g,id:String(i)}));
   primary=applyRoute(primary,query,groups);
   state.viewMode=primary.mode;
+  if(applyRouteScope(query)){updateControls();renderDashboard();}
   routeRestoring=true;
   setExperienceVisibility();renderPrimary();showTabEvidence(primary.mode);
   routeRestoring=false;
@@ -294,13 +297,27 @@ function initialisePrimary(){
   if(!perspectiveIndex.releases.some(r=>r.hash===primary.releaseHash))
     primary.releaseHash=perspectiveIndex.releases.at(-1)?.hash||null;
 }
+/** The scope bar's people, or null when everyone is in scope. */
+const scopeIds=()=>state.selectedIds.size&&state.selectedIds.size<mergeGroups.length?[...state.selectedIds]:null;
 function renderPrimary(){
   if(!perspectiveIndex)return;
   initialisePrimary();
+  // Every tab follows the scope bar's dates.
+  primary.periodFrom=state.start||analysis?.start||primary.periodFrom;
+  primary.periodTo=state.end||analysis?.end||primary.periodTo;
   primary.mode=state.viewMode==='evidence'?primary.mode:state.viewMode;
-  perspectiveIndex.navigation={ui:primary,groups:mergeGroups.map((g,i)=>({...g,id:String(i)})),datasetId:localDatasetId,path:routePath()};
+  perspectiveIndex.navigation={ui:primary,groups:mergeGroups.map((g,i)=>({...g,id:String(i)})),datasetId:localDatasetId,path:routePath(),scope:{ids:scopeIds()}};
   $('stories-view').innerHTML=renderPrimaryExplorer(perspectiveIndex,primary);
+  $('scope-headline').innerHTML=scopeHeadline(perspectiveIndex,primary);
   syncBrowserRoute();
+}
+/** Narrow the scope to some dates (and optionally people), then show a tab. */
+function setScope({from,to,people=null},mode=null){
+  Object.assign(state,{period:'custom',start:from,end:to});scopeFollowsLatest=false;
+  if(people)state.selectedIds=new Set(people.map(String));
+  Object.assign(primary,{periodPreset:'custom',periodBucket:null,periodFocusPerson:null,periodFocusArea:null});
+  if(mode)goPrimary(mode);
+  renderDashboard();
 }
 function primarySnapshot(){
   const {trail,...snapshot}=primary;
@@ -320,9 +337,23 @@ function resetPrimaryOnLoad(){
   // A permalink takes precedence over the imported session's last-view preference.
   if(new URL(window.location.href).searchParams.has('view')){
     const groups=mergeGroups.map((g,i)=>({...g,id:String(i)}));
-    primary=applyRoute(primary,readRoute(new URL(window.location.href)),groups);
+    const route=readRoute(new URL(window.location.href));
+    primary=applyRoute(primary,route,groups);
     state.viewMode=primary.mode;
+    applyRouteScope(route);
   }
+}
+/** A link's dates and Rhythm person become the scope. Returns whether the scope changed. */
+function applyRouteScope(route){
+  let changed=false;
+  if(route.from&&route.to&&(route.from!==state.start||route.to!==state.end)){
+    Object.assign(state,{period:'custom',start:route.from,end:route.to});scopeFollowsLatest=false;changed=true;
+  }
+  if(primary.mode==='rhythm'&&primary.periodSelectedId!=null){
+    if(state.selectedIds.size!==1||!state.selectedIds.has(primary.periodSelectedId)){state.selectedIds=new Set([primary.periodSelectedId]);changed=true;}
+    primary.periodSelectedId=null;
+  }
+  return changed;
 }
 
 function setText(id, content) { $(id).textContent = content; }
@@ -927,7 +958,7 @@ function buildDashboard() {
 }
 function configureOptions() {
   const years=[...new Set([...rawCommits.map(c=>c.date?.slice(0,4)),...rawTags.map(t=>t.taggedDate?.slice(0,4)),...rawGithubReleases.filter(r=>!r.draft).map(r=>r.publishedDate?.slice(0,4)),...rawHerokuReleases.map(r=>r.date?.slice(0,4))].filter(Boolean))].sort().reverse();
-  $('period-select').innerHTML=`<option value="all">All imported dates</option><option value="90d">Latest 90 days</option><option value="365d">Latest 365 days</option><option value="730d">Latest 730 days</option>${years.map(y=>`<option value="year-${y}">Calendar year ${y}</option>`).join('')}<option value="custom">Custom date range</option>`;
+  $('period-select').innerHTML=`<option value="all">All imported dates</option><option value="7d">Latest 7 days</option><option value="14d">Latest 14 days</option><option value="30d">Latest 30 days</option><option value="90d">Latest 90 days</option><option value="365d">Latest 365 days</option><option value="730d">Latest 730 days</option>${years.map(y=>`<option value="year-${y}">Calendar year ${y}</option>`).join('')}<option value="custom">Custom date range</option>`;
   const options=entries=>entries.map(([key,m])=>`<option value="${key}">${esc(m.label)}</option>`).join('');
   const measures=Object.entries(METRICS);
   $('metric-select').innerHTML=`<optgroup label="Authored activity">${options(measures.filter(([,m])=>m.source!=='releases'))}</optgroup><optgroup label="Release delivery">${options(measures.filter(([,m])=>m.source==='releases'))}</optgroup>`;
@@ -983,6 +1014,9 @@ function updateControls() {
   $('period-select').value=state.period;
   if ($('period-select').selectedIndex === -1) $('period-select').value='custom';
   $('date-from').value=state.start||'';$('date-to').value=state.end||'';
+  $('scope-comparison').value=primary.periodComparison;
+  $('scope-compare-dates').hidden=primary.periodComparison!=='custom';
+  $('scope-compare-from').value=primary.compareFrom||'';$('scope-compare-to').value=primary.compareTo||'';
   $('filter-merges').checked=state.includeMerges;
   $('filter-reverts').checked=state.includeReverts;
   $('metric-select').value=state.metric;
@@ -998,7 +1032,9 @@ function renderScope(view) {
   const policy=`${view.includeMerges?'merges included':'merges excluded'} · ${view.includeReverts?'reverts included':'reverts excluded'}`;
   const lens=`${METRICS[view.metric].label.toLowerCase()} · ${displayModeLabel(state.mode).toLowerCase()}`;
   const reference=` · reference: ${view.denominator==='repository'?'all contributors':'selected people'}`;
-  setText('scope-description', `${selectedCountText(view)} · ${view.start} to ${view.end} · ${policy} · ${lens}${reference}`);
+  const comparison={previous:'compared with the previous period',year:'compared with the same dates last year',custom:primary.compareFrom&&primary.compareTo?`compared with ${formatDate(primary.compareFrom)} – ${formatDate(primary.compareTo)}`:'comparison dates not set',none:'no comparison'}[primary.periodComparison]||'';
+  const people=view.selectedIds.size===view.groupDefs.length?`All ${view.groupDefs.length} people`:view.selectedIds.size===1?esc(view.groupDefs.find(g=>view.selectedIds.has(g.id))?.displayName||'1 person'):`${view.selectedIds.size} of ${view.groupDefs.length} people`;
+  $('scope-summary').innerHTML=`<strong>${people}</strong><span>${esc(formatDate(view.start))} – ${esc(formatDate(view.end))}</span><span>${esc(comparison)}</span><span>${esc(policy)}</span><span>Measure: ${esc(lens)}${esc(reference)}</span>`;
   const total = rawCommits.length;
   setText('data-coverage', `Dataset: ${number.format(total)} deduplicated, dated commits · ${formatDate(view.min)} – ${formatDate(view.max)} · ${view.groupDefs.length} reconciled identities`);
 }
@@ -2737,8 +2773,8 @@ const ACTIONS={
   'append-activity':()=>appendActivity(),
   'review-identities':()=>{identityPicker=null;renderMergeUI();$('merge-step').hidden=false;$('merge-step').scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-evidence-filters':()=>{
-    $('legacy-scope-details').open=true;
-    $('legacy-scope-details').scrollIntoView({behavior:'smooth',block:'start'});
+    if($('scope-panel').hidden)ACTIONS['toggle-scope']();
+    $('scope-bar').scrollIntoView({behavior:'smooth',block:'start'});
   },
   'primary-nav':(_e,t)=>goPrimary(t.dataset.to),
   'local-link-enable':()=>enableLocalLinks(),
@@ -2789,41 +2825,41 @@ const ACTIONS={
   'primary-release-period':(_e,t)=>{
     const date=t.dataset.date;if(!date)return;
     const at=dayNumber(date);
-    goPrimary('rhythm',{periodFrom:dateAtDay(at-6),periodTo:dateAtDay(at+7),periodPreset:'custom'});
+    setScope({from:dateAtDay(at-6),to:dateAtDay(at+7)},'rhythm');
   },
-  'primary-period-preset':(_e,t)=>{
-    const length=Number(t.dataset.days),window=windowOf(perspectiveIndex,length);
-    Object.assign(primary,{periodPreset:String(length),periodFrom:window.from,periodTo:window.to,periodBucket:null});renderPrimary();
-  },
-  'primary-period-custom':()=>{primary.periodPreset='custom';renderPrimary();$('primary-period-from')?.focus({preventScroll:true});},
   'primary-period-bin':(_e,t)=>{primary.periodBucket=t.dataset.bin;renderPrimary();},
   'primary-period-reset':()=>{primary.periodBucket=null;renderPrimary();},
-  'primary-period-cell':(_e,t)=>{primary.periodFocusPerson=t.dataset.person;primary.periodFocusArea=t.dataset.area;renderPrimary();$('primary-copy-status')?.closest('.primary-panel')?.previousElementSibling?.scrollIntoView({behavior:'smooth',block:'nearest'});},
+  'primary-period-cell':(_e,t)=>{primary.periodFocusPerson=t.dataset.person;primary.periodFocusArea=t.dataset.area;renderPrimary();$('primary-who-where-detail')?.scrollIntoView({behavior:'smooth',block:'nearest'});},
   'primary-contributor-tab':(_e,t)=>{primary.contributorTab=t.dataset.tab;if(primary.contributorTab==='compare'&&!primary.compareB)primary.compareB=perspectiveIndex.groups.find(g=>g.id!==primary.contributorFocus)?.id||null;renderPrimary();},
   'primary-co-release-partner':(_e,t)=>{primary.coReleasePartner=t.dataset.person;primary.contributorTab='together';renderPrimary();$('primary-co-release-detail')?.scrollIntoView({behavior:'smooth',block:'nearest'});},
   'primary-open-co-release-pair':(_e,t)=>{goPrimary('contributors',{contributorFocus:t.dataset.first,coReleasePartner:t.dataset.second,contributorTab:'together'},{scroll:false});$('primary-co-release-detail')?.scrollIntoView({behavior:'smooth',block:'nearest'});},
   'primary-open-month':(_e,t)=>{
     const [y,m]=t.dataset.month.split('-').map(Number),to=new Date(Date.UTC(y,m,0)).toISOString().slice(0,10);
-    goPrimary('rhythm',{periodFrom:`${y}-${String(m).padStart(2,'0')}-01`,periodTo:to,periodPreset:'custom'});
+    setScope({from:`${y}-${String(m).padStart(2,'0')}-01`,to},'rhythm');
   },
-  'primary-open-year':(_e,t)=>goPrimary('rhythm',{periodFrom:`${t.dataset.year}-01-01`,periodTo:`${t.dataset.year}-12-31`,periodPreset:'custom'}),
-  'primary-person-period':(_e,t)=>{const window=windowOf(perspectiveIndex,30);goPrimary('rhythm',{periodFrom:window.from,periodTo:window.to,periodPreset:'30',periodSelectedId:t.dataset.person});},
+  'primary-open-year':(_e,t)=>setScope({from:`${t.dataset.year}-01-01`,to:`${t.dataset.year}-12-31`},'rhythm'),
+  'primary-person-period':(_e,t)=>{const window=windowOf(perspectiveIndex,30);setScope({from:window.from,to:window.to,people:[t.dataset.person]},'rhythm');},
   'primary-open-rhythm':async()=>{state.rhythmFocus=primary.contributorFocus;await switchExperience('rhythm',{target:'rhythm-heading'});if(evidenceRendered.keys.has('rhythm'))renderRhythm(analysis);},
   'primary-evidence-person':async(_e,t)=>{state.rhythmFocus=t.dataset.person;await switchExperience('contributors',{target:'ranking-heading'});},
   'primary-evidence-release':async(_e,t)=>storyOpenEvidence('impact-explorer',t.dataset.hash),
-  'primary-copy-briefing':()=>{
+  'toggle-scope':()=>{
+    const open=$('scope-panel').hidden;
+    $('scope-panel').hidden=!open;$('scope-toggle').setAttribute('aria-expanded',String(open));
+    $('scope-toggle').textContent=open?'Done':'Edit scope';
+  },
+  'summarise-scope':()=>{
     const text=periodBriefingForUi(perspectiveIndex,primary);
     if(!text)return;
-    const status=$('primary-copy-status');
-    if(!navigator.clipboard?.writeText){
-      if(status)status.textContent='Clipboard is unavailable in this browser; use a localhost HTTP server or select the briefing below.';
-      let fallback=$('primary-briefing-fallback');
-      if(!fallback && status){fallback=document.createElement('textarea');fallback.id='primary-briefing-fallback';fallback.className='primary-briefing-fallback';fallback.setAttribute('aria-label','Period briefing to copy');status.after(fallback);}
-      if(fallback){fallback.value=text;fallback.select();}
-      return;
-    }
-    navigator.clipboard.writeText(text).then(()=>{if(status)status.textContent='Briefing copied';})
-      .catch(()=>{if(status)status.textContent='Clipboard blocked. Select the briefing below.';let fallback=$('primary-briefing-fallback');if(!fallback&&status){fallback=document.createElement('textarea');fallback.id='primary-briefing-fallback';fallback.className='primary-briefing-fallback';fallback.setAttribute('aria-label','Period briefing to copy');status.after(fallback);}if(fallback){fallback.value=text;fallback.select();}});
+    const status=$('scope-status');
+    const fallback=message=>{
+      status.textContent=message;
+      let area=$('scope-summary-fallback');
+      if(!area){area=document.createElement('textarea');area.id='scope-summary-fallback';area.className='primary-briefing-fallback';area.setAttribute('aria-label','Scope summary to copy');status.after(area);}
+      area.value=text;area.select();
+    };
+    if(!navigator.clipboard?.writeText){fallback('Clipboard is unavailable in this browser; select the summary below.');return;}
+    navigator.clipboard.writeText(text).then(()=>{status.textContent='Summary of this scope copied';$('scope-summary-fallback')?.remove();})
+      .catch(()=>fallback('Clipboard blocked. Select the summary below.'));
   },
   'story-perspective':(_event,target)=>{state.storyPerspective=target.dataset.storyPerspective;state.storyFindingId=null;state.storyMonth=null;state.storyShowAll=false;renderStories();document.querySelector(`[data-story-perspective=\"${state.storyPerspective}\"]`)?.focus({preventScroll:true});},
   'story-inspect':(_event,target)=>{
@@ -2999,20 +3035,16 @@ function handleDocumentChange(event) {
   }
   const primaryFields={
     'primary-release-type':'releaseType','primary-release-year':'releaseYear','primary-release-shape':'releaseShape','primary-release-footprint':'releaseFootprint','primary-cohort-by':'cohortBy',
-    'primary-period-from':'periodFrom','primary-period-to':'periodTo',
-    'primary-period-comparison':'periodComparison','primary-compare-from':'compareFrom','primary-compare-to':'compareTo',
     'primary-contributor-focus':'contributorFocus','primary-contributor-range':'contributorRange',
-    'primary-period-person':'periodSelectedId','primary-codebase-range':'codebaseRange',
+    'primary-codebase-range':'codebaseRange',
     'primary-compare-a':'contributorFocus','primary-compare-b':'compareB','primary-compare-c':'compareC',
     'primary-together-partner':'coReleasePartner','primary-together-sort':'coReleaseSort',
   };
   if(primaryFields[t.id]){
     const key=primaryFields[t.id];
     primary[key]=t.value||null;
-    if(t.id==='primary-period-from'||t.id==='primary-period-to'){primary.periodPreset='custom';primary.periodBucket=null;primary.periodFocusPerson=null;primary.periodFocusArea=null;}
-    if(t.id==='primary-period-person'){primary.periodBucket=null;primary.periodFocusPerson=null;primary.periodFocusArea=null;}
     if(['primary-release-type','primary-release-year','primary-release-shape','primary-release-footprint'].includes(t.id))primary.releasePage=0;
-    if(['primary-contributor-focus','primary-period-from','primary-period-to'].includes(t.id))routePushPending=true;
+    if(t.id==='primary-contributor-focus')routePushPending=true;
     if(t.id==='primary-contributor-focus'&&primary.compareB===primary.contributorFocus)primary.compareB=null;
     if(t.id==='primary-contributor-focus'&&primary.coReleasePartner===primary.contributorFocus)primary.coReleasePartner=null;
     renderPrimary();
@@ -3033,6 +3065,8 @@ function handleDocumentChange(event) {
     case 'identity-import-input':importIdentities(event);break;
     case 'period-select':updatePeriod(t.value);break;
     case 'date-from':case 'date-to':changeDate();break;
+    case 'scope-comparison':primary.periodComparison=t.value;updateControls();renderScope(analysis);renderPrimary();break;
+    case 'scope-compare-from':case 'scope-compare-to':primary.compareFrom=$('scope-compare-from').value||null;primary.compareTo=$('scope-compare-to').value||null;renderScope(analysis);renderPrimary();break;
     case 'filter-merges':state.includeMerges=t.checked;renderDashboard();break;
     case 'filter-reverts':state.includeReverts=t.checked;renderDashboard();break;
     case 'metric-select':state.metric=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;

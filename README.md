@@ -86,12 +86,29 @@ underneath:
 | --- | --- | --- |
 | **Releases** | What shipped? | Release landscape, cohorts, Browse releases, Release anatomy, Impact › Release detail and People & releases |
 | **People** | Who contributed? | Contributor portraits; summary, contribution side by side and momentum over time |
-| **Rhythm** | When, and how steadily? | The period view; the activity pulse; weekly, yearly and seasonal rhythms |
-| **Codebase** | Where in the code? | Released areas; Impact › Codebase reach and Change evolution; change sizes; hotspots |
+| **Rhythm** | When, and how steadily? | The scope unfolding over time; the activity pulse; weekly, yearly and seasonal rhythms |
+| **Codebase** | Where in the code? | Released areas; who changed what; Impact › Codebase reach and Change evolution; change sizes; hotspots |
 | **Deployments** | Where did it run? | Heroku environments and their relationship to tagged releases |
 | **Evidence** | The records | The contributor table (copyable as CSV) and recent commits |
 
 Old links to `?view=periods` open the Rhythm tab.
+
+**The scope bar** sits above every tab and says who and when the tab
+describes: the people, the dates (all imported dates, the latest 7, 14, 30,
+90, 365 or 730 days, a calendar year or any custom interval), what to
+**compare with** (the previous period of equal length, the same dates last
+year, other dates or nothing), the merge/revert policy and the measure.
+**Edit scope** opens the controls. Under the summary, four headline facts
+(authored commits, people authoring, release events and areas touched) show
+their change against the comparison window, and short observations note
+material changes; a comparison window that reaches outside the imported
+history is flagged and no change is claimed. **Summarise this scope** copies a
+traceable plain-text summary of the scope's activity, releases, areas,
+comparison and limitations. Links that open a month, a year, a release's
+surrounding fortnight or a person's recent period set the scope's dates (and,
+for a person, its people). The **Codebase** tab adds **Who changed what**, a
+zero-aware person × top-level area grid for the scope; select a cell to list
+its commits.
 
 - **Releases — start with releases.** A release landscape shows aligned
   calendar-bucket lanes for release counts, contributor appearances and codebase
@@ -105,19 +122,11 @@ Old links to `?view=periods` open the Rhythm tab.
   baseline tag is labelled non-incremental; releases with missing ancestry
   warn that their evidence may be incomplete. "Led release" is a distinct
   GitHub publisher/tagger role, not a claim about who authored its code.
-- **Rhythm — start with time.** Choose **7, 14, 30, 90 days, or any custom
-  inclusive interval**. Switch between an immediately preceding equal-duration
-  window, the same calendar period last year, a custom baseline or no
-  comparison. The **period unfolding** timeline aligns authored commits,
-  distinct contributors and tagged-release events at daily, weekly or monthly
-  resolution. Select a time bucket to examine the exact recorded commits and
-  releases. A zero-aware **contributor × top-level code area** matrix reveals
-  who touched what; select a cell to inspect its commits, or follow a person,
-  area or release. Short, supported period observations explain actual
-  differences and explicitly flag incomplete comparison coverage. GitHub
-  release notes provide *recorded* purpose, not invented motivation. Copy a
-  traceable **Period Briefing** including scope, activity, released events,
-  components, comparison and limitations.
+- **Rhythm — start with time.** **The scope, unfolding** aligns the scope's
+  authored commits, distinct contributors and tagged-release events at daily,
+  weekly or monthly resolution. Select a time bucket to examine the exact
+  recorded commits and releases. The activity pulse and weekly, yearly and
+  seasonal rhythms follow.
 - **People — start with a person.** Select any **reconciled** contributor
   (all their merged author emails), then explore their **Delivery / Together / Focus /
   Behaviour / Evolution / Compare** views. The release portfolio distinguishes

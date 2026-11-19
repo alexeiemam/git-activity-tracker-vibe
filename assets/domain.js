@@ -273,7 +273,7 @@ export function periodForPreset(commits, preset = 'all', bounds = null) {
   // Commit-only analysis continues using authored dates by default.
   const { min, max } = bounds ?? getDateBounds(commits);
   if (!min || !max) return { start: null, end: null };
-  if (preset === '90d' || preset === '365d' || preset === '730d') {
+  if (/^(7|14|30|90|365|730)d$/.test(preset)) {
     const days = Number(preset.slice(0, -1));
     return { start: dateAtDay(dayNumber(max) - days + 1), end: max };
   }

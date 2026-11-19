@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {buildAnalysis,parseGitHistory,dayNumber,dateAtDay} from '../assets/domain.js';
 import {impactAnalysis} from '../assets/impact.js';
 import {buildEvidenceIndex,comparisonWindow,windowOf,periodDigest,contributorPortrait,releaseLandscape,releaseDetails,codebasePortrait,briefingText} from '../assets/perspectives.js';
-import {renderPrimaryExplorer,periodBriefingForUi} from '../assets/perspective-view.js';
+import {renderPrimaryExplorer,periodBriefingForUi,scopeHeadline} from '../assets/perspective-view.js';
 
 const h=ch=>ch.repeat(40);
 const tagged=(tag,hash,date)=>`TAG|${tag}||${hash}|commit|${date}T12:00:00Z`;
@@ -77,9 +77,9 @@ test('comparison outside imported history is marked non-comparable, not inferred
  const digest=periodDigest(index,{from:'2025-01-09',to:'2025-01-13'},{comparison:'previous'});
  assert.equal(digest.comparisonComparable,false);
  assert.equal(digest.comparison.summary.commits,0);
- const rendered=renderPrimaryExplorer(index,ui({mode:'rhythm',periodFrom:'2025-01-09',periodTo:'2025-01-13'}));
- assert.match(rendered,/beyond imported history/);
- assert.doesNotMatch(rendered,/No material multi-signal change/);
+ const headline=scopeHeadline(index,ui({mode:'rhythm',periodFrom:'2025-01-09',periodTo:'2025-01-13',periodComparison:'previous'}));
+ assert.match(headline,/beyond imported history/);
+ assert.doesNotMatch(headline,/primary-delta/,'no change is claimed against unobserved dates');
 });
 
 test('contributor portrait reconciles identities and separates authored time from delivery',()=>{
@@ -144,7 +144,8 @@ test('primary asset integration keeps release models in the analysis worker',()=
  assert.match(worker,/cachedPrimaryKey/);
  assert.match(app,/renderPrimaryExplorer\(perspectiveIndex,primary\)/);
  for(const name of ['observatory','rhythm','contributors','codebase','deployments','evidence'])assert.match(html,new RegExp(`data-experience="${name}"`));
- assert.match(html,/id="legacy-scope-details"/);
+ assert.match(html,/id="scope-bar"/);
+ assert.match(html,/id="scope-comparison"/,'the comparison window is part of the scope');
 });
 
 test('release landscape preserves empty intervals as true calendar gaps',()=>{
@@ -230,4 +231,21 @@ test('Together escapes untrusted contributor labels and limits initial rendered 
  assert.doesNotMatch(html,/<img src=x/);
  assert.match(html,/&lt;img src=x/);
  assert.match(html,/No shared release contributions|Shared releases/);
+});
+
+test('the scope headline shows changes against a comparison window inside the imported history',()=>{
+ const headline=scopeHeadline(index,ui({periodFrom:'2025-02-16',periodTo:'2025-02-28',periodComparison:'previous'}));
+ assert.match(headline,/Authored commits/);
+ assert.match(headline,/class="primary-delta">Previous: /);
+ assert.match(headline,/Compared with 3 Feb 2025 – 15 Feb 2025/);
+ assert.doesNotMatch(scopeHeadline(index,ui({periodFrom:'2025-02-16',periodTo:'2025-02-28',periodComparison:'none'})),/primary-delta/);
+});
+
+test('scope people narrow the Rhythm timeline and the codebase who-changed-what grid',()=>{
+ const scoped={...index,navigation:{...index.navigation,scope:{ids:['1']}}};
+ const everyone=renderPrimaryExplorer(index,ui({mode:'codebase',periodFrom:'2025-01-09',periodTo:'2025-03-04'}));
+ const one=renderPrimaryExplorer(scoped,ui({mode:'codebase',periodFrom:'2025-01-09',periodTo:'2025-03-04'}));
+ assert.match(everyone,/Who changed what/);
+ assert.ok((everyone.match(/data-action="primary-period-cell"/g)||[]).length>(one.match(/data-action="primary-period-cell"/g)||[]).length);
+ assert.match(renderPrimaryExplorer(scoped,ui({mode:'rhythm'})),/The scope, unfolding/);
 });

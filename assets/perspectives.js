@@ -356,7 +356,7 @@ export function codebasePortrait(index,window,selectedArea=null) {
 export function briefingText(index,digest) {
   if(!digest)return '';
   const {window,summary,events,comparison}=digest;
-  const lines=[`git:signals — Period briefing (${window.from} to ${window.to})`,
+  const lines=[`git:signals — Scope summary (${window.from} to ${window.to})`,
     `Authored: ${summary.commits} matching commits, ${summary.people.length} contributors, ${summary.activeDays} calendar dates with authored activity.`,
     `Delivery: ${events.releases} tagged release events, ${events.drivers} matched release publishers. Release contents are untrimmed by author dates.`,
     `Codebase: ${summary.areas.length} top-level areas, ${summary.distinctPaths} distinct paths, ${summary.fileTouches} file touches.`,
