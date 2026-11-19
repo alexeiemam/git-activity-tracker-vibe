@@ -7,10 +7,10 @@
  * selected-cohort peer comparisons reveal sustained, unusually high levels.
  * No score is a measure of work hours, output quality or individual performance.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=velocity-20261119-1';
-import {dailyEvidence} from './momentum.js?v=velocity-20261119-1';
-import {temporalActivityByPerson,emptyTemporalDay,temporalOptions} from './temporal-activity.js?v=velocity-20261119-1';
-import {scheduleById,countAgainstSchedule} from './working-patterns.js?v=velocity-20261119-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=daysoff-20261119-1';
+import {dailyEvidence} from './momentum.js?v=daysoff-20261119-1';
+import {temporalActivityByPerson,emptyTemporalDay,temporalOptions} from './temporal-activity.js?v=daysoff-20261119-1';
+import {scheduleById,countAgainstSchedule} from './working-patterns.js?v=daysoff-20261119-1';
 
 export const LEVEL_WINDOWS = Object.freeze([5,10,20]);
 export const DEFAULT_LEVEL_WINDOW = 10;
@@ -83,7 +83,7 @@ export function contributionLevelMatrix(index,contributors,window,options={}) {
   const rows=[],byId=new Map();
   if(valid) for(const person of contributors||[]) {
     const source=activity.get(String(person.id))||new Map(),clocks=timing.get(String(person.id));
-    const schedule=scheduleById(options.workingDaysById,person.id,person.workingDays);
+    const schedule=scheduleById(options.workingDaysById,person.id,person.workingDays,person.leave);
     const daily=new Map(),months=new Map(),rolling=[],covered=[];
     let total=0,days=0,commits=0,churn=0,releaseLines=0,latestWindow=null,working=0;
     // Include earlier evidence for the trailing working-day pace, even when

@@ -9,8 +9,8 @@
  * Days, identities and merge/revert inclusion come from the full-history,
  * policy-filtered evidence index. Display windows do not trim earlier context.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=velocity-20261119-1';
-import {scheduleById,countAgainstSchedule} from './working-patterns.js?v=velocity-20261119-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=daysoff-20261119-1';
+import {scheduleById,countAgainstSchedule} from './working-patterns.js?v=daysoff-20261119-1';
 
 export const TEMPORAL_PERIODS = Object.freeze([60,90,120]);
 export const TEMPORAL_PERIOD_DEFAULT = 90;
@@ -146,7 +146,7 @@ export function temporalActivitySummary(index,contributors,window,options={}) {
   const observed=validDate(bounds.min)&&validDate(bounds.max)&&Array.isArray(index?.activity);
   const rows=[],byId=new Map();
   if(valid)for(const person of contributors||[]) {
-    const id=String(person.id),schedule=scheduleById(options.workingDaysById,id,person.workingDays);
+    const id=String(person.id),schedule=scheduleById(options.workingDaysById,id,person.workingDays,person.leave);
     const days=grouped.get(id)||new Map(),entries=[];
     let activeDays=0,daysWithClock=0,daysWithMeasuredSpan=0,spanSum=0,activePeriodSum=0,distributionSum=0,distributionCount=0;
     for(let day=dayNumber(start),last=dayNumber(end);day<=last;day++){

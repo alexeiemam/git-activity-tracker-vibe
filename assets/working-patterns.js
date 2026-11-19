@@ -23,16 +23,41 @@ export const EVERY_DAY=Object.freeze([0,1,2,3,4,5,6]);
 /**
  * How an identity's days are measured: their working days, or every day when
  * none are set (so their work is still measured, never left out). `noneSet`
- * lets summaries say so plainly.
+ * lets summaries say so plainly. With leave, that identity's bank holidays and
+ * other days off are days off too, in every view; leave left out means none
+ * (the app always passes it, so the defaults are explicit there).
+ * `isExpectedDay` follows the pattern alone: no working days, nothing expected.
  */
-export function scheduleFor(days) {
+export function scheduleFor(days,leave) {
   const pattern=normalizeWorkingDays(days),measured=pattern.length?pattern:[...EVERY_DAY];
-  return {pattern,measured,noneSet:!pattern.length,
-    isWorkingDay:date=>measured.includes(new Date(`${date}T12:00:00Z`).getUTCDay())};
+  const weekday=date=>new Date(`${date}T12:00:00Z`).getUTCDay();
+  const closed=leaveDays(leave);
+  const offReason=date=>closed?.(date)||(measured.includes(weekday(date))?null:'non-working day');
+  return {pattern,measured,noneSet:!pattern.length,offReason,
+    isWorkingDay:date=>measured.includes(weekday(date))&&!closed?.(date),
+    isExpectedDay:date=>pattern.includes(weekday(date))&&!closed?.(date)};
 }
-/** Each identity's schedule from a `{id: workingDays}` map, falling back to their own pattern. */
-export function scheduleById(workingDaysById={},id,fallback) {
-  return scheduleFor(Object.hasOwn(workingDaysById||{},String(id))?workingDaysById[String(id)]:fallback);
+/**
+ * Each identity's schedule from a `{id: workingDays}` or
+ * `{id: {workingDays, leave}}` map, falling back to their own settings.
+ */
+export function scheduleById(workingDaysById={},id,fallback,fallbackLeave) {
+  const value=Object.hasOwn(workingDaysById||{},String(id))?workingDaysById[String(id)]:undefined;
+  if(Array.isArray(value))return scheduleFor(value,fallbackLeave);
+  if(value&&typeof value==='object')return scheduleFor(value.workingDays,value.leave);
+  return scheduleFor(fallback,fallbackLeave);
+}
+/** A lookup naming why a date is a day off under some leave ('bank holiday', 'day off'), or null without leave. */
+function leaveDays(leave) {
+  if(!leave)return null;
+  const {bankHolidays,extraDays}=normalizeLeave(leave),extra=new Set(extraDays),years=new Map();
+  if(!bankHolidays.length&&!extra.size)return null;
+  return date=>{
+    if(extra.has(date))return 'day off';
+    const year=Number(date.slice(0,4));
+    if(!years.has(year))years.set(year,bankHolidayDates(year,bankHolidays));
+    return years.get(year).has(date)?'bank holiday':null;
+  };
 }
 
 /**
@@ -214,7 +239,8 @@ export function workedDaysBalance(index,contributors,window,{workingDaysById={},
     years.push({year:y,from:start,to:end});
   }
   const rows=(contributors||[]).map(person=>{
-    const id=String(person.id),schedule=scheduleById(workingDaysById,id,person.workingDays);
+    // Bank holidays and other days off are counted separately here, so measure against the weekly pattern alone.
+    const id=String(person.id),schedule=scheduleFor(scheduleById(workingDaysById,id,person.workingDays).pattern);
     const leave=normalizeLeave(Object.hasOwn(leaveById,id)?leaveById[id]:person.leave);
     const dates=active.get(id)||new Set(),sorted=[...dates].sort();
     const first=sorted[0]||null,last=sorted[sorted.length-1]||null;

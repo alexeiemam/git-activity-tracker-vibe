@@ -4,9 +4,9 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=velocity-20261119-1';
-import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=velocity-20261119-1';
-import { scheduleFor } from './working-patterns.js?v=velocity-20261119-1';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=daysoff-20261119-1';
+import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=daysoff-20261119-1';
+import { scheduleFor } from './working-patterns.js?v=daysoff-20261119-1';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },
@@ -346,7 +346,7 @@ function contributorStats(group, commits) {
   const areas = new Map();
   let timedCommits = 0;
   // Work on the identity's non-working days is counted, never dropped; with no working days set, none are "off".
-  const schedule = scheduleFor(group.workingDays);
+  const schedule = scheduleFor(group.workingDays, group.leave);
   const offDay = date => !schedule.noneSet && !schedule.isWorkingDay(date);
   let offDayCommits = 0;
   let timedOffDayCommits = 0;
@@ -396,6 +396,7 @@ function contributorStats(group, commits) {
     timedCommits,
     // Plain data: analysis is posted back from a worker, which cannot carry functions.
     workingDays: schedule.pattern,
+    leave: group.leave,
     offDayCommits,
     timedOffDayCommits,
     areas,
@@ -517,7 +518,7 @@ export function offDayShare(view, commits) {
   let counted = 0, off = 0;
   const schedules = new Map();
   const scheduleOf = id => {
-    if (!schedules.has(id)) { const person = view.byId.get(id); schedules.set(id, person ? scheduleFor(person.workingDays) : null); }
+    if (!schedules.has(id)) { const person = view.byId.get(id); schedules.set(id, person ? scheduleFor(person.workingDays, person.leave) : null); }
     return schedules.get(id);
   };
   for (const commit of commits || []) {

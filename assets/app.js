@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=velocity-20261119-1';
-import { generateDemoLog } from './demo-data.js?v=velocity-20261119-1';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=velocity-20261119-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=velocity-20261119-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=velocity-20261119-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=velocity-20261119-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=velocity-20261119-1';
-import { releaseScorecard } from './release-scorecard.js?v=velocity-20261119-1';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=velocity-20261119-1';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=velocity-20261119-1';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=velocity-20261119-1';
-import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=velocity-20261119-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=velocity-20261119-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=velocity-20261119-1';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=velocity-20261119-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=velocity-20261119-1';
-import { buildStoryAnalysis } from './stories.js?v=velocity-20261119-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=velocity-20261119-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=velocity-20261119-1';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=velocity-20261119-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=velocity-20261119-1';
-import { downloadFilename } from './download-names.js?v=velocity-20261119-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=velocity-20261119-1';
-import { buildDeploymentIndex } from './deployments.js?v=velocity-20261119-1';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=velocity-20261119-1';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=velocity-20261119-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=velocity-20261119-1';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=velocity-20261119-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=velocity-20261119-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=velocity-20261119-1';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=velocity-20261119-1';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=velocity-20261119-1';
+} from './domain.js?v=daysoff-20261119-1';
+import { generateDemoLog } from './demo-data.js?v=daysoff-20261119-1';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=daysoff-20261119-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=daysoff-20261119-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=daysoff-20261119-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=daysoff-20261119-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=daysoff-20261119-1';
+import { releaseScorecard } from './release-scorecard.js?v=daysoff-20261119-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=daysoff-20261119-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=daysoff-20261119-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=daysoff-20261119-1';
+import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=daysoff-20261119-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=daysoff-20261119-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=daysoff-20261119-1';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=daysoff-20261119-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=daysoff-20261119-1';
+import { buildStoryAnalysis } from './stories.js?v=daysoff-20261119-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=daysoff-20261119-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=daysoff-20261119-1';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=daysoff-20261119-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=daysoff-20261119-1';
+import { downloadFilename } from './download-names.js?v=daysoff-20261119-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=daysoff-20261119-1';
+import { buildDeploymentIndex } from './deployments.js?v=daysoff-20261119-1';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=daysoff-20261119-1';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=daysoff-20261119-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=daysoff-20261119-1';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=daysoff-20261119-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=daysoff-20261119-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=daysoff-20261119-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=daysoff-20261119-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=daysoff-20261119-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=velocity-20261119-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=daysoff-20261119-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -505,8 +505,8 @@ function renderWorkingPatterns(view) {
   const rows=mergeGroups.map((group,index)=>({group,index})).filter(({index})=>shown.has(String(index)));
   editor.innerHTML=rows.length?rows.map(({group,index})=>`<div class="continuity-pattern-row"><div><strong>${esc(group.displayName)}</strong><small>${esc(workingPatternLabel(group.workingDays))} · ${esc(leaveLabel(group.leave))}</small></div>${patternControls(group,index)}</div>`).join(''):'<p>Select a contributor in the filters to set a working-day pattern.</p>';
 }
-/** Each identity's working days, keyed by contributor id, for every model that measures against them. */
-const workingDaysById=()=>Object.fromEntries(mergeGroups.map((g,i)=>[String(i),normalizeWorkingDays(g.workingDays)]));
+/** Each identity's working days and leave, keyed by contributor id, for every model that measures against them. */
+const workingDaysById=()=>Object.fromEntries(mergeGroups.map((g,i)=>[String(i),groupSettings(g)]));
 /** Yearly leave feeds the worked-days balance; the inputs re-render with the dashboard. */
 function updateLeave(input) {
   const index=Number(input.dataset.group),group=mergeGroups[index];if(!group)return;
@@ -1639,6 +1639,8 @@ function dailyPulseMonths(view) {
   return markers;
 }
 
+/** Why a date is off for this person: a bank holiday, another day off, or outside their working days. */
+const offNote=(schedule,day,name)=>({'bank holiday':`A bank holiday for ${name}`,'day off':`A day off for ${name}`})[schedule.offReason(day)]||`Not one of ${name}'s working days`;
 /** One key for every daily lens: each person's days off recede; work on them is ringed. */
 const pulseOffdayKey=(unscored=false)=>`<span class="pulse-offday-key"><span><i class="pulse-offday" aria-hidden="true"></i>day off</span><span><i class="pulse-offday has-work" aria-hidden="true"></i>worked on a day off${unscored?' · counted, not scored':''}</span></span>`;
 function renderDailyPulse(view) {
@@ -1667,7 +1669,7 @@ function renderDailyPulse(view) {
       const offDay=levelMode?cell?.reason==='scored'&&cell.weekday===false:signalMode?cell?.reason==='non-working-day':!schedule.isWorkingDay(day);
       const offWork=offDay&&(scoredOff?value>0:cell.commits>0);
       const cellStyle=offDay?(offWork?(!scoredOff?`--offday-work:${Math.round(100*Math.min(1,.3+.7*cell.commits/state.pulseBusyDay))}%`:(signalStyle||((v)=>intensityStyle(v,scale)))(value)):''):signalStyle?signalStyle(value):intensityStyle(value,scale);
-      return `<button type="button" class="pulse-cell pulse-daily-cell ${offDay?`pulse-offday${offWork?' has-work':''}${offWork&&!scoredOff?' is-unscored':''}`:''} ${levelMode?'pulse-velocity-cell pulse-velocity-day':''}" style="${cellStyle}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(offDay&&scoredOff?`${label} Not one of ${c.displayName}'s working days.`:label)}" aria-label="${esc(offDay&&scoredOff?`${label} Not one of ${c.displayName}'s working days`:label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover"></button>`;
+      return `<button type="button" class="pulse-cell pulse-daily-cell ${offDay?`pulse-offday${offWork?' has-work':''}${offWork&&!scoredOff?' is-unscored':''}`:''} ${levelMode?'pulse-velocity-cell pulse-velocity-day':''}" style="${cellStyle}" data-action="pulse-day" data-pulse-day="${day}" data-person-id="${esc(c.id)}" title="${esc(offDay&&scoredOff?`${label} ${offNote(schedule,day,c.displayName)}.`:label)}" aria-label="${esc(offDay&&scoredOff?`${label} ${offNote(schedule,day,c.displayName)}`:label)}. View day evidence" aria-haspopup="dialog" aria-controls="pulse-popover"></button>`;
     })).join('');
     return `<div class="pulse-daily-contributor"><div class="pulse-daily-person" title="${esc(c.displayName)}" style="${style(c.id)}"><i class="person-dot" aria-hidden="true"></i><span>${esc(c.displayName)}</span></div><div class="pulse-weekdays">${weekdays}</div><div class="pulse-day-cells" style="grid-template-columns:${weekColumns}">${cells}</div></div>`;
   }).join('');

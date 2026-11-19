@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {continuityMatrix} from '../assets/continuity.js';
 import {normalizeWorkingDays,workingPatternLabel,isScheduledDay,
-  continuityScheduleStatus,continuityCountBalance,missingDayColour,extraDayColour,normalizeLeave,bankHolidayDates,workedDaysBalance} from '../assets/working-patterns.js';
+  continuityScheduleStatus,continuityCountBalance,missingDayColour,extraDayColour,normalizeLeave,bankHolidayDates,workedDaysBalance,scheduleFor,scheduleById} from '../assets/working-patterns.js';
 import {buildIdentityConfig,parseIdentityConfig,applyIdentityConfig} from '../assets/identity-config.js';
 const person={id:'0',displayName:'Contributor'};
+const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
 const fullWeek={from:'2026-10-05',to:'2026-10-11'};
 const dates=['2026-10-05','2026-10-06','2026-10-07','2026-10-08','2026-10-09','2026-10-10','2026-10-11'];
 const commit=date=>({groupId:'0',date,files:[{path:'app.rb',added:30,deleted:0}]});
@@ -270,4 +271,26 @@ test('a person is only measured between their first and last recorded commit',()
   assert.equal(row.total.holidays,12.1,'half a year of holiday');
   assert.equal(row.total.bankHolidays,3,'August Bank Holiday, Christmas and Boxing Day');
   assert.equal(row.total.expected,row.years[1].expected);
+});
+
+test('bank holidays and other days off are days off in every schedule',()=>{
+  const leave={holidays:24,bankHolidays:['christmas','boxing'],extraDays:['2025-06-05']};
+  const s=scheduleFor([1,2,3,4],leave);
+  assert.equal(s.isWorkingDay('2025-12-25'),false,'Christmas Thursday');
+  assert.equal(s.offReason('2025-12-25'),'bank holiday');
+  assert.equal(s.isWorkingDay('2025-06-05'),false);
+  assert.equal(s.offReason('2025-06-05'),'day off');
+  assert.equal(s.offReason('2025-12-26'),'bank holiday','named even when it falls on a Friday outside Mon–Thu');
+  assert.equal(s.offReason('2025-12-27'),'non-working day');
+  assert.equal(s.isWorkingDay('2025-12-24'),true);
+  assert.equal(scheduleFor([1,2,3,4]).isWorkingDay('2025-12-25'),true,'without leave nothing extra is off');
+  assert.equal(scheduleFor([],leave).isExpectedDay('2025-12-24'),false,'no working days, nothing expected');
+  assert.equal(scheduleFor([],leave).isWorkingDay('2025-12-25'),false,'measured every day, but not on a bank holiday');
+  const byMap=scheduleById({7:{workingDays:[1,2,3,4,5],leave}},'7');
+  assert.equal(byMap.isWorkingDay('2025-12-25'),false,'the app passes working days and leave together');
+  assert.equal(scheduleById({7:[1,2,3,4,5]},'7',undefined,leave).isWorkingDay('2025-12-25'),false,'a plain pattern keeps the person\'s own leave');
+  for(const file of ['momentum','release-gap','contribution-level','temporal-activity'])
+    assert.match(read(`../assets/${file}.js`),/person\.workingDays,\s*person\.leave\)/,`${file} measures against leave`);
+  assert.match(read('../assets/continuity.js'),/schedule\.isExpectedDay\(date\)/);
+  assert.match(read('../assets/app.js'),/const workingDaysById=\(\)=>Object\.fromEntries\(mergeGroups\.map\(\(g,i\)=>\[String\(i\),groupSettings\(g\)\]\)\)/);
 });

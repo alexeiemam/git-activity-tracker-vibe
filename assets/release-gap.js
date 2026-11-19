@@ -11,10 +11,10 @@
  * This is NOT a rating of people or performance. Line counts miss pairing,
  * reviews, binary work, and many other kinds of contribution.
  */
-import { dayNumber, dateAtDay, validDate } from './domain.js?v=velocity-20261119-1';
-import { nonVersionChurn, temporalActivityByPerson, emptyTemporalDay, MAX_GAP_DISTRIBUTION_RELIEF, temporalOptions } from './temporal-activity.js?v=velocity-20261119-1';
-import { scheduleById } from './working-patterns.js?v=velocity-20261119-1';
-export { nonVersionChurn } from './temporal-activity.js?v=velocity-20261119-1';
+import { dayNumber, dateAtDay, validDate } from './domain.js?v=daysoff-20261119-1';
+import { nonVersionChurn, temporalActivityByPerson, emptyTemporalDay, MAX_GAP_DISTRIBUTION_RELIEF, temporalOptions } from './temporal-activity.js?v=daysoff-20261119-1';
+import { scheduleById } from './working-patterns.js?v=daysoff-20261119-1';
+export { nonVersionChurn } from './temporal-activity.js?v=daysoff-20261119-1';
 
 export const GAP_HORIZONS = Object.freeze([30, 60, 90]);
 export const BUSY_DAY_THRESHOLDS = Object.freeze([2, 4, 6]);
@@ -117,7 +117,7 @@ export function releaseGapMatrix(index, contributors, window, options = {}) {
   const byId = new Map();
   if (valid) for (const person of contributors || []) {
     // Quiet days only raise attention on the identity's working days (every day when none are set).
-    const schedule = scheduleById(options.workingDaysById, person.id, person.workingDays);
+    const schedule = scheduleById(options.workingDaysById, person.id, person.workingDays, person.leave);
     const events = releasesById.get(String(person.id)) || [];
     const daily = new Map(), months = new Map();
     const authored = person.daily?.commits || {};

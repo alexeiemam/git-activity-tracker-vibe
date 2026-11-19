@@ -10,9 +10,9 @@
  * dates and release-event dates are intentionally never conflated. Import
  * bounds, missing tags and incomplete release ancestry stay visible.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=velocity-20261119-1';
-import {dailyEvidence} from './momentum.js?v=velocity-20261119-1';
-import {normalizeWorkingDays,isScheduledDay,continuityScheduleStatus,continuityCountBalance} from './working-patterns.js?v=velocity-20261119-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=daysoff-20261119-1';
+import {dailyEvidence} from './momentum.js?v=daysoff-20261119-1';
+import {scheduleById,continuityScheduleStatus,continuityCountBalance} from './working-patterns.js?v=daysoff-20261119-1';
 
 export const CONTINUITY_WINDOWS=Object.freeze([8,12,20]);
 export const DEFAULT_CONTINUITY_WINDOW=20;
@@ -126,7 +126,8 @@ export function continuityMatrix(index,contributors,window,options={}) {
   const rows=[],byId=new Map();
   if(valid)for(const person of contributors||[]){
     const id=String(person.id);
-    const workingDays=normalizeWorkingDays(Object.hasOwn(patterns,id)?patterns[id]:person.workingDays);
+    // Expected days follow the weekly pattern, less this identity's bank holidays and other days off.
+    const schedule=scheduleById(patterns,id,person.workingDays,person.leave),workingDays=schedule.pattern;
     const authored=source.get(id)||new Map();
     const daily=new Map(),monthly=new Map(),weekly=new Map();
     // Monthly status sums the separate *calendar-week slices inside that month*
@@ -147,7 +148,7 @@ export function continuityMatrix(index,contributors,window,options={}) {
     for(let d=prefixFrom;d<=endingDay;d++){
       const date=dateAtDay(d);
       const observed=hasActivity&&date>=bounds.min&&date<=bounds.max;
-      const covered=observed&&isScheduledDay(date,workingDays);
+      const covered=observed&&schedule.isExpectedDay(date);
       const item=authored.get(date);
       const meaningful=observed&&(item?.churn||0)>=meaningfulLines;
       coveredPrefix.push(coveredPrefix.at(-1)+Number(covered));
@@ -206,7 +207,7 @@ export function continuityMatrix(index,contributors,window,options={}) {
       const release=releaseDays.get(date);
       const events=release?.members.get(id)||[];
       const rolling=rollingAt(d);
-      const workday=isScheduledDay(date,workingDays);
+      const workday=schedule.isExpectedDay(date);
       const meaningful=observed&&churn>=meaningfulLines;
       const item={date,observed,workday,calendarWeekend:[0,6].includes(new Date(`${date}T12:00:00Z`).getUTCDay()),
         expected:observed&&workday,missing:observed&&workday&&!meaningful,extra:observed&&!workday&&meaningful,

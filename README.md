@@ -130,7 +130,12 @@ Bank Holidays, Christmas Day and Boxing Day) and any **other days off** (one-off
 dates, such as a moved or extra bank holiday). "Use this leave for every
 identity" copies one identity's leave to all. Bank holidays are resolved to
 real dates each year, a weekend date moving to the next free weekday, and
-only those landing on the person's working days are taken off. A year's
+only those landing on the person's working days are taken off. Bank holidays and
+other days off are days off everywhere, not only here: every daily pulse
+lens shows them receding (hover says "A bank holiday for …"), Continuity
+does not expect a contribution on them, Momentum, Absolute velocity and the
+release gap treat them as non-working days, and work on them is ringed and
+always counts. A year's
 expected days are its working days inside the scope dates, between the
 person's first and last authored commit in the imported history, less those
 bank holidays, less the holiday entitlement scaled to the share of the year

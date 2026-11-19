@@ -11,10 +11,10 @@
  * Uses full-history, policy-filtered evidence. Selected date windows only
  * control what is displayed; they never remove the prior comparison period.
  */
-import { dayNumber, dateAtDay, validDate } from './domain.js?v=velocity-20261119-1';
-import { nonVersionChurn, releaseContributionCredit } from './release-gap.js?v=velocity-20261119-1';
-import { temporalActivityByPerson, emptyTemporalDay, temporalOptions } from './temporal-activity.js?v=velocity-20261119-1';
-import { scheduleById, countAgainstSchedule } from './working-patterns.js?v=velocity-20261119-1';
+import { dayNumber, dateAtDay, validDate } from './domain.js?v=daysoff-20261119-1';
+import { nonVersionChurn, releaseContributionCredit } from './release-gap.js?v=daysoff-20261119-1';
+import { temporalActivityByPerson, emptyTemporalDay, temporalOptions } from './temporal-activity.js?v=daysoff-20261119-1';
+import { scheduleById, countAgainstSchedule } from './working-patterns.js?v=daysoff-20261119-1';
 
 export const MOMENTUM_WINDOWS = Object.freeze([5,10,20]);
 export const DEFAULT_MOMENTUM_WINDOW = 10;
@@ -129,7 +129,7 @@ export function momentumMatrix(index,contributors,window,options={}) {
   if (valid) for (const person of contributors||[]) {
     const evidence=byDay.get(String(person.id))||new Map();
     const timing=temporalDays.get(String(person.id));
-    const schedule=scheduleById(options.workingDaysById,person.id,person.workingDays);
+    const schedule=scheduleById(options.workingDaysById,person.id,person.workingDays,person.leave);
     const daily=new Map(),months=new Map(),buffer=[];
     let sum=0,scoredDays=0,buildingDays=0,coolingDays=0,latest=null,working=0;
     const first=completeCoverage ? Math.min(dayNumber(start),dayNumber(coverageStart)) : dayNumber(start);
