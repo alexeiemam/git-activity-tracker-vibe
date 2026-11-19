@@ -1,7 +1,7 @@
 /** Bounded, browser-independent navigation state for the three primary perspectives. */
 export const primaryDefaults=()=>({
   mode:'observatory',cohortBy:'type',releaseHash:null,releaseType:'all',releaseYear:'all',releaseQuery:'',releasePage:0,releaseBin:null,
-  releaseShape:'all',releaseFootprint:'all',releaseBrowse:'list',fingerprintView:'arrival',shapeWeight:'count',shapeCompare:'on',
+  releaseView:'browse',releaseShape:'all',releaseFootprint:'all',releaseBrowse:'list',fingerprintView:'arrival',shapeWeight:'count',shapeCompare:'on',
   periodPreset:'14',periodFrom:null,periodTo:null,periodComparison:'previous',compareFrom:null,compareTo:null,
   periodBucket:null,periodSelectedId:null,periodFocusPerson:null,periodFocusArea:null,
   contributorFocus:null,contributorTab:'delivery',contributorRange:'all',compareB:null,compareC:null,
@@ -14,7 +14,7 @@ const accepted={
   releaseType:['all','major','minor','patch','prerelease','unclassified','divergent','baseline','same-version'],
   releaseShape:['all','hotfix','steady','long-tail','backlog','initial','unmeasured'],
   releaseFootprint:['all','focused','spread','cross-cutting','broad-sweep','initial','unmeasured'],
-  releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off'],
+  releaseView:['browse','overview'],releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off'],
   periodComparison:['none','previous','year','custom'],
   contributorTab:['delivery','together','focus','evolution','compare'],
   coReleaseSort:['shared','overlap'],

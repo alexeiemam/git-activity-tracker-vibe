@@ -2443,7 +2443,7 @@ function setExperienceVisibility() {
   const tab=state.viewMode;
   $('stories-view').hidden=tab==='evidence';
   const sections=[...document.querySelectorAll('#evidence-view [data-tabs]')];
-  for(const node of sections)node.hidden=!sectionTabs(node).includes(tab);
+  for(const node of sections)node.hidden=!sectionTabs(node).includes(evidenceTabOf(tab));
   $('evidence-view').hidden=!sections.some(node=>!node.hidden);
   for(const button of document.querySelectorAll('[data-experience]')){
     const active=button.dataset.experience===tab;
@@ -2504,7 +2504,9 @@ const EVIDENCE_STAGES=[
 ];
 let evidenceRendered={run:-1,keys:new Set()};
 const evidencePending=new Map();
-const stagesFor=tab=>EVIDENCE_STAGES.filter(stage=>stage.tabs.includes(tab));
+/** The detailed release charts belong to the Releases overview, not to browsing. */
+const evidenceTabOf=tab=>tab==='observatory'&&primary.releaseView!=='overview'?null:tab;
+const stagesFor=tab=>EVIDENCE_STAGES.filter(stage=>stage.tabs.includes(evidenceTabOf(tab)));
 const evidenceReady=(tab,run=renderGeneration)=>evidenceRendered.run===run&&stagesFor(tab).every(stage=>evidenceRendered.keys.has(stage.key));
 async function ensureEvidenceRendered(tab=state.viewMode,run=renderGeneration,generation=progressGeneration) {
   if(!analysis||evidenceReady(tab,run))return;
@@ -2805,25 +2807,28 @@ const ACTIONS={
   'deployment-select':(_e,t)=>{primary.deploymentFocus=t.dataset.deploymentId;routePushPending=true;renderPrimary();$('deployment-inspector')?.scrollIntoView({behavior:'smooth',block:'nearest'});},
   'deployment-page':(_e,t)=>{primary.deploymentPage=Math.max(0,Number(t.dataset.page)||0);primary.deploymentFocus=null;renderPrimary();},
   'primary-back':()=>window.history.back(),
-  'primary-open-release':(_e,t)=>{goPrimary('observatory',{releaseHash:t.dataset.hash,releaseType:'all',releaseYear:'all',releaseShape:'all',releaseFootprint:'all',releaseBin:null,releaseQuery:'',releasePage:0},{scroll:false});$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
-  'primary-select-release':(_e,t)=>{primary.releaseHash=t.dataset.hash;routePushPending=true;renderPrimary();$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
+  'primary-open-release':(_e,t)=>{goPrimary('observatory',{releaseView:'browse',releaseHash:t.dataset.hash,releaseType:'all',releaseYear:'all',releaseShape:'all',releaseFootprint:'all',releaseBin:null,releaseQuery:'',releasePage:0},{scroll:false});$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
+  'primary-select-release':(_e,t)=>{primary.releaseHash=t.dataset.hash;primary.releaseView='browse';routePushPending=true;renderPrimary();$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-open-person':(_e,t)=>goPrimary('contributors',{contributorFocus:t.dataset.person,contributorTab:'delivery',contributorRange:primary.mode==='rhythm'?'period':'all'}),
   'primary-open-area':(_e,t)=>goPrimary('codebase',{codeArea:t.dataset.area,codebaseRange:primary.mode==='rhythm'?'period':'all'}),
   'primary-select-area':(_e,t)=>{primary.codeArea=t.dataset.area;routePushPending=true;renderPrimary();},
   'primary-release-page':(_e,t)=>{primary.releasePage=Math.max(0,Number(t.dataset.page)||0);renderPrimary();},
   'primary-reset-release-search':()=>{Object.assign(primary,{releaseBin:null,releaseYear:'all',releaseType:'all',releaseShape:'all',releaseFootprint:'all',releaseQuery:'',releasePage:0});renderPrimary();},
-  'primary-shape-control':(_e,t)=>{
-    const options={releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off']};
+  'primary-toggle':(_e,t)=>{
+    const options={releaseView:['browse','overview'],releaseBrowse:['list','wait','footprint'],fingerprintView:['arrival','histogram'],shapeWeight:['count','lines'],shapeCompare:['on','off']};
     if(!options[t.dataset.key]?.includes(t.dataset.value))return;
-    primary[t.dataset.key]=t.dataset.value;renderPrimary();
+    primary[t.dataset.key]=t.dataset.value;
+    if(t.dataset.key==='releaseView'){routePushPending=true;setExperienceVisibility();}
+    renderPrimary();
+    if(t.dataset.key==='releaseView')showTabEvidence('observatory');
     // Re-rendering replaces the control; keep keyboard focus on the same choice (the compare switch flips its value).
-    const same=`[data-action="primary-shape-control"][data-key="${t.dataset.key}"]`;
+    const same=`[data-action="primary-toggle"][data-key="${t.dataset.key}"]`;
     (document.querySelector(`${same}[data-value="${t.dataset.value}"]`)||document.querySelector(same))?.focus({preventScroll:true});
   },
   'primary-open-shape':(_e,t)=>{
     // A shape badge opens every release side by side, filtered to that shape.
     const [filter,other]=t.dataset.browse==='footprint'?['releaseFootprint','releaseShape']:['releaseShape','releaseFootprint'];
-    Object.assign(primary,{releaseBrowse:t.dataset.browse==='footprint'?'footprint':'wait',[filter]:t.dataset.shape,[other]:'all',
+    Object.assign(primary,{releaseView:'browse',releaseBrowse:t.dataset.browse==='footprint'?'footprint':'wait',[filter]:t.dataset.shape,[other]:'all',
       releaseType:'all',releaseYear:'all',releaseBin:null,releaseQuery:'',releasePage:0});
     renderPrimary();
     const target=$('primary-browse-releases');target?.scrollIntoView({behavior:'smooth',block:'start'});target?.focus({preventScroll:true});
@@ -2835,8 +2840,8 @@ const ACTIONS={
     document.querySelector(`[data-action="primary-strip-release"][data-hash="${t.dataset.hash}"]`)?.focus({preventScroll:true});
   },
   'primary-reset-release-bin':()=>{primary.releaseBin=null;renderPrimary();},
-  'primary-filter-release-type':(_e,t)=>{primary.releaseType=t.dataset.type;primary.releasePage=0;renderPrimary();},
-  'primary-observatory-bin':(_e,t)=>{primary.releaseBin=t.dataset.bin;primary.releasePage=0;renderPrimary();$('primary-release-type')?.scrollIntoView({behavior:'smooth',block:'center'});},
+  'primary-filter-release-type':(_e,t)=>{Object.assign(primary,{releaseType:t.dataset.type,releasePage:0,releaseView:'browse',releaseBrowse:'list'});setExperienceVisibility();renderPrimary();$('primary-browse-releases')?.scrollIntoView({behavior:'smooth',block:'start'});},
+  'primary-observatory-bin':(_e,t)=>{Object.assign(primary,{releaseBin:t.dataset.bin,releasePage:0,releaseView:'browse',releaseBrowse:'list'});setExperienceVisibility();renderPrimary();$('primary-browse-releases')?.scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-release-period':(_e,t)=>{
     const date=t.dataset.date;if(!date)return;
     const at=dayNumber(date);

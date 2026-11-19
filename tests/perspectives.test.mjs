@@ -189,8 +189,8 @@ test('period inspection works when release events exist but no commits were auth
 });
 
 test('release cohort controls offer lead and year compositions without productivity scoring',()=>{
- const driver=renderPrimaryExplorer(index,ui({mode:'observatory',cohortBy:'driver'}));
- const years=renderPrimaryExplorer(index,ui({mode:'observatory',cohortBy:'year'}));
+ const driver=renderPrimaryExplorer(index,ui({mode:'observatory',releaseView:'overview',cohortBy:'driver'}));
+ const years=renderPrimaryExplorer(index,ui({mode:'observatory',releaseView:'overview',cohortBy:'year'}));
  assert.match(driver,/Group by/);
  assert.match(driver,/Lead unknown|Unmatched:/);
  assert.match(years,/2025/);
@@ -264,4 +264,16 @@ test('each tab has one reading guide instead of caveats repeated under every cha
  const html=renderPrimaryExplorer(index,ui({mode:'contributors'}));
  assert.doesNotMatch(html,/primary-footnote|Not a productivity ranking/);
  assert.doesNotMatch(html,/class="primary-eyebrow">DELIVERED CONTRIBUTIONS/,'cards carry one heading, not an eyebrow and a title');
+});
+
+test('Releases opens on the list beside the selected release; the overview holds the landscape',()=>{
+ const browse=renderPrimaryExplorer(index,ui({mode:'observatory'}));
+ assert.match(browse,/class="primary-release-browse"><div class="primary-release-sidebar"><div id="primary-browse-releases"/);
+ assert.match(browse,/<div class="primary-release-detail"><section class="primary-anatomy/);
+ assert.doesNotMatch(browse,/The release landscape/);
+ const strips=renderPrimaryExplorer(index,ui({mode:'observatory',releaseBrowse:'wait'}));
+ assert.doesNotMatch(strips,/primary-release-sidebar/,'strips need the full width');
+ const overview=renderPrimaryExplorer(index,ui({mode:'observatory',releaseView:'overview'}));
+ assert.match(overview,/The release landscape/);
+ assert.doesNotMatch(overview,/primary-anatomy/);
 });

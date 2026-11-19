@@ -84,7 +84,7 @@ underneath:
 
 | Tab | Question | Contents |
 | --- | --- | --- |
-| **Releases** | What shipped? | Release landscape, cohorts, Browse releases, Release anatomy, Impact › Release detail and People & releases |
+| **Releases** | What shipped? | **Browse releases** (the list beside the selected release's anatomy) and **Overview** (landscape, mix, cohorts, deployment evidence, release gaps, Impact › Release detail and People & releases) |
 | **People** | Who contributed? | Contributor portraits; summary, contribution side by side and momentum over time |
 | **Rhythm** | When, and how steadily? | The scope unfolding over time; the activity pulse; weekly, yearly and seasonal rhythms |
 | **Codebase** | Where in the code? | Released areas; who changed what; Impact › Codebase reach and Change evolution; change sizes |
@@ -117,7 +117,11 @@ zero-aware person × top-level area grid for the scope (with an **Everyone
 else** row when the scope is narrowed, replacing the old hotspots chart);
 select a cell to list its commits.
 
-- **Releases — start with releases.** A release landscape shows aligned
+- **Releases — start with releases.** The tab opens on **Browse releases**:
+  the filterable list stays in view beside the release it opens (the wait and
+  footprint strips take the full width above it). **Overview** holds the
+  landscape and the detailed release charts; selecting a time bucket or a
+  release kind there returns to the filtered list. A release landscape shows aligned
   calendar-bucket lanes for release counts, contributor appearances and codebase
   area occurrences. Empty buckets remain visible, so quiet delivery periods
   cannot disappear. Browse **all tagged releases**, search by tag, filter by
