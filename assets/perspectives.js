@@ -4,10 +4,10 @@
  * complete introduced Git ancestry (subject only to the explicitly declared
  * merge/revert policy); an authored period is a different observation clock.
  */
-import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=timeline-20261119-1';
-import { changeCategory, fileKind } from './impact.js?v=timeline-20261119-1';
-import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape } from './release-footprint.js?v=timeline-20261119-1';
-import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=timeline-20261119-1';
+import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=release-notes-20261119-1';
+import { changeCategory, fileKind } from './impact.js?v=release-notes-20261119-1';
+import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape } from './release-footprint.js?v=release-notes-20261119-1';
+import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=release-notes-20261119-1';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);

@@ -71,7 +71,7 @@ Open `http://localhost:8000` and choose **Explore demo dataset**, or use the gen
 
 **Large-history performance:** Git log parsing and full tag-ancestry/impact analysis run in a dedicated browser Web Worker. The top-right progress indicator reports parsing, contributor comparisons, release reconstruction (with a release count), and the stages of rendering; the page remains responsive while CPU-heavy calculations run. Release ancestry uses compact bitsets instead of repeatedly rebuilding large sets, and presentation-only changes reuse the computed evidence rather than rerunning Git analysis. A browser that cannot create module workers falls back to synchronous calculation with a visible progress notice; serving the app over HTTP as shown above is recommended. The dashboard's data never leaves the local browser. GitHub publisher and Heroku actor accounts appear as mergeable identities alongside Git author emails. Unique, well-supported matches are suggested automatically; ambiguous actors remain separate, manual merging takes precedence, and no provider account is counted as a Git author without an actual authored commit. Reopen the identity editor with **Review identities** on the dashboard. Legacy GitHub publisher overrides remain respected. These attribution choices are preserved by session export/import.
 
-No build, install, backend, API key, or CDN for the browser application is needed. The optional Google Fonts request can fall back to local fonts offline. The **capture command** calls an authenticated local GitHub CLI when installed; credentials are handled by `gh`, not by git:signals.
+No build, install, backend, API key, or CDN for the browser application is needed. The one third-party library, [marked](https://github.com/markedjs/marked) 12.0.2 (MIT), is vendored unmodified as `assets/vendor/marked.esm.js` to render release notes; it is served with the app, not fetched from a CDN. The optional Google Fonts request can fall back to local fonts offline. The **capture command** calls an authenticated local GitHub CLI when installed; credentials are handled by `gh`, not by git:signals.
 
 ## Four subjects, one app
 
@@ -148,7 +148,10 @@ control.
   Compare release cohorts by **SemVer transition, matched release lead or calendar year**. Select any release to open its **Release Anatomy**: complete Git-ancestry
   incremental commits, recorded contributors and their commit shares, the
   matched publisher/lead, changed code areas, commit-subject categories,
-  GitHub publication details and notes, and the underlying hashes. The initial
+  GitHub publication details and notes (rendered as GitHub-flavoured Markdown
+  inside a sandboxed frame: its own styles stay contained, no scripts run,
+  nothing is loaded, raw HTML shows as text, only http(s) and mailto links are
+  kept and images become links), and the underlying hashes. The initial
   baseline tag is labelled non-incremental; releases with missing ancestry
   warn that their evidence may be incomplete. "Led release" is a distinct
   GitHub publisher/tagger role, not a claim about who authored its code.

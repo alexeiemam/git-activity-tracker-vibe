@@ -793,7 +793,6 @@
 .primary-notes{margin:17px 0;border:1px solid #e0e8df;border-radius:9px;overflow:hidden}
 .primary-notes summary{cursor:pointer;padding:15px 17px;font:600 12px var(--font);background:#f7faf6}
 .primary-notes[open] summary{border-bottom:1px solid #e2eae1}
-.primary-notes-body{white-space:pre-wrap;overflow-wrap:anywhere;padding:17px;font:12px/1.75 var(--font);max-height:380px;overflow:auto}
 .primary-commit-list{max-height:330px;overflow:auto;padding:9px 14px}
 .primary-commit-list>div{display:grid;grid-template-columns:82px 90px minmax(100px,1fr) minmax(180px,2fr);gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid #e9efe8;font-size:11px;min-width:550px}
 .primary-commit-list code{font:11px var(--mono);color:#3a7655}.primary-commit-list span{overflow-wrap:anywhere}
@@ -1612,3 +1611,6 @@ button.primary-map-cell:focus-visible,.primary-map-top:focus-visible{outline:3px
 .impact-overview-window:hover{background:#489b6b44}
 .impact-overview-window:focus-visible{outline:3px solid #c2925d;outline-offset:1px}
 .impact-timeline-hint{color:#4f7a62}
+
+/* Published release notes, rendered as Markdown inside a sandboxed frame that keeps their styles contained. */
+.markdown-frame{display:block;width:100%;height:240px;border:0;background:#fffefa}

@@ -1,11 +1,12 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait } from './perspectives.js?v=timeline-20261119-1';
-import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=timeline-20261119-1';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, releaseFootprint, footprintArea, topOf, OTHER_FOLDERS } from './release-footprint.js?v=timeline-20261119-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=timeline-20261119-1';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=timeline-20261119-1';
-import { targetUrl } from './route-state.js?v=timeline-20261119-1';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=timeline-20261119-1';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait } from './perspectives.js?v=release-notes-20261119-1';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=release-notes-20261119-1';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, releaseFootprint, footprintArea, topOf, OTHER_FOLDERS } from './release-footprint.js?v=release-notes-20261119-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=release-notes-20261119-1';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=release-notes-20261119-1';
+import { targetUrl } from './route-state.js?v=release-notes-20261119-1';
+import { markdownFrame } from './markdown.js?v=release-notes-20261119-1';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=release-notes-20261119-1';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});
@@ -257,7 +258,7 @@ function releaseAnatomy(index,selectedHash,ui){
     <div class="primary-two-col"><div class="primary-inset"><h4>Who authored its changes?</h4>${people||empty('No matching included changes','Check the merge/revert policy and imported refs.')}${rows.length>12?`<p class="primary-muted">${rows.length-12} further contributors; use Explore Evidence for the full matrix.</p>`:''}<p class="primary-muted">Commit share uses the complete included release (under the stated commit policy). The lead role is independent.</p></div><div class="primary-inset"><h4>Where did they land?</h4>${areas.map(([name,count])=>`<div class="primary-area-row"><a href="${href(index,{view:'codebase',area:name})}" data-action="primary-open-area" data-area="${e(name)}">${e(name)}</a>${bar(count,maxArea)}<span>${f(count)}</span></div>`).join('')||'<p class="primary-muted">No files in this release.</p>'}<h4 class="primary-subtitle">Recorded change categories</h4><div class="primary-tags">${counts.map(([k,v])=>`<span>${e(k)} · ${f(v)}</span>`).join('')||'No categories recorded'}</div><p class="primary-muted">Categories are inferred from commit subjects, not verified intent.</p></div></div>
     ${releaseShapePanel(index,r,details,ui)}
     ${deploymentReleasePanel(index,r)}
-    ${r.github?.body?`<details class="primary-notes"><summary>Read published release notes</summary><div class="primary-notes-body">${e(r.github.body)}</div></details>`:''}
+    ${r.github?.body?`<details class="primary-notes"><summary>Read published release notes</summary>${markdownFrame(r.github.body,{title:`Release notes for ${r.tag}`})}</details>`:''}
     <details class="primary-notes"><summary>Inspect ${f(r.commits.length)} included commits (latest 40 shown)</summary><div class="primary-commit-list">${commits.map(c=>`<div><code>${e(c.hash.slice(0,8))}</code><span>${e(day(c.date))}</span>${whoButton(index,c.groupId)}<span class="primary-commit-subject">${e(c.subject)}</span></div>`).join('')||'<p>No matching commit detail in imported history.</p>'}</div></details>
     <div class="primary-card-footer"><a class="button soft" href="${href(index,{view:'rhythm',from:r.date?shiftDate(r.date,-6):null,to:r.date?shiftDate(r.date,7):null})}" data-action="primary-release-period" data-date="${e(r.date||'')}">Explore surrounding fortnight →</a><button type="button" class="button outline" data-action="primary-evidence-release" data-hash="${e(r.hash)}">See it on the timeline</button></div>
   </section>`;

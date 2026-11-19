@@ -9,9 +9,9 @@
  * Uses full-history, policy-filtered evidence. Selected date windows only
  * control what is displayed; they never remove the prior comparison period.
  */
-import { dayNumber, dateAtDay, validDate } from './domain.js?v=timeline-20261119-1';
-import { nonVersionChurn, releaseContributionCredit } from './release-gap.js?v=timeline-20261119-1';
-import { temporalActivityByPerson, emptyTemporalDay, temporalOptions } from './temporal-activity.js?v=timeline-20261119-1';
+import { dayNumber, dateAtDay, validDate } from './domain.js?v=release-notes-20261119-1';
+import { nonVersionChurn, releaseContributionCredit } from './release-gap.js?v=release-notes-20261119-1';
+import { temporalActivityByPerson, emptyTemporalDay, temporalOptions } from './temporal-activity.js?v=release-notes-20261119-1';
 
 export const MOMENTUM_WINDOWS = Object.freeze([5,10,20]);
 export const DEFAULT_MOMENTUM_WINDOW = 10;
