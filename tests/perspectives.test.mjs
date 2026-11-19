@@ -153,7 +153,10 @@ test('primary asset integration keeps release models in the analysis worker',()=
  assert.match(html,/id="scope-bar"/);
  assert.match(html,/id="scope-comparison"/,'the comparison window is part of the scope');
  assert.match(html,/id="people-measure" class="people-measure" data-tabs="contributors"/,'the measure sits with the People charts it drives');
- assert.match(html,/aria-labelledby="pulse-heading" data-tabs="rhythm contributors observatory"/,'each tab shows its own pulse lenses');
+ // The pulse appears on exactly the tabs that have pulse lenses.
+ const pulseTabs=html.match(/aria-labelledby="pulse-heading" data-tabs="([^"]+)"/)[1].split(' ').sort();
+ const lensTabs=[...app.match(/const PULSE_VIEWS=\{([\s\S]*?)\n\};/)[1].matchAll(/^  ([a-z]+):\{lenses:/gm)].map(m=>m[1]).sort();
+ assert.deepEqual(pulseTabs,lensTabs,'each tab with pulse lenses shows the pulse, and no other tab does');
  assert.match(html,/id="pulse-metric-select"/);
  assert.match(app,/rhythm:\{lenses:\['activity','continuity'\]/);
 });
