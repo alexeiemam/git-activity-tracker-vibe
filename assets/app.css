@@ -1624,10 +1624,10 @@ a.primary-map-top{display:block}
 
 /* "On this page": every section is shown in order; the bar under the tabs jumps between them. */
 .primary-section-nav{position:sticky;top:64px;z-index:15;display:flex;gap:6px;flex-wrap:wrap;margin:-6px 0 4px;padding:8px 0 10px;background:var(--bg);border-bottom:1px solid #e3e9e1}
-.primary-section-nav a{padding:6px 12px;border-radius:999px;border:1px solid #d6e3d8;background:#fffefa;color:#2f5e45;font:600 11px var(--mono);text-decoration:none}
-.primary-section-nav a:hover{background:#e8f3eb}
-.primary-section-nav a[aria-current="location"]{background:#1d3b2e;border-color:#1d3b2e;color:#fff}
-.primary-section-nav a:focus-visible{outline:3px solid #4f9a78;outline-offset:2px}
+.primary-section-nav>a{padding:6px 12px;border-radius:999px;border:1px solid #d6e3d8;background:#fffefa;color:#2f5e45;font:600 11px var(--mono);text-decoration:none}
+.primary-section-nav>a:hover{background:#e8f3eb}
+.primary-section-nav>a[aria-current="location"]{background:#1d3b2e;border-color:#1d3b2e;color:#fff}
+.primary-section-nav>a:focus-visible{outline:3px solid #4f9a78;outline-offset:2px}
 .primary-section-title{margin:30px 0 2px;font-size:26px;letter-spacing:-.02em;scroll-margin-top:124px}
 .primary-section-title:focus{outline:none}
 .primary-section-title+.primary-lede{margin-top:0}
@@ -1636,7 +1636,7 @@ a.primary-map-top{display:block}
 .primary-slot>.report-section{margin:14px 0 30px}
 .primary-slot>.stat-grid{margin:14px 0 10px}
 .primary-slot>.insight-strip{margin-bottom:24px}
-@media(max-width:720px){.primary-section-nav{top:56px;gap:4px}.primary-section-nav a{padding:5px 9px}}
+@media(max-width:720px){.primary-section-nav{top:56px;gap:4px}.primary-section-nav>a{padding:5px 9px}}
 
 /* Jump links inside a section (a portrait, the rhythm explorer): everything below is shown; these skip to a part. */
 .primary-jump-links{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
@@ -1723,3 +1723,12 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 .impact-flight.is-pinned{stroke:#173d2c;stroke-width:1.5}
 .primary-age-bar b.is-others,.primary-age-key.is-compare.is-others{background:#4d70a4}
 @media (forced-colors:active){.primary-age-bar b.is-others{background:Highlight}}
+/* Codebase: the path sits in the sticky bar, ahead of the section chips. */
+.primary-section-nav.has-lead{align-items:center}
+.primary-section-nav .primary-breadcrumb{flex:1 1 260px;min-width:0;margin-right:8px}
+.primary-section-nav .primary-breadcrumb ol{margin:0;row-gap:2px}
+.primary-section-nav .primary-breadcrumb a{color:#2f5e45;text-decoration:none;padding:2px 4px;border-radius:4px}
+.primary-section-nav .primary-breadcrumb a:hover{background:#e8f3eb;text-decoration:underline;text-underline-offset:3px}
+.primary-section-nav .primary-breadcrumb [aria-current]{padding:2px 4px;color:var(--ink)}
+.primary-contents-table tr.is-up th{padding-top:9px;padding-bottom:9px;font-weight:500}
+.primary-contents-table tr.is-up a{font:12px var(--mono);color:#2f5e45}

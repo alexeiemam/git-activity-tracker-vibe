@@ -1,13 +1,13 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=journey-20261119-1';
-import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=journey-20261119-1';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=journey-20261119-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=journey-20261119-1';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=journey-20261119-1';
-import { targetUrl } from './route-state.js?v=journey-20261119-1';
-import { markdownFrame } from './markdown.js?v=journey-20261119-1';
-import { workedDaysBalance, daysOffText } from './working-patterns.js?v=journey-20261119-1';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=journey-20261119-1';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=codetree-20261120-1';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=codetree-20261120-1';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=codetree-20261120-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=codetree-20261120-1';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=codetree-20261120-1';
+import { targetUrl } from './route-state.js?v=codetree-20261120-1';
+import { markdownFrame } from './markdown.js?v=codetree-20261120-1';
+import { workedDaysBalance, daysOffText } from './working-patterns.js?v=codetree-20261120-1';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=codetree-20261120-1';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});
@@ -330,7 +330,7 @@ const delta=(now,old,unit='')=>old==null?'':`<small class="primary-delta">Previo
 /** Where a detailed section (rendered by app.js) is placed in a view's reading order. */
 const slot=(name,attrs='')=>`<div class="primary-slot" data-slot="${name}"${attrs}></div>`;
 /** Every section of a page is shown in order; this "On this page" bar jumps to one. */
-const sectionNav=(label,items)=>`<nav class="primary-section-nav" aria-label="${e(label)}: jump to a section">${items.map(([id,text])=>`<a href="#${id}" data-action="primary-jump" data-target="${id}">${e(text)}</a>`).join('')}</nav>`;
+const sectionNav=(label,items,lead='')=>`<nav class="primary-section-nav${lead?' has-lead':''}" aria-label="${e(label)}: jump to a section">${lead}${items.map(([id,text])=>`<a href="#${id}" data-action="primary-jump" data-target="${id}">${e(text)}</a>`).join('')}</nav>`;
 const sectionHeading=(id,title,intro='')=>`<h2 class="primary-section-title" id="${id}" tabindex="-1">${e(title)}</h2>${intro?`<p class="primary-lede">${e(intro)}</p>`:''}`;
 
 /** The scope's people and dates, as set in the app's scope bar (all people when `ids` is null). */
@@ -507,7 +507,7 @@ function codebaseLocation(index,area){
 }
 function breadcrumb(index,folder,file){
   const steps=[['','repository'],...folderTrail(`${folder}x`).map(key=>[key,leafName(key)]),...(file?[[file,leafName(file)]]:[])];
-  return `<nav class="primary-breadcrumb" aria-label="Location in the codebase"><ol>${steps.map(([key,text],i)=>`<li>${i===steps.length-1?`<span aria-current="page">${e(text)}</span>`:areaLink(index,key,text)}</li>`).join('')}</ol></nav>`;
+  return `<div class="primary-breadcrumb" role="group" aria-label="Location in the codebase"><ol>${steps.map(([key,text],i)=>`<li>${i===steps.length-1?`<span aria-current="page">${e(text)}</span>`:areaLink(index,key,text)}</li>`).join('')}</ol></div>`;
 }
 
 /** The current folder as tiles: a block per child folder holding its own children, sized by all-time touches, darker for the scope's touches. */
@@ -553,7 +553,7 @@ function contentsCard(index,ui,{folder,signals}){
     fading.has(r.key)?`<em class="is-down">↓ fading ${r.second?`${f(r.first/r.second)}×`:'to none'}</em>`:'',
     partner(r.key)?`<em>changes with ${e(leafName(partner(r.key)))}</em>`:''].join('');
   const sorter=`<div class="primary-preset-row" role="group" aria-label="Sort">${toggleButton('codeSort','changes','Most changed',sort)}${toggleButton('codeSort','recent','Recently changed',sort)}${toggleButton('codeSort','name','Name',sort)}</div>`;
-  const table=`<div class="primary-table-wrap"><table class="primary-signal-table primary-contents-table"><thead><tr><th>Name</th><th>Changes</th><th>People</th><th>Over the scope</th><th>Last changed</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.isFolder?'is-folder':'is-file'}"><th>${areaLink(index,r.key,leafName(r.key))}${r.isFolder?`<small>${f(r.files)} ${r.files===1?'file':'files'}</small>`:''}${badges(r)}</th><td>${r.touches?`${bar(r.touches,max)}<span>${f(r.touches)}</span>`:'<span class="primary-muted">—</span>'}</td><td>${r.touches?`${f(r.people.length)} · ${e(name(r.top))} ${p(r.topShare)}`:'—'}</td><td>${r.touches?sparkline(r.series,`${r.key}: ${r.touches} changes by ${signals.granularity}`):''}</td><td>${r.last?e(day(r.last)):'—'}</td></tr>`).join('')}</tbody></table></div>`;
+  const table=`<div class="primary-table-wrap"><table class="primary-signal-table primary-contents-table"><thead><tr><th>Name</th><th>Changes</th><th>People</th><th>Over the scope</th><th>Last changed</th></tr></thead><tbody>${folder?`<tr class="is-up"><th colspan="5">${areaLink(index,folderTrail(folder).at(-2)||'',`↑ ${folderTrail(folder).at(-2)?leafName(folderTrail(folder).at(-2)):'repository'}`)}</th></tr>`:''}${rows.map(r=>`<tr class="${r.isFolder?'is-folder':'is-file'}"><th>${areaLink(index,r.key,leafName(r.key))}${r.isFolder?`<small>${f(r.files)} ${r.files===1?'file':'files'}</small>`:''}${badges(r)}</th><td>${r.touches?`${bar(r.touches,max)}<span>${f(r.touches)}</span>`:'<span class="primary-muted">—</span>'}</td><td>${r.touches?`${f(r.people.length)} · ${e(name(r.top))} ${p(r.topShare)}`:'—'}</td><td>${r.touches?sparkline(r.series,`${r.key}: ${r.touches} changes by ${signals.granularity}`):''}</td><td>${r.last?e(day(r.last)):'—'}</td></tr>`).join('')}</tbody></table></div>`;
   return card(`Inside ${folder||'the repository'}`,rows.length?`<div class="primary-row between"><p class="primary-muted">${f(rows.filter(r=>r.isFolder).length)} folders and ${f(rows.filter(r=>!r.isFolder).length)} files ever changed here. Changes, people and trend are the scope's; files never changed in it show a dash.</p>${sorter}</div>${collapsible(table,ui,{tall:rows.length>TALL_MAP,label:'list',key:'listExpanded'})}`:empty('Nothing recorded here','No file in the imported history sits in this folder.'));
 }
 
@@ -594,10 +594,11 @@ function codebaseView(index,ui){
   const clockSwitch=`<div class="primary-preset-row" role="group" aria-label="Count changes">${toggleButton('codebaseClock','authored','Authored',clock)}${toggleButton('codebaseClock','released','Released',clock)}</div>`;
   const basis=clock==='released'?'commits shipped by releases published in the scope dates':'commits authored in the scope dates';
   const head=`${sectionHeading('codebase-here',here?leafName(here):'Repository',file?'':'Open any folder to look inside it; every section below follows the folder you are in.')}
-    ${breadcrumb(index,folder,file)}
     <div class="primary-row between primary-signal-head"><p class="primary-muted">${e(day(from))} – ${e(day(to))} · ${e(basis)}${ids?' by the people in scope':''}.</p>${clockSwitch}</div>
     <div class="primary-facts">${stat(f(portrait.touches),'File touches')}${stat(f(portrait.commits),'Commits')}${stat(f(portrait.people.length),'People')}${stat(f(portrait.releases),'Releases shipping them')}</div>`;
-  if(file)return `${sectionNav('Codebase',[['codebase-here','File'],['codebase-file','History']])}${head}
+  // The path rides in the sticky bar, so going up is always one click away, wherever you are on the page.
+  const trail=breadcrumb(index,folder,file);
+  if(file)return `${sectionNav('Codebase',[['codebase-here','File'],['codebase-file','History']],trail)}${head}
     ${sectionHeading('codebase-file','History','')}
     ${fileCard(index,file,portrait,fileCompanions(commits,file))}`;
   const signals=codebaseSignals(commits,{from,to,areaOf:path=>childOf(path,folder)});
@@ -611,7 +612,7 @@ function codebaseView(index,ui){
     <div class="primary-signal"><span>Changed together</span><strong>${pair?`${p(pair.overlap)} of their commits shared`:'Nothing coupled'}</strong>${pair?`<small>${link(pair.a)} and ${link(pair.b)} share ${f(pair.shared)} commits</small>`:'<small>No two folders or files here share enough commits.</small>'}</div>
   </div>`;
   const fm=folderMap(pathTouches(index),folder);
-  return `${sectionNav('Codebase',[['codebase-here','Folder'],['codebase-signals','Signals'],['codebase-map','Map'],['codebase-contents','Contents'],['codebase-who','Who works where']])}${head}
+  return `${sectionNav('Codebase',[['codebase-here','Folder'],['codebase-signals','Signals'],['codebase-map','Map'],['codebase-contents','Contents'],['codebase-who','Who works where']],trail)}${head}
     ${sectionHeading('codebase-signals','Signals',`Where attention is warranted among the folders and files inside ${folder||'the repository'}. One person makes ${p(o.ownerShare)} or more of at least ${f(o.minimumTouches)} changes; churn rising or fading means one half of the dates (split at ${day(signals.mid)}) has ${f(o.churnRatio)}× the other's changes, with at least ${f(o.minimumChurn)}; pairs change together in ${f(o.minimumShared)} or more commits, ignoring commits that touch more than ${f(o.maxAreasPerCommit)} of them.`)}
     ${commits.length?signalCards:empty('No file changes in this scope','Widen the scope\'s dates or people, or switch between authored and released changes.')}
     ${sectionHeading('codebase-map','Map',`Each folder inside ${folder||'the repository'} with its own folders and files, and the files directly here.`)}

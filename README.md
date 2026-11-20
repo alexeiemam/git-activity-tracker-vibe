@@ -146,10 +146,15 @@ attendance: reviews, meetings, pairing and unpushed work look like days off,
 so a shortfall is a question, not a finding.
 
 **Codebase** is a folder browser. It starts at the repository and follows one
-current folder; the path above it (**repository › app › services**) goes back
-up, and every folder or file name is an ordinary link, so links, Back and new
-tabs work (`?view=codebase&area=app/services/`). There is no depth limit: keep
-opening folders until you reach a file. Every section compares the folders
+current folder; the path (**repository › app › services**) rides in the sticky
+section bar, so going back up is one click from anywhere on the page, and
+**Contents** starts with a **↑ parent** row. Every folder or file name is an
+ordinary link, so links, Back and new tabs work
+(`?view=codebase&area=app/services/`). Opening a folder keeps your place: the
+section you clicked in (Map, Contents, Signals…) stays where it was on screen,
+or settles just under the bar if you had scrolled into it, rather than the page
+jumping back to the top; opening a file starts at its heading. There is no
+depth limit: keep opening folders until you reach a file. Every section compares the folders
 and files directly inside the current folder, from the scope's changes on one
 of two clocks: **Authored** (commits authored in the scope dates) or
 **Released** (commits shipped by releases published in the scope dates, each

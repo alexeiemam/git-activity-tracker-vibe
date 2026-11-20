@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=journey-20261119-1';
-import { generateDemoLog } from './demo-data.js?v=journey-20261119-1';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=journey-20261119-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=journey-20261119-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=journey-20261119-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=journey-20261119-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=journey-20261119-1';
-import { releaseScorecard } from './release-scorecard.js?v=journey-20261119-1';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=journey-20261119-1';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=journey-20261119-1';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=journey-20261119-1';
-import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=journey-20261119-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=journey-20261119-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=journey-20261119-1';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=journey-20261119-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=journey-20261119-1';
-import { buildStoryAnalysis } from './stories.js?v=journey-20261119-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=journey-20261119-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=journey-20261119-1';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=journey-20261119-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=journey-20261119-1';
-import { downloadFilename } from './download-names.js?v=journey-20261119-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=journey-20261119-1';
-import { buildDeploymentIndex } from './deployments.js?v=journey-20261119-1';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=journey-20261119-1';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=journey-20261119-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=journey-20261119-1';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=journey-20261119-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=journey-20261119-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=journey-20261119-1';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=journey-20261119-1';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=journey-20261119-1';
+} from './domain.js?v=codetree-20261120-1';
+import { generateDemoLog } from './demo-data.js?v=codetree-20261120-1';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=codetree-20261120-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=codetree-20261120-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=codetree-20261120-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=codetree-20261120-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=codetree-20261120-1';
+import { releaseScorecard } from './release-scorecard.js?v=codetree-20261120-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=codetree-20261120-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=codetree-20261120-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=codetree-20261120-1';
+import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=codetree-20261120-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=codetree-20261120-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=codetree-20261120-1';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=codetree-20261120-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=codetree-20261120-1';
+import { buildStoryAnalysis } from './stories.js?v=codetree-20261120-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=codetree-20261120-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=codetree-20261120-1';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=codetree-20261120-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=codetree-20261120-1';
+import { downloadFilename } from './download-names.js?v=codetree-20261120-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=codetree-20261120-1';
+import { buildDeploymentIndex } from './deployments.js?v=codetree-20261120-1';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=codetree-20261120-1';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=codetree-20261120-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=codetree-20261120-1';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=codetree-20261120-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=codetree-20261120-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=codetree-20261120-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=codetree-20261120-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=codetree-20261120-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=journey-20261119-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=codetree-20261120-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -2741,6 +2741,29 @@ function updateSectionNav() {
 }
 let sectionNavFrame=0;
 window.addEventListener('scroll',()=>{if(!sectionNavFrame)sectionNavFrame=requestAnimationFrame(()=>{sectionNavFrame=0;updateSectionNav();});},{passive:true});
+/**
+ * Moving between folders keeps your place: the section you clicked in (Map,
+ * Contents, Signals…) stays where it was on screen, or just under the sticky
+ * bar if you had scrolled into it, instead of the page jumping to the top.
+ * A link in the sticky bar keeps the section being read. Opening a file,
+ * whose page has none of those sections, starts at its heading.
+ */
+function codebaseAnchor(link) {
+  const nav=link.closest('.primary-section-nav');
+  const headings=[...document.querySelectorAll('#stories-view .primary-section-title')];
+  let id=nav?nav.querySelector('a[aria-current="location"]')?.dataset.target:null;
+  if(!nav){const at=link.getBoundingClientRect().top;for(const h of headings)if(h.getBoundingClientRect().top<=at)id=h.id;}
+  const heading=id&&$(id),bar=document.querySelector('#stories-view .primary-section-nav');
+  return heading?{id,top:heading.getBoundingClientRect().top,floor:bar?bar.getBoundingClientRect().bottom+8:0}:null;
+}
+function keepCodebaseAnchor(keep) {
+  if(!keep)return false;
+  const same=$(keep.id),heading=same||$('codebase-here');
+  if(!heading)return false;
+  window.scrollBy({top:heading.getBoundingClientRect().top-(same?Math.max(keep.top,keep.floor):keep.floor),behavior:'instant'});
+  heading.focus({preventScroll:true});
+  return true;
+}
 /** Scroll a section into view and move focus to its heading, as an in-page link would. */
 let jumpingTo=null;
 function jumpTo(id) {
@@ -3028,7 +3051,11 @@ const ACTIONS={
   'primary-select-release':(_e,t)=>{primary.releaseHash=t.dataset.hash;primary.releaseView='browse';routePushPending=true;renderPrimary();$('primary-release-anatomy')?.scrollIntoView({behavior:'smooth',block:'start'});},
   'primary-open-person':(_e,t)=>goPrimary('contributors',{contributorFocus:t.dataset.person,contributorTab:'delivery',contributorRange:'all'},{jump:'people-portrait'}),
   'primary-open-area':(_e,t)=>goPrimary('codebase',{codeArea:t.dataset.area}),
-  'primary-select-area':(_e,t)=>{Object.assign(primary,{codeArea:t.dataset.area||null,periodFocusPerson:null,periodFocusArea:null});routePushPending=true;renderPrimary();if(t.dataset.jump)jumpTo(t.dataset.jump);},
+  'primary-select-area':(_e,t)=>{
+    const keep=codebaseAnchor(t);
+    Object.assign(primary,{codeArea:t.dataset.area||null,periodFocusPerson:null,periodFocusArea:null});routePushPending=true;renderPrimary();
+    if(!keepCodebaseAnchor(keep)&&t.dataset.jump)jumpTo(t.dataset.jump);
+  },
   'primary-release-page':(_e,t)=>{primary.releasePage=Math.max(0,Number(t.dataset.page)||0);renderPrimary();},
   'primary-reset-release-search':()=>{Object.assign(primary,{releaseYear:'all',releaseType:'all',releaseShape:'all',releaseFootprint:'all',releaseQuery:'',releasePage:0});renderPrimary();},
   'primary-toggle':(_e,t)=>{

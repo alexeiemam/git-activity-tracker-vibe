@@ -338,4 +338,10 @@ test('Codebase follows one folder from the repository down to a file',()=>{
  assert.match(file,/Who changed it[\s\S]*Ada/);
  assert.match(file,/Releases that shipped these changes/);
  assert.match(at('app/',{codeSort:'name'}),/aria-pressed="true">Name/);
+ // The path rides in the sticky section bar, and Contents starts with a way up.
+ const models=at('app/models/');
+ assert.match(models,/<nav class="primary-section-nav has-lead"[^>]*><div class="primary-breadcrumb"[\s\S]*?<span aria-current="page">models\/<\/span>[\s\S]*?<\/div><a href="#codebase-here"/);
+ assert.match(models,/<tr class="is-up"><th colspan="5"><a [^>]*data-area="app\/"[^>]*>↑ app\/<\/a>/);
+ assert.match(at('app/'),/<tr class="is-up"><th colspan="5"><a [^>]*data-area=""[^>]*>↑ repository<\/a>/);
+ assert.doesNotMatch(root,/class="is-up"/,'the repository has nowhere to go up to');
 });
