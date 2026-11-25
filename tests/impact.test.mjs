@@ -132,7 +132,7 @@ test('file categories and change signals use only evidenced paths and convention
 
 test('renderers encode Git-controlled content and keep percentages and censored data legible',()=>{
   const i=impact({selectedIds:['0']},{metric:'share'}), r=release(i,'v1.1.0');
-  assert.match(impactTimeline(i,r.hash),/GitHub release created/);
+  assert.match(impactTimeline(i,r.hash),/GitHub release published/);
   assert.match(impactReleaseMatrix(i),/—|100%/);
   assert.match(impactDurability(i,r.hash),/Not fully observed/);
   assert.match(impactReleaseDetail(r,i.referenceLabel,i.metric),/First tagged|Introduced after/);

@@ -118,7 +118,7 @@ export function generateDemoLog({ years = 3, commits = 520 } = {}) {
       // multiline notes without making external requests in demo mode.
       const publisher=publishers[releaseNumber%publishers.length];
       const event={tag_name:version,name:`Release ${version}`,author:{login:publisher,type:'User'},
-        created_at:new Date(Date.parse(author)-(7+releaseNumber%40)*60000).toISOString(),published_at:author,prerelease:false,draft:false,
+        published_at:author,prerelease:false,draft:false,
         body:`Demo release ${version}:\n- Improvements to dashboard and API workflows\n- Tests and maintenance follow-ups`,
         html_url:`https://github.com/example/demo/releases/tag/${version}`};
       github.push(`GHRELEASE|${btoa(JSON.stringify(event))}`);

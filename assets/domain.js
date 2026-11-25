@@ -4,9 +4,9 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=schematic-stems-20261125-1';
-import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=schematic-stems-20261125-1';
-import { scheduleFor } from './working-patterns.js?v=schematic-stems-20261125-1';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=release-published-20261125-1';
+import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=release-published-20261125-1';
+import { scheduleFor } from './working-patterns.js?v=release-published-20261125-1';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },
@@ -85,15 +85,11 @@ export function decodeGithubRelease(value) {
     if (!tag || tag.length > 300) return null;
     const publishedText = String(item.published_at || '');
     const publishedAt = publishedText && Number.isFinite(Date.parse(publishedText)) ? Date.parse(publishedText) : null;
-    // GitHub's own record of when the release was created, kept to the minute.
-    const createdText = String(item.created_at || '');
-    const createdAt = createdText && Number.isFinite(Date.parse(createdText)) ? Date.parse(createdText) : null;
     const login = typeof item.author?.login === 'string' ? item.author.login.trim() : '';
     return {
       tag, title:String(item.name || '').slice(0,400), notes:String(item.body || '').slice(0,120_000),
       publisher:login.slice(0,150), publisherType:String(item.author?.type || '').slice(0,40),
       publishedAt, publishedDate:publishedAt===null?null:new Date(publishedAt).toISOString().slice(0,10),
-      createdAt,
       draft:item.draft === true, prerelease:item.prerelease === true,
       url:typeof item.html_url === 'string' && /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/releases\/tag\//i.test(item.html_url) ? item.html_url.slice(0,2000) : null,
     };

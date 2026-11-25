@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=schematic-stems-20261125-1';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=schematic-stems-20261125-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=schematic-stems-20261125-1';
+import { IMPACT_METRICS } from './impact.js?v=release-published-20261125-1';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=release-published-20261125-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=release-published-20261125-1';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -224,10 +224,10 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
     const h=34*b.count/barMax;
     return `<rect x="${left}" y="${246+o-h}" width="${barW}" height="${h}" rx="1" fill="#9dbfac" opacity=".85"><title>${e(b.label)} · ${amount(b.count)} authored commits (within shown range)</title></rect>`;
   }).join('');
-  // GitHub release creation, placed at its exact minute rather than mid-day.
-  const createdMarkers=all.filter(r=>Number.isFinite(r.github?.createdAt)&&r.github.createdAt>=min&&r.github.createdAt<=max).map(r=>{
-    const at=r.github.createdAt,pos=x(at),stamp=new Date(at).toISOString();
-    return `<path d="M ${pos} ${195+o} l 4 4 l -4 4 l -4 -4 z" fill="#ad7d3c" stroke="#fff" stroke-width=".8" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-created-marker"><title>${e(r.tag)} · GitHub release created ${e(shortDate(stamp.slice(0,10)))} ${stamp.slice(11,16)} UTC</title></path>`;
+  // GitHub release publication, placed at its exact minute rather than mid-day.
+  const publishedMarkers=all.filter(r=>Number.isFinite(r.github?.publishedAt)&&r.github.publishedAt>=min&&r.github.publishedAt<=max).map(r=>{
+    const at=r.github.publishedAt,pos=x(at),stamp=new Date(at).toISOString();
+    return `<path d="M ${pos} ${195+o} l 4 4 l -4 4 l -4 -4 z" fill="#ad7d3c" stroke="#fff" stroke-width=".8" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-created-marker"><title>${e(r.tag)} · GitHub release published ${e(shortDate(stamp.slice(0,10)))} ${stamp.slice(11,16)} UTC</title></path>`;
   }).join('');
   const ticks=[];
   const startDate=new Date(min),endDate=new Date(max);
@@ -299,12 +299,12 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
       ${stems}${caption}
       <text x="14" y="${235+o}" class="impact-axis" transform="rotate(-90,14,${235+o})">AUTHORED</text>
       <line x1="48" y1="${246+o}" x2="${width-28}" y2="${246+o}" stroke="#d6e6d6"/>
-      ${bars}${createdMarkers}
+      ${bars}${publishedMarkers}
       ${ticks.filter((_,i)=>i%skip===0).map(t=>`<line x1="${x(t.time)}" y1="${249+o}" x2="${x(t.time)}" y2="${254+o}" stroke="#9aae9c"/><text x="${x(t.time)}" y="${273+o}" text-anchor="middle" class="impact-axis">${e(t.label)}</text>`).join('')}
     </svg></div>
     ${!records.length?'<p class="impact-muted" role="status">No release tags fall within this timeline range. Adjust the dates or choose a release from the dropdown to locate it.</p>':''}
     <div class="impact-timeline-legend">${['major','minor','patch','prerelease','baseline','unclassified'].map(kind=>`<span><i style="background:${color(kind)}"></i>${typeLabel(kind)}</span>`).join('')}
-      <span><i style="background:#9dbfac;border-radius:1px"></i>Authored commits (including unreleased)</span><span><i style="background:#ad7d3c;transform:rotate(45deg);border-radius:0"></i>GitHub release created (to the minute)</span><span><i style="background:#fff;border:2px solid #8d9f91"></i>Undefined measure</span><span class="impact-flight-key">Work in flight ${FLIGHT_COLOURS.map((c,i)=>`<i style="background:${c}" title="${i+1}${i===3?'+':''} releases"></i>`).join('')}&nbsp;1 → 4+ releases</span><span><i class="impact-shared-key"></i>Shared work days · click a stretch to pin it, Esc to unpin</span></div>`;
+      <span><i style="background:#9dbfac;border-radius:1px"></i>Authored commits (including unreleased)</span><span><i style="background:#ad7d3c;transform:rotate(45deg);border-radius:0"></i>GitHub release published (to the minute)</span><span><i style="background:#fff;border:2px solid #8d9f91"></i>Undefined measure</span><span class="impact-flight-key">Work in flight ${FLIGHT_COLOURS.map((c,i)=>`<i style="background:${c}" title="${i+1}${i===3?'+':''} releases"></i>`).join('')}&nbsp;1 → 4+ releases</span><span><i class="impact-shared-key"></i>Shared work days · click a stretch to pin it, Esc to unpin</span></div>`;
 }
 
 export function impactReleasePicker(model, hash) {
