@@ -139,7 +139,7 @@ test('releases sit at their time of day, so same-day releases spread out in orde
 test('overlapping release dots move right just enough, keep their height, and only when zoomed in',()=>{
   const rows=[{hash:'a',x:100,y:50},{hash:'b',x:103,y:50},{hash:'c',x:104,y:90},{hash:'d',x:300,y:50}];
   const layout=dodgeReleases(rows,r=>r.x,r=>r.y,1000);
-  assert.deepEqual(layout.get('a'),{at:100,cx:100,cy:50});
+  assert.deepEqual(layout.get('a'),{at:100,cx:100,cy:50,jog:10});
   assert.equal(layout.get('b').cx,113,'cleared by one dot width');
   assert.equal(layout.get('b').at,103,'its stem still starts at its true time');
   assert.equal(layout.get('b').cy,50,'height is the measure and never moves');
@@ -148,6 +148,8 @@ test('overlapping release dots move right just enough, keep their height, and on
   const crowd=Array.from({length:8},(_,i)=>({hash:String(i),x:100,y:50}));
   assert.ok(dodgeReleases(crowd,r=>r.x,r=>r.y,1000).get('7').cx<=100+39,'never more than three dot widths');
   assert.equal(dodgeReleases(rows,r=>r.x,r=>r.y,1000,false).get('b').cx,103,'zoomed out: true time only');
+  const nested=dodgeReleases([{hash:'p',x:100,y:50},{hash:'q',x:102,y:50},{hash:'r',x:104,y:50}],r=>r.x,r=>r.y,1000);
+  assert.ok(nested.get('r').jog<nested.get('q').jog,'a later stem steps across below one moved past its start, so stems never cross');
 });
 
 test('release tails span when the shipped work was written, flagging work from before the previous release', () => {

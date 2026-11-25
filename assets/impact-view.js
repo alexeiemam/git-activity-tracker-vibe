@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=release-created-20261125-1';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=release-created-20261125-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=release-created-20261125-1';
+import { IMPACT_METRICS } from './impact.js?v=schematic-stems-20261125-1';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=schematic-stems-20261125-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=schematic-stems-20261125-1';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -12,11 +12,12 @@ const clockText = r => Number.isFinite(r?.clock) ? ` ${String(Math.floor(r.clock
  * Releases sit at their time of day; where dots would still overlap, a later
  * one moves right just far enough to clear the earlier ones, never up or down
  * (height is the measure) and never more than a few dot widths. Its stem still
- * starts at its true time, so a moved dot leans back to where it belongs.
+ * starts at its true time and steps across at a right angle just off the
+ * axis, so a moved dot is still wired to where it belongs.
  * Only when zoomed in far enough that a day has room (MIN_DODGE_DAY pixels):
- * across years nothing can be separated, and leaning stems would only hatch.
+ * across years nothing can be separated, and stepped stems would only hatch.
  */
-const DOT_CLEARANCE=13,MAX_DODGE=3*DOT_CLEARANCE,MIN_DODGE_DAY=8;
+const DOT_CLEARANCE=13,MAX_DODGE=3*DOT_CLEARANCE,MIN_DODGE_DAY=8,STEM_JOG=10,STEM_JOG_STEP=3,STEM_JOG_MIN=2;
 export function dodgeReleases(records,xOf,yOf,right,dodge=true) {
   const placed=[],layout=new Map();
   const ordered=[...records].sort((a,b)=>xOf(a)-xOf(b));
@@ -30,7 +31,9 @@ export function dodgeReleases(records,xOf,yOf,right,dodge=true) {
       cx=Math.max(cx,p.cx+Math.sqrt(DOT_CLEARANCE**2-dy**2));
     }
     cx=Math.min(cx,at+MAX_DODGE,Math.max(at,right));
-    const item={at,cx:Math.round(cx*10)/10,cy};
+    // Step across below any earlier stem that was moved past this one's start, so stems nest and never cross.
+    const jog=placed.reduce((low,p)=>p.cx>at&&p.at<p.cx?Math.min(low,p.jog-STEM_JOG_STEP):low,STEM_JOG);
+    const item={at,cx:Math.round(cx*10)/10,cy,jog:Math.max(STEM_JOG_MIN,jog)};
     placed.push(item);layout.set(r.hash,item);
   }
   return layout;
@@ -252,9 +255,12 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
   const layout=dodgeReleases(records,r=>x(impactReleasePosition(r)),r=>r.metricValue==null?181:y(r.metricValue),width-36,dayWidth>=MIN_DODGE_DAY);
   const stems=records.map(r=>{
     const undefinedMetric=r.metricValue==null;
-    const {at,cx,cy}=layout.get(r.hash),active=r.hash===selectedHash;
+    const {at,cx,cy,jog:rise}=layout.get(r.hash),active=r.hash===selectedHash;
     const msg=`${r.tag} · ${shortDate(r.date)}${clockText(r)} · ${typeLabel(r.transition)} · ${humanMetric(r.metricValue,model.metric)} ${IMPACT_METRICS[model.metric]} · ${driverText(r)} · ${amount(r.selectedFootprint.pathsCount)} paths`;
-    return `<line x1="${at}" y1="170" x2="${cx}" y2="${cy}" stroke="${color(r.transition)}" stroke-opacity="${active?'.8':'.34'}" stroke-width="${active?3:2}"/>
+    // A schematic stem: straight up from its true time, across at a right angle, then up to the dot.
+    const jog=Math.sign(cy-170)*Math.min(rise,Math.abs(cy-170)/2);
+    const stem=cx===at?`M${at} 170V${cy}`:`M${at} 170V${170+jog}H${cx}V${cy}`;
+    return `<path d="${stem}" fill="none" stroke-linejoin="miter" stroke="${color(r.transition)}" stroke-opacity="${active?'.8':'.34'}" stroke-width="${active?3:2}"/>
       ${active?`<circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="#152f21" stroke-width="2" opacity=".5"/>`:''}${work.partners.has(r.hash)?`<circle cx="${cx}" cy="${cy}" r="10" class="impact-partner-ring"/>`:''}
       <circle cx="${cx}" cy="${cy}" r="${active?8:5.5}" fill="${undefinedMetric?'#fff':color(r.transition)}" stroke="${active?'#152f21':undefinedMetric?'#8d9f91':'#fff'}" stroke-width="${active?3:2}" role="button" tabindex="0" aria-current="${active?'true':'false'}" aria-label="${e(msg)}. Select release" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-timeline-dot"><title>${e(msg)}</title></circle>`;
   }).join('');
