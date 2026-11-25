@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=personas-20261125-3';
-import { generateDemoLog } from './demo-data.js?v=personas-20261125-3';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=personas-20261125-3';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=personas-20261125-3';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=personas-20261125-3';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=personas-20261125-3';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=personas-20261125-3';
-import { releaseScorecard } from './release-scorecard.js?v=personas-20261125-3';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=personas-20261125-3';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=personas-20261125-3';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=personas-20261125-3';
-import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=personas-20261125-3';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=personas-20261125-3';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=personas-20261125-3';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=personas-20261125-3';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-3';
-import { buildStoryAnalysis } from './stories.js?v=personas-20261125-3';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=personas-20261125-3';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=personas-20261125-3';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=personas-20261125-3';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=personas-20261125-3';
-import { downloadFilename } from './download-names.js?v=personas-20261125-3';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=personas-20261125-3';
-import { buildDeploymentIndex } from './deployments.js?v=personas-20261125-3';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=personas-20261125-3';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=personas-20261125-3';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=personas-20261125-3';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=personas-20261125-3';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=personas-20261125-3';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=personas-20261125-3';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=personas-20261125-3';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=personas-20261125-3';
+} from './domain.js?v=personas-20261125-4';
+import { generateDemoLog } from './demo-data.js?v=personas-20261125-4';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=personas-20261125-4';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=personas-20261125-4';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=personas-20261125-4';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=personas-20261125-4';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=personas-20261125-4';
+import { releaseScorecard } from './release-scorecard.js?v=personas-20261125-4';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=personas-20261125-4';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=personas-20261125-4';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=personas-20261125-4';
+import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=personas-20261125-4';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=personas-20261125-4';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=personas-20261125-4';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=personas-20261125-4';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-4';
+import { buildStoryAnalysis } from './stories.js?v=personas-20261125-4';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=personas-20261125-4';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=personas-20261125-4';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=personas-20261125-4';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=personas-20261125-4';
+import { downloadFilename } from './download-names.js?v=personas-20261125-4';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=personas-20261125-4';
+import { buildDeploymentIndex } from './deployments.js?v=personas-20261125-4';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=personas-20261125-4';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=personas-20261125-4';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=personas-20261125-4';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=personas-20261125-4';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=personas-20261125-4';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=personas-20261125-4';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=personas-20261125-4';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=personas-20261125-4';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=personas-20261125-3', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=personas-20261125-4', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -1263,7 +1263,7 @@ function makeTableData(view) {
     {key:'released_lines',label:'Released changed lines',value:c=>releaseValue(c,'lines'),format:releaseFormat},
     {key:'actor_events',label:'Tag/publish actor events',value:c=>releaseValue(c,'actorEvents'),format:releaseFormat},
     {key:'version',label:'VERSION touches · proxy',value:c=>c.totals.releases},
-    {key:'weekend',label:'Non-working days %',value:c=>c.totals.commits&&c.workingDays?.length?c.offDayCommits/c.totals.commits*100:null,format:v=>v==null?'—':percent(v)},
+    {key:'weekend',label:'Commits on days off %',hint:'Share of this person\'s commits made on their own days off. Flexible hours, time zones, on-call and personal projects all raise it; it can also be a sign of workload worth a kind check-in. Never a measure of commitment.',value:c=>c.totals.commits&&c.workingDays?.length?c.offDayCommits/c.totals.commits*100:null,format:v=>v==null?'—':percent(v)},
   ];
   const format=(col,raw)=>col.format?col.format(raw):number.format(raw);
   return {columns, rows:sortedContributors(view,releaseEvidence).map(c=>({ c, vals:columns.map(col=>col.value(c)) })), format,releaseEvidence};
@@ -1272,7 +1272,7 @@ function renderTable(view) {
   if(!view.contributors.length){ $('scorecard-wrap').innerHTML=empty('No selected contributors.');tableRows=[];return; }
   const data=makeTableData(view);
   tableRows=data.rows;
-  $('scorecard-wrap').innerHTML=`<table class="data-table"><thead><tr>${data.columns.map((col,i)=>`<th class="${i?'right':''}" scope="col" ${col.key===state.sortKey?`aria-sort="${state.sortDesc?'descending':'ascending'}"`:''}>${`<button type="button" class="sort-button" data-action="sort-table" data-sort="${col.key}">${esc(col.label)}${state.sortKey===col.key?(state.sortDesc?' ↓':' ↑'):''}</button>`}</th>`).join('')}</tr></thead><tbody>${data.rows.map(({c,vals})=>`<tr>${vals.map((val,i)=>`<td class="${i?'right':'name-cell'}">${i ? esc(data.format(data.columns[i],val)) : data.columns[i].show(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  $('scorecard-wrap').innerHTML=`<table class="data-table"><thead><tr>${data.columns.map((col,i)=>`<th class="${i?'right':''}" scope="col" ${col.key===state.sortKey?`aria-sort="${state.sortDesc?'descending':'ascending'}"`:''}>${`<button type="button" class="sort-button" data-action="sort-table" data-sort="${col.key}"${col.hint?` title="${esc(col.hint)}"`:''}>${esc(col.label)}${state.sortKey===col.key?(state.sortDesc?' ↓':' ↑'):''}</button>`}</th>`).join('')}</tr></thead><tbody>${data.rows.map(({c,vals})=>`<tr>${vals.map((val,i)=>`<td class="${i?'right':'name-cell'}">${i ? esc(data.format(data.columns[i],val)) : data.columns[i].show(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   setText('table-note',`Authored activity and VERSION touches use commit-author dates. Tagged releases, their included commits and released changed lines use release-event dates (${view.start}–${view.end}) and full introduced Git ancestry under the selected merge/revert policy; baseline tags are excluded. Released changed lines exclude VERSION files and binary changes. Tag/publish actor events are metadata, not proof of deployment or authored contribution. ${data.releaseEvidence.available?`${data.releaseEvidence.inRange} incremental tagged release events observed; ${data.releaseEvidence.partialReleases} have partial ancestry.`:'No imported tagged-release evidence — release columns are unavailable, not zero.'} Distinct tags on divergent histories can include overlapping changes. Active days are contributor-days, not distinct team dates. Share denominator: ${view.denominator==='repository'?'repository':'selected cohort'}.`);
 }
 function copyCsv() {
