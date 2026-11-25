@@ -1746,3 +1746,14 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 .primary-shipped-group h5{margin:10px 0 4px;font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--green)}.primary-shipped-release ul{margin:0;padding-left:18px;font-size:13px;line-height:1.65}.primary-shipped-release details{margin-top:8px;font-size:12px}.primary-shipped-release summary{cursor:pointer;color:var(--muted)}.primary-shipped-more>summary{cursor:pointer;font:11px var(--mono);color:var(--green);margin:6px 0}
 .primary-shape-kicker{font:9px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;align-self:center}.primary-release-title{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .primary-release-row .primary-shape-stack{display:grid;grid-template-columns:auto auto;align-items:center;gap:3px 6px;justify-items:start}
+/* Printing (or saving as PDF): the evidence and the scope it covers, without the controls. */
+@media print{
+  @page{margin:14mm}
+  body{background:#fff;font-size:11pt}
+  .work-progress,.masthead,.hero,.source-card,.app-bar-actions,.app-tabs,#scope-panel,.scope-bar-actions,.scope-status,.primary-section-nav,.primary-jump-links,.page-footer,.impact-timeline-controls,.impact-timeline-overview,.primary-pager,.primary-controls,.primary-preset-row,.primary-card-footer,[data-action="copy-shipped"],.app-menu,.append-history-panel{display:none!important}
+  .page{max-width:none;padding:0}
+  .primary-panel,.report-card,.primary-shipped-release,.stat-card,.primary-anatomy{break-inside:avoid;box-shadow:none}
+  .primary-shipped-release{break-inside:auto}.primary-shipped-release header{break-after:avoid}
+  [style*="sticky"],.app-tabs,.primary-section-nav{position:static!important}
+  a{text-decoration:none;color:inherit}
+}

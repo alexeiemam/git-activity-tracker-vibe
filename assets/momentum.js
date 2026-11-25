@@ -11,10 +11,10 @@
  * Uses full-history, policy-filtered evidence. Selected date windows only
  * control what is displayed; they never remove the prior comparison period.
  */
-import { dayNumber, dateAtDay, validDate } from './domain.js?v=personas-20261125-12';
-import { nonVersionChurn, releaseContributionCredit } from './release-gap.js?v=personas-20261125-12';
-import { temporalActivityByPerson, emptyTemporalDay, temporalOptions } from './temporal-activity.js?v=personas-20261125-12';
-import { scheduleById, countAgainstSchedule } from './working-patterns.js?v=personas-20261125-12';
+import { dayNumber, dateAtDay, validDate } from './domain.js?v=personas-20261125-14';
+import { nonVersionChurn, releaseContributionCredit } from './release-gap.js?v=personas-20261125-14';
+import { temporalActivityByPerson, emptyTemporalDay, temporalOptions } from './temporal-activity.js?v=personas-20261125-14';
+import { scheduleById, countAgainstSchedule } from './working-patterns.js?v=personas-20261125-14';
 
 export const MOMENTUM_WINDOWS = Object.freeze([5,10,20]);
 export const DEFAULT_MOMENTUM_WINDOW = 10;
