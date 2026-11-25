@@ -4,7 +4,7 @@ export const primaryDefaults=()=>({
   releaseView:'browse',releaseRange:'scope',releaseShape:'all',releaseFootprint:'all',releaseBrowse:'timeline',fingerprintView:'arrival',shapeWeight:'count',shapeCompare:'on',
   periodPreset:'14',periodFrom:null,periodTo:null,periodComparison:'previous',compareFrom:null,compareTo:null,
   periodBucket:null,periodSelectedId:null,periodFocusPerson:null,periodFocusArea:null,
-  contributorFocus:null,contributorTab:'delivery',contributorRange:'all',compareB:null,compareC:null,
+  contributorFocus:null,contributorTab:'delivery',contributorRange:'period',compareB:null,compareC:null,
   coReleasePartner:null,coReleaseSort:'shared',
   codeArea:null,codebaseClock:'authored',codeSort:'changes',mapExpanded:'off',listExpanded:'off',deploymentEnv:'all',deploymentYear:'all',deploymentFocus:null,deploymentPage:0,trail:[],
 });

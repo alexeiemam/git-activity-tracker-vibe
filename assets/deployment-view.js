@@ -1,12 +1,12 @@
 /** UI fragments for the independent QA environments and production evidence. */
-import { DEPLOYMENT_ENVS } from './deployments.js?v=personas-20261125-6';
-import { comparisonWindow } from './perspectives.js?v=personas-20261125-6';
+import { DEPLOYMENT_ENVS } from './deployments.js?v=personas-20261125-7';
+import { comparisonWindow } from './perspectives.js?v=personas-20261125-7';
 const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const nf=new Intl.NumberFormat('en-GB');
 const f=v=>Number.isFinite(v)?nf.format(v):'—';
 const when=ms=>ms==null?'Unknown':new Date(ms).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
 const short=sha=>sha?sha.slice(0,9):'Unresolved';
-import { targetUrl } from './route-state.js?v=personas-20261125-6';
+import { targetUrl } from './route-state.js?v=personas-20261125-7';
 const href=(index,changes)=>esc(targetUrl(index.navigation?.path||'./index.html',index.navigation?.ui||{},index.navigation?.groups||index.groups,index.navigation?.datasetId,changes));
 const LINK=(index,{id,text})=>`<a class="deployment-link" href="${href(index,{view:'deployments',event:id})}" data-action="deployment-open" data-deployment-id="${esc(id)}">${esc(text)} ↗</a>`;
 const panel=(eyebrow,title,body)=>`<section class="primary-panel deployment-panel"><div class="primary-card-heading"><span class="primary-eyebrow">${esc(eyebrow)}</span><h3>${esc(title)}</h3></div>${body}</section>`;
@@ -144,7 +144,7 @@ export function deploymentPeriodPanel(index,ui){
 
 export function deploymentContributorPanel(index,personId,ui){
   const model=safe(index);if(!model.available)return '';
-  const period=ui.contributorRange==='period'?{from:ui.periodFrom,to:ui.periodTo}:ui.contributorRange==='year'?{from:new Date(Date.parse(index.bounds.max+'T00:00:00Z')-364*86400000).toISOString().slice(0,10),to:index.bounds.max}:null;
+  const period=ui.contributorRange==='period'&&ui.periodFrom&&ui.periodTo?{from:ui.periodFrom,to:ui.periodTo}:ui.contributorRange==='year'?{from:new Date(Date.parse(index.bounds.max+'T00:00:00Z')-364*86400000).toISOString().slice(0,10),to:index.bounds.max}:null;
   const matching=model.events.filter(e=>e.env==='PROD'&&['code','config-and-code','divergent-revision'].includes(e.type)&&(!period||(e.date>=period.from&&e.date<=period.to))&&e.people.some(p=>p.id===personId));
   const person=model.people.find(p=>p.id===personId);
   const observed=matching.reduce((total,e)=>total+(e.people.find(p=>p.id===personId)?.commits||0),0);

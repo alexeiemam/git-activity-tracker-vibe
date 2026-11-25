@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=personas-20261125-6';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=personas-20261125-6';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-6';
+import { IMPACT_METRICS } from './impact.js?v=personas-20261125-7';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=personas-20261125-7';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-7';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
