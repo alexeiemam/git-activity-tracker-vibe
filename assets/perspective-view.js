@@ -1,13 +1,13 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=personas-20261125-4';
-import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=personas-20261125-4';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=personas-20261125-4';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-4';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=personas-20261125-4';
-import { targetUrl } from './route-state.js?v=personas-20261125-4';
-import { markdownFrame } from './markdown.js?v=personas-20261125-4';
-import { workedDaysBalance, daysOffText } from './working-patterns.js?v=personas-20261125-4';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=personas-20261125-4';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=personas-20261125-6';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=personas-20261125-6';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=personas-20261125-6';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-6';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=personas-20261125-6';
+import { targetUrl } from './route-state.js?v=personas-20261125-6';
+import { markdownFrame } from './markdown.js?v=personas-20261125-6';
+import { workedDaysBalance, daysOffText } from './working-patterns.js?v=personas-20261125-6';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=personas-20261125-6';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});
@@ -280,7 +280,11 @@ function observatory(index,ui){
   const shapeCounts=new Map();for(const r of all.releases)shapeCounts.set(shapeOf(r),(shapeCounts.get(shapeOf(r))||0)+1);
   const footprints=releaseFootprints(index),footprintOf=r=>footprints.releases.get(r.hash)?.shape||'unmeasured';
   const footprintCounts=new Map();for(const r of all.releases)footprintCounts.set(footprintOf(r),(footprintCounts.get(footprintOf(r))||0)+1);
-  const list=all.releases.filter(r=>(ui.releaseType==='all'||r.kind===ui.releaseType)&&(!ui.releaseShape||ui.releaseShape==='all'||shapeOf(r)===ui.releaseShape)&&(!ui.releaseFootprint||ui.releaseFootprint==='all'||footprintOf(r)===ui.releaseFootprint)&&(ui.releaseYear==='all'||r.date.startsWith(ui.releaseYear))&&(String(r.tag).toLowerCase().includes((ui.releaseQuery||'').toLowerCase()))).reverse();
+  // Releases follow the scope's dates unless the reader asks for all of history.
+  const inDates=r=>(!ui.periodFrom||r.date>=ui.periodFrom)&&(!ui.periodTo||r.date<=ui.periodTo);
+  const scoped=all.releases.filter(inDates),narrowed=scoped.length<all.releases.length;
+  const range=narrowed&&ui.releaseRange!=='all'?'scope':'all';
+  const list=all.releases.filter(r=>(range==='all'||inDates(r))&&(ui.releaseType==='all'||r.kind===ui.releaseType)&&(!ui.releaseShape||ui.releaseShape==='all'||shapeOf(r)===ui.releaseShape)&&(!ui.releaseFootprint||ui.releaseFootprint==='all'||footprintOf(r)===ui.releaseFootprint)&&(ui.releaseYear==='all'||r.date.startsWith(ui.releaseYear))&&(String(r.tag).toLowerCase().includes((ui.releaseQuery||'').toLowerCase()))).reverse();
   const browse=BROWSE_MODES.some(m=>m.key===ui.releaseBrowse)?ui.releaseBrowse:'timeline';
   const filtered=list.length!==all.releases.length;
   const pages=Math.max(1,Math.ceil(list.length/24)),page=clamp(ui.releasePage||0,0,pages-1);
@@ -290,7 +294,8 @@ function observatory(index,ui){
   const med=all.medianInterval;
   const cadence=all.releases.length>=12&&all.previousCadence!=null&&all.recentCadence!=null&&Math.abs(all.recentCadence-all.previousCadence)>=Math.max(2,all.previousCadence*.25)
     ?` The median gap between releases changed from ${f(all.previousCadence)} to ${f(all.recentCadence)} days between the earlier and later halves of the history.`:'';
-  const summary=`<p class="primary-browse-summary">${f(all.total)} tagged releases · ${f(all.contributors)} contributors · ${f(all.drivers)} matched release leads${med==null?'':` · a median ${f(med)} ${med===1?'day':'days'} apart`}.${e(cadence)}</p>`;
+  const rangeSwitch=narrowed?`<div class="primary-preset-row primary-release-range" role="group" aria-label="Which releases">${toggleButton('releaseRange','scope',`In these dates (${f(scoped.length)})`,range)}${toggleButton('releaseRange','all',`All history (${f(all.releases.length)})`,range)}</div>`:'';
+  const summary=`${rangeSwitch}<p class="primary-browse-summary">${range==='scope'?`${f(scoped.length)} of `:''}${f(all.total)} tagged releases${range==='scope'?` fall in ${e(day(ui.periodFrom))} – ${e(day(ui.periodTo))}. Across all history:`:' ·'} ${f(all.contributors)} contributors · ${f(all.drivers)} matched release leads${med==null?'':` · a median ${f(med)} ${med===1?'day':'days'} apart`}.${e(cadence)}</p>`;
   const switcher=`<div class="primary-row between primary-browse-head"><div class="primary-preset-row" role="group" aria-label="Show releases as">${BROWSE_MODES.map(m=>toggleButton('releaseBrowse',m.key,m.label,browse)).join('')}</div>${browse==='wait'||browse==='footprint'?shapeWeightControl(ui):''}</div>`;
   const filters=`<div class="primary-controls primary-release-controls"><label>Kind ${select('primary-release-type',[{label:'All release kinds',value:'all'},...all.types.map(([k,v])=>({label:`${type(k)} (${f(v)})`,value:k}))],ui.releaseType)}</label><label>Wait shape ${select('primary-release-shape',[{label:'All wait shapes',value:'all'},...RELEASE_SHAPES.filter(x=>shapeCounts.has(x.key)).map(x=>({label:`${x.label} (${f(shapeCounts.get(x.key))})`,value:x.key}))],ui.releaseShape||'all')}</label><label>Footprint ${select('primary-release-footprint',[{label:'All footprints',value:'all'},...FOOTPRINT_SHAPES.filter(x=>footprintCounts.has(x.key)).map(x=>({label:`${x.label} (${f(footprintCounts.get(x.key))})`,value:x.key}))],ui.releaseFootprint||'all')}</label><label>Year ${select('primary-release-year',[{value:'all',label:'All years'},...years.map(y=>({value:y,label:y}))],ui.releaseYear)}</label><label>Find a tag <input id="primary-release-query" class="primary-input" placeholder="Filter tag names…" value="${e(ui.releaseQuery||'')}"></label></div>`;
   const matches=filtered?new Set(list.map(r=>r.hash)):null;

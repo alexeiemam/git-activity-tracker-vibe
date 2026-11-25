@@ -176,8 +176,8 @@ test('many releases retain a bounded DOM and navigate without dropping history',
  const model=releaseLandscape(large);
  assert.equal(model.total,428);
  assert.ok(model.bins.length<130,'long histories aggregate to monthly/quarterly overview');
- const first=renderPrimaryExplorer(large,ui({mode:'observatory',releaseBrowse:'list',releasePage:0}));
- const last=renderPrimaryExplorer(large,ui({mode:'observatory',releaseBrowse:'list',releasePage:17}));
+ const first=renderPrimaryExplorer(large,ui({mode:'observatory',releaseBrowse:'list',releaseRange:'all',releasePage:0}));
+ const last=renderPrimaryExplorer(large,ui({mode:'observatory',releaseBrowse:'list',releaseRange:'all',releasePage:17}));
  assert.equal((first.match(/class="primary-release-entry/g)||[]).length,24);
  assert.equal((last.match(/class="primary-release-entry/g)||[]).length,20);
  assert.match(first,/v2\.0\.427/);
@@ -281,7 +281,7 @@ test('Releases opens on the timeline; the list sits beside the release it opens 
  assert.doesNotMatch(browse,/The release landscape/);
  const strips=renderPrimaryExplorer(index,ui({mode:'observatory',releaseBrowse:'wait'}));
  assert.doesNotMatch(strips,/primary-release-sidebar/,'strips need the full width');
- assert.match(browse,/class="primary-browse-summary">3 tagged releases/,'the overview numbers lead the browse card');
+ assert.match(browse,/class="primary-browse-summary">(\d+ of )?3 tagged releases/,'the overview numbers lead the browse card');
  for(const mode of ['timeline','people','followup']){
   const html=renderPrimaryExplorer(index,ui({mode:'observatory',releaseBrowse:mode}));
   assert.match(html,new RegExp(`class="primary-slot" data-slot="impact" data-mode="${mode}"`),'the impact explorer is placed here');
@@ -344,4 +344,18 @@ test('Codebase follows one folder from the repository down to a file',()=>{
  assert.match(models,/<tr class="is-up"><th colspan="5"><a [^>]*data-area="app\/"[^>]*>↑ app\/<\/a>/);
  assert.match(at('app/'),/<tr class="is-up"><th colspan="5"><a [^>]*data-area=""[^>]*>↑ repository<\/a>/);
  assert.doesNotMatch(root,/class="is-up"/,'the repository has nowhere to go up to');
+});
+
+test('Browse releases follows the scope dates, with all of history one switch away',()=>{
+ const dates=index.releases.map(r=>r.date).sort();
+ const scoped=ui({mode:'observatory',releaseBrowse:'list',periodFrom:dates.at(-1),periodTo:dates.at(-1)});
+ const html=renderPrimaryExplorer(index,scoped);
+ const inDates=index.releases.filter(r=>r.date===dates.at(-1)).length;
+ assert.equal((html.match(/class="primary-release-entry/g)||[]).length,inDates,'only releases in the scope dates are listed');
+ assert.match(html,new RegExp(`In these dates \\(${inDates}\\)`));
+ assert.match(html,/data-key="releaseRange" data-value="all"/,'all of history is offered');
+ const everything=renderPrimaryExplorer(index,{...scoped,releaseRange:'all'});
+ assert.equal((everything.match(/class="primary-release-entry/g)||[]).length,index.releases.length);
+ const wide=renderPrimaryExplorer(index,ui({mode:'observatory',releaseBrowse:'list',periodFrom:dates[0],periodTo:dates.at(-1)}));
+ assert.doesNotMatch(wide,/data-key="releaseRange"/,'no switch when the dates already hold every release');
 });
