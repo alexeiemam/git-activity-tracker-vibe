@@ -1,11 +1,11 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=release-hover-20261125-1';
-import { mergeGitHistories, isCompleteRecapture, hasImportableEvidence } from './history-merge.js?v=release-hover-20261125-1';
-import { impactAnalysis, applyReleaseMeasures } from './impact.js?v=release-hover-20261125-1';
-import { buildStoryAnalysis } from './stories.js?v=release-hover-20261125-1';
-import { buildEvidenceIndex } from './perspectives.js?v=release-hover-20261125-1';
-import { buildDeploymentIndex } from './deployments.js?v=release-hover-20261125-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=release-hover-20261125-1';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=release-nearest-20261125-1';
+import { mergeGitHistories, isCompleteRecapture, hasImportableEvidence } from './history-merge.js?v=release-nearest-20261125-1';
+import { impactAnalysis, applyReleaseMeasures } from './impact.js?v=release-nearest-20261125-1';
+import { buildStoryAnalysis } from './stories.js?v=release-nearest-20261125-1';
+import { buildEvidenceIndex } from './perspectives.js?v=release-nearest-20261125-1';
+import { buildDeploymentIndex } from './deployments.js?v=release-nearest-20261125-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=release-nearest-20261125-1';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;

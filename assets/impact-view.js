@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=release-hover-20261125-1';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=release-hover-20261125-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=release-hover-20261125-1';
+import { IMPACT_METRICS } from './impact.js?v=release-nearest-20261125-1';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=release-nearest-20261125-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=release-nearest-20261125-1';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -270,6 +270,7 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
       ${[0,.5,1].map(f=>`<line x1="48" y1="${y(f*hi)}" x2="${width-28}" y2="${y(f*hi)}" stroke="#e4ebe1" stroke-dasharray="2 4"/><text x="40" y="${y(f*hi)+4}" text-anchor="end" class="impact-axis">${humanMetric(f*hi,model.metric)}</text>`).join('')}
       <line x1="48" y1="170" x2="${width-28}" y2="170" stroke="#bbcfc0"/>
       ${work.svg}
+      <line class="impact-hover-guide" x1="0" y1="35" x2="0" y2="${260+o}" visibility="hidden" pointer-events="none"/>
       ${stems}${caption}
       <text x="14" y="${235+o}" class="impact-axis" transform="rotate(-90,14,${235+o})">AUTHORED</text>
       <line x1="48" y1="${246+o}" x2="${width-28}" y2="${246+o}" stroke="#d6e6d6"/>

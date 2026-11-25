@@ -10,9 +10,9 @@
  * dates and release-event dates are intentionally never conflated. Import
  * bounds, missing tags and incomplete release ancestry stay visible.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=release-hover-20261125-1';
-import {dailyEvidence} from './momentum.js?v=release-hover-20261125-1';
-import {scheduleById,continuityScheduleStatus,continuityCountBalance} from './working-patterns.js?v=release-hover-20261125-1';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=release-nearest-20261125-1';
+import {dailyEvidence} from './momentum.js?v=release-nearest-20261125-1';
+import {scheduleById,continuityScheduleStatus,continuityCountBalance} from './working-patterns.js?v=release-nearest-20261125-1';
 
 export const CONTINUITY_WINDOWS=Object.freeze([8,12,20]);
 export const DEFAULT_CONTINUITY_WINDOW=20;
