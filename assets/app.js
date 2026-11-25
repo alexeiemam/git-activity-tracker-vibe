@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=release-published-20261125-1';
-import { generateDemoLog } from './demo-data.js?v=release-published-20261125-1';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=release-published-20261125-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=release-published-20261125-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=release-published-20261125-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=release-published-20261125-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=release-published-20261125-1';
-import { releaseScorecard } from './release-scorecard.js?v=release-published-20261125-1';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=release-published-20261125-1';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=release-published-20261125-1';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=release-published-20261125-1';
-import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=release-published-20261125-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=release-published-20261125-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=release-published-20261125-1';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=release-published-20261125-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=release-published-20261125-1';
-import { buildStoryAnalysis } from './stories.js?v=release-published-20261125-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=release-published-20261125-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=release-published-20261125-1';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=release-published-20261125-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=release-published-20261125-1';
-import { downloadFilename } from './download-names.js?v=release-published-20261125-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=release-published-20261125-1';
-import { buildDeploymentIndex } from './deployments.js?v=release-published-20261125-1';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=release-published-20261125-1';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=release-published-20261125-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=release-published-20261125-1';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=release-published-20261125-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=release-published-20261125-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=release-published-20261125-1';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=release-published-20261125-1';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=release-published-20261125-1';
+} from './domain.js?v=release-hover-20261125-1';
+import { generateDemoLog } from './demo-data.js?v=release-hover-20261125-1';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=release-hover-20261125-1';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=release-hover-20261125-1';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=release-hover-20261125-1';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=release-hover-20261125-1';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=release-hover-20261125-1';
+import { releaseScorecard } from './release-scorecard.js?v=release-hover-20261125-1';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=release-hover-20261125-1';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=release-hover-20261125-1';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=release-hover-20261125-1';
+import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=release-hover-20261125-1';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=release-hover-20261125-1';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=release-hover-20261125-1';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=release-hover-20261125-1';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=release-hover-20261125-1';
+import { buildStoryAnalysis } from './stories.js?v=release-hover-20261125-1';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=release-hover-20261125-1';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=release-hover-20261125-1';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=release-hover-20261125-1';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=release-hover-20261125-1';
+import { downloadFilename } from './download-names.js?v=release-hover-20261125-1';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=release-hover-20261125-1';
+import { buildDeploymentIndex } from './deployments.js?v=release-hover-20261125-1';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=release-hover-20261125-1';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=release-hover-20261125-1';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=release-hover-20261125-1';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=release-hover-20261125-1';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=release-hover-20261125-1';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=release-hover-20261125-1';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=release-hover-20261125-1';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=release-hover-20261125-1';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=release-published-20261125-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=release-hover-20261125-1', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -1085,7 +1085,6 @@ function updateControls() {
   $('denominator-select').value=state.denominator;
   $('denominator-select').disabled=false;
   $('metric-explanation').textContent=`${METRICS[state.metric].note}. ${state.mode==='share' ? 'Share uses the reference selected below.' : 'Reference is used for percent context and hotspots.'}`;
-  document.querySelectorAll('[data-trend]').forEach(btn=>{const yes=btn.dataset.trend===state.trend;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
   document.querySelectorAll('[data-pulse-mode]').forEach(btn=>{if(btn.dataset.pulseMode==='weekly')btn.hidden=state.pulseLens!=='continuity';const yes=btn.dataset.pulseMode===state.pulseMode;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
   document.querySelectorAll('[data-pulse-lens]').forEach(btn=>{const yes=btn.dataset.pulseLens===state.pulseLens;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
 }
@@ -1166,6 +1165,8 @@ function chartTicks(view,lines,axisMax) {
   return out;
 }
 function renderTrend(view) {
+  // The toggle redraws only this chart, so the buttons are kept in step here.
+  document.querySelectorAll('[data-trend]').forEach(btn=>{const yes=btn.dataset.trend===state.trend;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
   setText('trend-axis-label',`${displayModeLabel(state.mode).toUpperCase()} / ${METRICS[view.metric].label.toUpperCase()}`);
   const note=state.trend==='rolling' ? 'Trailing 4 calendar weeks · totals or rates calculated from summed evidence'
     : state.trend==='weekly' ? 'Raw calendar weeks · edge weeks use only dates within the selection'
@@ -2352,6 +2353,8 @@ function timelineTimeAt(svg,clientX) {
   const viewX=(clientX-box.left)/box.width*Number(d.viewWidth);
   return Number(d.start)+(viewX-Number(d.plotLeft))/Number(d.plotWidth)*(Number(d.end)-Number(d.start));
 }
+/** How close (screen pixels from a dot's edge) the pointer must be to count as on it, and how far apart a crowd is pulled. */
+const TIMELINE_NEAR_PX=8,TIMELINE_APART_PX=16;
 const timelineMsPerPixel=svg=>{const box=svg.getBoundingClientRect(),d=svg.dataset;return (Number(d.end)-Number(d.start))/(Number(d.plotWidth)*box.width/Number(d.viewWidth));};
 /** Zoom the current window by `factor` around a time (the selected release when visible, else the centre). */
 function zoomTimeline(factor,anchor=null) {
@@ -2445,6 +2448,57 @@ function bindTimelineGestures() {
     if(!svg||!impactModel||event.target.closest('[data-impact-hash]'))return;
     event.preventDefault();zoomTimeline(event.shiftKey?2:.5,timelineTimeAt(svg,event.clientX));
   });
+  // Release dots sit at their true time and height and may overlap. Hover lists
+  // every dot near the pointer, nearest first; clicking a crowd zooms in until
+  // its dots come apart, and clicking a lone dot (or a crowd that shares one
+  // instant) selects the nearest.
+  const tip=()=>root.querySelector('.impact-dot-tip');
+  const hideTip=()=>{const t=tip();if(t)t.hidden=true;for(const dot of root.querySelectorAll('.impact-timeline-dot.is-nearest'))dot.classList.remove('is-nearest');};
+  const nearDots=event=>{
+    const svg=event.target.closest?.('[data-timeline-plot]');if(!svg)return [];
+    const box=svg.getBoundingClientRect(),scale=box.width/Number(svg.dataset.viewWidth);
+    const px=event.clientX-box.left,py=event.clientY-box.top;
+    return [...svg.querySelectorAll('.impact-timeline-dot')]
+      .map(dot=>({dot,d:Math.hypot(Number(dot.getAttribute('cx'))*scale-px,Number(dot.getAttribute('cy'))*scale-py)-Number(dot.getAttribute('r'))*scale}))
+      .filter(n=>n.d<=TIMELINE_NEAR_PX).sort((a,b)=>a.d-b.d).map(n=>n.dot);
+  };
+  // The zoom that puts at least TIMELINE_APART_PX between neighbouring dots of a crowd, or null when they share one instant.
+  const separation=(svg,dots)=>{
+    const times=dots.map(dot=>Number(dot.dataset.at)).sort((a,b)=>a-b);
+    const gaps=times.slice(1).map((t,i)=>t-times[i]).filter(g=>g>0);
+    if(!gaps.length)return null;
+    const factor=Math.min(.5,Math.min(...gaps)/TIMELINE_APART_PX/timelineMsPerPixel(svg));
+    return {factor,anchor:(times[0]+times.at(-1))/2};
+  };
+  root.addEventListener('pointermove',event=>{
+    const t=tip();
+    if(!t||gesture?.moved){hideTip();return;}
+    const dots=nearDots(event);
+    hideTip();
+    if(!dots.length)return;
+    dots[0].classList.add('is-nearest');
+    const row=dot=>`<div class="impact-dot-tip-row${dot===dots[0]?' is-nearest':''}"><span><i style="background:${esc(dot.dataset.colour)}"></i>${esc(dot.dataset.tag)}</span><b>${esc(dot.dataset.when)}</b></div>`;
+    const byTime=[...dots].sort((a,b)=>Number(a.dataset.at)-Number(b.dataset.at));
+    const apart=dots.length>1&&separation(event.target.closest('[data-timeline-plot]'),dots);
+    t.innerHTML=dots.length===1
+      ?`<strong>${esc(dots[0].dataset.tag)}</strong><div>${esc(dots[0].dataset.when)}</div><div>${esc(dots[0].dataset.measure)}</div><small>Click to select</small>`
+      :`<strong>${dots.length} releases here</strong>${byTime.slice(0,8).map(row).join('')}${byTime.length>8?`<div>+ ${byTime.length-8} more</div>`:''}<small>${apart?'Click to pull them apart':'Same moment · click selects the highlighted one'}</small>`;
+    t.hidden=false;
+    const box=root.getBoundingClientRect(),w=t.offsetWidth||220;
+    t.style.left=`${Math.min(Math.max(4,event.clientX-box.left+14),Math.max(4,box.width-w-4))}px`;
+    t.style.top=`${event.clientY-box.top+16}px`;
+  });
+  root.addEventListener('pointerleave',hideTip);
+  root.addEventListener('click',event=>{
+    if(event.defaultPrevented)return;
+    const target=event.target.closest('[data-action]');
+    if(target&&!target.classList.contains('impact-timeline-dot'))return;
+    const dots=nearDots(event);if(!dots.length)return;
+    event.stopPropagation();event.preventDefault();hideTip();
+    const svg=event.target.closest('[data-timeline-plot]'),apart=dots.length>1&&separation(svg,dots);
+    if(apart){const window=currentTimelineWindow();if(window)animateTimelineTo(impactTimelineZoomWindow(impactModel,window,apart.factor,apart.anchor));return;}
+    ACTIONS['impact-release'](event,dots[0]);
+  },true);
   // Hovering a stretch of the work strip lights up the releases whose work it was.
   const lightFlight=hashes=>{
     for(const dot of root.querySelectorAll('.impact-timeline-dot.is-in-flight'))dot.classList.remove('is-in-flight');

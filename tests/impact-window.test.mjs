@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { impactTimelineZoomWindow,impactTimelineShiftWindow,impactTimelineCentreWindow,impactTimelinePreferenceFor,impactTimelineExtent,impactTimelineWindow,impactTimelineZoom,impactTimelineReveal,impactTimelineCustomRange,impactTimelinePan,impactTimelineDates } from '../assets/impact-window.js';
-import { impactTimeline, dodgeReleases } from '../assets/impact-view.js';
+import { impactTimeline } from '../assets/impact-view.js';
 import { impactReleasePosition, releaseTail, impactCommitPosition, workPartners, workInFlight } from '../assets/impact-window.js';
 import { parseGitHistory } from '../assets/domain.js';
 
@@ -136,20 +136,23 @@ test('releases sit at their time of day, so same-day releases spread out in orde
   assert.equal(tags[0].taggedClock,(23*3600+40*60+5)*1000,'and their own clock, not UTC');
 });
 
-test('overlapping release dots move right just enough, keep their height, and only when zoomed in',()=>{
-  const rows=[{hash:'a',x:100,y:50},{hash:'b',x:103,y:50},{hash:'c',x:104,y:90},{hash:'d',x:300,y:50}];
-  const layout=dodgeReleases(rows,r=>r.x,r=>r.y,1000);
-  assert.deepEqual(layout.get('a'),{at:100,cx:100,cy:50,jog:10});
-  assert.equal(layout.get('b').cx,113,'cleared by one dot width');
-  assert.equal(layout.get('b').at,103,'its stem still starts at its true time');
-  assert.equal(layout.get('b').cy,50,'height is the measure and never moves');
-  assert.equal(layout.get('c').cx,104,'a dot well above needs no move');
-  assert.equal(layout.get('d').cx,300);
-  const crowd=Array.from({length:8},(_,i)=>({hash:String(i),x:100,y:50}));
-  assert.ok(dodgeReleases(crowd,r=>r.x,r=>r.y,1000).get('7').cx<=100+39,'never more than three dot widths');
-  assert.equal(dodgeReleases(rows,r=>r.x,r=>r.y,1000,false).get('b').cx,103,'zoomed out: true time only');
-  const nested=dodgeReleases([{hash:'p',x:100,y:50},{hash:'q',x:102,y:50},{hash:'r',x:104,y:50}],r=>r.x,r=>r.y,1000);
-  assert.ok(nested.get('r').jog<nested.get('q').jog,'a later stem steps across below one moved past its start, so stems never cross');
+test('crowded releases stay at their true time and height, with what the hover lists on each dot',()=>{
+  const at=Date.parse('2026-03-10T12:00:00Z');
+  const release=(tag,minutes)=>({hash:tag,tag,date:'2026-03-10',clock:12*3600000+minutes*60000,timestamp:at+minutes*60000,transition:'minor',
+    previousTag:'v0',metricValue:1,selectedFootprint:{pathsCount:1},driver:{source:'unknown'},tail:null});
+  const model={releases:[release('v1',0),release('v2',2),release('v3',4)],activityMonths:[],activityDays:[],versionEvents:[],metric:'commits'};
+  const html=impactTimeline(model,'v1',{mode:'all'});
+  const dots=[...html.matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)"[^>]*data-impact-hash="(v\d)" data-at="(\d+)"/g)];
+  assert.equal(dots.length,3);
+  for(const [,cx,,hash,time] of dots){
+    assert.equal(Number(time),model.releases.find(r=>r.hash===hash).timestamp,'data-at is the true time');
+    assert.ok(Math.abs(Number(cx)-Number(dots[0][1])-(Number(time)-at)/(Date.parse('2026-03-12T12:00:00Z')-Date.parse('2026-03-08T12:00:00Z'))*(1100-94))<1,'no sideways dodge');
+  }
+  assert.equal(new Set(dots.map(d=>d[2])).size,1,'height is the measure');
+  assert.equal(dots.at(-1)[3],'v1','the selected release is drawn last, on top');
+  assert.ok(!/<path d="M[\d.]+ 170V/.test(html),'stems are plain vertical lines');
+  assert.ok(html.includes('data-when="10 Mar 2026 12:02"'));
+  assert.ok(html.includes('class="impact-dot-tip"'));
 });
 
 test('release tails span when the shipped work was written, flagging work from before the previous release', () => {
