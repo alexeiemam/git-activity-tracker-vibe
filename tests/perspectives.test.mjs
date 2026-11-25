@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {buildAnalysis,parseGitHistory,dayNumber,dateAtDay} from '../assets/domain.js';
 import {impactAnalysis} from '../assets/impact.js';
-import {buildEvidenceIndex,comparisonWindow,windowOf,periodDigest,contributorPortrait,releaseLandscape,releaseDetails,codebaseCommits,areaPortrait,briefingText} from '../assets/perspectives.js';
+import {buildEvidenceIndex,comparisonWindow,windowOf,periodDigest,contributorPortrait,releaseLandscape,releaseDetails,codebaseCommits,areaPortrait,briefingText,shippedInWindow,shippedText,plainSubject} from '../assets/perspectives.js';
 import {renderPrimaryExplorer,periodBriefingForUi,scopeHeadline} from '../assets/perspective-view.js';
 import {restorePrimaryState} from '../assets/perspective-state.js';
 
@@ -316,7 +316,7 @@ test('People is one page in reading order, and every slot a view renders has a s
 
 test('Releases is one page: browse, over time, then environments when deployment history exists',()=>{
  const html=renderPrimaryExplorer(index,ui({mode:'observatory'}));
- assert.match(html,/aria-label="Releases: jump to a section"><a href="#releases-browse"[^>]*>Browse releases<\/a><a href="#releases-over-time"/);
+ assert.match(html,/aria-label="Releases: jump to a section"><a href="#releases-shipped"[^>]*>What shipped<\/a><a href="#releases-browse"[^>]*>Browse releases<\/a><a href="#releases-over-time"/);
  assert.doesNotMatch(html,/data-key="releaseView"/,'no Browse/Environments switch');
  assert.ok(html.indexOf('id="releases-browse"')<html.indexOf('id="releases-over-time"'));
  assert.doesNotMatch(html,/releases-environments/,'without deployment history there is no Environments section');
@@ -358,4 +358,24 @@ test('Browse releases follows the scope dates, with all of history one switch aw
  assert.equal((everything.match(/class="primary-release-entry/g)||[]).length,index.releases.length);
  const wide=renderPrimaryExplorer(index,ui({mode:'observatory',releaseBrowse:'list',periodFrom:dates[0],periodTo:dates.at(-1)}));
  assert.doesNotMatch(wide,/data-key="releaseRange"/,'no switch when the dates already hold every release');
+});
+
+test('what shipped lists releases in the dates with plain, grouped changes and the work not yet released',()=>{
+ assert.equal(plainSubject('feat(ui)!: new explorer'),'ui: New explorer');
+ assert.equal(plainSubject('fix: handle empty tags'),'Handle empty tags');
+ assert.equal(plainSubject('Tidy the readme'),'Tidy the readme');
+ const dates=index.releases.map(r=>r.date).sort();
+ const all=shippedInWindow(index,{from:dates[0],to:dates.at(-1)});
+ assert.equal(all.releases.length,index.releases.length);
+ assert.ok(all.releases.every((r,i,a)=>i===0||(a[i-1].date>=r.date)),'newest first');
+ for(const r of all.releases)for(const g of r.groups)assert.ok(g.items.length&&g.label);
+ const latest=shippedInWindow(index,{from:dates.at(-1),to:dates.at(-1)});
+ assert.ok(latest.releases.every(r=>r.date===dates.at(-1)),'only releases dated in the window');
+ const text=shippedText(all);
+ assert.match(text,/^What shipped, /);
+ for(const r of all.releases)assert.ok(text.includes(r.tag));
+ const html=renderPrimaryExplorer(index,ui({mode:'observatory',periodFrom:dates[0],periodTo:dates.at(-1)}));
+ assert.ok(html.indexOf('id="releases-shipped"')<html.indexOf('id="releases-browse"'),'What shipped leads the Releases page');
+ assert.match(html,/data-action="copy-shipped"/);
+ assert.match(periodBriefingForUi(index,ui({periodFrom:dates[0],periodTo:dates.at(-1)})),/What shipped, /,'the scope summary says what shipped');
 });

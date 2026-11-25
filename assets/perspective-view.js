@@ -1,13 +1,13 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=personas-20261125-8';
-import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=personas-20261125-8';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=personas-20261125-8';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-8';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=personas-20261125-8';
-import { targetUrl } from './route-state.js?v=personas-20261125-8';
-import { markdownFrame } from './markdown.js?v=personas-20261125-8';
-import { workedDaysBalance, daysOffText } from './working-patterns.js?v=personas-20261125-8';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=personas-20261125-8';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, shippedInWindow, shippedText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=personas-20261125-10';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=personas-20261125-10';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=personas-20261125-10';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-10';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=personas-20261125-10';
+import { targetUrl } from './route-state.js?v=personas-20261125-10';
+import { markdownFrame } from './markdown.js?v=personas-20261125-10';
+import { workedDaysBalance, daysOffText } from './working-patterns.js?v=personas-20261125-10';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=personas-20261125-10';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});
@@ -306,12 +306,44 @@ function observatory(index,ui){
   const browseCard=`<div id="primary-browse-releases" tabindex="-1">${card('Browse releases',`${summary}${switcher}${filters}${body}`)}</div>`;
   // Environments only appears when deployment history was imported.
   const deployed=!!index.deployments?.available;
-  const nav=sectionNav('Releases',[['releases-browse','Browse releases'],['releases-over-time','Over time'],...(deployed?[['releases-environments','Environments']]:[])]);
+  const nav=sectionNav('Releases',[['releases-shipped','What shipped'],['releases-browse','Browse releases'],['releases-over-time','Over time'],...(deployed?[['releases-environments','Environments']]:[])]);
   const anatomy=chosen?releaseAnatomy(index,chosen.hash,ui):empty('No release in this filter','Change the year, type, wait shape, footprint or tag filter to choose a release.');
   // The list stays beside the release it opens; wider views take the full width above it.
-  return `${nav}<div id="releases-browse" tabindex="-1">${browse==='list'?`<div class="primary-release-browse"><div class="primary-release-sidebar">${browseCard}</div><div class="primary-release-detail">${anatomy}</div></div>`:`${browseCard}${anatomy}`}</div>
+  return `${nav}<div id="releases-shipped" tabindex="-1">${shippedCard(index,ui)}</div><div id="releases-browse" tabindex="-1">${browse==='list'?`<div class="primary-release-browse"><div class="primary-release-sidebar">${browseCard}</div><div class="primary-release-detail">${anatomy}</div></div>`:`${browseCard}${anatomy}`}</div>
     ${sectionHeading('releases-over-time','Over time','How the scope\'s authored work, contributors and release events unfold.')}${scopeTimelineCard(index,ui)}
     ${deployed?`${sectionHeading('releases-environments','Environments','Where releases ran: published versus production, then every environment event.')}${deploymentOverviewPanel(index)}${deploymentExplorer(index,ui)}${deploymentPeriodPanel(index,ui)}`:''}`;
+}
+
+/**
+ * What shipped in the scope's dates, in plain terms for people outside the
+ * team: each release's title, people, production status and its changes
+ * grouped as new, fixes and behind the scenes; then work not yet released.
+ */
+const SHIPPED_SHOWN=6,SHIPPED_ITEMS=8;
+function shippedChanges(groups){
+  return groups.map(g=>g.key==='internal'
+    ?`<details class="primary-shipped-internal"><summary>Behind the scenes · ${f(g.items.length)} ${g.items.length===1?'change':'changes'} (refactoring, tests, tooling, docs)</summary><ul>${g.items.map(i=>`<li>${e(i)}</li>`).join('')}</ul></details>`
+    :`<div class="primary-shipped-group"><h5>${e(g.label)}</h5><ul>${g.items.slice(0,SHIPPED_ITEMS).map(i=>`<li>${e(i)}</li>`).join('')}</ul>${g.items.length>SHIPPED_ITEMS?`<details><summary>${f(g.items.length-SHIPPED_ITEMS)} more</summary><ul>${g.items.slice(SHIPPED_ITEMS).map(i=>`<li>${e(i)}</li>`).join('')}</ul></details>`:''}</div>`).join('');
+}
+function shippedRelease(index,r){
+  const live=r.production===undefined?'':r.production?`<span class="primary-shipped-live is-live">In production since ${e(day(new Date(r.production).toISOString().slice(0,10)))}</span>`:'<span class="primary-shipped-live">Not yet seen in production</span>';
+  return `<article class="primary-shipped-release"><header><div><h4><a href="${href(index,{view:'observatory',release:r.hash})}" data-action="primary-select-release" data-hash="${e(r.hash)}">${e(r.tag)}</a>${r.title?` <span>${e(r.title)}</span>`:''}</h4><p>${e(day(r.date))} · ${e(type(r.kind))} release · ${f(r.commits)} ${r.commits===1?'change':'changes'} by ${e(r.people.join(', ')||'unknown authors')}${r.lead?` · released by ${e(r.lead)}`:''}</p></div>${live}</header>
+    ${r.groups.length?shippedChanges(r.groups):'<p class="primary-muted">No change descriptions in the imported history for this release.</p>'}
+    ${r.notes?`<details class="primary-shipped-notes"><summary>Published release notes</summary>${markdownFrame(r.notes,{title:`Release notes for ${r.tag}`})}</details>`:''}</article>`;
+}
+function shippedCard(index,ui){
+  const shipped=shippedInWindow(index,{from:ui.periodFrom,to:ui.periodTo});
+  const shown=shipped.releases.slice(0,SHIPPED_SHOWN),more=shipped.releases.slice(SHIPPED_SHOWN);
+  const pending=shipped.unreleased;
+  const head=`<div class="primary-row between"><p class="primary-muted">${f(shipped.releases.length)} ${shipped.releases.length===1?'release':'releases'} in ${e(day(ui.periodFrom))} – ${e(day(ui.periodTo))}. Changes are described by their commit messages; the grouping is inferred from how each message starts.</p><button type="button" class="button outline" data-action="copy-shipped">Copy as release notes</button></div><p id="primary-shipped-status" class="scope-status" role="status" aria-live="polite"></p>`;
+  const releases=shipped.releases.length?`${shown.map(r=>shippedRelease(index,r)).join('')}${more.length?`<details class="primary-shipped-more"><summary>${f(more.length)} earlier ${more.length===1?'release':'releases'} in these dates</summary>${more.map(r=>shippedRelease(index,r)).join('')}</details>`:''}`
+    :empty('No releases in these dates','Choose "Since the latest release" or a longer period in Edit scope.');
+  const unreleased=pending.commits?`<article class="primary-shipped-release is-pending"><header><div><h4>Not yet released</h4><p>${f(pending.commits)} ${pending.commits===1?'change':'changes'} authored in these dates by ${e(pending.people.join(', '))}, not in any imported release</p></div></header>${shippedChanges(pending.groups)}</article>`:'';
+  return card('What shipped',`${head}${releases}${unreleased}`);
+}
+/** Plain-text release notes for the scope's dates, for the copy button. */
+export function shippedTextForUi(index,ui){
+  return shippedText(shippedInWindow(index,{from:ui.periodFrom,to:ui.periodTo}));
 }
 
 /** Groups of comparable releases (by version transition, lead or year); a group narrows the list. */
@@ -643,5 +675,5 @@ export function renderPrimaryExplorer(index,ui){
 export function periodBriefingForUi(index,ui){
   const window={from:ui.periodFrom,to:ui.periodTo};
   const base=briefingText(index,periodDigest(index,window,{comparison:ui.periodComparison,customComparison:{from:ui.compareFrom,to:ui.compareTo},selectedIds:scopeOf(index,ui).ids}));
-  return `${base}\n${deploymentBriefing(index,window.from,window.to)}`;
+  return `${base}\n${deploymentBriefing(index,window.from,window.to)}\n\n${shippedText(shippedInWindow(index,window))}`;
 }

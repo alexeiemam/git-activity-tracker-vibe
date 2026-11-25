@@ -4,13 +4,13 @@
  * date selection. Author activity is dated by authorship; releases by tag date.
  * These coordinates describe recorded Git evidence, never attendance or quality.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=personas-20261125-8';
-import {mondayOfDate,continuityMatrix} from './continuity.js?v=personas-20261125-8';
-import {signatureMatrix,DELIVERY_REFERENCE_LINES,CONTRIBUTION_REFERENCE_INDEX} from './contribution-signature.js?v=personas-20261125-8';
-import {dailyEvidence} from './momentum.js?v=personas-20261125-8';
-import {momentumMatrix} from './momentum.js?v=personas-20261125-8';
-import {contributionLevelMatrix} from './contribution-level.js?v=personas-20261125-8';
-import {releaseGapMatrix} from './release-gap.js?v=personas-20261125-8';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=personas-20261125-10';
+import {mondayOfDate,continuityMatrix} from './continuity.js?v=personas-20261125-10';
+import {signatureMatrix,DELIVERY_REFERENCE_LINES,CONTRIBUTION_REFERENCE_INDEX} from './contribution-signature.js?v=personas-20261125-10';
+import {dailyEvidence} from './momentum.js?v=personas-20261125-10';
+import {momentumMatrix} from './momentum.js?v=personas-20261125-10';
+import {contributionLevelMatrix} from './contribution-level.js?v=personas-20261125-10';
+import {releaseGapMatrix} from './release-gap.js?v=personas-20261125-10';
 
 export const MOTION_WINDOWS=Object.freeze([4,8,12,20]);
 export const MOTION_STEPS=Object.freeze([1,2,4]);

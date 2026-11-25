@@ -4,10 +4,10 @@
  * complete introduced Git ancestry (subject only to the explicitly declared
  * merge/revert policy); an authored period is a different observation clock.
  */
-import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=personas-20261125-8';
-import { changeCategory, fileKind } from './impact.js?v=personas-20261125-8';
-import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape, folderArea } from './release-footprint.js?v=personas-20261125-8';
-import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=personas-20261125-8';
+import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=personas-20261125-10';
+import { changeCategory, fileKind } from './impact.js?v=personas-20261125-10';
+import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape, folderArea } from './release-footprint.js?v=personas-20261125-10';
+import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=personas-20261125-10';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);
@@ -538,5 +538,77 @@ export function briefingText(index,digest) {
     `Releases: ${digest.releases.map(r=>r.tag).join(', ')||'none in the interval'}.`];
   if(comparison)lines.push(`Comparison (${comparison.window.from} to ${comparison.window.to}): ${comparison.summary.commits} authored commits and ${comparison.events.releases} release events.`);
   lines.push('Interpretation limits: authored commits are not working hours; release events use tag/GitHub publication dates; only imported reachable Git history is visible.');
+  return lines.join('\n');
+}
+
+/**
+ * What shipped in a window, in plain terms: each release dated within it
+ * (newest first) with its title, people, production date and its changes
+ * grouped by what kind of change the commit subject says it is, plus the
+ * work authored in the window that no imported release contains yet.
+ * Subjects are the only description Git has; categories are inferred.
+ */
+export const SHIPPED_GROUPS=[
+  {key:'new',label:'New and improved',kinds:['feat','perf']},
+  {key:'fixes',label:'Fixes',kinds:['fix']},
+  {key:'reverted',label:'Reverted',kinds:['revert']},
+  {key:'other',label:'Other changes',kinds:['other']},
+  {key:'internal',label:'Behind the scenes',kinds:['refactor','chore','test','docs','build','ci','style']},
+];
+/** A commit subject as a readable line: no conventional-commit prefix, scope kept as a lead-in. */
+export function plainSubject(subject){
+  const text=String(subject||'').trim();
+  const match=text.match(/^[a-z]+(?:\(([^)]+)\))?!?:\s*(.*)$/i);
+  const body=(match?match[2]:text)||text,scope=match?.[1];
+  const sentence=body.charAt(0).toUpperCase()+body.slice(1);
+  return scope?`${scope}: ${sentence}`:sentence;
+}
+const IMPROVEMENT=/^(improve|optimi[sz]e|enhance|speed up|support)\b/i;
+function groupChanges(commits){
+  const groups=SHIPPED_GROUPS.map(g=>({...g,items:[]}));
+  const seen=new Set();
+  for(const c of commits){
+    if(c.merges)continue;
+    const line=plainSubject(c.subject);
+    if(!line||seen.has(line.toLowerCase()))continue;
+    seen.add(line.toLowerCase());
+    // Unprefixed messages that say they improve something read as improvements, not "other".
+    const kind=c.kind==='other'&&IMPROVEMENT.test(String(c.subject||'').trim())?'feat':c.kind;
+    (groups.find(g=>g.kinds.includes(kind))||groups.find(g=>g.key==='other')).items.push(line);
+  }
+  return groups.filter(g=>g.items.length);
+}
+export function shippedInWindow(index,{from,to}){
+  const inWindow=date=>!!date&&(!from||date>=from)&&(!to||date<=to);
+  const byHash=new Map(index.activity.map(c=>[c.hash,c]));
+  const names=new Map(index.groups.map(g=>[g.id,g.displayName]));
+  const prod=new Map((index.deployments?.available?index.deployments.releaseLinks:[]).map(l=>[l.releaseHash,l.byEnv?.PROD?.at??null]));
+  const releases=index.releases.filter(r=>inWindow(r.date)).slice().sort((a,b)=>(b.timestamp??0)-(a.timestamp??0)).map(r=>{
+    const commits=r.commits.map(h=>byHash.get(h)).filter(Boolean);
+    const people=[...new Set(commits.map(c=>c.groupId))].map(id=>names.get(id)).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+    return {hash:r.hash,tag:r.tag,date:r.date,kind:r.kind,baseline:!!r.baseline,
+      // A title that only repeats the tag ("Release v1.2.0") adds nothing.
+      title:r.github?.title&&!r.github.title.toLowerCase().includes(String(r.tag).toLowerCase())?r.github.title:null,notes:r.github?.body||'',url:r.github?.url||'',
+      lead:r.driver?.groupId!=null?names.get(r.driver.groupId)||null:r.driver?.name||null,
+      people,commits:commits.length,production:prod.has(r.hash)?prod.get(r.hash):undefined,groups:groupChanges(commits)};
+  });
+  const released=new Set(index.releases.flatMap(r=>r.commits));
+  const pending=index.activity.filter(c=>inWindow(c.date)&&!released.has(c.hash)&&!c.merges);
+  return {from,to,releases,unreleased:{commits:pending.length,
+    people:[...new Set(pending.map(c=>c.groupId))].map(id=>names.get(id)).filter(Boolean).sort((a,b)=>a.localeCompare(b)),
+    groups:groupChanges(pending.slice().reverse())}};
+}
+/** The same, as plain text to paste into a doc, ticket or chat. */
+export function shippedText(shipped,{limit=12}={}){
+  const day=v=>v?new Date(`${v}T12:00:00Z`).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}):'';
+  const lines=[`What shipped, ${day(shipped.from)} – ${day(shipped.to)}`];
+  const changes=groups=>groups.filter(g=>g.key!=='internal').flatMap(g=>[`  ${g.label}:`,...g.items.slice(0,limit).map(i=>`  - ${i}`),...(g.items.length>limit?[`  - …and ${g.items.length-limit} more`]:[])])
+    .concat(groups.filter(g=>g.key==='internal').map(g=>`  Behind the scenes: ${g.items.length} ${g.items.length===1?'change':'changes'} (refactoring, tests, tooling, docs).`));
+  if(!shipped.releases.length)lines.push('','No releases in these dates.');
+  for(const r of shipped.releases){
+    const live=r.production===undefined?'':r.production?` · in production since ${new Date(r.production).toISOString().slice(0,10)}`:' · not yet seen in production';
+    lines.push('',`${r.tag}${r.title?` — ${r.title}`:''} (${day(r.date)})${live}`,`  ${r.commits} changes by ${r.people.join(', ')||'unknown authors'}${r.lead?`; released by ${r.lead}`:''}.`,...changes(r.groups));
+  }
+  if(shipped.unreleased.commits)lines.push('',`Not yet released: ${shipped.unreleased.commits} changes by ${shipped.unreleased.people.join(', ')}.`,...changes(shipped.unreleased.groups));
   return lines.join('\n');
 }
