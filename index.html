@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=personas-20261125-14">
+  <link rel="stylesheet" href="./assets/app.css?v=personas-20261125-17">
 </head>
 <body>
   <div class="page">
@@ -37,7 +37,13 @@
       <details id="source-details" open>
         <summary><span class="source-heading"><span class="step-dot">01</span> <strong id="source-title">Load repository history</strong> <span class="subtle" id="source-status">Paste git log output, or try the demo.</span></span><span class="summary-chevron" aria-hidden="true">⌄</span></summary>
         <div class="source-content">
+          <div class="source-paths" role="group" aria-label="Ways to start">
+            <div><strong>Someone sent you a session file?</strong><p>Open the <code>.json.gz</code> file they shared. Nothing is uploaded.</p><button type="button" data-action="choose-import" class="button primary">Open a session file</button></div>
+            <div><strong>Just looking around?</strong><p>Explore a made-up team's three years of releases.</p><button type="button" data-action="load-demo" class="button soft">Explore the demo</button></div>
+            <div><strong>Have the repository on your machine?</strong><p>Copy the command, run it inside the repository, then paste what it copies into the box below.</p><button type="button" data-action="copy-command" class="button outline">Copy command</button></div>
+          </div>
           <div class="source-topline"><label for="range-select">Initially show</label><select id="range-select" aria-label="Initial authored-date window"><option value="1">1 year</option><option value="2">2 years</option><option value="3" selected>3 years</option><option value="4">4 years</option><option value="5">5 years</option></select><span class="helper">Import full reachable history. Start by viewing the latest <strong>authored</strong> years; change dates in the dashboard.</span></div>
+          <details class="command-details"><summary>See exactly what the command runs</summary>
           <div class="command-row"><span class="terminal-mark">$</span><code id="git-cmd">(
   if ! git fetch origin --tags --quiet; then echo "Note: origin tag fetch failed; using locally available tags." &gt;&amp;2; fi
   git for-each-ref --format='TAG|%(refname:short)|%(*objectname)|%(objectname)|%(objecttype)|%(creatordate:iso-strict)|%(taggername)|%(taggeremail:trim)' refs/tags
@@ -182,6 +188,7 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
   git log HEAD --tags --pretty=format:'COMMIT|%H|%ae|%an|%aI|%cI|%s|%P' --numstat
 ) | pbcopy</code><button type="button" data-action="copy-command" class="command-copy">Copy command</button></div>
           <p class="input-hint">Run inside your repository. This uses up to three bounded Heroku Release List pages per environment (up to 3,000 events; later pages require the authenticated Heroku API and Python 3). It fetches tags from <code>origin</code>, adds GitHub Releases via <code>gh</code>, independently captures up to 3,000 Heroku releases each from remotes <code>STAG</code>, <code>BETA</code> and <code>PROD</code> (when authenticated), and copies authored history without a committer-date cutoff. It also checks up to 18 deployment SHAs against local Git objects and imports at most 175 additional commits per missing branch tip. To opt into at most four bounded GitHub fetches for unavailable SHA objects, run <code>export GIT_SIGNALS_FETCH_DEPLOYMENT_SHAS=1</code> before the command. These fetches may update local shallow-repository metadata; failure leaves deployment evidence explicitly unresolved. No credentials or Heroku config values are requested; the imported release metadata and Git history stay in your browser. Incomplete Heroku access is reported per environment. The command uses macOS <code>pbcopy</code>; on other systems, remove the final pipe and copy terminal output.</p>
+          </details>
           <label class="field-label" for="log-input">Git history + optional GitHub and Heroku release evidence</label>
           <textarea id="log-input" placeholder="TAG|v8.9.1||hash|commit|2026-10-01T09:12:00+01:00&#10;GHRELEASE|base64-encoded-GitHub-Release-metadata&#10;HEROKU|PROD|base64-encoded-Heroku-release-list&#10;COMMIT|hash|email|name|author-time|committer-time|subject|parents&#10;25  8  app/models/example.rb" spellcheck="false"></textarea>
           <p class="input-hint">The paste field clears after a successful import. Your evidence remains in the current session and its export.</p>
@@ -349,6 +356,6 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=personas-20261125-14"></script>
+  <script type="module" src="./assets/app.js?v=personas-20261125-17"></script>
 </body>
 </html>

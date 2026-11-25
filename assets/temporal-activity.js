@@ -9,8 +9,8 @@
  * Days, identities and merge/revert inclusion come from the full-history,
  * policy-filtered evidence index. Display windows do not trim earlier context.
  */
-import {dayNumber,dateAtDay,validDate} from './domain.js?v=personas-20261125-14';
-import {scheduleById,countAgainstSchedule} from './working-patterns.js?v=personas-20261125-14';
+import {dayNumber,dateAtDay,validDate} from './domain.js?v=personas-20261125-17';
+import {scheduleById,countAgainstSchedule} from './working-patterns.js?v=personas-20261125-17';
 
 export const TEMPORAL_PERIODS = Object.freeze([60,90,120]);
 export const TEMPORAL_PERIOD_DEFAULT = 90;
