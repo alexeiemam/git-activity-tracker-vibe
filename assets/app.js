@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=release-nearest-20261125-1';
-import { generateDemoLog } from './demo-data.js?v=release-nearest-20261125-1';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=release-nearest-20261125-1';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=release-nearest-20261125-1';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=release-nearest-20261125-1';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=release-nearest-20261125-1';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=release-nearest-20261125-1';
-import { releaseScorecard } from './release-scorecard.js?v=release-nearest-20261125-1';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=release-nearest-20261125-1';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=release-nearest-20261125-1';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=release-nearest-20261125-1';
-import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=release-nearest-20261125-1';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=release-nearest-20261125-1';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=release-nearest-20261125-1';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=release-nearest-20261125-1';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=release-nearest-20261125-1';
-import { buildStoryAnalysis } from './stories.js?v=release-nearest-20261125-1';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=release-nearest-20261125-1';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=release-nearest-20261125-1';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=release-nearest-20261125-1';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=release-nearest-20261125-1';
-import { downloadFilename } from './download-names.js?v=release-nearest-20261125-1';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=release-nearest-20261125-1';
-import { buildDeploymentIndex } from './deployments.js?v=release-nearest-20261125-1';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=release-nearest-20261125-1';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=release-nearest-20261125-1';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=release-nearest-20261125-1';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=release-nearest-20261125-1';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=release-nearest-20261125-1';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=release-nearest-20261125-1';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=release-nearest-20261125-1';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=release-nearest-20261125-1';
+} from './domain.js?v=timeline-exact-20261125-2';
+import { generateDemoLog } from './demo-data.js?v=timeline-exact-20261125-2';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=timeline-exact-20261125-2';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=timeline-exact-20261125-2';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=timeline-exact-20261125-2';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=timeline-exact-20261125-2';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=timeline-exact-20261125-2';
+import { releaseScorecard } from './release-scorecard.js?v=timeline-exact-20261125-2';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=timeline-exact-20261125-2';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=timeline-exact-20261125-2';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=timeline-exact-20261125-2';
+import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=timeline-exact-20261125-2';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=timeline-exact-20261125-2';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=timeline-exact-20261125-2';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=timeline-exact-20261125-2';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=timeline-exact-20261125-2';
+import { buildStoryAnalysis } from './stories.js?v=timeline-exact-20261125-2';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=timeline-exact-20261125-2';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=timeline-exact-20261125-2';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=timeline-exact-20261125-2';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=timeline-exact-20261125-2';
+import { downloadFilename } from './download-names.js?v=timeline-exact-20261125-2';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=timeline-exact-20261125-2';
+import { buildDeploymentIndex } from './deployments.js?v=timeline-exact-20261125-2';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=timeline-exact-20261125-2';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=timeline-exact-20261125-2';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=timeline-exact-20261125-2';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=timeline-exact-20261125-2';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=timeline-exact-20261125-2';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=timeline-exact-20261125-2';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=timeline-exact-20261125-2';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=timeline-exact-20261125-2';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=release-nearest-20261125-1', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=timeline-exact-20261125-2', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -2303,8 +2303,16 @@ const SIZE_BANDS=[
 let timelineView=null,timelineFrame=0,timelineAnimation=0,timelineSettle=0;
 /** A stretch of the work strip pinned to show whose work it held: a way of looking, never a release choice. */
 let timelineFlight=null;
+/**
+ * The exact window a zoom or pan settled on. The saved preference keeps only
+ * calendar dates (for the date boxes, the URL and saved sessions); this keeps
+ * the view at the minute it was left while those dates still match.
+ */
+let timelineExact=null;
 function timelinePreference() {
   if(timelineView)return {mode:'custom',start:timelineView.start,end:timelineView.end};
+  if(timelineExact&&state.impactTimelineMode==='custom'&&timelineExact.from===state.impactTimelineFrom&&timelineExact.to===state.impactTimelineTo)
+    return {mode:'custom',start:timelineExact.start,end:timelineExact.end};
   return {mode:state.impactTimelineMode,from:state.impactTimelineFrom,to:state.impactTimelineTo};
 }
 const currentTimelineWindow=()=>impactModel?impactTimelineWindow(impactModel,timelinePreference()):null;
@@ -2325,6 +2333,7 @@ function showTimelineWindow(window) {
 function commitTimelineWindow(window,preference=null) {
   cancelAnimationFrame(timelineFrame);timelineFrame=0;timelineView=null;
   if(window||preference)setTimelinePreference(preference||impactTimelinePreferenceFor(impactModel,window));
+  if(window&&!preference)timelineExact={start:window.start,end:window.end,from:state.impactTimelineFrom,to:state.impactTimelineTo};
   renderImpactTimeline();
 }
 /** Ease from the current window to `target`, unless the viewer prefers reduced motion. */
@@ -2476,13 +2485,19 @@ function bindTimelineGestures() {
     const dots=all.filter(n=>n.dx-closest<=TIMELINE_COLUMN_PX).sort((a,b)=>a.dy-b.dy).map(n=>n.dot);
     return {svg,dots,inBand:py/scale<=TIMELINE_BAND_BOTTOM};
   };
-  // The zoom that puts at least TIMELINE_APART_PX between neighbouring dots of a crowd, or null when they share one instant.
+  // The window that pulls a crowd apart, or null when its dots share one instant:
+  // the whole crowd, centred, with room around it; zoomed no further than its
+  // closest pair needs (TIMELINE_APART_PX). A crowd still too tight inside it
+  // is pulled apart by clicking it again.
   const separation=(svg,dots)=>{
     const times=dots.map(dot=>Number(dot.dataset.at)).sort((a,b)=>a-b);
     const gaps=times.slice(1).map((t,i)=>t-times[i]).filter(g=>g>0);
-    if(!gaps.length)return null;
-    const factor=Math.min(.5,Math.min(...gaps)/TIMELINE_APART_PX/timelineMsPerPixel(svg));
-    return {factor,anchor:(times[0]+times.at(-1))/2};
+    const current=currentTimelineWindow();
+    if(!gaps.length||!current)return null;
+    const span=current.end-current.start,msPerPx=timelineMsPerPixel(svg);
+    const factor=Math.min(.5,Math.max(Math.min(...gaps)/TIMELINE_APART_PX/msPerPx,(times.at(-1)-times[0])*1.5/span));
+    const anchor=(times[0]+times.at(-1))/2;
+    return impactTimelineCentreWindow(impactModel,impactTimelineZoomWindow(impactModel,current,factor,anchor),anchor);
   };
   root.addEventListener('pointermove',event=>{
     const t=tip();
@@ -2514,7 +2529,7 @@ function bindTimelineGestures() {
     const hit=nearest(event);if(!hit||!hit.inBand)return;
     event.stopPropagation();event.preventDefault();hideTip();
     const apart=hit.dots.length>1&&separation(hit.svg,hit.dots);
-    if(apart){const window=currentTimelineWindow();if(window)animateTimelineTo(impactTimelineZoomWindow(impactModel,window,apart.factor,apart.anchor));return;}
+    if(apart){animateTimelineTo(apart);return;}
     ACTIONS['impact-release'](event,hit.dots[0]);
   },true);
   // Hovering a stretch of the work strip lights up the releases whose work it was.
@@ -2526,6 +2541,7 @@ function bindTimelineGestures() {
   root.addEventListener('pointerout',event=>{if(event.target.closest('[data-flight]'))lightFlight([]);});
 }
 function setTimelinePreference(next) {
+  timelineExact=null;
   state.impactTimelineMode=next.mode;
   state.impactTimelineFrom=next.from || null;
   state.impactTimelineTo=next.to || null;
