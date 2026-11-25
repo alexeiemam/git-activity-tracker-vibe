@@ -3,38 +3,38 @@ import {
   periodForPreset, seriesForAnalysis, moveContributorIdentities,
   valueInMode, displayModeLabel, sum, seasonalityAnalysis, seasonalMonthValue,
   parseGitHistory, getHistoryDateBounds, withWeekAggregation,
-} from './domain.js?v=personas-20261125-2';
-import { generateDemoLog } from './demo-data.js?v=personas-20261125-2';
-import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=personas-20261125-2';
-import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=personas-20261125-2';
-import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=personas-20261125-2';
-import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=personas-20261125-2';
-import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=personas-20261125-2';
-import { releaseScorecard } from './release-scorecard.js?v=personas-20261125-2';
-import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=personas-20261125-2';
-import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=personas-20261125-2';
-import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=personas-20261125-2';
-import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=personas-20261125-2';
-import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=personas-20261125-2';
-import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=personas-20261125-2';
-import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=personas-20261125-2';
-import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-2';
-import { buildStoryAnalysis } from './stories.js?v=personas-20261125-2';
-import { renderStoryExplorer, storyCopyText } from './story-view.js?v=personas-20261125-2';
-import { buildEvidenceIndex, windowOf } from './perspectives.js?v=personas-20261125-2';
-import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=personas-20261125-2';
-import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=personas-20261125-2';
-import { downloadFilename } from './download-names.js?v=personas-20261125-2';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=personas-20261125-2';
-import { buildDeploymentIndex } from './deployments.js?v=personas-20261125-2';
-import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=personas-20261125-2';
-import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=personas-20261125-2';
-import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=personas-20261125-2';
-import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=personas-20261125-2';
-import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=personas-20261125-2';
-import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=personas-20261125-2';
-import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=personas-20261125-2';
-import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=personas-20261125-2';
+} from './domain.js?v=personas-20261125-3';
+import { generateDemoLog } from './demo-data.js?v=personas-20261125-3';
+import { impactAnalysis, applyReleaseMeasures, IMPACT_METRICS } from './impact.js?v=personas-20261125-3';
+import { releaseGapMatrix, DEFAULT_GAP_HORIZON, DEFAULT_BUSY_DAY, DEFAULT_RELEASE_LINES, GAP_HORIZONS, BUSY_DAY_THRESHOLDS, RELEASE_LINE_THRESHOLDS, DAILY_CHURN_THRESHOLDS, DEFAULT_DAILY_CHURN, ATTENTION_THRESHOLD } from './release-gap.js?v=personas-20261125-3';
+import { momentumMatrix, DEFAULT_MOMENTUM_WINDOW, MOMENTUM_WINDOWS, MOMENTUM_DIRECTION_THRESHOLD } from './momentum.js?v=personas-20261125-3';
+import { contributionLevelMatrix, DEFAULT_LEVEL_WINDOW, LEVEL_WINDOWS } from './contribution-level.js?v=personas-20261125-3';
+import { velocityStyle,velocityCellText,velocityLegend } from './absolute-velocity.js?v=personas-20261125-3';
+import { releaseScorecard } from './release-scorecard.js?v=personas-20261125-3';
+import { signatureMatrix, SIGNATURE_MODES, DEFAULT_SIGNATURE_MODE } from './contribution-signature.js?v=personas-20261125-3';
+import { renderContributionSignature, renderSignatureLegend, renderSignatureSummary, renderSignatureQuadrant, bindSignatureQuadrant } from './contribution-signature-view.js?v=personas-20261125-3';
+import { continuityMatrix, continuityReleaseColour, CONTINUITY_WINDOWS, DEFAULT_CONTINUITY_WINDOW } from './continuity.js?v=personas-20261125-3';
+import {WEEKDAY_LABELS,BANK_HOLIDAYS,scheduleById,normalizeWorkingDays,normalizeLeave,daysOffText,workingPatternLabel,missingDayColour,extraDayColour} from './working-patterns.js?v=personas-20261125-3';
+import { TEMPORAL_PERIODS, TEMPORAL_PERIOD_DEFAULT, TEMPORAL_CHURN_CAPS, TEMPORAL_CHURN_DEFAULT, MEANINGFUL_CHURN_THRESHOLDS, MEANINGFUL_CHURN_DEFAULT, MAX_GAP_DISTRIBUTION_RELIEF, temporalActivitySummary, temporalDay, emptyTemporalDay } from './temporal-activity.js?v=personas-20261125-3';
+import { impactSelectMessage, impactSummary, impactTimeline, impactReleasePicker, impactReleaseDetail, impactReleaseMatrix, impactMatrixWindow, impactMatrixPageForRelease, impactReleaseMatrixCsv, impactDurability, impactGithubStatus, impactIndividualProfiles } from './impact-view.js?v=personas-20261125-3';
+import { impactTimelineExtent, impactTimelineWindow, impactTimelineReveal, impactTimelineCustomRange, impactTimelineZoomWindow, impactTimelineShiftWindow, impactTimelineCentreWindow, impactTimelinePreferenceFor, impactReleasePosition } from './impact-window.js?v=personas-20261125-3';
+import { makeIntensityScale, intensityColour, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-3';
+import { buildStoryAnalysis } from './stories.js?v=personas-20261125-3';
+import { renderStoryExplorer, storyCopyText } from './story-view.js?v=personas-20261125-3';
+import { buildEvidenceIndex, windowOf } from './perspectives.js?v=personas-20261125-3';
+import { renderPrimaryExplorer, periodBriefingForUi, scopeHeadline, readingGuide } from './perspective-view.js?v=personas-20261125-3';
+import { primaryDefaults, restorePrimaryState, primaryStateForExport } from './perspective-state.js?v=personas-20261125-3';
+import { downloadFilename } from './download-names.js?v=personas-20261125-3';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=personas-20261125-3';
+import { buildDeploymentIndex } from './deployments.js?v=personas-20261125-3';
+import { externalIdentities, reconcileProviderGroups, extendContributorGroups } from './external-identities.js?v=personas-20261125-3';
+import { mergeGitHistories, isCompleteRecapture, compactAdditionalCapture, hasImportableEvidence } from './history-merge.js?v=personas-20261125-3';
+import { reorderContributors, reorderLinkedIdentity, rebaseContributorId, contributorColourIndex, contributorKey } from './identity-order.js?v=personas-20261125-3';
+import { parseIdentityConfig, buildIdentityConfig, applyIdentityConfig, adoptReservedIdentities, sanitizeIdentityGroups, reserveFor } from './identity-config.js?v=personas-20261125-3';
+import { readRoute, routeFromState, applyRoute, routeUrl, targetUrl } from './route-state.js?v=personas-20261125-3';
+import { saveLocalHistory, readLocalHistory, deleteLocalHistory } from './local-history.js?v=personas-20261125-3';
+import { buildMotionScenes, MOTION_WINDOWS, MOTION_STEPS, MOTION_TRAILS, MOTION_LABELS, MOTION_MODES, DEFAULT_MOTION_VIEWS } from './motion-explorer.js?v=personas-20261125-3';
+import { renderMotionExplorer, bindMotionExplorer } from './motion-view.js?v=personas-20261125-3';
 
 const COLORS = ['#13735a','#dd7853','#5379ba','#9170ac','#b88b3c','#3f9a9a','#c66887','#687e41','#c07648','#5376a0','#8c5c79','#508e65'];
 // The analysis worker owns the expensive import and release-DAG calculations.
@@ -52,7 +52,7 @@ function createAnalysisWorker() {
   if (workerFaulted || typeof Worker === 'undefined') return null;
   if (analysisWorker) return analysisWorker;
   try {
-    analysisWorker = new Worker(new URL('./analysis-worker.js?v=personas-20261125-2', import.meta.url), {type:'module'});
+    analysisWorker = new Worker(new URL('./analysis-worker.js?v=personas-20261125-3', import.meta.url), {type:'module'});
     analysisWorker.onmessage = ({data}) => {
       const job = workerJobs.get(data.id);
       if (!job) return;
@@ -172,6 +172,8 @@ const $ = id => document.getElementById(id);
 const number = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 });
 const decimal = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 2 });
 const percent = n => `${Math.abs(n) > 0 && Math.abs(n) < .01 ? Number(n.toPrecision(2)) : decimal.format(n)}%`;
+/** What every per-person measure leaves out; shown wherever individuals are compared. */
+const GIT_BLIND_SPOTS='These are counts of recorded Git activity, not effort, value or performance: code review, pairing, design, mentoring, support, incidents and planning do not appear in Git at all.';
 const esc = value => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const color = id => COLORS[mergeGroups[Number(id)] ? contributorColourIndex(mergeGroups[Number(id)], COLORS.length) : (Number(id) || 0) % COLORS.length];
 const style = id => `--person:${color(id)}`;
@@ -211,7 +213,7 @@ const state = {
   includeMerges: false, includeReverts: true,
   metric: 'commits', mode: 'total', denominator: 'repository',
   trend: 'rolling', pulseMode: 'monthly', pulseLens:'activity', pulseMetric:'commits',continuityView:DEFAULT_SIGNATURE_MODE, pulseGapHorizon:DEFAULT_GAP_HORIZON, pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES, pulseDailyChurn:DEFAULT_DAILY_CHURN, pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT, rhythmFocus: 'selection', rhythmDisplay: 'heatmap',
-  seasonMode: 'rate', seasonYears: null, sortKey: 'lens', sortDesc: true,
+  seasonMode: 'rate', seasonYears: null, sortKey: 'name', sortDesc: false, rankingOrder: 'name',
   impactTab:'timeline',impactMetric:'commits',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
   impactTimelineMode:'latest',impactTimelineFrom:null,impactTimelineTo:null,
   impactFocus:'selection', impactActorMap:{},
@@ -907,7 +909,7 @@ function syncScopeAfterLoad() {
   const desiredStart = dateAtDay(dayNumber(anniversary)+1);
   const initialStart = min > desiredStart ? min : desiredStart;
   Object.assign(state, { period:initialStart===min?'all':'custom',start:initialStart,end:max,includeMerges:false,includeReverts:true,
-    ...defaultMotionState(),metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseMetric:'commits',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
+    ...defaultMotionState(),metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseMetric:'commits',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',seasonMode:'rate',seasonYears:null,sortKey:'name',sortDesc:false,rankingOrder:'name',search:'',impactTab:'timeline',impactMetric:'commits',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'latest',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{},
     viewMode:'observatory',storyPerspective:'team',storyFocus:'selection',storyTopic:'all',storyCategory:'noteworthy',storyShowAll:false,
     storyFindingId:null,storyMonth:null,storyPairA:null,storyPairB:null,storyTrail:[],storyDismissed:new Set() });
@@ -1048,7 +1050,7 @@ function changeDate() {
 function resetFilters() {
   scopeFollowsLatest=true;
   Object.assign(state,{ period:'all',start:sourceDateBounds().min,end:sourceDateBounds().max,
-    ...defaultMotionState(),includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseMetric:'commits',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',seasonMode:'rate',seasonYears:null,sortKey:'lens',sortDesc:true,search:'',impactTab:'timeline',impactMetric:'commits',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
+    ...defaultMotionState(),includeMerges:false,includeReverts:true,metric:'commits',mode:'total',denominator:'repository',trend:'rolling',pulseMode:'monthly',pulseLens:'activity',pulseMetric:'commits',continuityView:DEFAULT_SIGNATURE_MODE,pulseGapHorizon:DEFAULT_GAP_HORIZON,pulseBusyDay:DEFAULT_BUSY_DAY, pulseReleaseLines:DEFAULT_RELEASE_LINES,pulseDailyChurn:DEFAULT_DAILY_CHURN,pulseMomentumWorkdays:DEFAULT_MOMENTUM_WINDOW,pulseLevelWorkdays:DEFAULT_LEVEL_WINDOW,pulseContinuityWeeks:DEFAULT_CONTINUITY_WINDOW, pulseTemporalPeriod:TEMPORAL_PERIOD_DEFAULT,pulseTemporalChurn:TEMPORAL_CHURN_DEFAULT,pulseMeaningfulLines:MEANINGFUL_CHURN_DEFAULT,rhythmFocus:'selection',rhythmDisplay:'heatmap',seasonMode:'rate',seasonYears:null,sortKey:'name',sortDesc:false,rankingOrder:'name',search:'',impactTab:'timeline',impactMetric:'commits',impactReleaseHash:null,impactShowAll:false,impactMatrixMode:'all',impactMatrixPage:0,impactMatrixYear:'all',impactMatrixSize:18,
     impactTimelineMode:'latest',impactTimelineFrom:null,impactTimelineTo:null,impactFocus:'selection',impactActorMap:{} });
   state.selectedIds=new Set(mergeGroups.map((_,i)=>String(i)));
   $('contributor-search').value='';
@@ -1121,27 +1123,20 @@ function renderStats(view) {
   if (!view.selectedIds.size) return setText('insight-strip','Select one or more contributors above to reveal the comparisons.');
   if (!selected.commits) return setText('insight-strip','No commits match this exact scope. Try another date window or change the merge/revert policy.');
   if (!selectedMetric) return setText('insight-strip', `No ${METRICS[view.metric].label.toLowerCase()} were recorded in this scope. Choose another measure or broaden the selection.`);
-  const ranked=[...view.contributors].sort((a,b)=>metricValue(b,view.metric)-metricValue(a,view.metric));
-  const first=ranked[0];
-  const second=ranked[1];
-  const refMetric=view.referenceTotal;
-  // Release roles are rates over releases in scope, not portions of an additive total.
-  if (METRICS[view.metric].unit==='releases') {
-    const role=view.metric==='release_leadership'?'led':'shipped work in';
-    const releases=c=>`<strong>${esc(number.format(metricValue(c,view.metric)))}</strong> (${esc(percent(metricValue(c,view.metric)/refMetric*100))})`;
-    $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> ${role} ${releases(first)} of the ${esc(number.format(refMetric))} tagged releases in scope${second?`; <strong>${esc(second.displayName)}</strong> follows with ${releases(second)}.`:'.'}`;
-    return;
-  }
-  // Same units for both people: the recorded amount, then its share of the reference total.
-  const amount=c=>`<strong>${esc(number.format(metricValue(c,view.metric)))}</strong> (${esc(refMetric?percent(metricValue(c,view.metric)/refMetric*100):'0%')})`;
-  $('insight-strip').innerHTML=`<strong>${esc(first.displayName)}</strong> accounts for ${amount(first)} of ${esc(METRICS[view.metric].label.toLowerCase())} in the ${view.denominator==='repository'?'repository':'selected cohort'}${second?`; <strong>${esc(second.displayName)}</strong> follows with ${amount(second)}.`:'.'}`;
+  // A neutral statement of the total, never "who leads": the measures count
+  // recorded Git activity, which leaves out much of what people do.
+  const people=view.contributors.filter(c=>metricValue(c,view.metric)>0).length;
+  const unit=METRICS[view.metric].unit==='releases'?'tagged releases':METRICS[view.metric].label.toLowerCase();
+  $('insight-strip').innerHTML=`<strong>${esc(number.format(people))} ${people===1?'person':'people'}</strong> recorded <strong>${esc(number.format(selectedMetric))}</strong> ${esc(unit)} in these dates. ${GIT_BLIND_SPOTS}`;
 }
 function renderRanking(view) {
   const label=METRICS[view.metric].label;
   setText('ranking-context',`${label.toUpperCase()} / ${displayModeLabel(state.mode).toUpperCase()}`);
   setText('ranking-scale',state.mode==='share'? view.referenceTotal ? 'Bar width: 100% = entire reference group' : 'No reference activity; shares are undefined' : 'Bar width: longest = largest selected value (same scale for all)');
   if(!view.contributors.length) return $('ranking').innerHTML=empty('No people selected. Select one or many above.');
-  const ordered=[...view.contributors].sort((a,b)=>lensFor(b,view)-lensFor(a,view) || a.displayName.localeCompare(b.displayName));
+  const byName=(a,b)=>a.displayName.localeCompare(b.displayName);
+  const ordered=[...view.contributors].sort(state.rankingOrder==='value'?(a,b)=>lensFor(b,view)-lensFor(a,view)||byName(a,b):byName);
+  document.querySelectorAll('[data-ranking-order]').forEach(btn=>{const yes=btn.dataset.rankingOrder===state.rankingOrder;btn.classList.toggle('active',yes);btn.setAttribute('aria-pressed',String(yes));});
   const maximum=state.mode==='share'?100:Math.max(...ordered.map(c=>lensFor(c,view)),1);
   $('ranking').innerHTML=ordered.map((c,i)=>{
     const metric=metricValue(c,view.metric);
@@ -1151,7 +1146,7 @@ function renderRanking(view) {
       :state.mode==='share'?`${number.format(metric)} ${METRICS[view.metric].unit}`
       :state.mode==='per_active_day'?`${number.format(metric)} / ${c.totals.active_days} active days`
       :`${number.format(metric)} over ${view.spanDays} days`;
-    return `<div class="ranking-row" style="${style(c.id)}"><div class="ranking-person"><span class="ranking-index">${String(i+1).padStart(2,'0')}</span><i class="person-dot" aria-hidden="true"></i><span class="ranking-name" title="${esc(c.displayName)}">${esc(c.displayName)}</span></div><div class="ranking-track" title="${esc(c.displayName)}: ${esc(formatLens(val))}"><div class="ranking-fill" style="width:${maximum&&val!==null?Math.min(100,Math.max(0,val/maximum*100)):0}%"></div></div><div class="ranking-value">${esc(formatLens(val))}<small>${esc(side)}</small></div></div>`;
+    return `<div class="ranking-row" style="${style(c.id)}"><div class="ranking-person"><i class="person-dot" aria-hidden="true"></i><span class="ranking-name" title="${esc(c.displayName)}">${esc(c.displayName)}</span></div><div class="ranking-track" title="${esc(c.displayName)}: ${esc(formatLens(val))}"><div class="ranking-fill" style="width:${maximum&&val!==null?Math.min(100,Math.max(0,val/maximum*100)):0}%"></div></div><div class="ranking-value">${esc(formatLens(val))}<small>${esc(side)}</small></div></div>`;
   }).join('');
 }
 
@@ -1243,8 +1238,10 @@ function sortedContributors(view,releaseEvidence) {
     actor_events:c=>releaseEvidence?.available?(releaseEvidence.byId.get(String(c.id))?.actorEvents??0):-1,
     version:c=>c.totals.releases,weekend:c=>c.totals.commits&&c.workingDays?.length?c.offDayCommits/c.totals.commits*100:-1,
   };
+  const byName=(a,b)=>a.displayName.localeCompare(b.displayName);
+  if(state.sortKey==='name')return [...view.contributors].sort((a,b)=>byName(a,b)*(state.sortDesc?-1:1));
   const get=getters[state.sortKey]||getters.lens;
-  return [...view.contributors].sort((a,b)=>(get(a)-get(b))*(state.sortDesc?-1:1) || a.displayName.localeCompare(b.displayName));
+  return [...view.contributors].sort((a,b)=>(get(a)-get(b))*(state.sortDesc?-1:1) || byName(a,b));
 }
 function makeTableData(view) {
   const reference=view.referenceTotal;
@@ -1275,7 +1272,7 @@ function renderTable(view) {
   if(!view.contributors.length){ $('scorecard-wrap').innerHTML=empty('No selected contributors.');tableRows=[];return; }
   const data=makeTableData(view);
   tableRows=data.rows;
-  $('scorecard-wrap').innerHTML=`<table class="data-table"><thead><tr>${data.columns.map((col,i)=>`<th class="${i?'right':''}" scope="col" ${col.key===state.sortKey?`aria-sort="${state.sortDesc?'descending':'ascending'}"`:''}>${col.key==='name'?esc(col.label):`<button type="button" class="sort-button" data-action="sort-table" data-sort="${col.key}">${esc(col.label)}${state.sortKey===col.key?(state.sortDesc?' ↓':' ↑'):''}</button>`}</th>`).join('')}</tr></thead><tbody>${data.rows.map(({c,vals})=>`<tr>${vals.map((val,i)=>`<td class="${i?'right':'name-cell'}">${i ? esc(data.format(data.columns[i],val)) : data.columns[i].show(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  $('scorecard-wrap').innerHTML=`<table class="data-table"><thead><tr>${data.columns.map((col,i)=>`<th class="${i?'right':''}" scope="col" ${col.key===state.sortKey?`aria-sort="${state.sortDesc?'descending':'ascending'}"`:''}>${`<button type="button" class="sort-button" data-action="sort-table" data-sort="${col.key}">${esc(col.label)}${state.sortKey===col.key?(state.sortDesc?' ↓':' ↑'):''}</button>`}</th>`).join('')}</tr></thead><tbody>${data.rows.map(({c,vals})=>`<tr>${vals.map((val,i)=>`<td class="${i?'right':'name-cell'}">${i ? esc(data.format(data.columns[i],val)) : data.columns[i].show(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   setText('table-note',`Authored activity and VERSION touches use commit-author dates. Tagged releases, their included commits and released changed lines use release-event dates (${view.start}–${view.end}) and full introduced Git ancestry under the selected merge/revert policy; baseline tags are excluded. Released changed lines exclude VERSION files and binary changes. Tag/publish actor events are metadata, not proof of deployment or authored contribution. ${data.releaseEvidence.available?`${data.releaseEvidence.inRange} incremental tagged release events observed; ${data.releaseEvidence.partialReleases} have partial ancestry.`:'No imported tagged-release evidence — release columns are unavailable, not zero.'} Distinct tags on divergent histories can include overlapping changes. Active days are contributor-days, not distinct team dates. Share denominator: ${view.denominator==='repository'?'repository':'selected cohort'}.`);
 }
 function copyCsv() {
@@ -3349,7 +3346,8 @@ const ACTIONS={
   'pulse-day':(_e,t)=>{if(pulsePopoverPinned&&pulsePopoverOrigin===t)hidePulsePopover();else showPulsePopover(t,{pin:true});},
   'pulse-period':(_e,t)=>{if(pulsePopoverPinned&&pulsePopoverOrigin===t)hidePulsePopover();else showPulsePeriodPopover(t,{pin:true});},
   'close-pulse':closePulseAndRestoreFocus,
-  'sort-table':(_e,t)=>{const key=t.dataset.sort;state.sortDesc=state.sortKey===key?!state.sortDesc:true;state.sortKey=key;renderTable(analysis);},
+  'sort-table':(_e,t)=>{const key=t.dataset.sort;state.sortDesc=state.sortKey===key?!state.sortDesc:key!=='name';state.sortKey=key;renderTable(analysis);},
+  'ranking-order':(_e,t)=>{state.rankingOrder=t.dataset.rankingOrder==='value'?'value':'name';if(analysis)renderRanking(analysis);},
   'copy-csv':copyCsv,
 };
 function handleDocumentClick(event) {
@@ -3432,7 +3430,7 @@ function handleDocumentChange(event) {
     case 'scope-compare-from':case 'scope-compare-to':primary.compareFrom=$('scope-compare-from').value||null;primary.compareTo=$('scope-compare-to').value||null;renderScope(analysis);renderPrimary();break;
     case 'filter-merges':state.includeMerges=t.checked;renderDashboard();break;
     case 'filter-reverts':state.includeReverts=t.checked;renderDashboard();break;
-    case 'metric-select':state.metric=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;
+    case 'metric-select':state.metric=t.value;renderDashboard();break;
     case 'pulse-gap-horizon':state.pulseGapHorizon=GAP_HORIZONS.includes(Number(t.value))?Number(t.value):DEFAULT_GAP_HORIZON;renderPulse(analysis);break;
     case 'pulse-busy-day':state.pulseBusyDay=BUSY_DAY_THRESHOLDS.includes(Number(t.value))?Number(t.value):DEFAULT_BUSY_DAY;renderPulse(analysis);break;
     case 'pulse-release-lines':state.pulseReleaseLines=RELEASE_LINE_THRESHOLDS.includes(Number(t.value))?Number(t.value):DEFAULT_RELEASE_LINES;renderPulse(analysis);break;
@@ -3458,7 +3456,7 @@ function handleDocumentChange(event) {
       if(next){setTimelinePreference(next);selectImpactReleaseWithinWindow();}
       renderImpact(analysis);break;
     }
-    case 'mode-select':state.mode=t.value;state.sortKey='lens';state.sortDesc=true;renderDashboard();break;
+    case 'mode-select':state.mode=t.value;renderDashboard();break;
     case 'denominator-select':state.denominator=t.value;renderDashboard();break;
   }
 }

@@ -1738,3 +1738,4 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 .app-bar-button.is-copied{background:var(--green);border-color:var(--green);color:#fff}
 .primary-caveat{margin:0 0 14px;padding:11px 14px;border-left:3px solid #b07a2c;background:#fbf5e9;border-radius:0 7px 7px 0;font-size:13px;line-height:1.6;color:#4b4434}.primary-caveat strong{color:var(--ink)}
 .primary-worked-table td strong{color:var(--ink);font-weight:600}.primary-worked-of{font-weight:400;color:var(--muted)}
+.primary-person-limits{margin:16px 0 0;padding:11px 14px;border-radius:7px;background:#ffffff14;border:1px solid #ffffff2e;font-size:12.5px;line-height:1.6;color:#e3efe7}.primary-person-limits strong{color:#fff}

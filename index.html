@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/app.css?v=personas-20261125-2">
+  <link rel="stylesheet" href="./assets/app.css?v=personas-20261125-3">
 </head>
 <body>
   <div class="page">
@@ -257,7 +257,7 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
       <div id="overview-stats" class="stat-grid" data-slot-section="stats" hidden aria-label="Summary metrics for selected contributors"></div>
       <div id="insight-strip" class="insight-strip" data-slot-section="insight" hidden aria-live="polite"></div>
 
-      <section class="report-section" aria-labelledby="ranking-heading" data-slot-section="ranking" hidden><div class="section-header"><div><h3 id="ranking-heading">Contribution, side by side.</h3><p>One metric and reference scale for everyone. Bars and figures refer to the exact scope above.</p></div></div><div class="report-card"><div class="viz-top"><div id="ranking-context" class="eyebrow"></div><span class="helper" id="ranking-scale"></span></div><div id="ranking" class="ranking-list"></div></div></section>
+      <section class="report-section" aria-labelledby="ranking-heading" data-slot-section="ranking" hidden><div class="section-header"><div><h3 id="ranking-heading">Contribution, side by side.</h3><p>One metric and reference scale for everyone. Bars and figures refer to the exact scope above. Listed by name; order by value only when that comparison is the question.</p></div><div class="segmented" role="group" aria-label="Order people by"><button type="button" class="segment active" data-action="ranking-order" data-ranking-order="name" aria-pressed="true">By name</button><button type="button" class="segment" data-action="ranking-order" data-ranking-order="value" aria-pressed="false">By value</button></div></div><div class="report-card"><div class="viz-top"><div id="ranking-context" class="eyebrow"></div><span class="helper" id="ranking-scale"></span></div><div id="ranking" class="ranking-list"></div></div></section>
 
       <section class="report-section" aria-labelledby="trend-heading" data-slot-section="trend" hidden><div class="section-header"><div><h3 id="trend-heading">Momentum over time.</h3><p>Compare smoothed four-week windows, raw weeks, or cumulative progress. The same mode, metric, and denominator apply here.</p></div><div class="segmented" role="group" aria-label="Trend aggregation"><button type="button" class="segment active" data-action="trend-mode" data-trend="rolling" aria-pressed="true">4-week</button><button type="button" class="segment" data-action="trend-mode" data-trend="weekly" aria-pressed="false">Weekly</button><button type="button" class="segment" data-action="trend-mode" data-trend="cumulative" aria-pressed="false">Cumulative</button></div></div><div class="report-card"><div class="viz-top"><span id="trend-axis-label" class="eyebrow"></span><span class="helper" id="trend-note"></span></div><div id="trend-chart" class="trend-chart" aria-label="Metric trend of selected contributors"></div><div id="trend-legend" class="trend-legend"></div></div></section>
 
@@ -348,6 +348,6 @@ for item in sorted((x for x in rows if isinstance(x,dict)), key=lambda x:str(x.g
     </section>
     <footer class="page-footer">git<span class="wordmark-light">signals</span> <span>Thoughtful comparisons from ordinary git history. Data stays in this browser.</span></footer>
   </div>
-  <script type="module" src="./assets/app.js?v=personas-20261125-2"></script>
+  <script type="module" src="./assets/app.js?v=personas-20261125-3"></script>
 </body>
 </html>
