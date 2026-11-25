@@ -364,6 +364,8 @@ test('what shipped lists releases in the dates with plain, grouped changes and t
  assert.equal(plainSubject('feat(ui)!: new explorer'),'ui: New explorer');
  assert.equal(plainSubject('fix: handle empty tags'),'Handle empty tags');
  assert.equal(plainSubject('Tidy the readme'),'Tidy the readme');
+ const text0=shippedText(shippedInWindow(index,{from:null,to:null}));
+ assert.doesNotMatch(text0,/Merge pull request/i,'merge messages never describe a change');
  const dates=index.releases.map(r=>r.date).sort();
  const all=shippedInWindow(index,{from:dates[0],to:dates.at(-1)});
  assert.equal(all.releases.length,index.releases.length);

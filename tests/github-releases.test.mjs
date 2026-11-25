@@ -178,6 +178,6 @@ test('release notes and titles reach the Observatory release anatomy, not only t
   assert.equal(release.github.title,'Release v1.0.1');
   assert.match(release.github.body,/Mostly API \| UI 🚀/);
   const html=renderPrimaryExplorer(index,{...primaryDefaults(),mode:'observatory',releaseHash:release.hash});
-  assert.match(html,/Read published release notes/);
+  assert.match(html,/<details class="primary-notes" open><summary>Published release notes/,"the notes are open in the anatomy");
   assert.match(html,/Ship reliable changes/);
 });

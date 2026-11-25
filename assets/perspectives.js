@@ -4,10 +4,10 @@
  * complete introduced Git ancestry (subject only to the explicitly declared
  * merge/revert policy); an authored period is a different observation clock.
  */
-import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=personas-20261125-10';
-import { changeCategory, fileKind } from './impact.js?v=personas-20261125-10';
-import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape, folderArea } from './release-footprint.js?v=personas-20261125-10';
-import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=personas-20261125-10';
+import { dayNumber, dateAtDay, dayOfWeek, fileArea, validDate } from './domain.js?v=personas-20261125-12';
+import { changeCategory, fileKind } from './impact.js?v=personas-20261125-12';
+import { buildCodebaseMap, releaseFootprint, typicalFootprint, footprintReference, footprintShape, folderArea } from './release-footprint.js?v=personas-20261125-12';
+import { releaseAgeDays, releaseAgeDistribution, firstReleaseByCommit, commitReleaseAges, releaseShape, allReleasesShape, shapeReference } from './release-latency.js?v=personas-20261125-12';
 
 const unique = values => [...new Set(values)];
 const sum = values => values.reduce((a,b)=>a+b,0);
@@ -563,12 +563,14 @@ export function plainSubject(subject){
   const sentence=body.charAt(0).toUpperCase()+body.slice(1);
   return scope?`${scope}: ${sentence}`:sentence;
 }
+const MERGE_SUBJECT=/^merge(?:d)?\s+(?:pull request|branch|remote|tag|commit)\b/i;
 const IMPROVEMENT=/^(improve|optimi[sz]e|enhance|speed up|support)\b/i;
 function groupChanges(commits){
   const groups=SHIPPED_GROUPS.map(g=>({...g,items:[]}));
   const seen=new Set();
   for(const c of commits){
-    if(c.merges)continue;
+    // Merge commits only say where work came from, not what it was.
+    if(c.merges||MERGE_SUBJECT.test(String(c.subject||'')))continue;
     const line=plainSubject(c.subject);
     if(!line||seen.has(line.toLowerCase()))continue;
     seen.add(line.toLowerCase());
@@ -593,7 +595,7 @@ export function shippedInWindow(index,{from,to}){
       people,commits:commits.length,production:prod.has(r.hash)?prod.get(r.hash):undefined,groups:groupChanges(commits)};
   });
   const released=new Set(index.releases.flatMap(r=>r.commits));
-  const pending=index.activity.filter(c=>inWindow(c.date)&&!released.has(c.hash)&&!c.merges);
+  const pending=index.activity.filter(c=>inWindow(c.date)&&!released.has(c.hash)&&!c.merges&&!MERGE_SUBJECT.test(String(c.subject||'')));
   return {from,to,releases,unreleased:{commits:pending.length,
     people:[...new Set(pending.map(c=>c.groupId))].map(id=>names.get(id)).filter(Boolean).sort((a,b)=>a.localeCompare(b)),
     groups:groupChanges(pending.slice().reverse())}};

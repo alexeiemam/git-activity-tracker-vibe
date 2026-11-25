@@ -11,10 +11,10 @@
  * This is NOT a rating of people or performance. Line counts miss pairing,
  * reviews, binary work, and many other kinds of contribution.
  */
-import { dayNumber, dateAtDay, validDate } from './domain.js?v=personas-20261125-10';
-import { nonVersionChurn, temporalActivityByPerson, emptyTemporalDay, MAX_GAP_DISTRIBUTION_RELIEF, temporalOptions } from './temporal-activity.js?v=personas-20261125-10';
-import { scheduleById } from './working-patterns.js?v=personas-20261125-10';
-export { nonVersionChurn } from './temporal-activity.js?v=personas-20261125-10';
+import { dayNumber, dateAtDay, validDate } from './domain.js?v=personas-20261125-12';
+import { nonVersionChurn, temporalActivityByPerson, emptyTemporalDay, MAX_GAP_DISTRIBUTION_RELIEF, temporalOptions } from './temporal-activity.js?v=personas-20261125-12';
+import { scheduleById } from './working-patterns.js?v=personas-20261125-12';
+export { nonVersionChurn } from './temporal-activity.js?v=personas-20261125-12';
 
 export const GAP_HORIZONS = Object.freeze([30, 60, 90]);
 export const BUSY_DAY_THRESHOLDS = Object.freeze([2, 4, 6]);
