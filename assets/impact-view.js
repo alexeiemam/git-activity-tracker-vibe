@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=personas-20261125-17';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=personas-20261125-17';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-17';
+import { IMPACT_METRICS } from './impact.js?v=personas-20261125-18';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=personas-20261125-18';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-18';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -32,7 +32,7 @@ export function impactSummary(model) {
     <div><span>TAGGED RELEASES</span><strong>${amount(releases.length)}</strong><small>${majors} major transitions · ${model.allReleaseCount} distinct tagged snapshots in import</small></div>
     <div><span>SCOPED CONTRIBUTIONS</span><strong>${amount(selectedCommits)}</strong><small>Authored commits included in these releases</small></div>
     <div><span>AREAS REACHED</span><strong>${amount(areas.size)}</strong><small>Across selected contributor releases</small></div>
-    <div><span>GH-PUBLISHED</span><strong>${amount(model.githubLinkedCount)}</strong><small>${amount(releases.length-model.githubLinkedCount)} tag-only · ${amount(versionTouches)} VERSION touches</small></div>
+    <div><span>PUBLISHED ON GITHUB</span><strong>${amount(model.githubLinkedCount)}</strong><small>${amount(releases.length-model.githubLinkedCount)} with a Git tag only · ${amount(versionTouches)} edits to a VERSION file</small></div>
   </div>`;
 }
 
@@ -60,7 +60,7 @@ export function impactGithubStatus(model) {
   };
   return `<div class="impact-gh-banner"><div class="impact-gh-banner-top"><div><span class="impact-gh-mark">${hasMeta?'GITHUB · ENRICHED':'GIT · TAG-ONLY'}</span><p>${e(subtitle)}</p></div>${hasMeta?`<span class="impact-gh-matched">${matched} / ${count} publishers matched · ${automatic} automatic · ${manual} confirmed</span>`:''}</div>
     ${model.captureWarningsCount?`<p class="impact-gh-warning">${amount(model.captureWarningsCount)} GitHub metadata records could not be decoded. The remaining evidence is still available.</p>`:''}
-    ${count?`<details class="impact-identity-mapping"><summary>Publisher identity matches <span>${count-matched} require review · affects lead attribution only</span></summary>
+    ${count?`<details class="impact-identity-mapping"><summary>Who published each release <span>${count-matched} to check · only changes who is shown as releasing</span></summary>
       <p class="impact-muted">Release-lead credit is inferred only from exact, unambiguous Git author identities already grouped under a contributor. GitHub noreply addresses are strongest; exact email usernames or author aliases can also match. Manual choices override automatic matches. Similar names are never guessed.</p>
       <div class="impact-actor-grid">${model.ghActors.map(actor=>`<label><span class="impact-gh-login">@${e(actor.login)} <small>${amount(actor.releases)} releases · ${e(description[actor.matchSource] || 'Unmatched')}${actor.groupName?` · ${e(actor.groupName)}`:''}</small></span><select data-gh-actor="${e(actor.login)}" aria-label="Match GitHub publisher ${e(actor.login)} to a contributor"><option value="__auto__" ${actor.matchSource!=='manual'&&actor.matchSource!=='excluded'?'selected':''}>Automatic matching${actor.groupName?` · ${e(actor.groupName)}`:''}</option><option value="__none__" ${actor.matchSource==='excluded'?'selected':''}>Do not attribute</option>${model.groups.map(g=>`<option value="${e(g.emails[0])}" ${g.id===actor.groupId&&actor.matchSource==='manual'?'selected':''}>${e(g.name)} · ${e(g.emails.length===1?g.emails[0]:`${g.emails.length} author identities`)}</option>`).join('')}</select></label>`).join('')}</div>
     </details>`:''}</div>`;

@@ -1,13 +1,13 @@
 /** Accessible, bounded UI for the three primary evidence perspectives. */
-import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, shippedInWindow, shippedText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=personas-20261125-17';
-import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=personas-20261125-17';
-import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=personas-20261125-17';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-17';
-import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=personas-20261125-17';
-import { targetUrl } from './route-state.js?v=personas-20261125-17';
-import { markdownFrame } from './markdown.js?v=personas-20261125-17';
-import { workedDaysBalance, daysOffText } from './working-patterns.js?v=personas-20261125-17';
-import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=personas-20261125-17';
+import { periodDigest, contributorPortrait, releaseDetails, releaseLandscape, windowOf, briefingText, shippedInWindow, shippedText, releaseFingerprints, releaseFootprints, codebaseCommits, personAreaTouches, areaPortrait, codebaseSignals, childOf, folderTrail, pathTouches, folderMap, fileCompanions, FILES_HERE } from './perspectives.js?v=personas-20261125-18';
+import { RELEASE_AGE_BUCKETS, RELEASE_SHAPES, fresherThan, shapeNote } from './release-latency.js?v=personas-20261125-18';
+import { FOOTPRINT_SHAPES, footprintNote, similarReleases, OTHER_FOLDERS } from './release-footprint.js?v=personas-20261125-18';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=personas-20261125-18';
+import { coReleasePatterns, coReleaseEvidence } from './co-release.js?v=personas-20261125-18';
+import { targetUrl } from './route-state.js?v=personas-20261125-18';
+import { markdownFrame } from './markdown.js?v=personas-20261125-18';
+import { workedDaysBalance, daysOffText } from './working-patterns.js?v=personas-20261125-18';
+import { deploymentOverviewPanel, deploymentReleasePanel, deploymentPeriodPanel, deploymentContributorPanel, deploymentExplorer, deploymentBriefing } from './deployment-view.js?v=personas-20261125-18';
 
 const e=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n=new Intl.NumberFormat('en-GB',{maximumFractionDigits:1});
