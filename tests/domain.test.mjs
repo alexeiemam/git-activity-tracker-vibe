@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { generateDemoLog } from '../assets/demo-data.js';
 import {
-  parseGitLog, buildAnalysis, periodForPreset, validDate, longestStreak, moveContributorIdentities,
+  parseGitLog, buildAnalysis, periodForPreset, releaseDates, validDate, longestStreak, moveContributorIdentities,
   longestConsecutiveWorkdays, dayOfWeek, sum, valueInMode, fileArea, seriesForAnalysis, pulseDayDetails,
 } from '../assets/domain.js';
 
@@ -369,4 +369,17 @@ test('weekly timing remains empty and undefined when all scoped commits lack an 
   assert.equal(sum(r.weekdays.map(d=>d.count)),0);
   assert.equal(sum(r.cells.map(d=>d.count)),0);
   assert.equal(r.cells[0].percentage,null);
+});
+
+test('release presets cover the work since the latest release, and the latest release cycle',()=>{
+  const tags=[{name:'v1',taggedDate:'2026-01-10'},{name:'v2',taggedDate:'2026-02-01'},{name:'v3',taggedDate:'2026-03-01'}];
+  const github=[{tag:'v3',publishedDate:'2026-03-03',draft:false},{tag:'v2',publishedDate:'2026-02-20',draft:true}];
+  const releases=releaseDates(tags,github);
+  assert.deepEqual(releases.map(r=>r.date),['2026-01-10','2026-02-01','2026-03-03'],'published date wins; drafts do not');
+  const bounds={min:'2026-01-01',max:'2026-03-20'};
+  assert.deepEqual(periodForPreset([],'since-release',bounds,releases),{start:'2026-03-04',end:'2026-03-20'});
+  assert.deepEqual(periodForPreset([],'release-cycle',bounds,releases),{start:'2026-02-02',end:'2026-03-03'});
+  assert.deepEqual(periodForPreset([],'since-release',{min:'2026-01-01',max:'2026-03-03'},releases),{start:'2026-03-03',end:'2026-03-03'},'never an empty window');
+  assert.deepEqual(periodForPreset([],'release-cycle',bounds,releases.slice(0,1)),{start:'2026-01-01',end:'2026-01-10'},'a first release covers history up to it');
+  assert.deepEqual(periodForPreset([],'since-release',bounds,[]),{start:'2026-01-01',end:'2026-03-20'},'without releases, all dates');
 });

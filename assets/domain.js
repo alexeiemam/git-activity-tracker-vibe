@@ -4,9 +4,9 @@
  * are additive, unlike the number of calendar dates with any team activity.
  */
 
-import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=personas-20261125-7';
-import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=personas-20261125-7';
-import { scheduleFor } from './working-patterns.js?v=personas-20261125-7';
+import { decodeHerokuBatch, DEPLOYMENT_ENVS } from './deployments.js?v=personas-20261125-8';
+import { mergeGitHistories, bestCaptureStatus } from './history-merge.js?v=personas-20261125-8';
+import { scheduleFor } from './working-patterns.js?v=personas-20261125-8';
 
 export const METRICS = Object.freeze({
   commits: { label: 'Commits', unit: 'commits', note: 'Commit records, not an estimate of impact' },
@@ -277,11 +277,40 @@ export function getHistoryDateBounds(commits, tags = [], githubReleases = [], he
   return bounds;
 }
 
-export function periodForPreset(commits, preset = 'all', bounds = null) {
+/**
+ * Each tagged release's date, oldest first: its GitHub publication date when
+ * a published (non-draft) GitHub Release exists, otherwise its tag date.
+ */
+export function releaseDates(tags = [], githubReleases = []) {
+  const published = new Map(githubReleases.filter(r => !r.draft && validDate(r.publishedDate)).map(r => [r.tag, r.publishedDate]));
+  const byTag = new Map();
+  for (const tag of tags) {
+    const date = published.get(tag.name) ?? tag.taggedDate;
+    if (validDate(date) && !byTag.has(tag.name)) byTag.set(tag.name, date);
+  }
+  return [...byTag].map(([tag, date]) => ({ tag, date })).sort((a, b) => a.date.localeCompare(b.date) || a.tag.localeCompare(b.tag));
+}
+
+/**
+ * The dates a scope preset covers. Release presets need `releases` (from
+ * releaseDates): "since-release" runs from the day after the latest release
+ * to the end of history; "release-cycle" from the day after the release
+ * before it up to the latest release, i.e. the work that went into it.
+ */
+export function periodForPreset(commits, preset = 'all', bounds = null, releases = []) {
   // A caller may include tag dates in the global date-window boundaries.
   // Commit-only analysis continues using authored dates by default.
   const { min, max } = bounds ?? getDateBounds(commits);
   if (!min || !max) return { start: null, end: null };
+  const days = [...new Set(releases.map(r => r.date))].sort();
+  if (preset === 'since-release' && days.length) {
+    const start = dateAtDay(dayNumber(days.at(-1)) + 1);
+    return start > max ? { start: max, end: max } : { start, end: max };
+  }
+  if (preset === 'release-cycle' && days.length) {
+    const end = days.at(-1);
+    return { start: days.length > 1 ? dateAtDay(dayNumber(days.at(-2)) + 1) : min, end };
+  }
   if (/^(7|14|30|90|365|730)d$/.test(preset)) {
     const days = Number(preset.slice(0, -1));
     return { start: dateAtDay(dayNumber(max) - days + 1), end: max };

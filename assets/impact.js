@@ -7,8 +7,8 @@
  * No line-level survival, deploy date, customer value, or team productivity is
  * inferred from numstat; file revisitation is explicitly a proxy.
  */
-import { fileArea } from './domain.js?v=personas-20261125-7';
-import { releaseTail, workPartners } from './impact-window.js?v=personas-20261125-7';
+import { fileArea } from './domain.js?v=personas-20261125-8';
+import { releaseTail, workPartners } from './impact-window.js?v=personas-20261125-8';
 
 export const IMPACT_METRICS = Object.freeze({
   commits: 'Commits', churn: 'Line churn', paths: 'Distinct paths', areas: 'Codebase areas', share: 'Commit share',
