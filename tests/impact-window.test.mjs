@@ -108,8 +108,8 @@ test('exact windows zoom around a pointer, shift, centre and save as dates, alwa
   assert.ok(Math.abs((zoomed.end-zoomed.start)-(all.end-all.start)/2)<1,'half the span');
   const before=(anchor-all.start)/(all.end-all.start),after=(anchor-zoomed.start)/(zoomed.end-zoomed.start);
   assert.ok(Math.abs(before-after)<1e-9,'the time under the pointer stays under the pointer');
-  const day=impactTimelineZoomWindow(m,zoomed,1e-9,anchor);
-  assert.equal(day.end-day.start,86400000,'zoom stops at one day');
+  const closest=impactTimelineZoomWindow(m,zoomed,1e-9,anchor);
+  assert.equal(closest.end-closest.start,600000,'zoom stops at ten minutes');
   const shifted=impactTimelineShiftWindow(m,zoomed,-1e13);
   assert.equal(shifted.start,extent.start,'panning stops at the start of history');
   assert.equal(shifted.end-shifted.start,zoomed.end-zoomed.start,'and keeps the zoom');

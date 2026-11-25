@@ -32,8 +32,11 @@ export function impactTimelineExtent(model) {
   return {start: start - 2*DAY, end: Math.max(end+2*DAY,start+2*DAY)};
 }
 
+/** Narrowest window the timeline zooms to: ten minutes, so release times read to the minute. */
+const MIN_SPAN = 10*60000;
+
 function keepWithin(extent, start, end) {
-  const span = Math.max(DAY,end-start);
+  const span = Math.max(MIN_SPAN,end-start);
   const total = extent.end-extent.start;
   if (span>=total) return {start:extent.start,end:extent.end};
   const first = clamp(start,extent.start,extent.end-span);
@@ -111,9 +114,6 @@ export function impactTimelinePan(model, options, progress) {
   const start=extent.start+available*clamp(Number(progress)/1000||0,0,1);
   return {mode:'custom',from:dateOf(start),to:dateOf(start+span-1)};
 }
-
-/** Narrowest window the timeline zooms to: one day. */
-const MIN_SPAN = DAY;
 
 /** `window` scaled by `factor` around `anchor` (a time; the centre by default), kept inside history. */
 export function impactTimelineZoomWindow(model, window, factor, anchor=null) {

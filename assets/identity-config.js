@@ -6,7 +6,7 @@
  * later import or appended capture can still honour the user's mapping, and so
  * re-exporting never silently drops them.
  */
-import { normalizeLeave } from './working-patterns.js?v=codetree-20261120-1';
+import { normalizeLeave } from './working-patterns.js?v=release-created-20261125-1';
 
 export const IDENTITY_CONFIG_FORMAT = 'git-signals-identities';
 export const IDENTITY_CONFIG_VERSION = 1;

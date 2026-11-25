@@ -1612,7 +1612,7 @@ a.primary-map-top{display:block}
 .impact-timeline-scroll svg{min-width:0}
 .impact-timeline-scroll:focus-visible{outline:3px solid #4f9a78;outline-offset:2px}
 #impact-timeline.is-panning .impact-timeline-scroll,#impact-timeline.is-panning .impact-overview-window{cursor:grabbing}
-#impact-timeline.is-panning .impact-timeline-dot{pointer-events:none}
+#impact-timeline.is-panning .impact-timeline-dot,#impact-timeline.is-panning .impact-created-marker{pointer-events:none}
 .impact-overview-track{cursor:pointer;touch-action:none;height:22px}
 .impact-overview-window{pointer-events:auto;cursor:grab;transition:background .15s}
 .impact-overview-window:hover{background:#489b6b44}
@@ -1732,3 +1732,4 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 .primary-section-nav .primary-breadcrumb [aria-current]{padding:2px 4px;color:var(--ink)}
 .primary-contents-table tr.is-up th{padding-top:9px;padding-bottom:9px;font-weight:500}
 .primary-contents-table tr.is-up a{font:12px var(--mono);color:#2f5e45}
+.impact-created-marker{cursor:pointer}.impact-created-marker:hover{filter:drop-shadow(0 0 3px #173d3588)}

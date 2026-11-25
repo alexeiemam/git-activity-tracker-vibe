@@ -1,7 +1,7 @@
 /** Presentational HTML helpers for the tag-first impact explorer. */
-import { IMPACT_METRICS } from './impact.js?v=codetree-20261120-1';
-import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=codetree-20261120-1';
-import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=codetree-20261120-1';
+import { IMPACT_METRICS } from './impact.js?v=release-created-20261125-1';
+import { impactTimelineWindow, impactTimelineExtent, impactTimelineDates, impactReleasePosition, workInFlight } from './impact-window.js?v=release-created-20261125-1';
+import { makeIntensityScale, intensityStyle, intensityLegend } from './value-colour.js?v=release-created-20261125-1';
 
 const e = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const n = new Intl.NumberFormat('en-GB', {maximumFractionDigits:1});
@@ -219,16 +219,24 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
     const end=weekly?b.start+7*86400000:Date.UTC(new Date(b.start).getUTCFullYear(),new Date(b.start).getUTCMonth()+1,1);
     const left=x(Math.max(min,b.start)),barW=Math.max(1,x(Math.min(max,end))-left-2);
     const h=34*b.count/barMax;
-    return `<rect x="${left}" y="${246+o-h}" width="${barW}" height="${h}" rx="1" fill="#9dbfac" opacity=".85"><title>${e(b.label)} · ${amount(b.count)} authored commits · ${amount(b.version)} VERSION touches (within shown range)</title></rect>`;
+    return `<rect x="${left}" y="${246+o-h}" width="${barW}" height="${h}" rx="1" fill="#9dbfac" opacity=".85"><title>${e(b.label)} · ${amount(b.count)} authored commits (within shown range)</title></rect>`;
   }).join('');
-  const versionMarkers=model.versionEvents.filter(c=>c.authoredAt!=null&&Date.parse(`${c.date}T12:00:00Z`)>=min&&Date.parse(`${c.date}T12:00:00Z`)<=max).map(c=>{
-    const pos=x(Date.parse(`${c.date}T12:00:00Z`));
-    return `<path d="M ${pos} ${195+o} l 4 4 l -4 4 l -4 -4 z" fill="#ad7d3c" stroke="#fff" stroke-width=".8"><title>${e(c.date)} · VERSION edit · ${e(c.subject)} · ${e(c.name)}</title></path>`;
+  // GitHub release creation, placed at its exact minute rather than mid-day.
+  const createdMarkers=all.filter(r=>Number.isFinite(r.github?.createdAt)&&r.github.createdAt>=min&&r.github.createdAt<=max).map(r=>{
+    const at=r.github.createdAt,pos=x(at),stamp=new Date(at).toISOString();
+    return `<path d="M ${pos} ${195+o} l 4 4 l -4 4 l -4 -4 z" fill="#ad7d3c" stroke="#fff" stroke-width=".8" data-action="impact-release" data-impact-hash="${e(r.hash)}" class="impact-created-marker"><title>${e(r.tag)} · GitHub release created ${e(shortDate(stamp.slice(0,10)))} ${stamp.slice(11,16)} UTC</title></path>`;
   }).join('');
   const ticks=[];
   const startDate=new Date(min),endDate=new Date(max);
   const tickMonths=spanDays<=120?0:spanDays<=365?1:spanDays<=3*365?3:spanDays<=7*365?6:12;
-  if(!tickMonths) {
+  const stepMs=[1,2,5,10,15,30,60,120,180,360,720,1440,2880].map(m=>m*60000).find(step=>(max-min)/step<=10);
+  if(spanDays<=14&&stepMs) {
+    // Zoomed close in: clock ticks (as recorded), with the date at each midnight.
+    for(let t=Math.ceil(min/stepMs)*stepMs;t<=max;t+=stepMs){
+      const iso=new Date(t).toISOString();
+      ticks.push({time:t,label:t%86400000===0?shortDate(iso.slice(0,10)):iso.slice(11,16)});
+    }
+  } else if(!tickMonths) {
     const startWeek=Date.UTC(startDate.getUTCFullYear(),startDate.getUTCMonth(),startDate.getUTCDate());
     for(let t=startWeek;t<=max;t+=7*86400000)if(t>=min)ticks.push({time:t,label:shortDate(new Date(t).toISOString().slice(0,10))});
   } else {
@@ -285,12 +293,12 @@ export function impactTimeline(model, selectedHash, options={mode:'all'}) {
       ${stems}${caption}
       <text x="14" y="${235+o}" class="impact-axis" transform="rotate(-90,14,${235+o})">AUTHORED</text>
       <line x1="48" y1="${246+o}" x2="${width-28}" y2="${246+o}" stroke="#d6e6d6"/>
-      ${bars}${versionMarkers}
+      ${bars}${createdMarkers}
       ${ticks.filter((_,i)=>i%skip===0).map(t=>`<line x1="${x(t.time)}" y1="${249+o}" x2="${x(t.time)}" y2="${254+o}" stroke="#9aae9c"/><text x="${x(t.time)}" y="${273+o}" text-anchor="middle" class="impact-axis">${e(t.label)}</text>`).join('')}
     </svg></div>
     ${!records.length?'<p class="impact-muted" role="status">No release tags fall within this timeline range. Adjust the dates or choose a release from the dropdown to locate it.</p>':''}
     <div class="impact-timeline-legend">${['major','minor','patch','prerelease','baseline','unclassified'].map(kind=>`<span><i style="background:${color(kind)}"></i>${typeLabel(kind)}</span>`).join('')}
-      <span><i style="background:#9dbfac;border-radius:1px"></i>Authored commits (including unreleased)</span><span><i style="background:#ad7d3c;transform:rotate(45deg);border-radius:0"></i>VERSION touched (author date)</span><span><i style="background:#fff;border:2px solid #8d9f91"></i>Undefined measure</span><span class="impact-flight-key">Work in flight ${FLIGHT_COLOURS.map((c,i)=>`<i style="background:${c}" title="${i+1}${i===3?'+':''} releases"></i>`).join('')}&nbsp;1 → 4+ releases</span><span><i class="impact-shared-key"></i>Shared work days · click a stretch to pin it, Esc to unpin</span></div>`;
+      <span><i style="background:#9dbfac;border-radius:1px"></i>Authored commits (including unreleased)</span><span><i style="background:#ad7d3c;transform:rotate(45deg);border-radius:0"></i>GitHub release created (to the minute)</span><span><i style="background:#fff;border:2px solid #8d9f91"></i>Undefined measure</span><span class="impact-flight-key">Work in flight ${FLIGHT_COLOURS.map((c,i)=>`<i style="background:${c}" title="${i+1}${i===3?'+':''} releases"></i>`).join('')}&nbsp;1 → 4+ releases</span><span><i class="impact-shared-key"></i>Shared work days · click a stretch to pin it, Esc to unpin</span></div>`;
 }
 
 export function impactReleasePicker(model, hash) {
