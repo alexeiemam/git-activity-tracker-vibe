@@ -1,8 +1,8 @@
 /** Three descriptive views over one author/release evidence contract. */
-import {velocityStyle,velocityCellText,velocityLegend} from './absolute-velocity.js?v=personas-20261125-18';
-import {missingDayColour,extraDayColour} from './working-patterns.js?v=personas-20261125-18';
-import {continuityReleaseColour} from './continuity.js?v=personas-20261125-18';
-import {quadrantPosition,DELIVERY_REFERENCE_LINES,CONTRIBUTION_REFERENCE_INDEX} from './contribution-signature.js?v=personas-20261125-18';
+import {velocityStyle,velocityCellText,velocityLegend} from './absolute-velocity.js?v=personas-20261126-19';
+import {missingDayColour,extraDayColour} from './working-patterns.js?v=personas-20261126-19';
+import {continuityReleaseColour} from './continuity.js?v=personas-20261126-19';
+import {quadrantPosition,DELIVERY_REFERENCE_LINES,CONTRIBUTION_REFERENCE_INDEX} from './contribution-signature.js?v=personas-20261126-19';
 
 const esc=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const number=n=>Number.isFinite(n)?new Intl.NumberFormat('en-GB').format(n):'—';

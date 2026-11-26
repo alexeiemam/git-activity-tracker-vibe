@@ -1761,3 +1761,9 @@ a.rhythm-tab{text-decoration:none;color:inherit}
 @media(max-width:820px){.source-paths{grid-template-columns:1fr}}
 .command-details{margin:0 0 6px}.command-details>summary{cursor:pointer;font:11px var(--mono);color:var(--green);margin-bottom:10px;list-style:none}.command-details>summary::before{content:"▸ "}.command-details[open]>summary::before{content:"▾ "}
 .source-card .command-details>summary{display:block;padding:0;justify-content:initial}
+.primary-worked-balance{display:inline-block;margin:0 0 4px;padding:2px 8px;border-radius:999px;font:600 11px var(--mono);white-space:nowrap}
+.primary-worked-table td.is-above .primary-worked-balance{background:#e2eff7;color:#1d5f86}
+.primary-worked-table td.is-below .primary-worked-balance{background:#fbecdc;color:#9a5212}
+.primary-worked-table td.is-level .primary-worked-balance{background:#eef0ec;color:var(--muted)}
+.primary-worked-table td .primary-worked-balance{display:block;width:max-content}
+.primary-worked-key.is-above{color:#1d5f86}.primary-worked-key.is-below{color:#9a5212}
