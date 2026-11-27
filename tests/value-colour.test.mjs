@@ -33,15 +33,18 @@ test('zero is categorically neutral and the first positive value is conspicuous'
   assert.match(intensityStyle(0,scale), /background:#edf1ec/);
 });
 
-test('positive gradient spreads distinguishable bands across several orders of magnitude',()=>{
-  const scale=makeIntensityScale([0,1,10,100,1000]);
-  const values=[1,10,100,1000];
+test('positive gradient keeps the busiest values apart, not just the quietest',()=>{
+  // On a 1–53 scale, 22 vs 53 must read as clearly as 1 vs 3 (a log axis made it far fainter).
+  const scale=makeIntensityScale([0,1,3,22,53]);
+  const gap=(a,b)=>intensityPosition(b,scale)-intensityPosition(a,scale);
+  assert.ok(gap(22,53)>gap(1,3)*2,'the top of the range gets more of the palette than the bottom');
+  assert.ok(luminance(intensityColour(22,scale))-luminance(intensityColour(53,scale))>.1);
+  const values=[1,3,8,22,53];
   const shades=values.map(n=>intensityColour(n,scale));
   assert.equal(new Set(shades).size,values.length);
   const lights=shades.map(luminance);
-  for(let i=1;i<lights.length;i++) assert.ok(lights[i-1]-lights[i]>.06,`${values[i-1]} and ${values[i]} should be visually distinguishable`);
-  assert.ok(Math.abs(intensityPosition(10,scale)-1/3)<1e-8);
-  assert.ok(Math.abs(intensityPosition(100,scale)-2/3)<1e-8);
+  for(let i=1;i<lights.length;i++) assert.ok(lights[i-1]>lights[i],`${values[i]} should be darker than ${values[i-1]}`);
+  assert.ok(Math.abs(intensityPosition(25,makeIntensityScale([1,4,25,100,121]))-.4)<1e-8);
 });
 
 test('small fractional positives, isolated positive cells and absent observations stay distinct',()=>{
@@ -73,7 +76,7 @@ test('legends present 0, positive gradient and distinct missing state',()=>{
   const html=intensityLegend(scale,n=>`${Math.round(n)} commits`,{missing:true});
   assert.match(html,/0 · none/);
   assert.match(html,/1 commits → 500 commits · positive range/);
-  assert.match(html,/log by value, not percentile/);
+  assert.match(html,/square root by value, not percentile/);
   assert.match(html,/unavailable/);
   assert.match(html,/numeric-key-swatch is-zero/);
   assert.equal((html.match(/class="numeric-key-swatch /g)||[]).length,8);
@@ -120,7 +123,7 @@ test('narrow positive ranges do not receive the contrast reserved for major diff
   assert.notEqual(intensityColour(1,makeIntensityScale([0,1])),POSITIVE_COLOURS.at(-1));
 });
 
-test('logarithmic mapping is monotonic, rank-independent and safe across extreme ratios',()=>{
+test('square-root mapping is monotonic, rank-independent and safe across extreme ratios',()=>{
   const a=makeIntensityScale([0,1,4,16,64,256]);
   const b=makeIntensityScale([0,1,1,1,4,4,16,256,256]);
   for(const value of [1,4,16,64,256]) assert.equal(intensityColour(value,a),intensityColour(value,b));

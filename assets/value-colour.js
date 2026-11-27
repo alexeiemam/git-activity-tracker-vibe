@@ -4,7 +4,10 @@
  *
  * The hue and wide lightness range make the smallest positive conspicuous against
  * zero. Within the positive range, colours are interpolated in OKLab (roughly
- * equal perceptual steps) and mapped by the actual VALUE ratio on a log axis.
+ * equal perceptual steps) and mapped by the actual VALUE on a square-root
+ * axis: a log axis gave 1 → 3 as much colour as 18 → 53, so the busiest
+ * cells, the ones people compare, blurred together. Square root keeps small
+ * counts visible while giving the top of the range most of the palette.
  * A narrow positive range uses only part of the palette; 10 vs 11 should not
  * look as different as 1 vs 100 merely because both are min and max.
  */
@@ -83,7 +86,8 @@ export function intensityPosition(value, scale) {
   // overflow if values range from very small fractions to very large counts.
   const distance = Math.log(max) - Math.log(min);
   if (!(distance > 0)) return 0;
-  const fullRange = clamp((Math.log(value) - Math.log(min)) / distance);
+  const root = Math.sqrt(min), width = Math.sqrt(max) - root;
+  const fullRange = width > 0 ? clamp((Math.sqrt(value) - root) / width) : 0;
   const span = clamp(distance / Math.log(FULL_SPAN_RATIO));
   return fullRange * span;
 }
@@ -123,11 +127,11 @@ export function intensityStyle(value, scale) {
 export function intensitySwatches(scale, positiveSteps = 7) {
   if (!scale?.minPositive) return [0];
   if (scale.minPositive === scale.max) return [0, scale.max];
-  const lo = Math.log(scale.minPositive), hi = Math.log(scale.max);
+  const lo = Math.sqrt(scale.minPositive), hi = Math.sqrt(scale.max);
   const steps = Math.max(2, positiveSteps);
   return [0, ...Array.from({length: steps}, (_, index) =>
     index === 0 ? scale.minPositive : index === steps - 1 ? scale.max
-      : Math.exp(lo + (hi - lo) * (index / (steps - 1)))
+      : (lo + (hi - lo) * (index / (steps - 1))) ** 2
   )];
 }
 
@@ -152,10 +156,10 @@ export function intensityLegend(scale, format = x => String(x), {missing = false
   const endpoint = min == null ? 'No positive values'
     : min === scale.max ? `${legendValue(min, format)} · only positive value`
       : `${legendValue(min, format)} → ${legendValue(scale.max, format)} · positive range`;
-  const method = min == null ? '' : min === scale.max ? 'one positive level' : 'log by value, not percentile';
+  const method = min == null ? '' : min === scale.max ? 'one positive level' : 'square root by value, not percentile';
   return `<div class="numeric-gradient-key" role="group" aria-label="Zero is neutral, missing is hatched. Positive values use a perceptually spaced gold-to-plum gradient mapped to actual value ratios, not ranks. Narrow ranges use less contrast.">
     <span>0 · none</span><span class="numeric-key-swatches">${spans}</span>
     <span class="numeric-key-endpoints">${endpoint}</span>
-    ${missing ? '<span class="numeric-key-missing" title="Not observed or undefined">— · unavailable</span>' : ''}${method ? `<span class="numeric-key-method" title="The logarithmic scale is applied to actual ratios. When values vary by less than fourfold, less than the full palette is used.">${method}</span>` : ''}
+    ${missing ? '<span class="numeric-key-missing" title="Not observed or undefined">— · unavailable</span>' : ''}${method ? `<span class="numeric-key-method" title="The square-root scale is applied to actual values, so the busiest cells stay distinguishable. When values vary by less than fourfold, less than the full palette is used.">${method}</span>` : ''}
   </div>`;
 }
