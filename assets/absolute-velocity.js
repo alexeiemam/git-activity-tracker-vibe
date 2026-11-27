@@ -6,7 +6,7 @@
  * These colours never depend on the selected people, period or data maximum.
  * A value above the darkest reference still retains its exact numeric value.
  */
-import {ZERO_COLOUR,MISSING_BACKGROUND} from './value-colour.js?v=personas-20261126-19';
+import {ZERO_COLOUR,MISSING_BACKGROUND} from './value-colour.js?v=personas-20261127-20';
 
 /**
  * Stepped bands, not a continuous ramp: a reference day (4 commits, 200 changed

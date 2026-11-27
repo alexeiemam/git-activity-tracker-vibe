@@ -99,7 +99,9 @@ test('expanded perceptual ramp has substantially more minimum-to-maximum contras
   const previousSpan=luminance('#5f9f7d')-luminance('#19533c');
   const newSpan=luminance(first)-luminance(last);
   assert.ok(newSpan>previousSpan*1.65,`Contrast should increase materially: ${newSpan} vs ${previousSpan}`);
-  assert.ok(luminance(ZERO_COLOUR)-luminance(first)>newSpan, 'zero-to-anything remains an even stronger luminance distinction');
+  // Hue now separates the positive bands, so the positive span may exceed the
+  // zero step; zero to anything must still be a large, unmistakable jump.
+  assert.ok(luminance(ZERO_COLOUR)-luminance(first)>.3, 'zero-to-anything remains a strong luminance distinction');
   const shades=POSITIVE_COLOURS.map(luminance);
   for(let i=1;i<shades.length;i++) assert.ok(shades[i-1]-shades[i]>.02,'positive palette must progress monotonically with legible shade differences');
 });

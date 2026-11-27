@@ -1,11 +1,11 @@
 /** CPU-heavy Git parsing and evidence aggregation stays off the UI thread. */
-import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=personas-20261126-19';
-import { mergeGitHistories, isCompleteRecapture, hasImportableEvidence } from './history-merge.js?v=personas-20261126-19';
-import { impactAnalysis, applyReleaseMeasures } from './impact.js?v=personas-20261126-19';
-import { buildStoryAnalysis } from './stories.js?v=personas-20261126-19';
-import { buildEvidenceIndex } from './perspectives.js?v=personas-20261126-19';
-import { buildDeploymentIndex } from './deployments.js?v=personas-20261126-19';
-import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=personas-20261126-19';
+import { parseGitHistory, buildAnalysis, getHistoryDateBounds } from './domain.js?v=personas-20261127-20';
+import { mergeGitHistories, isCompleteRecapture, hasImportableEvidence } from './history-merge.js?v=personas-20261127-20';
+import { impactAnalysis, applyReleaseMeasures } from './impact.js?v=personas-20261127-20';
+import { buildStoryAnalysis } from './stories.js?v=personas-20261127-20';
+import { buildEvidenceIndex } from './perspectives.js?v=personas-20261127-20';
+import { buildDeploymentIndex } from './deployments.js?v=personas-20261127-20';
+import { encodeSessionArchive, decodeSessionArchive } from './session-archive.js?v=personas-20261127-20';
 
 let history = null;
 let cachedPrimary = null, cachedPrimaryKey = null;

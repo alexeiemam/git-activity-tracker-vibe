@@ -1,6 +1,6 @@
 /**
  * Shared numerical colour scale. Zero means no observed activity, never missing.
- * Positive values are green, and missing observations use a separate pattern.
+ * Positive values run lime to indigo, and missing observations use a separate pattern.
  *
  * The hue and wide lightness range make the smallest positive conspicuous against
  * zero. Within the positive range, colours are interpolated in OKLab (roughly
@@ -15,8 +15,9 @@ export const MISSING_BACKGROUND = 'repeating-linear-gradient(135deg,#f7f8f5 0px,
 // Below that, use a proportional fraction of the span. This avoids overstating
 // a tiny range while preserving a continuous, rank-independent encoding.
 const FULL_SPAN_RATIO = 4;
-const LOW_POSITIVE = '#57c58d';
-const HIGH_POSITIVE = '#092f24';
+// Several hues, not one: lime → green → teal → blue → indigo. Lightness still
+// falls steadily, but the hue turns too, so neighbouring bands stay apart.
+const POSITIVE_STOPS = ['#8ccc4e', '#3fb36b', '#138a82', '#1d5a8f', '#1c2557'];
 const clamp = x => Math.min(1, Math.max(0, x));
 const valid = x => typeof x === 'number' && Number.isFinite(x) && x >= 0;
 
@@ -52,11 +53,11 @@ function fromLab([L, a, b]) {
   }).join('')}`;
 }
 
-const lowLab = toLab(LOW_POSITIVE);
-const highLab = toLab(HIGH_POSITIVE);
+const stopLabs = POSITIVE_STOPS.map(toLab);
 export function positiveColour(position) {
-  const t = clamp(Number.isFinite(position) ? position : 0);
-  return fromLab(lowLab.map((v, i) => v + (highLab[i] - v) * t));
+  const t = clamp(Number.isFinite(position) ? position : 0) * (stopLabs.length - 1);
+  const i = Math.min(stopLabs.length - 2, Math.floor(t)), local = t - i;
+  return fromLab(stopLabs[i].map((v, k) => v + (stopLabs[i + 1][k] - v) * local));
 }
 // Seven reference shades, useful for inspecting the actual perceptual ramp.
 export const POSITIVE_COLOURS = Array.from({length: 7}, (_, i) => positiveColour(i / 6));
@@ -152,7 +153,7 @@ export function intensityLegend(scale, format = x => String(x), {missing = false
     : min === scale.max ? `${legendValue(min, format)} · only positive value`
       : `${legendValue(min, format)} → ${legendValue(scale.max, format)} · positive range`;
   const method = min == null ? '' : min === scale.max ? 'one positive level' : 'log by value, not percentile';
-  return `<div class="numeric-gradient-key" role="group" aria-label="Zero is neutral, missing is hatched. Positive values use a perceptually spaced green gradient mapped to actual value ratios, not ranks. Narrow ranges use less contrast.">
+  return `<div class="numeric-gradient-key" role="group" aria-label="Zero is neutral, missing is hatched. Positive values use a perceptually spaced lime-to-indigo gradient mapped to actual value ratios, not ranks. Narrow ranges use less contrast.">
     <span>0 · none</span><span class="numeric-key-swatches">${spans}</span>
     <span class="numeric-key-endpoints">${endpoint}</span>
     ${missing ? '<span class="numeric-key-missing" title="Not observed or undefined">— · unavailable</span>' : ''}${method ? `<span class="numeric-key-method" title="The logarithmic scale is applied to actual ratios. When values vary by less than fourfold, less than the full palette is used.">${method}</span>` : ''}
